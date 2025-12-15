@@ -5,7 +5,7 @@ import path from "path"
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/app',
+  base: '/user',
   server: {
     host: true,
     port: 8000,

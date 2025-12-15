@@ -1,0 +1,64 @@
+version: '3.9'
+
+services:
+  # Production User App
+  prod-app:
+    container_name: prod-app
+    build:
+      context: .
+      dockerfile: ./Docker/Dockerfile.app
+      target: app-production
+    restart: always
+    env_file:
+      - .env.production
+    expose:
+      - "80"
+    networks:
+      - prod-net
+      - proxy-network
+    profiles:
+      - production
+
+  # Production Admin App
+  prod-admin:
+    container_name: prod-admin
+    build:
+      context: .
+      dockerfile: ./Docker/Dockerfile.admin
+      target: admin-production
+    restart: always
+    env_file:
+      - .env.production
+    expose:
+      - "80"
+    networks:
+      - prod-net
+      - proxy-network
+    profiles:
+      - production
+
+  # Production Client App (Next.js)
+  prod-client:
+    container_name: prod-client
+    build:
+      context: .
+      dockerfile: ./Docker/Dockerfile.client
+      target: client-production
+    restart: always
+    env_file:
+      - .env.production
+    expose:
+      - "3000"
+    networks:
+      - prod-net
+      - proxy-network
+    profiles:
+      - production
+  
+networks:
+  app-net:
+    driver: bridge
+  prod-net:
+    driver: bridge
+  proxy-network:
+    external: true
