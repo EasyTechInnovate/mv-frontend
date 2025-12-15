@@ -1,7 +1,20 @@
 import { useEffect, useState } from "react";
-import { fetchMerchData } from "./MerchStoreManagementData";
-import { Search, Download, Check, X, Eye, Users, Clock, CheckCircle, } from "lucide-react";
+import GlobalApi from "@/lib/GlobalApi";
+import {
+  Search,
+  Download,
+  Check,
+  X,
+  Eye,
+  Users,
+  Clock,
+  CheckCircle,
+} from "lucide-react";
 import DesignRequestTable from "../../components/merch-store-management/MerchRequestTable";
+import MerchStoreViewModal from "@/components/merch-store-management/MerchStoreViewModal";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 
 const statusColors = {
   Pending: "bg-yellow-900/30 text-yellow-400",
@@ -10,11 +23,48 @@ const statusColors = {
   Rejected: "bg-red-900/30 text-red-400",
 };
 
+const PRODUCT_LABELS = {
+  t_shirt: "T-Shirt",
+  hoodie: "Hoodie",
+  sipper_bottle: "Sipper Bottle",
+  posters: "Posters",
+  tote_bags: "Tote Bags",
+  stickers: "Stickers",
+  other: "Other",
+};
+
+const CHANNEL_LABELS = {
+  instagram: "Instagram",
+  youtube: "YouTube",
+  email_newsletter: "Email Newsletter",
+  live_events: "Live Events",
+  other: "Other",
+};
+
+const STATUS_LABELS = {
+  pending: "Pending",
+  approved: "Approved",
+  rejected: "Rejected",
+  design_pending: "Design Pending",
+  design_submitted: "Under Review",
+  design_approved: "Design Approved",
+  design_rejected: "Design Rejected",
+};
+
+
 export default function MerchStoreManagement({ theme }) {
   const [data, setData] = useState(null);
   const [activeTab, setActiveTab] = useState("approval");
+  const [selectedRequest, setSelectedRequest] = useState(null);
+const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+const [deleteId, setDeleteId] = useState(null);
+const [isDeleting, setIsDeleting] = useState(false);
 
-  // helpers for theme styling
+
+
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
   const boxBg =
     theme === "dark"
       ? "bg-[#151F28] border border-gray-800"
@@ -28,13 +78,80 @@ export default function MerchStoreManagement({ theme }) {
       ? "bg-gray-800 hover:bg-gray-700 text-white"
       : "bg-gray-200 hover:bg-gray-300 text-[#111A22]";
 
-  useEffect(() => {
-    const load = async () => {
-      const res = await fetchMerchData();
-      setData(res);
+  
+const fetchData = async () => {
+  try {
+    const res = await GlobalApi.getAllMerchStores(page, limit);
+    const merch = res.data.data.merchStores || [];
+
+    const formatted = {
+      stats: {
+        totalRequests: merch.length,
+        pending: merch.filter((m) => m.status === "pending").length,
+        approved: merch.filter((m) => m.status === "approved").length,
+        underReview: merch.filter((m) => m.status === "design_submitted").length,
+      },
+
+      approvalRequests: merch.map((item) => {
+        // ⭐ FIX → show only ONE product
+        const formattedProducts =
+          PRODUCT_LABELS[item.productPreferences?.selectedProducts?.[0]] ||
+          item.productPreferences?.selectedProducts?.[0] ||
+          "—";
+
+        // Channels also keep SINGLE value (first)
+        const formattedChannels =
+          CHANNEL_LABELS[item.marketingPlan?.promotionChannels?.[0]] ||
+          item.marketingPlan?.promotionChannels?.[0] ||
+          "—";
+
+        const statusMap = {
+          pending: "Pending",
+          approved: "Approved",
+          rejected: "Rejected",
+          design_pending: "Design Pending",
+          design_submitted: "Under Review",
+          design_approved: "Design Approved",
+          design_rejected: "Design Rejected",
+        };
+
+        return {
+          id: item._id,
+          artist: item.artistInfo?.artistName ?? "N/A",
+          product: formattedProducts,
+          marketingPlan: item.marketingPlan?.planToPromote
+            ? "True"
+            : "False",
+          channel: formattedChannels,
+          mmcAssist: item.marketingPlan?.mmcMarketingAssistance ? "Yes" : "No",
+          status: statusMap[item.status] || item.status,
+          date: new Date(item.createdAt).toLocaleDateString(),
+        };
+      }),
+
+      designRequests: merch
+        .filter((m) => m.status === "design_submitted")
+        .map((item) => ({
+          id: item._id,
+          artist: item.artistInfo?.artistName,
+          accountId: item.accountId,
+          designs: item.designs,
+          submittedAt: item.designsSubmittedAt,
+          notes: item.adminNotes ?? "",
+        })),
     };
-    load();
-  }, []);
+
+    setData(formatted);
+  } catch (err) {
+    console.error("Failed to load merch stores", err);
+  }
+};
+
+
+
+  useEffect(() => {
+    fetchData();
+  }, [page]);
 
   if (!data)
     return (
@@ -49,6 +166,35 @@ export default function MerchStoreManagement({ theme }) {
       </div>
     );
 
+    const handleDelete = async () => {
+  if (!deleteId) return;
+
+  try {
+    setIsDeleting(true);
+    await GlobalApi.deleteMerchStore(deleteId);
+
+    toast.success("Merch store deleted successfully");
+
+    setData((prev) => ({
+      ...prev,
+      approvalRequests: prev.approvalRequests.filter(
+        (item) => item.id !== deleteId
+      ),
+      stats: {
+        ...prev.stats,
+        totalRequests: prev.stats.totalRequests - 1,
+      },
+    }));
+  } catch (error) {
+    console.error("Delete failed", error);
+    toast.error("Failed to delete merch store");
+  } finally {
+    setIsDeleting(false);
+    setDeleteId(null);
+  }
+};
+
+
   return (
     <div
       className={`${
@@ -57,77 +203,49 @@ export default function MerchStoreManagement({ theme }) {
           : "bg-gray-100 text-black"
       } min-h-screen p-4 sm:p-6 rounded-2xl`}
     >
-      <h1 className="text-2xl sm:text-2xl font-semibold mb-1">Merch Store Management</h1>
+      <h1 className="text-2xl font-semibold mb-1">Merch Store Management</h1>
       <p className="text-gray-400 text-xs sm:text-sm mb-6">
         Manage merchandise store requests and approvals from users
       </p>
 
-{/* Stats */}
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-  {/* Total Requests */}
-  <div className={`${boxBg} p-4 rounded-2xl shadow relative`}>
-    <span className="absolute top-4 right-4 text-gray-400">
-      <Users className="h-5 w-5" />
-    </span>
-    <p className="text-gray-400 text-sm">Total Requests</p>
-    <p className="text-2xl font-bold">{data.stats.totalRequests}</p>
-  </div>
-
-  {/* Pending */}
-  <div className={`${boxBg} p-4 rounded-2xl shadow relative`}>
-    <span className="absolute top-4 right-4 text-yellow-400">
-      <Clock className="h-5 w-5" />
-    </span>
-    <p className="text-gray-400 text-sm">Pending</p>
-    <p className="text-2xl font-bold text-yellow-400">{data.stats.pending}</p>
-  </div>
-
-  {/* Approved */}
-  <div className={`${boxBg} p-4 rounded-2xl shadow relative`}>
-    <span className="absolute top-4 right-4 text-green-400">
-      <CheckCircle className="h-5 w-5" />
-    </span>
-    <p className="text-gray-400 text-sm">Approved</p>
-    <p className="text-2xl font-bold text-green-400">{data.stats.approved}</p>
-  </div>
-
-  {/* Under Review */}
-  <div className={`${boxBg} p-4 rounded-2xl shadow relative`}>
-    <span className="absolute top-4 right-4 text-blue-400">
-      <Search className="h-5 w-5" />
-    </span>
-    <p className="text-gray-400 text-sm">Under Review</p>
-    <p className="text-2xl font-bold text-blue-400">{data.stats.underReview}</p>
-  </div>
-</div>
-
-      {/* Search + Filters */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
-        <div className={`${inputBg} flex items-center w-full sm:w-1/3 rounded-lg px-3 py-2`}>
-          <Search size={16} className="text-gray-400 mr-2" />
-          <input
-            type="text"
-            placeholder="Search by user, product name, or description..."
-            className="bg-transparent w-full text-sm outline-none placeholder:text-gray-400"
-          />
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className={`${boxBg} p-4 rounded-2xl shadow relative`}>
+          <span className="absolute top-4 right-4 text-gray-400">
+            <Users className="h-5 w-5" />
+          </span>
+          <p className="text-gray-400 text-sm">Total Requests</p>
+          <p className="text-2xl font-bold">{data.stats.totalRequests}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <select className={`${inputBg} text-sm rounded-lg px-3 py-2`}>
-            <option>All Status</option>
-          </select>
-          <select className={`${inputBg} text-sm rounded-lg px-3 py-2`}>
-            <option>All Types</option>
-          </select>
-          <select className={`${inputBg} text-sm rounded-lg px-3 py-2`}>
-            <option>All Priority</option>
-          </select>
-          <button className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2">
-            <Download size={14} /> Export
-          </button>
+
+        <div className={`${boxBg} p-4 rounded-2xl shadow relative`}>
+          <span className="absolute top-4 right-4 text-yellow-400">
+            <Clock className="h-5 w-5" />
+          </span>
+          <p className="text-gray-400 text-sm">Pending</p>
+          <p className="text-2xl font-bold text-yellow-400">{data.stats.pending}</p>
+        </div>
+
+        <div className={`${boxBg} p-4 rounded-2xl shadow relative`}>
+          <span className="absolute top-4 right-4 text-green-400">
+            <CheckCircle className="h-5 w-5" />
+          </span>
+          <p className="text-gray-400 text-sm">Approved</p>
+          <p className="text-2xl font-bold text-green-400">{data.stats.approved}</p>
+        </div>
+
+        <div className={`${boxBg} p-4 rounded-2xl shadow relative`}>
+          <span className="absolute top-4 right-4 text-blue-400">
+            <Search className="h-5 w-5" />
+          </span>
+          <p className="text-gray-400 text-sm">Under Review</p>
+          <p className="text-2xl font-bold text-blue-400">
+            {data.stats.underReview}
+          </p>
         </div>
       </div>
 
-      {/* Tabs */}
+      
       <div className={`flex ${theme === "dark" ? "border-gray-700" : "border-gray-300"} border-b mb-4`}>
         {["approval", "design", "listed"].map((tab) => (
           <button
@@ -148,7 +266,7 @@ export default function MerchStoreManagement({ theme }) {
         ))}
       </div>
 
-      {/* Approval Request Table */}
+      
       {activeTab === "approval" && (
         <div className={`${boxBg} overflow-x-auto rounded-2xl shadow`}>
           <table className="w-full text-sm">
@@ -168,6 +286,7 @@ export default function MerchStoreManagement({ theme }) {
                 <th className="px-4 py-3 text-left">Actions</th>
               </tr>
             </thead>
+
             <tbody>
               {data.approvalRequests.map((req) => (
                 <tr
@@ -181,47 +300,103 @@ export default function MerchStoreManagement({ theme }) {
                   <td className="px-4 py-3">{req.marketingPlan}</td>
                   <td className="px-4 py-3">{req.channel}</td>
                   <td className="px-4 py-3">{req.mmcAssist}</td>
+
                   <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full ${statusColors[req.status]}`}
-                    >
+                    <span className={`px-2 py-1 text-xs rounded-full ${statusColors[req.status]}`}>
                       {req.status}
                     </span>
                   </td>
+
                   <td className="px-4 py-3">{req.date}</td>
-                  <td className="px-4 py-3 flex gap-2">
-                    <button className={`${softBtn} px-2 py-1 rounded flex items-center gap-1 text-xs`}>
-                      <Eye size={12} /> View
-                    </button>
-                    {req.status === "Pending" && (
-                      <>
-                        <button className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded flex items-center gap-1 text-xs">
-                          <Check size={12} /> Accept
-                        </button>
-                        <button className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded flex items-center gap-1 text-xs">
-                          <X size={12} /> Reject
-                        </button>
-                      </>
-                    )}
-                  </td>
+
+                <td className="px-4 py-3 flex gap-2">
+  <button
+    onClick={() => {
+      setSelectedRequest(req.id);
+      setIsViewModalOpen(true);
+    }}
+    className={`${softBtn} px-2 py-1 rounded flex items-center gap-1 text-xs`}
+  >
+    <Eye size={12} /> View
+  </button>
+
+  <button
+    onClick={() => setDeleteId(req.id)}
+    className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded flex items-center gap-1 text-xs"
+  >
+    <Trash2 size={12} /> Delete
+  </button>
+</td>
+
                 </tr>
               ))}
             </tbody>
           </table>
+
+          
+          <div className="flex justify-between items-center px-4 py-3">
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage(page - 1)}
+              className={`px-3 py-1 rounded ${
+                page <= 1 ? "opacity-50 cursor-not-allowed" : softBtn
+              }`}
+            >
+              Previous
+            </button>
+
+            <span className="text-sm text-gray-400">Page {page}</span>
+
+            <button
+              onClick={() => setPage(page + 1)}
+              className={`${softBtn} px-3 py-1 rounded`}
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Design Request Table */}
+      {/* DESIGN REQUEST TABLE */}
       {activeTab === "design" && (
         <DesignRequestTable theme={theme} data={data.designRequests} />
       )}
 
-      {/* Listed Product Placeholder */}
+      {/* LISTED PRODUCTS PLACEHOLDER */}
       {activeTab === "listed" && (
-        <div className={`${boxBg} rounded-2xl p-6 text-center ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-          Listed Product Section (Figma design pending)
+        <div
+          className={`${boxBg} rounded-2xl p-6 text-center ${
+            theme === "dark" ? "text-gray-400" : "text-gray-500"
+          }`}
+        >
+          Listed Product Section (Coming Soon)
         </div>
       )}
+
+      <MerchStoreViewModal
+  open={isViewModalOpen}
+  onClose={() => {
+    setIsViewModalOpen(false);
+    setSelectedRequest(null);
+  }}
+  storeId={selectedRequest}
+  theme={theme}
+/>
+
+{deleteId && (
+  <ConfirmDialog
+    title="Delete Merch Store"
+    message="Are you sure you want to delete this merch store request? This action cannot be undone."
+    confirmLabel="Delete"
+    cancelLabel="Cancel"
+    loading={isDeleting}
+    theme={theme}
+    onCancel={() => setDeleteId(null)}
+    onConfirm={handleDelete}
+  />
+)}
+
+
     </div>
   );
 }
