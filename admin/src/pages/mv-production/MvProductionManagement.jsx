@@ -9,7 +9,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Music, MoreHorizontal, Upload } from "lucide-react";
+import { Music, MoreHorizontal, Upload, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import GlobalApi from "@/lib/GlobalApi"; 
 import MVProductionUserPage from "@/components/mv-production/MVProductionUserPage"; 
@@ -24,80 +24,63 @@ export default function MVProductionManagement({ theme = "dark" }) {
   const tableBorder = isDark ? "border-gray-700" : "border-gray-200";
 
  
-  const [search, setSearch] = useState("");
   const [productions, setProductions] = useState([]);
-  const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    itemsPerPage: 10,
-  });
   const [loading, setLoading] = useState(false);
 
- 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({});
+  const itemsPerPage = 10;
+  
   const [activePage, setActivePage] = useState("list");
   const [selectedProduction, setSelectedProduction] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("all");
  
-const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-const [itemToDelete, setItemToDelete] = useState(null);
-const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-
-
-  const fetchProductions = async (pageNo = 1) => {
+  const fetchProductions = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await GlobalApi.getAllMVProductions(pageNo, pagination.itemsPerPage || 10);
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        status: statusFilter === "all" ? undefined : statusFilter,
+        search: debouncedSearch || undefined,
+      };
+      const res = await GlobalApi.getAllMVProductions(params);
       const data = res?.data?.data || {};
       setProductions(data.productions || []);
-      if (data.pagination) setPagination(data.pagination);
-      else
-        setPagination((prev) => ({
-          ...prev,
-          currentPage: pageNo,
-          totalPages: Math.ceil((data?.totalCount || data.productions?.length || productions.length) / (prev.itemsPerPage || 10)),
-        }));
+      setPagination(data.pagination || {});
     } catch (err) {
       console.error("API ERROR →", err);
       toast.error(err?.response?.data?.message || "Failed to load productions");
+      setProductions([]);
+      setPagination({});
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProductions(page);
-   
-  }, [page]);
+    fetchProductions();
+  }, [currentPage, debouncedSearch, statusFilter]);
 
-  
-  const filteredProductions = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return productions.filter((p) => {
-      if (statusFilter !== "all" && (p.status || "").toLowerCase() !== statusFilter.toLowerCase()) {
-        return false;
-      }
-      if (!q) return true;
-      const accountId = (p.accountId || "").toLowerCase();
-      const projectTitle = (p.projectOverview?.projectTitle || "").toLowerCase();
-      const first = (p.userId?.firstName || "").toLowerCase();
-      const last = (p.userId?.lastName || "").toLowerCase();
-      const accountName = `${first} ${last}`.trim();
-      const email = (p.userId?.emailAddress || "").toLowerCase();
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1); // Reset to first page on new search
+    }, 500);
 
-      return (
-        accountId.includes(q) ||
-        projectTitle.includes(q) ||
-        accountName.includes(q) ||
-        email.includes(q)
-      );
-    });
-  }, [productions, search, statusFilter]);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   
   const stats = [
-    { label: "Total Productions", value: pagination?.totalCount ?? productions.length },
+    { label: "Total Productions", value: pagination?.totalCount || 0 },
     { label: "Pending", value: productions.filter((p) => p.status === "pending").length },
     { label: "Accepted", value: productions.filter((p) => p.status === "accept").length },
     { label: "Rejected", value: productions.filter((p) => p.status === "reject").length },
@@ -109,13 +92,19 @@ const [deleteLoading, setDeleteLoading] = useState(false);
     setActivePage("modal");
   };
 
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= (pagination?.totalPages || 1)) {
+      setCurrentPage(newPage);
+    }
+  };
+
   const handleBack = () => {
     setActivePage("list");
     setSelectedProduction(null);
   };
 
   const handleRefreshAfterUpdate = () => {
-  fetchProductions(page); 
+  fetchProductions(); 
 };
 
 const handleDeleteConfirm = async () => {
@@ -130,7 +119,7 @@ const handleDeleteConfirm = async () => {
     setShowDeleteDialog(false);
     setItemToDelete(null);
 
-    fetchProductions(page);
+    fetchProductions();
   } catch (err) {
     console.error("DELETE ERROR →", err);
     toast.error(err?.response?.data?.message || "Failed to delete");
@@ -188,8 +177,8 @@ const handleDeleteConfirm = async () => {
       <div className="flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center">
         <Input
           placeholder="Search by account id, account name, project title, or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className={`w-full md:w-1/3 ${isDark ? "bg-[#151F28] border-gray-700 text-gray-200" : "bg-white"}`}
         />
 
@@ -217,7 +206,8 @@ const handleDeleteConfirm = async () => {
     <thead className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left`}>
       <tr>
         {[
-          "Account",
+          "Account ID",
+          "Account Name",
           "Project Title",
           "Budget",
           "Email",
@@ -235,18 +225,18 @@ const handleDeleteConfirm = async () => {
     <tbody>
       {loading ? (
         <tr>
-          <td colSpan={7} className="text-center py-6 text-gray-400">
+          <td colSpan={8} className="text-center py-6 text-gray-400">
             Loading...
           </td>
         </tr>
-      ) : filteredProductions.length === 0 ? (
+      ) : productions.length === 0 ? (
         <tr>
-          <td colSpan={7} className="text-center py-6 text-gray-400 italic">
+          <td colSpan={8} className="text-center py-6 text-gray-400 italic">
             No records found
           </td>
         </tr>
       ) : (
-        filteredProductions.map((p) => {
+        productions.map((p) => {
           const accountName = `${p.userId?.firstName || ""} ${p.userId?.lastName || ""}`.trim();
           const projectTitle = p.projectOverview?.projectTitle || "-";
           const budget = p.budgetRequestAndOwnershipProposal?.totalBudgetRequested ?? "-";
@@ -260,11 +250,8 @@ const handleDeleteConfirm = async () => {
                 isDark ? "hover:bg-gray-800/10" : "hover:bg-gray-100"
               }`}
             >
-              <td className="px-4 py-3">
-                <div className="font-medium">{p.accountId || "-"}</div>
-                <div className="text-xs text-gray-400">{accountName || "-"}</div>
-              </td>
-
+              <td className="px-4 py-3 font-medium">{p.accountId || "-"}</td>
+              <td className="px-4 py-3">{accountName || "-"}</td>
               <td className="px-4 py-3">{projectTitle}</td>
 
               <td className="px-4 py-3">
@@ -278,7 +265,7 @@ const handleDeleteConfirm = async () => {
 
               <td className="px-4 py-3">
                 <span
-                  className={`px-3 py-1 rounded-full text-xs ${
+                  className={`px-3 py-1 rounded-full text-xs capitalize ${
                     status === "accept"
                       ? "bg-green-600/20 text-green-400"
                       : status === "reject"
@@ -329,27 +316,61 @@ const handleDeleteConfirm = async () => {
 
 
    
-      <div className="flex justify-end items-center gap-3 pt-4 pr-4">
-        <Button
-          variant="outline"
-          disabled={page === 1}
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-        >
-          Previous
-        </Button>
+      {pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+            Showing {((pagination.currentPage - 1) * itemsPerPage) + 1} to {Math.min(pagination.currentPage * itemsPerPage, pagination.totalCount)} of {pagination.totalCount} productions
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`${isDark ? "bg-[#151F28] border-gray-700" : ""}`}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Previous
+            </Button>
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                let pageNum;
+                if (pagination.totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= pagination.totalPages - 2) {
+                  pageNum = pagination.totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
 
-        <span className="px-3 py-2">
-          Page {pagination?.currentPage ?? page} of {pagination?.totalPages ?? 1}
-        </span>
-
-        <Button
-          variant="outline"
-          disabled={page === (pagination?.totalPages ?? 1)}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          Next
-        </Button>
-      </div>
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={pageNum === currentPage ? 'secondary' : 'outline'}
+                    size="sm"
+                    onClick={() => handlePageChange(pageNum)}
+                    className={pageNum === currentPage ? `bg-purple-600 hover:bg-purple-700 ${isDark ? "text-white" : ""}` : (isDark ? "text-white bg-[#151F28] border-gray-700" : "")}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={!pagination.hasNext}
+              className={`${isDark ? "bg-[#151F28] border-gray-700" : ""}`}
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {showDeleteDialog && (
   <ConfirmDialog

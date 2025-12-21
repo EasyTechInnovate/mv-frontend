@@ -84,8 +84,8 @@ const getFaqById = (faqId) => axiosClient.get(`/v1/admin/faqs/${faqId}`);
 const getPendingSyncSubmissions = () =>
   axiosClient.get("/v1/marketing/admin/sync/submissions/pending");
 
-const getAllSyncSubmissions = (page = 1, limit = 10) =>
-  axiosClient.get(`/v1/marketing/admin/sync/submissions?page=${page}&limit=${limit}`);
+const getAllSyncSubmissions = (params) =>
+  axiosClient.get(`/v1/marketing/admin/sync/submissions`, { params });
 
 const reviewSyncSubmission = (submissionId, data) =>
   axiosClient.post(`/v1/marketing/admin/sync/submissions/${submissionId}/review`, data);
@@ -96,10 +96,8 @@ const reviewSyncSubmission = (submissionId, data) =>
 // ---------------------- Marketing: Playlist Pitching ----------------------
 
 
-const getPlayPitching = (store = "Spotify", page = 1, limit = 10) =>
-  axiosClient.get(
-    `/v1/marketing/admin/playlist-pitching/submissions/store/${store}?page=${page}&limit=${limit}`
-  );
+const getPlayPitching = (params) =>
+  axiosClient.get(`/v1/marketing/admin/playlist-pitching/submissions`, { params });
 
 const reviewPlayPitching = (submissionId, data) =>
   axiosClient.post(
@@ -405,8 +403,8 @@ export const deleteMerchStore = (storeId) =>
 
 // ---------------------- MV Production Management (Admin) ----------------------
 
-export const getAllMVProductions = (page = 1, limit = 10) =>
-  axiosClient.get(`/v1/mv-production/admin?page=${page}&limit=${limit}`);
+export const getAllMVProductions = (params) =>
+  axiosClient.get(`/v1/mv-production/admin`, { params });
 
 export const getMVProductionStats = () =>
   axiosClient.get(`/v1/mv-production/admin/stats`);

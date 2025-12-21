@@ -198,16 +198,21 @@ export default function SyncLicenseReviewModal({
 
             {data?.trackLinks?.length > 0 && (
               <Info
-                label="Track Link"
+                label="Track Links"
                 value={
-                  <a
-                    href={data.trackLinks[0].url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 underline"
-                  >
-                    {data.trackLinks[0].platform || "View Link"}
-                  </a>
+                  <div className="flex flex-col gap-1">
+                    {data.trackLinks.map((link, index) => (
+                      <a
+                        key={index}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 underline hover:text-blue-500 transition-colors"
+                      >
+                        {link.platform || `Link ${index + 1}`}
+                      </a>
+                    ))}
+                  </div>
                 }
                 full
               />

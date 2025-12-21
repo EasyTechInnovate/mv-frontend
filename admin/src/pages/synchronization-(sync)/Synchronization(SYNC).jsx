@@ -12,6 +12,8 @@ import {
   DollarSign,
   ChevronDown,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import GlobalApi from "@/lib/GlobalApi";
@@ -140,28 +142,54 @@ const iconMap = {
 export default function SyncManagement({ theme }) {
   const isDark = theme === "dark";
   const [requests, setRequests] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [status, setStatus] = useState(""); // "" for all status
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({});
+  const itemsPerPage = 10;
+
   const dropdownRef = useRef(null);
   const [showBulk, setShowBulk] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   
+  const normalizeResponse = (res) => {
+    if (!res || !res.data || !res.data.data) return { submissions: [], pagination: {} };
+
+    const payload = res.data.data;
+
+    return {
+      submissions: payload.submissions || [],
+      pagination: payload.pagination || {},
+    };
+  };
+
   const fetchSyncRequests = async () => {
     try {
       setLoading(true);
-      const res = await GlobalApi.getAllSyncSubmissions(1, 10);
-      if (res.data?.success) {
-        setRequests(res.data.data.submissions || []);
-      } else {
-        throw new Error("Failed to load sync submissions");
-      }
+      setError(null);
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        status: status === "" ? undefined : status,
+        search: debouncedSearch || undefined,
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      };
+      const res = await GlobalApi.getAllSyncSubmissions(params);
+      const { submissions, pagination } = normalizeResponse(res);
+      setRequests(submissions || []);
+      setPagination(pagination || {});
     } catch (err) {
       console.error("❌ Error fetching sync submissions:", err);
       setError("Failed to fetch data");
+      setRequests([]);
+      setPagination({});
       toast.error("Failed to load sync submissions");
     } finally {
       setLoading(false);
@@ -170,42 +198,54 @@ export default function SyncManagement({ theme }) {
 
   useEffect(() => {
     fetchSyncRequests();
-  }, []);
+  }, [currentPage, debouncedSearch, status]);
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1); // Reset to first page on new search
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
  
-  const stats = {
-    total: requests.length,
-    approved: requests.filter((r) => r.status === "approved").length,
-    rejected: requests.filter((r) => r.status === "rejected").length,
-    pending: requests.filter((r) => r.status === "pending").length,
-  };
+  const total = pagination.totalCount || 0;
+  const approved = Array.isArray(requests) ? requests.filter((r) => r.status === "approved").length : 0;
+  const rejected = Array.isArray(requests) ? requests.filter((r) => r.status === "rejected").length : 0;
+  const pending = Array.isArray(requests) ? requests.filter((r) => r.status === "pending").length : 0;
 
   const statCards = [
-    { key: "total", label: "Total Requests", value: stats.total },
-    { key: "approved", label: "Approved Requests", value: stats.approved },
-    { key: "rejected", label: "Rejected Requests", value: stats.rejected },
-    { key: "pending", label: "Pending Requests", value: stats.pending },
+    { key: "total", label: "Total Requests", value: total },
+    { key: "approved", label: "Approved Requests", value: approved },
+    { key: "rejected", label: "Rejected Requests", value: rejected },
+    { key: "pending", label: "Pending Requests", value: pending },
   ];
 
   const handleBulkDelete = () => setShowBulk(false);
   const handleBulkEdit = () => setShowBulk(false);
-
-  const filteredRequests = requests.filter((row) => {
-    const q = searchQuery.toLowerCase();
-    return (
-      row.trackName?.toLowerCase().includes(q) ||
-      row.artistName?.toLowerCase().includes(q)
-    );
-  });
 
   const handleReviewClick = (row) => {
     setSelectedRequest(row);
     setIsModalOpen(true);
   };
 
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= (pagination?.totalPages || 1)) {
+      setCurrentPage(newPage);
+    }
+  };
+
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedRequest(null);
+  };
+
+  const statusColors = {
+    approved: "bg-green-100 text-green-700 border-green-300",
+    rejected: "bg-red-100 text-red-700 border-red-300",
+    pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
   };
 
   const primaryText = isDark ? "text-gray-300" : "text-gray-800";
@@ -272,19 +312,14 @@ export default function SyncManagement({ theme }) {
       </div>
 
          
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mt-6">
-        <div className="relative flex-1">
-          <Search
-            className={`absolute left-3 top-2.5 ${
-              isDark ? "text-gray-400" : "text-gray-500"
-            }`}
-            size={18}
-          />
+      <div className="flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center mt-6">
+        <div className="relative w-full md:w-[520px]">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 opacity-70" />
           <input
             type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by track name or artist..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by track, artist, user..."
             className={`w-full text-sm pl-10 pr-4 py-2 rounded-lg border ${
               isDark
                 ? "bg-[#151F28] text-gray-200 border-gray-700"
@@ -293,26 +328,26 @@ export default function SyncManagement({ theme }) {
           />
         </div>
 
-        <div className="flex gap-2">
-          {["All Status", "All Genres", "All Types"].map((label) => (
-            <select
-              key={label}
-              className={`text-sm rounded-lg px-3 py-2 border ${
+        <div className="flex flex-wrap gap-2 items-center">
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setCurrentPage(1); // Reset page on status change
+            }}
+            className={`rounded-md px-3 py-2 text-sm border ${
                 isDark
                   ? "bg-[#151F28] text-gray-200 border-gray-700"
                   : "bg-white text-gray-800 border-gray-300"
               }`}
-            >
-              <option>{label}</option>
-            </select>
-          ))}
-
-          <Button
-            variant={isDark ? "outline" : "secondary"}
-            size="sm"
-            className="flex items-center gap-2 px-4"
           >
-            <Download className="w-4 h-4" /> Export
+            {["", "pending", "approved", "rejected"].map((s) => (
+              <option key={s} value={s}>{s === "" ? "All Status" : s.charAt(0).toUpperCase() + s.slice(1)}</option>
+            ))}
+          </select>
+
+          <Button variant={isDark ? "outline" : "secondary"}>
+            <Download className="w-4 h-4 mr-2" /> Export
           </Button>
 
           <div className="relative" ref={dropdownRef}>
@@ -367,11 +402,11 @@ export default function SyncManagement({ theme }) {
     </div>
   ) : error ? (
     <div className="text-center py-10 text-red-500">
-      Failed to load data. Please try again.
+      {error}
     </div>
   ) : (
     <table
-      className={`w-full border-collapse text-sm min-w-[1100px] ${
+      className={`w-full border-collapse text-sm min-w-[1300px] ${
         isDark ? "text-gray-200" : "text-[#151F28]"
       }`}
     >
@@ -384,15 +419,13 @@ export default function SyncManagement({ theme }) {
           {[
             "Track Name",
             "Artist Name",
+            "Account Name",
+            "Account ID",
             "Label Name",
-            "ISRC of Track",
+            "ISRC",
             "Genre",
-            "Mood",
-            "Theme",
             "Language",
-            "Master Rights",
-            "PRO Affiliation",
-            "Project Suitability",
+            "Status",
             "Submit Date",
             "Actions",
           ].map((header) => (
@@ -404,8 +437,8 @@ export default function SyncManagement({ theme }) {
       </thead>
 
       <tbody>
-        {filteredRequests.length > 0 ? (
-          filteredRequests.map((row, i) => (
+        {requests.length > 0 ? (
+          requests.map((row, i) => (
             <tr
               key={row._id || i}
               className={`border-t transition-colors ${
@@ -414,18 +447,28 @@ export default function SyncManagement({ theme }) {
                   : "border-gray-200 hover:bg-gray-100"
               }`}
             >
-              <td className="px-4 py-3 text-sm">{toTitleCase(row.trackName)}</td>
-              <td className="px-4 py-3 text-sm">{toTitleCase(row.artistName)}</td>
-              <td className="px-4 py-3 text-sm">{toTitleCase(row.labelName)}</td>
-              <td className="px-4 py-3 text-sm font-mono">{row.isrc || "—"}</td>
-              <td className="px-4 py-3 text-sm">{toReadable(row.genres, "genres")}</td>
-              <td className="px-4 py-3 text-sm">{toReadable(row.mood, "mood")}</td>
-              <td className="px-4 py-3 text-sm">{toReadable(row.theme, "theme")}</td>
-              <td className="px-4 py-3 text-sm">{toReadable(row.language, "language")}</td>
-              <td className="px-4 py-3 text-sm">{toTitleCase(row.masterRightsOwner)}</td>
-              <td className="px-4 py-3 text-sm">{toReadable(row.proAffiliation, "proAffiliation")}</td>
-              <td className="px-4 py-3 text-sm">{toReadable(row.projectSuitability, "projectSuitability")}</td>
-              <td className="px-4 py-3 text-sm">
+              <td className="px-4 py-3">{toTitleCase(row.trackName)}</td>
+              <td className="px-4 py-3">{toTitleCase(row.artistName)}</td>
+              <td className="px-4 py-3">{row.userId ? `${row.userId.firstName || ""} ${row.userId.lastName || ""}`.trim() || "—" : "—"}</td>
+              <td className="px-4 py-3">{row.userId?.accountId || "—"}</td>
+              <td className="px-4 py-3">{toTitleCase(row.labelName)}</td>
+              <td className="px-4 py-3 font-mono">{row.isrc || "—"}</td>
+              <td className="px-4 py-3">{toReadable(row.genres, "genres")}</td>
+              <td className="px-4 py-3">{toReadable(row.language, "language")}</td>
+              <td className="px-4 py-3">
+                {row.status ? (
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full border font-medium ${
+                      statusColors[row.status] || "bg-gray-100 text-gray-700 border-gray-300"
+                    }`}
+                  >
+                    {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
+                  </span>
+                ) : (
+                  "—"
+                )}
+              </td>
+              <td className="px-4 py-3">
                 {row.createdAt
                   ? new Date(row.createdAt).toLocaleDateString("en-US", {
                       month: "short",
@@ -450,7 +493,7 @@ export default function SyncManagement({ theme }) {
         ) : (
           <tr>
             <td
-              colSpan={14}
+              colSpan={11}
               className={`text-center py-6 ${
                 isDark ? "text-gray-500" : "text-gray-400"
               }`}
@@ -466,6 +509,63 @@ export default function SyncManagement({ theme }) {
 
 
       
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+            Showing {((pagination.currentPage - 1) * itemsPerPage) + 1} to {Math.min(pagination.currentPage * itemsPerPage, pagination.totalCount)} of {pagination.totalCount} submissions
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`${isDark ? "bg-[#151F28] border-gray-700" : ""}`}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Previous
+            </Button>
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                let pageNum;
+                if (pagination.totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= pagination.totalPages - 2) {
+                  pageNum = pagination.totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={pageNum === currentPage ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handlePageChange(pageNum)}
+                    className={pageNum === currentPage ? `bg-[#711CE9] hover:bg-[#711CE9]/90 ${isDark ? "text-white" : ""}` : (isDark ? "text-white bg-[#151F28] border-gray-700" : "")}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === pagination.totalPages}
+              className={`${isDark ? "bg-[#151F28] border-gray-700" : ""}`}
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       <SyncLicenseReviewModal
         isOpen={isModalOpen}
         onClose={handleModalClose}

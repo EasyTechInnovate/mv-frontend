@@ -150,19 +150,28 @@ export default function PlaylistPitchingReviewModal({
             <Info label="Vocals Present" value={data?.isVocalsPresent ? "Yes" : "No"} />
             <Info label="Store" value={data?.selectedStore} />
             <Info
-              label="Track Link"
+              label="Track Links"
               value={
-                <a
-                  href={data?.trackLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-400 underline"
-                >
-                  {data?.trackLink}
-                </a>
+                data?.trackLinks?.length > 0 ? (
+                  <div className="flex flex-col space-y-1">
+                    {data.trackLinks.map((link, index) => (
+                      <a
+                        key={index}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 underline flex items-center gap-1"
+                      >
+                        {link.platform || "Link"}: {link.url}
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  "—"
+                )
               }
             />
-            <Info label="Account ID" value={data?.userAccountId} />
+            <Info label="Account ID" value={data?.userId?.accountId} />
           </div>
 
           

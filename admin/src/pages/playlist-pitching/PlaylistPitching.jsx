@@ -9,6 +9,8 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
@@ -36,44 +38,46 @@ export default function PlaylistPitching({ theme }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("All Status");
-  const [genre, setGenre] = useState("All Genres");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [status, setStatus] = useState(""); // "" for all status
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({});
+  const itemsPerPage = 10;
 
   const [selectedPitch, setSelectedPitch] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const normalizeResponse = (res) => {
+    if (!res || !res.data || !res.data.data) return { submissions: [], pagination: {} };
 
-  const normalizeResponseToArray = (res) => {
-    if (!res) return [];
+    const payload = res.data.data;
 
-    const payload = res.data ?? res;
-
-
-    if (Array.isArray(payload)) return payload;
-    if (payload?.data?.submissions && Array.isArray(payload.data.submissions))
-      return payload.data.submissions;
-    if (Array.isArray(payload.data)) return payload.data;
-    if (Array.isArray(payload.submissions)) return payload.submissions;
-    if (Array.isArray(payload.items)) return payload.items;
-
-
-    const firstArray = Object.values(payload).find((v) => Array.isArray(v));
-    if (firstArray) return firstArray;
-    return [];
+    return {
+      submissions: payload.submissions || [],
+      pagination: payload.pagination || {},
+    };
   };
 
   const fetchPlaylistPitches = async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await GlobalApi.getPlayPitching();
-      const arr = normalizeResponseToArray(res);
-      setPitches(arr || []);
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        status: status === "" ? undefined : status, // Send status only if not "All Status"
+        search: debouncedSearch || undefined, // Send search only if not empty
+      };
+      const res = await GlobalApi.getPlayPitching(params);
+      const { submissions, pagination } = normalizeResponse(res);
+      setPitches(submissions || []);
+      setPagination(pagination || {});
     } catch (err) {
       console.error("Failed to load playlist pitches:", err);
       setError("Failed to load submissions.");
       setPitches([]);
+      setPagination({});
     } finally {
       setLoading(false);
     }
@@ -81,11 +85,17 @@ export default function PlaylistPitching({ theme }) {
 
   useEffect(() => {
     fetchPlaylistPitches();
-  }, []);
+  }, [currentPage, debouncedSearch, status]);
 
-  const handleRefresh = () => {
-    fetchPlaylistPitches();
-  };
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1); // Reset to first page on new search
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const handleModalClose = (shouldRefresh = false) => {
     setIsModalOpen(false);
@@ -93,7 +103,13 @@ export default function PlaylistPitching({ theme }) {
     if (shouldRefresh) fetchPlaylistPitches();
   };
 
-  const total = Array.isArray(pitches) ? pitches.length : 0;
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= (pagination?.totalPages || 1)) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const total = pagination.totalCount || 0;
   const pending = Array.isArray(pitches)
     ? pitches.filter((p) => p.status === "pending").length
     : 0;
@@ -104,35 +120,18 @@ export default function PlaylistPitching({ theme }) {
     ? pitches.filter((p) => p.status === "rejected").length
     : 0;
 
-  const genres = useMemo(
-    () => [
-      "All Genres",
-      ...Array.from(
-        new Set((Array.isArray(pitches) ? pitches.flatMap((p) => p.genres || []) : []))
-      ),
-    ],
-    [pitches]
-  );
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!Array.isArray(pitches)) return [];
-
-    return pitches.filter((p) => {
-      const matchesArtist = p.artistName
-        ? String(p.artistName).toLowerCase().includes(q)
-        : false;
-      const matchesStatus = status === "All Status" || p.status === status;
-      const matchesGenre =
-        genre === "All Genres" || (p.genres || []).includes(genre);
-      return (!q || matchesArtist) && matchesStatus && matchesGenre;
-    });
-  }, [pitches, search, status, genre]);
 
 
   const onReview = (row) => {
     setSelectedPitch(row);
     setIsModalOpen(true);
+  };
+
+  const statusColors = {
+    approved: "bg-green-100 text-green-700 border-green-300",
+    rejected: "bg-red-100 text-red-700 border-red-300",
+    pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
   };
 
   return (
@@ -177,8 +176,8 @@ export default function PlaylistPitching({ theme }) {
         <div className="relative w-full md:w-[520px]">
           <Search className="absolute left-3 top-2.5 h-4 w-4 opacity-70" />
           <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by artist name..."
             className={`pl-9 ${isDark ? "bg-[#151F28] border-gray-700 text-gray-200" : "bg-white"}`}
           />
@@ -187,23 +186,15 @@ export default function PlaylistPitching({ theme }) {
         <div className="flex flex-wrap gap-2 items-center">
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setCurrentPage(1); // Reset page on status change
+            }}
             className={`rounded-md px-3 py-2 text-sm ${isDark ? "bg-[#151F28] border border-gray-700 text-gray-200" : "bg-white border border-gray-300"
               }`}
           >
-            {["All Status", "pending", "approved", "rejected"].map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-
-          <select
-            value={genre}
-            onChange={(e) => setGenre(e.target.value)}
-            className={`rounded-md px-3 py-2 text-sm ${isDark ? "bg-[#151F28] border border-gray-700 text-gray-200" : "bg-white border border-gray-300"
-              }`}
-          >
-            {genres.map((g) => (
-              <option key={g}>{g}</option>
+            {["", "pending", "approved", "rejected"].map((s) => (
+              <option key={s} value={s}>{s === "" ? "All Status" : s.charAt(0).toUpperCase() + s.slice(1)}</option>
             ))}
           </select>
 
@@ -221,33 +212,51 @@ export default function PlaylistPitching({ theme }) {
           <div className="p-6 text-center text-red-500">{error}</div>
         ) : (
           <table className="w-full text-sm min-w-[1300px]">
-            <thead className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left`}>
+            <thead className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left `}>
               <tr>
-                <th className="px-4 py-3 font-medium">Track Name</th>
-                <th className="px-4 py-3 font-medium">Artist Name</th>
-                <th className="px-4 py-3 font-medium">Label Name</th>
-                <th className="px-4 py-3 font-medium">ISRC</th>
-                <th className="px-4 py-3 font-medium">Genre</th>
-                <th className="px-4 py-3 font-medium">Mood</th>
-                <th className="px-4 py-3 font-medium">Theme</th>
-                <th className="px-4 py-3 font-medium">Language</th>
-                <th className="px-4 py-3 font-medium">Store</th>
-                <th className="px-4 py-3 font-medium">Submit Date</th>
-                <th className="px-4 py-3 font-medium text-left">Actions</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Track Name</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Artist Name</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Username</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Account ID</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Label Name</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">ISRC</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Genre</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Mood</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Theme</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Language</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Store</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Status</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Submit Date</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((row) => (
+              {pitches.map((row) => (
                 <tr key={row._id} className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"} hover:bg-gray-800/40`}>
                   <td className="px-4 py-3 font-medium">{row.trackName || "—"}</td>
                   <td className="px-4 py-3">{row.artistName || "—"}</td>
+                  <td className="px-4 py-3">{row.userId ? `${row.userId.firstName || ""} ${row.userId.lastName || ""}`.trim() || "—" : "—"}</td>
+                  <td className="px-4 py-3">{row.userId?.accountId || "—"}</td>
                   <td className="px-4 py-3">{row.labelName || "—"}</td>
                   <td className="px-4 py-3">{row.isrc || "—"}</td>
                   <td className="px-4 py-3">{(row.genres || []).join(", ") || "—"}</td>
                   <td className="px-4 py-3 capitalize">{row.mood || "—"}</td>
                   <td className="px-4 py-3 capitalize">{row.theme || "—"}</td>
                   <td className="px-4 py-3 capitalize">{row.language || "—"}</td>
-                  <td className="px-4 py-3">{row.selectedStore || "—"}</td>
+                  <td className="px-4 py-3 capitalize">{row.selectedStore || "—"}</td>
+                  <td className="px-4 py-3">
+                    {row.status ? (
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full border font-medium ${
+                          statusColors[row.status] || "bg-gray-100 text-gray-700 border-gray-300"
+                        }`}
+                      >
+                        {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                   <td className="px-4 py-3">{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "—"}</td>
                   <td className="px-4 py-3">
                     <Button
@@ -261,9 +270,9 @@ export default function PlaylistPitching({ theme }) {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {pitches.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="px-4 py-6 text-center opacity-70">
+                  <td colSpan={14} className="px-4 py-6 text-center opacity-70">
                     No results found.
                   </td>
                 </tr>
@@ -273,14 +282,70 @@ export default function PlaylistPitching({ theme }) {
         )}
       </div>
 
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-muted-foreground">
+            Showing {((pagination.currentPage - 1) * itemsPerPage) + 1} to {Math.min(pagination.currentPage * itemsPerPage, pagination.totalCount)} of {pagination.totalCount} submissions
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </Button>
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                let pageNum;
+                if (pagination.totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= pagination.totalPages - 2) {
+                  pageNum = pagination.totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={pageNum === currentPage ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handlePageChange(pageNum)}
+                    className={pageNum === currentPage ? `bg-[#711CE9] hover:bg-[#711CE9]/90 ${isDark ? "text-white" : ""}` : (isDark ? "text-white bg-[#151F28]" : "")}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === pagination.totalPages}
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
 
       <PlaylistPitchingReviewModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
         data={selectedPitch}
         theme={theme}
-        refreshList={handleRefresh}
+        refreshList={fetchPlaylistPitches}
       />
     </div>
   );
 }
+
