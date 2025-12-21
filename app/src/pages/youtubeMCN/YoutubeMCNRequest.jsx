@@ -328,7 +328,7 @@ export default function YouTubeMCNRequest() {
 
           {formData.otherMCN === "Yes" && (
             <div>
-              <label className="block text-sm mb-1 ">If Yes, Name</label>
+              <label className="block text-sm mb-1 ">MCN Name</label>
               <input
                 type="text"
                 name="otherMCNName"
@@ -365,12 +365,12 @@ export default function YouTubeMCNRequest() {
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FileUploadArea
             fileType="analytics"
-            label="Upload Channel Analytics Screenshot (Last 30 Days)"
+            label="Upload Channel Analytics Screenshot (Last 90 Days)"
             url={formData.analyticsScreenshotUrl}
           />
           <FileUploadArea
             fileType="revenue"
-            label="Upload Channel Revenue Screenshot (Last 30 Days)"
+            label="Upload Channel Revenue Screenshot (Last 90 Days)"
             url={formData.revenueScreenshotUrl}
           />
         </CardContent>

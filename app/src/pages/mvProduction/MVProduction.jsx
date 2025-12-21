@@ -1,16 +1,21 @@
-import React, { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Eye, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Film, Trash2 } from "lucide-react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createMVProduction, getMyMVProductions, deleteMVProduction } from "../../services/api.services"
-import { showToast } from "../../utils/toast"
-import MVProductionView from "./MVProductionView"
+import { useState } from "react";
+import toast from 'react-hot-toast';
+import {
+  genreOptions,
+  moodOptions,
+  languageOptions,
+  themeOptions,
+} from "../../constants/options";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createMVProduction, deleteMVProduction, getMyMVProductions } from "@/services/api.services";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Eye, Film, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import MVProductionView from "./MVProductionView";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function MVProduction() {
   const [showForm, setShowForm] = useState(false)
@@ -44,7 +49,7 @@ export default function MVProduction() {
     artistName: "",
     labelName: "",
     releaseTimeline: "",
-    genres: [],
+    genres: "",
     mood: "",
     isPartOfAlbumOrEP: "",
     language: "",
@@ -62,13 +67,13 @@ export default function MVProduction() {
     shootDay: "",
     postProduction: "",
     miscellaneousContingency: "",
-    willContributePersonalFunds: "",
+    willContributePersonalFunds: "no",
     personalFundsAmount: "",
     revenueSharingModelProposed: "",
 
     // Step 3: Marketing & Distribution
     willBeReleasedViaMVDistribution: "",
-    anyBrandOrMerchTieIns: "",
+    anyBrandOrMerchTieIns: "no",
     brandOrMerchTieInsDescription: "",
     planToRunAdsOrInfluencerCampaigns: "",
 
@@ -83,7 +88,7 @@ export default function MVProduction() {
   const createMutation = useMutation({
     mutationFn: createMVProduction,
     onSuccess: (newData) => {
-      showToast.success("MV Production request submitted successfully!")
+      toast.success("MV Production request submitted successfully!")
       
       // Update query data directly instead of invalidating
       queryClient.setQueryData(['mvProductions', 1], (oldData) => {
@@ -106,7 +111,7 @@ export default function MVProduction() {
       resetForm()
     },
     onError: (error) => {
-      showToast.error(error.response?.data?.message || "Failed to submit MV Production request.")
+      toast.error(error.response?.data?.message || "Failed to submit MV Production request.")
     }
   })
 
@@ -114,7 +119,7 @@ export default function MVProduction() {
   const deleteMutation = useMutation({
     mutationFn: (id) => deleteMVProduction(id),
     onSuccess: (_, deletedId) => {
-      showToast.success("MV Production request deleted successfully!")
+      toast.success("MV Production request deleted successfully!")
       
       // Update query data directly - remove the deleted item
       queryClient.setQueryData(['mvProductions', currentPage], (oldData) => {
@@ -135,15 +140,24 @@ export default function MVProduction() {
       setDeleteConfirm(null)
     },
     onError: (error) => {
-      showToast.error(error.response?.data?.message || "Failed to delete MV Production request.")
+      toast.error(error.response?.data?.message || "Failed to delete MV Production request.")
     }
   })
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
+    const updatedFormData = { ...formData, [field]: value };
+
+    // If the user selects "no", clear the personal funds amount
+    if (field === 'willContributePersonalFunds' && value === 'no') {
+      updatedFormData.personalFundsAmount = '';
+    }
+
+    // If the user selects "no" for brand or merch tie-ins, clear the description
+    if (field === 'anyBrandOrMerchTieIns' && value === 'no') {
+      updatedFormData.brandOrMerchTieInsDescription = '';
+    }
+
+    setFormData(updatedFormData);
   }
 
   const handleCheckboxChange = (section, field, checked) => {
@@ -156,15 +170,6 @@ export default function MVProduction() {
     }))
   }
 
-  const handleGenreToggle = (genre) => {
-    setFormData(prev => ({
-      ...prev,
-      genres: prev.genres.includes(genre)
-        ? prev.genres.filter(g => g !== genre)
-        : [...prev.genres, genre]
-    }))
-  }
-
   const resetForm = () => {
     setFormData({
       copyrightOwnerName: "",
@@ -174,7 +179,7 @@ export default function MVProduction() {
       artistName: "",
       labelName: "",
       releaseTimeline: "",
-      genres: [],
+      genres: "",
       mood: "",
       isPartOfAlbumOrEP: "",
       language: "",
@@ -190,11 +195,11 @@ export default function MVProduction() {
       shootDay: "",
       postProduction: "",
       miscellaneousContingency: "",
-      willContributePersonalFunds: "",
+      willContributePersonalFunds: "no",
       personalFundsAmount: "",
       revenueSharingModelProposed: "",
       willBeReleasedViaMVDistribution: "",
-      anyBrandOrMerchTieIns: "",
+      anyBrandOrMerchTieIns: "no",
       brandOrMerchTieInsDescription: "",
       planToRunAdsOrInfluencerCampaigns: "",
       confirmFullCreativeOwnership: "",
@@ -253,7 +258,7 @@ export default function MVProduction() {
         artistName: formData.artistName,
         labelName: formData.labelName,
         releaseTimeline: formData.releaseTimeline,
-        genres: formData.genres,
+        genres: [formData.genres],
         mood: formData.mood,
         isPartOfAlbumOrEP: formData.isPartOfAlbumOrEP === "yes",
         language: formData.language,
@@ -421,21 +426,22 @@ export default function MVProduction() {
               disabled={showViewOnly}
             />
           </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label>Genres (Select multiple)</Label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {['pop', 'rock', 'hip-hop', 'electronic', 'classical', 'jazz', 'r&b'].map(genre => (
-                <div key={genre} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`genre-${genre}`}
-                    checked={formData.genres.includes(genre)}
-                    onCheckedChange={() => handleGenreToggle(genre)}
-                    disabled={showViewOnly}
-                  />
-                  <label htmlFor={`genre-${genre}`} className="text-sm capitalize">{genre}</label>
-                </div>
-              ))}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="genres">Genre</Label>
+            <Select
+              value={formData.genres}
+              onValueChange={(value) => handleInputChange('genres', value)}
+              disabled={showViewOnly}
+            >
+              <SelectTrigger className="bg-background border-border">
+                <SelectValue placeholder="Select genre" />
+              </SelectTrigger>
+              <SelectContent>
+                {genreOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="mood">Mood</Label>
@@ -448,10 +454,9 @@ export default function MVProduction() {
                 <SelectValue placeholder="Select mood" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="uplifting">Uplifting</SelectItem>
-                <SelectItem value="melancholic">Melancholic</SelectItem>
-                <SelectItem value="energetic">Energetic</SelectItem>
-                <SelectItem value="calm">Calm</SelectItem>
+                {moodOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -482,10 +487,9 @@ export default function MVProduction() {
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="english">English</SelectItem>
-                <SelectItem value="hindi">Hindi</SelectItem>
-                <SelectItem value="spanish">Spanish</SelectItem>
-                <SelectItem value="instrumental">Instrumental</SelectItem>
+                {languageOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -500,11 +504,9 @@ export default function MVProduction() {
                 <SelectValue placeholder="Select theme" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="journey & travel">Journey & Travel</SelectItem>
-                <SelectItem value="love & romance">Love & Romance</SelectItem>
-                <SelectItem value="party & celebration">Party & Celebration</SelectItem>
-                <SelectItem value="nature & environment">Nature & Environment</SelectItem>
-                <SelectItem value="love">Love</SelectItem>
+                {themeOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -565,7 +567,7 @@ export default function MVProduction() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="proposedOwnershipDilution">Proposed Ownership Dilution (%)</Label>
+          <Label htmlFor="proposedOwnershipDilution">Proposed Ownership Dilution (% of video IP)</Label>
           <Input
             id="proposedOwnershipDilution"
             placeholder="20"
@@ -649,36 +651,57 @@ export default function MVProduction() {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="personalFundsAmount">If yes, amount</Label>
-          <Input
-            id="personalFundsAmount"
-            placeholder="100000"
-            type="number"
-            value={formData.personalFundsAmount}
-            onChange={(e) => handleInputChange('personalFundsAmount', e.target.value)}
-            className="bg-background border-border"
-            disabled={showViewOnly}
-          />
-        </div>
+        {formData.willContributePersonalFunds === 'yes' && (
+          <div className="space-y-2">
+            <Label htmlFor="personalFundsAmount">If yes, amount</Label>
+            <Input
+              id="personalFundsAmount"
+              placeholder="100000"
+              type="number"
+              value={formData.personalFundsAmount}
+              onChange={(e) => handleInputChange('personalFundsAmount', e.target.value)}
+              className="bg-background border-border"
+              disabled={showViewOnly}
+            />
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="revenueSharingModelProposed">Revenue Sharing Model Proposed</Label>
-        <Select
-          value={formData.revenueSharingModelProposed}
-          onValueChange={(value) => handleInputChange('revenueSharingModelProposed', value)}
-          disabled={showViewOnly}
-        >
-          <SelectTrigger className="bg-background border-border">
-            <SelectValue placeholder="Select model" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="flat_buyout">Flat Buyout</SelectItem>
-            <SelectItem value="revenue_split">Revenue Split</SelectItem>
-            <SelectItem value="hybrid_buyout_royalties">Hybrid (Buyout + Royalties)</SelectItem>
-          </SelectContent>
-        </Select>
+        <Label className="text-sm font-medium">Revenue Sharing Model Proposed</Label>
+        <div className="flex max-md:flex-col md:gap-4 md:items-center space-y-2 mt-2">
+          {[{ label: "Flat Buyout", value: "flat_buyout" },
+          { label: "Revenue Split", value: "revenue_split" },
+          { label: "Hybrid (Buyout + Royalties)", value: "hybrid_buyout_royalties" }
+          ].map((option) => (
+            <div key={option.value} className="flex items-start space-x-2">
+              <Checkbox
+                id={`revenueSharingModel-${option.value}`}
+                checked={formData.revenueSharingModelProposed === option.value}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    handleInputChange('revenueSharingModelProposed', option.value);
+                  } else {
+                    // Allow unchecking if it's the currently selected one,
+                    // but since we want single select, it means if unchecked
+                    // and it's the current, then clear the selection.
+                    // This creates a radio-like behavior.
+                    if (formData.revenueSharingModelProposed === option.value) {
+                      handleInputChange('revenueSharingModelProposed', "");
+                    }
+                  }
+                }}
+                disabled={showViewOnly}
+              />
+              <label
+                htmlFor={`revenueSharingModel-${option.value}`}
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {option.label}
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -736,17 +759,19 @@ export default function MVProduction() {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="brandOrMerchTieInsDescription">If yes, describe</Label>
-          <Input
-            id="brandOrMerchTieInsDescription"
-            placeholder="Description"
-            value={formData.brandOrMerchTieInsDescription}
-            onChange={(e) => handleInputChange('brandOrMerchTieInsDescription', e.target.value)}
-            className="bg-background border-border"
-            disabled={showViewOnly}
-          />
-        </div>
+        {formData.anyBrandOrMerchTieIns === 'yes' && (
+          <div className="space-y-2">
+            <Label htmlFor="brandOrMerchTieInsDescription">If yes, describe</Label>
+            <Input
+              id="brandOrMerchTieInsDescription"
+              placeholder="Description"
+              value={formData.brandOrMerchTieInsDescription}
+              onChange={(e) => handleInputChange('brandOrMerchTieInsDescription', e.target.value)}
+              className="bg-background border-border"
+              disabled={showViewOnly}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

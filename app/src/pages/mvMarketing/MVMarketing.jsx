@@ -15,71 +15,17 @@ import {
 } from "../../services/api.services"
 import { showToast } from "../../utils/toast"
 
-// --- CONSTANTS for Select Options ---
-const genreOptions = [
-  { value: 'pop', label: 'Pop' },
-  { value: 'rock', label: 'Rock' },
-  { value: 'hip hop', label: 'Hip Hop' },
-  { value: 'electronic', label: 'Electronic' },
-];
-
-const moodOptions = [
-  { value: 'uplifting', label: 'Uplifting' },
-  { value: 'melancholic', label: 'Melancholic' },
-  { value: 'energetic', label: 'Energetic' },
-];
-
-const languageOptions = [
-  { value: 'beats', label: 'Beats' },
-  { value: 'english', label: 'English' },
-  { value: 'hindi', label: 'Hindi' },
-];
-
-const themeOptions = [
-  { value: 'journey & travel', label: 'Journey & Travel' },
-  { value: 'love', label: 'Love' },
-  { value: 'party', label: 'Party' },
-];
-
-const vocalsPresentOptions = [
-  { value: true, label: 'Yes' },
-  { value: false, label: 'No' },
-];
-
-const syncClearedOptions = [
-  { value: true, label: 'Yes' },
-  { value: false, label: 'No' },
-];
-
-const storeOptions = [
-  { value: 'Spotify', label: 'Spotify' },
-  { value: 'YouTube', label: 'YouTube' },
-  { value: 'Apple Music', label: 'Apple Music' },
-  { value: 'Amazon', label: 'Amazon' },
-  { value: 'Netease', label: 'Netease' },
-  { value: 'Resso', label: 'Resso' },
-  { value: 'YouTube Music', label: 'YouTube Music' },
-  { value: 'Tidal', label: 'Tidal' },
-  { value: 'Deezer', label: 'Deezer' },
-  { value: 'Pandora', label: 'Pandora' },
-  { value: 'SoundCloud', label: 'SoundCloud' },
-  { value: 'JioSaavn', label: 'JioSaavn' },
-  { value: 'Wynk', label: 'Wynk' },
-  { value: 'Gaana', label: 'Gaana' },
-];
-
-const masterRightsOptions = [
-  { value: 'artist', label: 'Artist' },
-  { value: 'label', label: 'Label' },
-  { value: 'other', label: 'Other' },
-];
-
-const publishingRightsOptions = [
-  { value: 'artist', label: 'Artist' },
-  { value: 'publisher', label: 'Publisher' },
-  { value: 'other', label: 'Other' },
-];
-
+import {
+  genreOptions,
+  moodOptions,
+  languageOptions,
+  themeOptions,
+  vocalsPresentOptions,
+  syncClearedOptions,
+  storeOptions,
+  masterRightsOptions,
+  publishingRightsOptions,
+} from "../../constants/options";
 export default function MVMarketing() {
   const [activeTab, setActiveTab] = useState('sync') // 'sync' or 'playlistPitching'
   const [currentPage, setCurrentPage] = useState(1)
@@ -122,11 +68,11 @@ export default function MVMarketing() {
   // --- FORM DATA ---
 
   const initialSyncFormData = {
-    trackName: "", artistName: "", labelName: "", isrc: "", genres: "pop", mood: "uplifting", isVocalsPresent: true, language: "beats", theme: "journey & travel", tempoBPM: "", masterRightsOwner: "artist", publishingRightsOwner: "artist", isFullyClearedForSync: true, proAffiliation: "", projectSuitability: { ad_campaigns: false, ott_web_series: false, tv_film_score: false, trailers: false, podcasts: false, corporate_films: false, gaming_animation: false, fashion_product_launch: false, festival_documentaries: false }, trackLinks: ""
+    trackName: "", artistName: "", labelName: "", isrc: "", genres: "pop", mood: "uplifting", isVocalsPresent: false, language: "beats", theme: "journey & travel", tempoBPM: "", masterRightsOwner: "artist", publishingRightsOwner: "artist", isFullyClearedForSync: true, proAffiliation: "", projectSuitability: { ad_campaigns: false, ott_web_series: false, tv_film_score: false, trailers: false, podcasts: false, corporate_films: false, fashion_or_product_launch: false, gaming_animation: false, festival_documentaries: false, short_films_student_projects: false }, trackLinks: ""
   };
   
   const initialPitchingFormData = {
-    trackName: "", artistName: "", labelName: "", isrc: "", genres: "pop", mood: "uplifting", isVocalsPresent: true, language: "beats", theme: "journey & travel", selectedStore: "Spotify", trackLink: ""
+    trackName: "", artistName: "", labelName: "", isrc: "", genres: "pop", mood: "uplifting", isVocalsPresent: false, language: "beats", theme: "journey & travel", selectedStore: "", trackLinks: [{platform: '', url: ''}]
   };
 
   // --- HANDLERS ---
@@ -158,7 +104,7 @@ export default function MVMarketing() {
             // We take the first genre from the array for display purposes.
             genres: Array.isArray(item.genres) ? item.genres[0] : item.genres,
             projectSuitability: tab === 'sync' ? projectSuitability : undefined,
-            trackLinks: item.trackLinks?.[0]?.url || ''
+            trackLinks: tab === 'sync' ? (item.trackLinks?.[0]?.url || '') : (item.trackLinks || [{platform: '', url: ''}])
           }, 
           isViewOnly: true }
     }));
@@ -214,6 +160,7 @@ export default function MVMarketing() {
         genres: [formData.genres], // Already lowercase
         language: formData.language.toLowerCase(),
         theme: formData.theme.toLowerCase(),
+        trackLinks: formData.trackLinks,
       };
       pitchingMutation.mutate(payload);
     }
@@ -221,14 +168,49 @@ export default function MVMarketing() {
 
   const isSubmitting = syncMutation.isLoading || pitchingMutation.isLoading;
 
-  const handleInputChange = (tab, field, value) => {
-    setViewState(prev => ({
+  const handleTrackLinkChange = (index, url) => {
+    setViewState(prev => {
+      const newTrackLinks = [...prev.playlistPitching.data.trackLinks];
+      newTrackLinks[index] = { ...newTrackLinks[index], url };
+      return {
         ...prev,
-        [tab]: {
-            ...prev[tab],
-            data: { ...prev[tab].data, [field]: value }
+        playlistPitching: {
+          ...prev.playlistPitching,
+          data: {
+            ...prev.playlistPitching.data,
+            trackLinks: newTrackLinks,
+          }
         }
-    }));
+      }
+    });
+  };
+
+  const handleInputChange = (tab, field, value) => {
+    setViewState(prev => {
+        const newData = { ...prev[tab].data, [field]: value };
+        if (field === 'isVocalsPresent' && value === false) {
+            newData.language = '';
+        }
+        if (tab === 'playlistPitching' && field === 'selectedStore') {
+            if (value === 'select_all') {
+                newData.trackLinks = [
+                    { platform: 'Spotify', url: '' },
+                    { platform: 'Apple Music', url: '' },
+                    { platform: 'JioSaavn', url: '' },
+                    { platform: 'Amazon Music', url: '' },
+                ];
+            } else {
+                newData.trackLinks = [{ platform: value, url: '' }];
+            }
+        }
+        return {
+            ...prev,
+            [tab]: {
+                ...prev[tab],
+                data: newData
+            }
+        };
+    });
   };
 
   const handleCheckboxChange = (field, checked) => {
@@ -281,7 +263,7 @@ export default function MVMarketing() {
                           <SelectWithLabel id="genres" label="Genres" value={data.genres} disabled={isViewOnly} onValueChange={(value) => handleInputChange('sync', 'genres', value)} options={genreOptions} />
                           <SelectWithLabel id="mood" label="Mood" value={data.mood} disabled={isViewOnly} onValueChange={(value) => handleInputChange('sync', 'mood', value)} options={moodOptions} />
                           <SelectWithLabel id="isVocalsPresent" label="Is Vocals Present?" value={data.isVocalsPresent} disabled={isViewOnly} onValueChange={(value) => handleInputChange('sync', 'isVocalsPresent', value)} options={vocalsPresentOptions} />
-                          <SelectWithLabel id="language" label="Language" value={data.language} disabled={isViewOnly} onValueChange={(value) => handleInputChange('sync', 'language', value)} options={languageOptions} />
+                          <SelectWithLabel id="language" label="Language" value={data.language} disabled={isViewOnly || !data.isVocalsPresent} onValueChange={(value) => handleInputChange('sync', 'language', value)} options={languageOptions} />
                           <div className="md:col-span-2">
                              <SelectWithLabel id="theme" label="Theme" value={data.theme} disabled={isViewOnly} onValueChange={(value) => handleInputChange('sync', 'theme', value)} options={themeOptions} />
                           </div>
@@ -359,11 +341,27 @@ export default function MVMarketing() {
                           <SelectWithLabel id="genres" label="Genres" value={data.genres} disabled={isViewOnly} onValueChange={(value) => handleInputChange('playlistPitching', 'genres', value)} options={genreOptions} />
                           <SelectWithLabel id="mood" label="Mood" value={data.mood} disabled={isViewOnly} onValueChange={(value) => handleInputChange('playlistPitching', 'mood', value)} options={moodOptions} />
                           <SelectWithLabel id="isVocalsPresent" label="Is Vocals Present?" value={data.isVocalsPresent} disabled={isViewOnly} onValueChange={(value) => handleInputChange('playlistPitching', 'isVocalsPresent', value)} options={vocalsPresentOptions} />
-                          <SelectWithLabel id="language" label="Language" value={data.language} disabled={isViewOnly} onValueChange={(value) => handleInputChange('playlistPitching', 'language', value)} options={languageOptions} />
+                          <SelectWithLabel id="language" label="Language" value={data.language} disabled={isViewOnly || !data.isVocalsPresent} onValueChange={(value) => handleInputChange('playlistPitching', 'language', value)} options={languageOptions} />
                           <SelectWithLabel id="theme" label="Theme" value={data.theme} disabled={isViewOnly} onValueChange={(value) => handleInputChange('playlistPitching', 'theme', value)} options={themeOptions} />
                           <SelectWithLabel id="selectedStore" label="Select Store" value={data.selectedStore} disabled={isViewOnly} onValueChange={(value) => handleInputChange('playlistPitching', 'selectedStore', value)} options={storeOptions} />
                           <div className="md:col-span-2">
-                             <InputWithLabel id="trackLink" label="Track Link" placeholder="Link" value={data.trackLink} disabled={isViewOnly} onChange={(e) => handleInputChange('playlistPitching', 'trackLink', e.target.value)} />
+                            {data.selectedStore === 'select_all' ? (
+                              <div className="space-y-4">
+                                {data.trackLinks.map((trackLink, index) => (
+                                  <InputWithLabel 
+                                    key={index}
+                                    id={`trackLink-${index}`} 
+                                    label={`Track Link for ${trackLink.platform}`} 
+                                    placeholder={`Link for ${trackLink.platform}`} 
+                                    value={trackLink.url} 
+                                    disabled={isViewOnly} 
+                                    onChange={(e) => handleTrackLinkChange(index, e.target.value)} 
+                                  />
+                                ))}
+                              </div>
+                            ) : (
+                              <InputWithLabel id="trackLink" label="Track Link" placeholder="Link" value={data.trackLinks[0]?.url || ''} disabled={isViewOnly} onChange={(e) => handleTrackLinkChange(0, e.target.value)} />
+                            )}
                           </div>
                       </div>
                   </div>
