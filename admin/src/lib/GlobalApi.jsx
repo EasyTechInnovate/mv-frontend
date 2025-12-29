@@ -422,6 +422,25 @@ export const deleteMVProduction = (productionId) =>
   axiosClient.delete(`/v1/mv-production/admin/${productionId}`);
 
 
+// ---------------------- Trending Artists (Admin) ----------------------
+
+export const getAllTrendingArtists = (params) =>
+  axiosClient.get(`/v1/trending-artists/admin`, { params });
+
+export const getTrendingArtistsStats = () =>
+  axiosClient.get(`/v1/trending-artists/admin/stats`);
+
+export const createTrendingArtist = (data) =>
+  axiosClient.post(`/v1/trending-artists/admin`, data);
+
+export const updateTrendingArtist = (artistId, data) =>
+  axiosClient.patch(`/v1/trending-artists/admin/${artistId}`, data);
+
+export const deleteTrendingArtist = (artistId) =>
+  axiosClient.delete(`/v1/trending-artists/admin/${artistId}`);
+
+
+
 export default {
   getHealth,
   getSubscriptionPlans,
@@ -529,5 +548,9 @@ export default {
   updateMVProduction,
   updateMVProductionStatus,
   deleteMVProduction,
-
+  getAllTrendingArtists,
+  getTrendingArtistsStats,
+  createTrendingArtist,
+  updateTrendingArtist,
+  deleteTrendingArtist,
 };

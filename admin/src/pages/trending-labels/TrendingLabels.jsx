@@ -187,7 +187,7 @@ export default function TrendingLabelsManager({ theme }) {
           >
             <tr>
               {[
-                "SR.NO.",
+                // "SR.NO.",
                 "Label No.",
                 "Label Name",
                 "Designation",
@@ -198,7 +198,7 @@ export default function TrendingLabelsManager({ theme }) {
                 "Last Updated",
                 "Actions",
               ].map((header) => (
-                <th key={header} className="px-4 py-3 font-medium">
+                <th key={header} className="px-4 py-3 whitespace-nowrap font-medium">
                   {header}
                 </th>
               ))}
@@ -221,19 +221,32 @@ export default function TrendingLabelsManager({ theme }) {
                     : "border-gray-200 hover:bg-gray-100"
                     }`}
                 >
-                  <td className="px-4 py-3">{index + 1}</td>
-                  <td className="px-4 py-3 font-mono text-purple-500">
+                  {/* <td className="px-4 py-3">{index + 1}</td> */}
+                  <td className="px-4 py-3 font-mono">
                     {l.labelNumber?.toUpperCase() || `MV${index + 1}`}
                   </td>
+                  
                   <td className="px-4 py-3 flex items-center gap-2">
-                    <div
-                      className={`w-8 h-8 flex items-center justify-center rounded-full font-semibold ${theme === "dark" ? "bg-[#212931]" : "bg-gray-300"
+                      <div
+                        className={`w-8 h-8 shrink-0 flex items-center justify-center rounded-full overflow-hidden font-semibold ${
+                          theme === "dark" ? "bg-gray-800 text-white" : "bg-gray-300 text-black"
                         }`}
-                    >
-                      {l.labelName?.charAt(0)}
-                    </div>
-                    <span>{l.labelName}</span>
-                  </td>
+                      >
+                        {l.logoUrl ? (
+                          <img
+                            src={l.logoUrl}
+                            alt={l.labelName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span>
+                            {l.labelName?.charAt(0)?.toUpperCase() || "N/A"}
+                          </span>
+                        )}
+                      </div>
+
+                      <span>{l.labelName || "—"}</span>
+                    </td>
                   <td className="px-4 py-3">{l.designation}</td>
                   <td className="px-4 py-3">{l.totalArtists}</td>
                   <td className="px-4 py-3">{l.totalReleases}</td>

@@ -86,7 +86,7 @@ function App() {
           theme={theme}
         />
 
-        <main className={`flex-1 p-4 overflow-y-auto ${theme === "dark" ? "bg-[#111A22]" : "bg-white"}`}>
+        <main className={`flex-1 p-4  overflow-y-auto min-w-0 ${theme === "dark" ? "bg-[#111A22]" : "bg-white"}`}>
           <Routes>
             <Route path="/" element={<Navigate to="/admin/login" replace />} />
             <Route path="/admin" element={<Navigate to="/admin/login" replace />} />

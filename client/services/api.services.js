@@ -79,3 +79,36 @@ export const submitAggregatorApplication = async (aggregatorData) => {
     const response = await servicesAxiosInstance.post('/v1/aggregator/apply', aggregatorData)
     return response.data
 }
+
+// ============= Trending Artists APIs =============
+
+/**
+ * Get top trending artists
+ * @returns {Promise} Response with list of top trending artists
+ */
+export const getTopTrendingArtists = async () => {
+    const response = await servicesAxiosInstance.get('/v1/trending-artists/top');
+    return response.data;
+};
+
+// ============= Trending Labels APIs =============
+
+/**
+ * Get top trending labels
+ * @returns {Promise} Response with list of top trending labels
+ */
+export const getTopTrendingLabels = async () => {
+    const response = await servicesAxiosInstance.get('/v1/trending-labels/top?limit=10');
+    return response.data;
+};
+
+// ============= FAQ APIs =============
+
+/**
+ * Get all FAQs
+ * @returns {Promise} Response with list of FAQs
+ */
+export const getFaqs = async () => {
+    const response = await servicesAxiosInstance.get('/v1/faqs');
+    return response.data;
+};
