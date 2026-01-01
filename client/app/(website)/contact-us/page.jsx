@@ -1,11 +1,11 @@
 'use client'
 import { Anton } from 'next/font/google'
 
-import React, { useState } from 'react'
-import Image from 'next/image'
+import React, { useState, useEffect } from 'react'
 import RIGHT_IMAGE from '@/public/images/contactus.png'
 import QR_IMAGE from '@/public/images/contactusqr.png'
 import { MainHeadingText } from '@/components/FixedUiComponents'
+import { useCompanyInfo } from '@/contexts/CompanyInfoContext';
 import Faq from '@/components/website/Faq'
 import LetTheWorld from '@/components/website/LetTheWorld'
 const anton = Anton({
@@ -21,7 +21,7 @@ export default function ContactPage() {
         phone: '',
         message: ''
     })
-
+    const { contact, isLoading } = useCompanyInfo();
     const [submitting, setSubmitting] = useState(false)
 
     function handleChange(e) {
@@ -128,8 +128,8 @@ export default function ContactPage() {
                             <div className="rounded-2xl overflow-hidden  ">
                                 <div className="rounded-2xl overflow-hidden ">
                                     <div className="relative w-full h-full md:pr-10">
-                                        <Image
-                                            src={RIGHT_IMAGE}
+                                        <img
+                                            src={RIGHT_IMAGE.src}
                                             alt="Contact visual"
                                             className="object-cover"
                                         />
@@ -149,27 +149,43 @@ export default function ContactPage() {
                                 <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400 ">
                                     <h3 className="text-2xl font-semibold mb-4"> General Inquiries</h3>
                                     <p className=" text-sm">For questions about our services, or platform:</p>
-                                    <p className="mt-3 text-sm ">
-                                        Email:{' '}
-                                        <a
-                                            className=""
-                                            href="mailto:contact@maheshwarivisuals.com">
-                                            contact@maheshwarivisuals.com
-                                        </a>
-                                    </p>
+                                    {contact?.primaryEmail && (
+                                        <p className="mt-3 text-sm ">
+                                            Email:{' '}
+                                            <a
+                                                className=""
+                                                href={`mailto:${contact.primaryEmail}`}>
+                                                {contact.primaryEmail}
+                                            </a>
+                                        </p>
+                                    )}
+                                    {contact?.businessEmail && (
+                                        <p className="mt-2 text-sm">
+                                            Business Email:{' '}
+                                            <a
+                                                className=""
+                                                href={`mailto:${contact.businessEmail}`}>
+                                                {contact.businessEmail}
+                                            </a>
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400 ">
                                     <h3 className="text-2xl font-semibold mb-4">Head Office</h3>
-                                    <p className=" text-sm leading-relaxed">
-                                        Maheshwari Visuals
-                                        <br />
-                                        Maheshwari Complex, Near Gandhi Park, Bilsi, UttarPradesh, India
-                                        <br />
-                                        Pincode : 243633
-                                        <br />
-                                        Landline : +91 05833796906
-                                    </p>
+                                    {contact?.physicalAddress && (
+                                        <p className=" text-sm leading-relaxed">
+                                            Maheshwari Visuals
+                                            <br />
+                                            {contact.physicalAddress.street}
+                                            <br />
+                                            {contact.physicalAddress.city}, {contact.physicalAddress.state}, {contact.physicalAddress.zipCode}
+                                            <br />
+                                            {contact.physicalAddress.country}
+                                            <br />
+                                            Phone : {contact.primaryPhone}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400 ">
@@ -181,31 +197,35 @@ export default function ContactPage() {
                                         <br />
                                         Or connect with a real person within 24 hours
                                     </p>
-                                    <div className="mt-6 text-sm">
-                                        <div>WhatsApp Support: +91 7599755643</div>
-                                        <div>Helpline: +91 05833796906</div>
-                                        <div>Working Hours: 10:00 AM – 7:00 PM IST (Mon–Fri)</div>
-                                        <div>
-                                            Email:{' '}
-                                            <a
-                                                className=""
-                                                href="mailto:support@maheshwarivisuals.com">
-                                                support@maheshwarivisuals.com
-                                            </a>
-                                        </div>
+                                    <div className="mt-6 text-sm space-y-2">
+                                        {contact?.primaryPhone && <div>Primary Phone: {contact.primaryPhone}</div>}
+                                        {contact?.secondaryPhone && <div>Secondary Phone: {contact.secondaryPhone}</div>}
+                                        {contact?.businessHours && <div>Working Hours: {contact.businessHours}</div>}
+                                        {contact?.supportEmail && (
+                                            <div>
+                                                Support Email:{' '}
+                                                <a
+                                                    className=""
+                                                    href={`mailto:${contact.supportEmail}`}>
+                                                    {contact.supportEmail}
+                                                </a>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
                                 <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400 ">
                                     <h3 className="text-xl font-semibold">© Infringements</h3>
-                                    <p className=" text-sm mt-2">
-                                        Email:{' '}
-                                        <a
-                                            className=""
-                                            href="mailto:copyrights@maheshwarivisuals.com">
-                                            copyrights@maheshwarivisuals.com
-                                        </a>
-                                    </p>
+                                     {contact?.supportEmail && (
+                                            <div>
+                                                Support Email:{' '}
+                                                <a
+                                                    className=""
+                                                    href={`mailto:${contact.supportEmail}`}>
+                                                    {contact.supportEmail}
+                                                </a>
+                                            </div>
+                                        )}
                                 </div>
                             </div>
 
@@ -213,22 +233,27 @@ export default function ContactPage() {
                                 <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400 ">
                                     <h3 className="text-2xl font-semibold mb-4">Partnerships & Media</h3>
                                     <p className=" text-sm">For collaborations and press:</p>
-                                    <p className="mt-2 text-sm">
-                                        Email:{' '}
-                                        <a
-                                            className=""
-                                            href="mailto:partnerships@maheshwarivisuals.com">
-                                            partnerships@maheshwarivisuals.com
-                                        </a>
-                                    </p>
-                                    <p className="mt-2 text-sm">
-                                        For Press & Media :{' '}
-                                        <a
-                                            className=""
-                                            href="mailto:press@maheshwarivisuals.com">
-                                            press@maheshwarivisuals.com
-                                        </a>
-                                    </p>
+                                    {contact?.businessEmail && (
+                                        <p className="mt-2 text-sm">
+                                            Email:{' '}
+                                            <a
+                                                className=""
+                                                href={`mailto:${contact.businessEmail}`}>
+                                                {contact.businessEmail}
+                                            </a>
+                                        </p>
+                                    )}
+                                    {contact?.primaryEmail && (
+                                        <p className="mt-2 text-sm">
+                                            For Press & Media :{' '}
+                                            <a
+                                                className=""
+                                                href={`mailto:${contact.primaryEmail}`}>
+                                                {contact.primaryEmail}
+                                            </a>
+                                        </p>
+                                    )}
+                                    
                                 </div>
 
                                 <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400  flex-1 flex flex-col justify-between">
@@ -239,11 +264,16 @@ export default function ContactPage() {
 
                                     <div className="mt-4 flex h-full items-center justify-center">
                                         <div className="w-[240px] h-[240px] md:w-[400px] md:h-[400px] ">
-                                            <Image
-                                                src={QR_IMAGE}
-                                                alt="WhatsApp QR"
-                                                className="object-contain w-full h-full"
-                                            />
+                                            {contact?.whatsappQRCode && (
+                                                <img
+                                                    src={contact.whatsappQRCode}
+                                                    alt="WhatsApp QR"
+                                                    className="object-contain w-full h-full"
+                                                    width={400}
+                                                    height={400}
+                                                />
+                                                
+                                            )}
                                         </div>
                                     </div>
                                 </div>

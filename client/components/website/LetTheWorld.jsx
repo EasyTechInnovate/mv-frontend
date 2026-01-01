@@ -4,6 +4,7 @@ import letTheWorld from '@/public/images/lettheworld.png'
 import { Button } from '../ui/button'
 import { HeadingText } from '../FixedUiComponents'
 import Image from 'next/image'
+import Link from 'next/link'
 const LetTheWorld = () => {
   return (
     <div style={{ backgroundImage: `url(${letTheWorldbg.src})` }} className='p-10 md:p-20  bg-top bg-cover  '>
@@ -16,8 +17,8 @@ const LetTheWorld = () => {
 
             <p className='text-gray-300 text-base mb-6'>Join us in our mission to share your story with the world.</p>
             <div className='flex space-x-4 flex-wrap '>
-                <Button variant="blue">Get Started</Button>
-                <Button variant="transparent">Explore Features</Button>
+                <Button variant="blue"><Link href="/signup">Get Started</Link> </Button>
+                <Button variant="transparent"><Link href="/features/for-artist">Explore Features</Link></Button>
             </div>
         </div>
         <div className='rounded  w-[100%] lg:w-[50%] '>

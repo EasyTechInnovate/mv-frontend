@@ -14,6 +14,7 @@ import brandandmerchicon from '@/public/images/forartist/brandandmerchicon.png'
 import brandandmerch from '@/public/images/forartist/brandandmerch.png'
 import { Anton } from 'next/font/google'
 import TrendingSingerSwiper from './TrendingSingerSwiper'
+import Link from 'next/link'
 
 const anton = Anton({
     weight: ['400'],
@@ -37,8 +38,9 @@ const page = () => {
                 <Button
                     variant="blue"
                     className="shadow-2xl mt-5 shadow-violet-600">
-                    {' '}
+                    <Link href="/signup">
                     Start Free Now
+                    </Link>
                 </Button>
             </div>
 

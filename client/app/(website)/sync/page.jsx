@@ -16,6 +16,7 @@ import whatis from '@/public/images/sync/whatis.png'
 
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import Link from 'next/link'
 const anton = Anton({
     weight: ['400'],
     subsets: ['latin']
@@ -46,8 +47,9 @@ const page = () => {
                 <Button
                     variant="blue"
                     className="shadow-2xl mt-0 shadow-violet-600">
-                    {' '}
+                    <Link href="/signup">
                     Start Free Now
+                    </Link>
                 </Button>
             </div>
 

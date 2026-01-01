@@ -112,3 +112,23 @@ export const getFaqs = async () => {
     const response = await servicesAxiosInstance.get('/v1/faqs');
     return response.data;
 };
+
+// ============= Company Settings APIs =============
+
+/**
+ * Get contact details from company settings
+ * @returns {Promise} Response with company contact details
+ */
+export const getContactDetails = async () => {
+    const response = await servicesAxiosInstance.get('/v1/company-settings/contact');
+    return response.data;
+};
+
+/**
+ * Get social media links from company settings
+ * @returns {Promise} Response with company social media links
+ */
+export const getSocialMediaLinks = async () => {
+    const response = await servicesAxiosInstance.get('/v1/company-settings/social-media');
+    return response.data;
+};

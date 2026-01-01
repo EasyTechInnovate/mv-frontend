@@ -13,13 +13,14 @@ import fanlink from '@/public/images/branding/fanlink.png'
 import royalty from '@/public/images/branding/royalty.png'
 import dolby from '@/public/images/branding/dolby.png'
 import dolbyimage from '@/public/images/branding/dolbyimage.png'
+import Link from 'next/link'
 
 const page = () => {
   return (
     <div className='overflow-x-hidden '>
       <div style={{ backgroundImage: `url(${herobg.src})` }} className='bg-cover bg-center min-h-screen w-full flex flex-col justify-center items-center pt-[150px]'>
         <MainHeadingText text='Redefining What' text2='Artists Deserve    ' />
-        <Button variant='blue' className='shadow-2xl mt-20 shadow-violet-600'> Start Free Now</Button>
+        <Button variant='blue' className='shadow-2xl mt-20 shadow-violet-600'> <Link href="/signup"> Start Free Now</Link></Button>
       </div>
 
       <TwoHalfBoxes

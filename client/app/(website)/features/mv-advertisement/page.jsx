@@ -59,8 +59,9 @@ const page = () => {
                 <Button
                     variant="blue"
                     className="shadow-2xl mt-5 shadow-violet-600">
-                    {' '}
+                    <Link href="/signup">
                     Start Free Now
+                    </Link>
                 </Button>
             </div>
 

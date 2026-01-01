@@ -1,19 +1,16 @@
 import axios from 'axios';
 
-// Next.js environment variable (must start with NEXT_PUBLIC_ for client-side)
 const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://mv.easytechinnovate.site';
 
 // Fallback URLs for development
 // const baseURL = 'https://mv.easytechinnovate.site';
 // const baseURL = 'http://localhost:5000';
 
-// console.log('API Base URL:', baseURL);
 
 const servicesAxiosInstance = axios.create({
     baseURL: baseURL
 });
 
-// Flag to prevent multiple simultaneous refresh token requests
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -28,7 +25,6 @@ const processQueue = (error, token = null) => {
     failedQueue = [];
 };
 
-// Request interceptor - Add access token to headers
 servicesAxiosInstance.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('accessToken');
@@ -42,7 +38,6 @@ servicesAxiosInstance.interceptors.request.use(
     }
 );
 
-// Response interceptor - Handle token refresh automatically
 servicesAxiosInstance.interceptors.response.use(
     (response) => {
         return response;
@@ -50,10 +45,10 @@ servicesAxiosInstance.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        // Check if error is 401 and we haven't tried to refresh yet
+
         if (error.response?.status === 401 && !originalRequest._retry) {
             if (isRefreshing) {
-                // If already refreshing, queue this request
+
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
                 })
@@ -72,7 +67,7 @@ servicesAxiosInstance.interceptors.response.use(
             const refreshToken = localStorage.getItem('refreshToken');
 
             if (!refreshToken) {
-                // No refresh token available, clear storage and reject
+
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
                 window.location.href = '/login';
@@ -80,27 +75,27 @@ servicesAxiosInstance.interceptors.response.use(
             }
 
             try {
-                // Call refresh token API
-                const response = await axios.post(`${baseURL}/auth/refresh-token`, {
+
+                const response = await axios.post(`${baseURL}/v1/auth/refresh-token`, {
                     refreshToken: refreshToken
                 });
 
                 const { accessToken } = response.data.data;
 
-                // Update access token in localStorage
+
                 localStorage.setItem('accessToken', accessToken);
 
-                // Update authorization header
+
                 servicesAxiosInstance.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
-                // Process queued requests
+
                 processQueue(null, accessToken);
 
-                // Retry original request
+
                 return servicesAxiosInstance(originalRequest);
             } catch (refreshError) {
-                // Refresh token failed, clear storage and redirect to login
+
                 processQueue(refreshError, null);
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');

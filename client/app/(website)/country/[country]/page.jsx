@@ -76,7 +76,7 @@ const HomePage = () => {
 
                         <div className="flex justify-center items-center mt-8 relative z-10">
                             <Button variant="blue">
-                                <Link href="#">Start Free Now</Link>
+                                <Link href="/signup">Start Free Now</Link>
                             </Button>
                         </div>
                         <div className="w-full flex px-12 items-center justify-center mt-20 relative z-10">

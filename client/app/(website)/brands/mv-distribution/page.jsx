@@ -22,6 +22,7 @@ import hiw2 from '@/public/images/mvdistribution/hiw2.png'
 import hiw3 from '@/public/images/mvdistribution/hiw3.png'
 import hiw4 from '@/public/images/mvdistribution/hiw4.png'
 import hiw5 from '@/public/images/mvdistribution/hiw5.png'
+import Link from 'next/link'
 
 const anton = Anton({
     weight: ['400'],
@@ -74,8 +75,9 @@ const page = () => {
                 <Button
                     variant="blue"
                     className="shadow-2xl  shadow-violet-600">
-                    {' '}
+                    <Link href="/signup">
                     Get Started
+                    </Link>
                 </Button>
             </div>
 

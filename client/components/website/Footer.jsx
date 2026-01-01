@@ -1,11 +1,15 @@
+'use client'
 import React from 'react';
+import { useCompanyInfo } from '@/contexts/CompanyInfoContext';
 
-import { FaEnvelope, FaMapMarkerAlt, FaInstagram, FaFacebookF, FaLinkedinIn, FaTwitter, FaSpotify } from 'react-icons/fa';
+import { FaEnvelope, FaMapMarkerAlt, FaInstagram, FaFacebookF, FaLinkedinIn, FaTwitter, FaSpotify, FaYoutube } from 'react-icons/fa';
 import { Button } from '../ui/button';
 import logo from '@/public/images/maheshwarilogo.png'; 
 import Image from 'next/image';
+import { Youtube } from 'lucide-react';
 
 const Footer = () => {
+  const { contact, socials, isLoading } = useCompanyInfo();
   
   const exploreLinks = [
     { title: 'MV Advertisement', href: '/features/mv-advertisement' },
@@ -22,7 +26,7 @@ const Footer = () => {
 
   const moreLinks = [
     { title: 'About', href: '/about-us' },
-    { title: 'Careers', href: '/careere' },
+    { title: 'Careers', href: '/career' },
     { title: 'Contact', href: '/contact-us' },
     { title: 'Blog', href: '#' },
     { title: 'Sign up', href: '/signin' },
@@ -81,35 +85,44 @@ const Footer = () => {
               </p>
               <div className="flex items-center space-x-2 text-gray-400">
                 <FaEnvelope className="text-base" />
-                <a href="mailto:support@maheshwarivisuals.com" className="text-sm hover:text-white transition-colors duration-200">
-                  support@maheshwarivisuals.com
+                <a href={`mailto:${contact?.supportEmail}`} className="text-sm hover:text-white transition-colors duration-200">
+                  {contact?.supportEmail || 'support@maheshwarivisuals.com'}
                 </a>
               </div>
               <div className="flex items-start space-x-2 text-gray-400">
                 <FaMapMarkerAlt className="text-base mt-1" />
                 <p className="text-sm">
-                  Maheshwari Complex, Bilsi,<br/>
-                  UttarPradesh, India Pincode : 243633
+                  {contact?.physicalAddress ? (
+                    <>
+                      {contact.physicalAddress.street}, {contact.physicalAddress.city},<br/>
+                      {contact.physicalAddress.state}, {contact.physicalAddress.country} Pincode : {contact.physicalAddress.zipCode}
+                    </>
+                  ) : (
+                    <>
+                      Maheshwari Complex, Bilsi,<br/>
+                      UttarPradesh, India Pincode : 243633
+                    </>
+                  )}
                 </p>
               </div>
             </div>
 
             
             <div className="flex space-x-4">
-              <a href="#" className="p-2 bg-[#212533] text-gray-400 rounded-lg hover:bg-white hover:text-[#1C1F2B] transition-colors duration-200">
+              <a href={socials?.instagram || '#'} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#212533] text-gray-400 rounded-lg hover:bg-white hover:text-[#1C1F2B] transition-colors duration-200">
                 <FaInstagram className="text-lg" />
               </a>
-              <a href="#" className="p-2 bg-[#212533] text-gray-400 rounded-lg hover:bg-white hover:text-[#1C1F2B] transition-colors duration-200">
+              <a href={socials?.facebook || '#'} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#212533] text-gray-400 rounded-lg hover:bg-white hover:text-[#1C1F2B] transition-colors duration-200">
                 <FaFacebookF className="text-lg" />
               </a>
-              <a href="#" className="p-2 bg-[#212533] text-gray-400 rounded-lg hover:bg-white hover:text-[#1C1F2B] transition-colors duration-200">
+              <a href={socials?.linkedin || '#'} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#212533] text-gray-400 rounded-lg hover:bg-white hover:text-[#1C1F2B] transition-colors duration-200">
                 <FaLinkedinIn className="text-lg" />
               </a>
-              <a href="#" className="p-2 bg-[#212533] text-gray-400 rounded-lg hover:bg-white hover:text-[#1C1F2B] transition-colors duration-200">
+              <a href={socials?.x || '#'} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#212533] text-gray-400 rounded-lg hover:bg-white hover:text-[#1C1F2B] transition-colors duration-200">
                 <FaTwitter className="text-lg" />
               </a>
-              <a href="#" className="p-2 bg-[#212533] text-gray-400 rounded-lg hover:bg-white hover:text-[#1C1F2B] transition-colors duration-200">
-                <FaSpotify className="text-lg" />
+              <a href={socials?.youtube || '#'} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#212533] text-gray-400 rounded-lg hover:bg-white hover:text-[#1C1F2B] transition-colors duration-200">
+                <FaYoutube className="text-lg" />
               </a>
             </div>
           </div>

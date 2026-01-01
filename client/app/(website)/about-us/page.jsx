@@ -14,6 +14,7 @@ import hwi4 from '@/public/images/aboutus/hwi4.png'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import ProcessFlow from '@/components/website/ProcessFlow'
+import Link from 'next/link'
 const anton = Anton({
     weight: ['400'],
     subsets: ['latin']
@@ -67,8 +68,9 @@ const page = () => {
                 <Button
                     variant="blue"
                     className="shadow-2xl mt-0 shadow-violet-600">
-                    {' '}
+                    <Link href="/signup">
                     Start Free Now
+                    </Link>
                 </Button>
             </div>
 

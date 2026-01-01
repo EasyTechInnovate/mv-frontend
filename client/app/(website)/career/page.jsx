@@ -15,6 +15,7 @@ import lifeofmv from '@/public/images/career/lifeofmv.png'
 import ourhiring from '@/public/images/career/ourhiring.png' 
 import whyyou from '@/public/images/career/whyyou.png' 
 import CareerSwiper from './CareerSwiper'
+import Link from 'next/link'
 
 
 
@@ -28,7 +29,7 @@ const page = () => {
         <CareerSwiper/>
 
         </div>
-        <Button variant='blue' className='shadow-2xl m-20 shadow-violet-600'> Start Free Now</Button>
+        <Button variant='blue' className='shadow-2xl m-20 shadow-violet-600'> <Link href="/signup"> Start Free Now</Link></Button>
       </div>
 
         <FullBox

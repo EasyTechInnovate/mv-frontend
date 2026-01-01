@@ -41,7 +41,7 @@ const page = () => {
                         Mahi is your AI-powered music business sidekick, crafted especially for artists, labels, and music creators. From uploading your first track to tracking royalties and managing distributions—Mahi makes it all simple. Always on, always learning, and always humble (no auto-tune or ego here 😉).
                     </p>
 
-                    <Button variant="blue" className='w-fit shadow-2xl shadow-violet-600'><Link href="#" >Get Started</Link></Button>
+                    <Button variant="blue" className='w-fit shadow-2xl shadow-violet-600'><Link href="/signup" >Get Started</Link></Button>
                 </div>
             </div>
 

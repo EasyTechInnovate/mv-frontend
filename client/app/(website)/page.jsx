@@ -175,7 +175,7 @@ const HomePage = () => {
                             <Button
                                 variant="blue"
                                 className="shadow-2xl shadow-violet-600">
-                                <Link href="#">Start Free Now</Link>
+                                <Link href="/signup">Start Free Now</Link>
                             </Button>
                         </motion.div>
                     </div>
@@ -248,7 +248,7 @@ const HomePage = () => {
                             <h1 className="text-center text-xl">📞 Real Human Support</h1>
                         </div>
                         <Button variant="blue">
-                            <Link href="#">Get Started</Link>
+                            <Link href="/signup">Get Started</Link>
                         </Button>
                     </div>
                     <div className="w-full lg:w-[40%] relative ">
@@ -296,7 +296,7 @@ const HomePage = () => {
                     <Button
                         variant="blue"
                         className="w-fit shadow-2xl shadow-violet-600">
-                        <Link href="#">Get Started</Link>
+                        <Link href="/signup">Get Started</Link>
                     </Button>
                 </div>
             </div>

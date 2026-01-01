@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  // baseURL: import.meta.env.VITE_API_URL || 'https://api-mv.manishdashsharma.com',
-  baseURL: 'https://api-mv.manishdashsharma.com',
+  baseURL: import.meta.env.VITE_API_URL || 'https://api-mv.manishdashsharma.com',
+  // baseURL: 'https://api-mv.manishdashsharma.com',
 });
 
 
@@ -13,6 +13,47 @@ axiosClient.interceptors.request.use((config) => {
   }
   return config;
 });
+
+axiosClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      if (refreshToken) {
+        try {
+          const { data } = await axios.post(
+            `${import.meta.env.VITE_API_URL || 'https://api-mv.manishdashsharma.com'}/v1/auth/refresh-token`,
+            { refreshToken }
+          );
+          
+          const { accessToken } = data.data;
+          localStorage.setItem("token", accessToken);
+          originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
+          return axiosClient(originalRequest);
+
+        } catch (refreshError) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("user");
+          window.location.href = "/login";
+          return Promise.reject(refreshError);
+        }
+      } else {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 
 

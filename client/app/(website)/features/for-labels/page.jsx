@@ -15,6 +15,7 @@ import royaltyright from '@/public/images/forlabels/royaltyright.png'
 import dadicatedright from '@/public/images/forlabels/dadicatedright.png'
 import { Anton } from 'next/font/google'
 import OurLabels from './OurLabels'
+import Link from 'next/link'
 
 const anton = Anton({
     weight: ['400'],
@@ -38,8 +39,9 @@ const page = () => {
                 <Button
                     variant="blue"
                     className="shadow-2xl mt-5 shadow-violet-600">
-                    {' '}
+                    <Link href="/signup">
                     Start Free Now
+                    </Link>
                 </Button>
             </div>
 

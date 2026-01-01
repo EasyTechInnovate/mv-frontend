@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import {
     Accordion,
     AccordionContent,
@@ -9,27 +9,25 @@ import {
 import { HeadingText } from '../FixedUiComponents'
 import faqImage  from '@/public/images/faq.png'
 import Image from 'next/image'
-import { getFaqs } from '@/services/api.services';
+import { useCompanyInfo } from '@/contexts/CompanyInfoContext';
 
 const Faq = () => {
-    const [faqs, setFaqs] = useState([]);
+    const { faqs: rawFaqs, isLoading } = useCompanyInfo();
 
-    useEffect(() => {
-        const fetchFaqs = async () => {
-            try {
-                const response = await getFaqs();
-                if (response.success && response.data.faqsByCategory) {
-                    const allFaqs = Object.values(response.data.faqsByCategory).flat();
-                    const sortedFaqs = allFaqs.sort((a, b) => a.displayOrder - b.displayOrder);
-                    setFaqs(sortedFaqs.slice(0, 6));
-                }
-            } catch (error) {
-                console.error("Failed to fetch FAQs:", error);
-            }
-        };
+    const faqs = useMemo(() => {
+        if (rawFaqs?.faqsByCategory) {
+            const allFaqs = Object.values(rawFaqs.faqsByCategory).flat();
+            const sortedFaqs = allFaqs.sort((a, b) => a.displayOrder - b.displayOrder);
+            return sortedFaqs.slice(0, 6);
+        }
+        return [];
+    }, [rawFaqs]);
 
-        fetchFaqs();
-    }, []);
+    if (isLoading) {
+        // You can return a loading skeleton here if you want
+        return null;
+    }
+
 
     return (
         <div className='max-w-full max-auto bg-[#151A27]  sm:flex justify-center items-center max-sm:gap-10 p-20 py-20 text-white'>
