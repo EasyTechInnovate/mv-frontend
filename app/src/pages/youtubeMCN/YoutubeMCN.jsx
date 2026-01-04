@@ -39,14 +39,14 @@ const RequestDetailsModal = ({ request, isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="w-lg  md:min-w-3xl ">
         <DialogHeader>
           <DialogTitle>Request Details</DialogTitle>
           <DialogDescription>
             Details for channel: {request.youtubeChannelName}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 py-4 max-h-[70vh] overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6 py-4 max-h-[70vh] overflow-y-auto">
           <DetailItem label="Channel Name" value={request.youtubeChannelName} />
           <div>
             <p className="text-sm text-muted-foreground">Channel ID or Link</p>
@@ -57,14 +57,91 @@ const RequestDetailsModal = ({ request, isOpen, onClose }) => {
           <DetailItem label="Subscribers" value={request.subscriberCount?.toLocaleString()} />
           <DetailItem label="Views (28 days)" value={request.totalViewsCountsIn28Days?.toLocaleString()} />
           <DetailItem label="Status" value={<StatusBadge status={request.status} />} />
-          <DetailItem label="Monetized" value={request.monetizationEligibility ? "Yes" : "No"} />
+          <DetailItem label="Monetization Eligible" value={request.monetizationEligibility ? "Yes" : "No"} />
           <DetailItem label="AdSense Enabled" value={request.isAdSenseEnabled ? "Yes" : "No"} />
           <DetailItem label="Copyright Strikes" value={request.hasCopyrightStrikes ? "Yes" : "No"} />
           <DetailItem label="Original Content" value={request.isContentOriginal ? "Yes" : "No"} />
-          <DetailItem label="In another MCN" value={request.isPartOfAnotherMCN ? "Yes" : "No"} />
-          {request.isPartOfAnotherMCN && <DetailItem label="Other MCN" value={request.otherMCNDetails} />}
-          <DetailItem label="Revenue (Last Month)" value={`$${request.channelRevenueLastMonth}`} />
+          <DetailItem label="Part of Another MCN" value={request.isPartOfAnotherMCN ? "Yes" : "No"} />
+          {request.isPartOfAnotherMCN && <DetailItem label="Other MCN Details" value={request.otherMCNDetails} />}
+          <DetailItem label="Channel Revenue (Last Month)" value={`$${request.channelRevenueLastMonth}`} />
           <DetailItem label="Submitted At" value={new Date(request.createdAt).toLocaleDateString()} />
+          <DetailItem label="Legal Owner" value={request.isLegalOwner ? "Yes" : "No"} />
+          <DetailItem label="Agrees To Terms" value={request.agreesToTerms ? "Yes" : "No"} />
+          <DetailItem label="Understands Ownership" value={request.understandsOwnership ? "Yes" : "No"} />
+          {request.consentsToContact && <DetailItem label="Consents To Contact" value={request.consentsToContact ? "Yes" : "No"} />}
+          {request.rejectionReason && <DetailItem label="Rejection Reason" value={request.rejectionReason} />}
+          {request.adminNotes && <DetailItem label="Admin Notes" value={request.adminNotes} />}
+          {(request.analyticsScreenshotUrl || request.revenueScreenshotUrl) && (
+            <div className="md:col-span-2 lg:col-span-3 flex flex-wrap gap-4">
+              {request.analyticsScreenshotUrl && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Analytics Screenshot</p>
+                  <a href={request.analyticsScreenshotUrl} target="_blank" rel="noopener noreferrer">
+                    <img src={request.analyticsScreenshotUrl} alt="Analytics Screenshot" className="max-w-xs h-auto rounded-md" />
+                  </a>
+                </div>
+              )}
+              {request.revenueScreenshotUrl && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Revenue Screenshot</p>
+                  <a href={request.revenueScreenshotUrl} target="_blank" rel="noopener noreferrer">
+                    <img src={request.revenueScreenshotUrl} alt="Revenue Screenshot" className="max-w-xs h-auto rounded-md" />
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+const ChannelDetailsModal = ({ channel, isOpen, onClose }) => {
+  if (!channel) return null
+
+  const DetailItem = ({ label, value }) => (
+    <div>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="font-medium">{value ?? "N/A"}</p>
+    </div>
+  )
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-5xl">
+        <DialogHeader>
+          <DialogTitle>Channel Details</DialogTitle>
+          <DialogDescription>
+            Details for active channel: {channel.channelName}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 py-4 max-h-[70vh] overflow-y-auto">
+          <DetailItem label="Channel Name" value={channel.channelName} />
+          <div>
+            <p className="text-sm text-muted-foreground">Channel Link</p>
+            <a href={channel.channelLink} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-500 hover:underline truncate" title={channel.channelLink}>
+              {channel.channelLink ?? "N/A"}
+            </a>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Channel id</p>
+            <a href={channel.youtubeChannelId} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-500 hover:underline truncate block" title={channel.youtubeChannelId}>
+              {channel.youtubeChannelId ?? "N/A"}
+            </a>
+          </div>
+          {/* <DetailItem label="YouTube Channel ID" value={channel.youtubeChannelId} /> */}
+          <DetailItem label="Revenue Share" value={`${channel.revenueShare}%`} />
+          <DetailItem label="Channel Manager" value={channel.channelManager} />
+          <DetailItem label="Status" value={<StatusBadge status={channel.status} />} />
+          <DetailItem label="Monthly Revenue" value={`$${channel.monthlyRevenue}`} />
+          <DetailItem label="Total Revenue" value={`$${channel.totalRevenue}`} />
+          <DetailItem label="Last Revenue Update" value={channel.lastRevenueUpdate ? new Date(channel.lastRevenueUpdate).toLocaleDateString() : "N/A"} />
+          <DetailItem label="Joined Date" value={new Date(channel.joinedDate).toLocaleDateString()} />
+          {channel.notes && <DetailItem label="Notes" value={channel.notes} />}
+          {channel.suspendedAt && <DetailItem label="Suspended At" value={new Date(channel.suspendedAt).toLocaleDateString()} />}
+          {channel.suspensionReason && <DetailItem label="Suspension Reason" value={channel.suspensionReason} />}
+          {channel.reactivatedAt && <DetailItem label="Reactivated At" value={new Date(channel.reactivatedAt).toLocaleDateString()} />}
         </div>
       </DialogContent>
     </Dialog>
@@ -79,6 +156,8 @@ export default function YouTubeMCN() {
   const [channelsPage, setChannelsPage] = useState(1)
   const [selectedRequest, setSelectedRequest] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedChannel, setSelectedChannel] = useState(null) // New state for selected channel
+  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false) // New state for channel modal
   const itemsPerPage = 10
 
   const { data: requestsData, isLoading: isLoadingRequests } = useQuery({
@@ -101,16 +180,16 @@ export default function YouTubeMCN() {
     mutationFn: requestMcnRemoval,
     onSuccess: () => {
       showToast.success("Channel removal request submitted.")
-      queryClient.invalidateQueries({ queryKey: ["myMcnChannels"] })
+      queryClient.invalidateQueries({ queryKey: ["myMcnRequests"] })
     },
     onError: (error) => {
       showToast.error(error.response?.data?.message || "Failed to submit removal request.")
     },
   })
 
-  const handleOptRequest = (channel) => {
-    if (window.confirm("Are you sure you want to request removal for this channel?")) {
-      requestRemoval(channel.mcnRequestId._id)
+  const handleOptRequest = (id, currentStatus) => {
+    if (window.confirm("Are you sure you want to request removal for this item?")) {
+      requestRemoval(id)
     }
   }
 
@@ -126,6 +205,11 @@ export default function YouTubeMCN() {
   const handleViewDetails = (request) => {
     setSelectedRequest(request)
     setIsModalOpen(true)
+  }
+
+  const handleViewChannelDetails = (channel) => {
+    setSelectedChannel(channel)
+    setIsChannelModalOpen(true)
   }
 
   return (
@@ -183,14 +267,26 @@ export default function YouTubeMCN() {
                           </td>
                           <td className="p-2">{new Date(request.createdAt).toLocaleDateString()}</td>
                           <td className="p-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewDetails(request)}
-                              className="flex items-center gap-1"
-                            >
-                              <Eye className="h-3 w-3" /> View
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              {request.status === 'approved' && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleOptRequest(request._id, request.status)}
+                                  disabled={isRequestingRemoval || request.status === 'removal_requested'}
+                                  className="bg-[#711CE9] hover:bg-[#5e17c2] text-white text-xs px-3 py-1 h-auto"
+                                >
+                                  {isRequestingRemoval ? <Loader2 className="h-3 w-3 animate-spin" /> : "Opt Request"}
+                                </Button>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewDetails(request)}
+                                className="flex items-center gap-1"
+                              >
+                                <Eye className="h-3 w-3" /> View
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -214,7 +310,7 @@ export default function YouTubeMCN() {
         <TabsContent value="channels">
           <div className="space-y-6">
             {/* Revenue Chart */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>Revenue by Platform</CardTitle>
               </CardHeader>
@@ -239,7 +335,7 @@ export default function YouTubeMCN() {
                   </ResponsiveContainer>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Active Channels Table */}
             {isLoadingChannels ? (
@@ -274,13 +370,14 @@ export default function YouTubeMCN() {
                             <td className="p-2">{new Date(channel.joinedDate).toLocaleDateString()}</td>
                             <td className="p-2">
                               <div className="flex items-center gap-2">
+
                                 <Button
+                                  variant="outline"
                                   size="sm"
-                                  onClick={() => handleOptRequest(channel)}
-                                  disabled={isRequestingRemoval || channel.status === 'removal_requested'}
-                                  className="bg-[#711CE9] hover:bg-[#5e17c2] text-white text-xs px-3 py-1 h-auto"
+                                  onClick={() => handleViewChannelDetails(channel)}
+                                  className="flex items-center gap-1"
                                 >
-                                  {isRequestingRemoval ? <Loader2 className="h-3 w-3 animate-spin" /> : "Opt Request"}
+                                  <Eye className="h-3 w-3" /> View
                                 </Button>
                                 {/* <Button variant="ghost" size="icon" className="h-8 w-8">
                                   <MoreHorizontal className="h-4 w-4" />
@@ -310,6 +407,11 @@ export default function YouTubeMCN() {
         request={selectedRequest}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+      <ChannelDetailsModal
+        channel={selectedChannel}
+        isOpen={isChannelModalOpen}
+        onClose={() => setIsChannelModalOpen(false)}
       />
     </div>
   )

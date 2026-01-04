@@ -208,8 +208,8 @@ const deleteTestimonial = (testimonialId) =>
 // ---------------------- MCN Admin ----------------------
 
 
-const getMcnRequests = (page = 1, limit = 10) =>
-  axiosClient.get(`/v1/mcn/admin/requests?page=${page}&limit=${limit}`);
+const getMcnRequests = (params) =>
+  axiosClient.get(`/v1/mcn/admin/requests`, { params });
 
 const getPendingMcnRequests = () =>
   axiosClient.get("/v1/mcn/admin/requests/pending");
@@ -220,8 +220,8 @@ const reviewMcnRequest = (requestId, data) =>
 const createMcnChannel = (requestId, data) =>
   axiosClient.post(`/v1/mcn/admin/requests/${requestId}/create-channel`, data);
 
-const getMcnChannels = (page = 1, limit = 10) =>
-  axiosClient.get(`/v1/mcn/admin/channels?page=${page}&limit=${limit}`);
+const getMcnChannels = (params) =>
+  axiosClient.get(`/v1/mcn/admin/channels`, { params });
 
 const updateMcnChannelStatus = (channelId, data) =>
   axiosClient.patch(`/v1/mcn/admin/channels/${channelId}/status`, data);

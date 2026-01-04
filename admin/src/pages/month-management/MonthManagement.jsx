@@ -171,7 +171,7 @@ export default function MonthManagement({ theme }) {
             className="p-3 text-sm cursor-pointer hover:bg-gray-700/40"
             onClick={() => setShowBonusPage(true)}
           >
-            Bonus Month Management
+            Bonus Royalty Month Management
           </li>
         </ul>
       </div>

@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Upload, Download, Search, Info } from "lucide-react";
+import { Upload, Download, Search, Info, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import ActiveChannelTable from "../../components/mcn-management/MCNActiveChannel";
 import { motion, AnimatePresence } from "framer-motion";
 import MCNInfoForm from "../../components/mcn-management/MCNUserForm";
@@ -7,103 +7,285 @@ import GlobalApi from "@/lib/GlobalApi";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import MCNRequestViewModal from "../../components/mcn-management/MCNReviewModal";
+import UpdateMCNChannelStatusModal from "../../components/mcn-management/UpdateMCNChannelStatusModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+
+const StatusBadge = ({ status }) => {
+  const statusConfig = {
+    pending: "bg-yellow-500/20 text-yellow-500",
+    approved: "bg-green-500/20 text-green-500",
+    active: "bg-green-500/20 text-green-500",
+    rejected: "bg-red-500/20 text-red-500",
+    removal_requested: "bg-orange-500/20 text-orange-500",
+    removal_approved: "bg-purple-500/20 text-purple-400",
+    inactive: "bg-gray-500/20 text-gray-400",
+    suspended: "bg-red-700/20 text-red-500",
+  };
+  const normalizedStatus = status?.toLowerCase().replace(/ /g, '_');
+  const className = statusConfig[normalizedStatus] || "bg-gray-500/20 text-gray-400";
+  
+  return (
+    <Badge className={className}>
+      {status?.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+    </Badge>
+  );
+};
+
+const PaginationControls = ({ pagination, onPageChange, isDark }) => {
+    if (!pagination || !pagination.totalPages || pagination.totalPages <= 1) {
+        return null;
+    }
+
+    const { currentPage, totalPages, totalCount } = pagination;
+    const itemsPerPage = 10; // Assuming limit is 10
+
+    return (
+        <div className="flex items-center justify-between mt-6">
+          <div className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} results
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`${isDark ? "bg-[#151F28] border-gray-700" : ""}`}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Previous
+            </Button>
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={pageNum === currentPage ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => onPageChange(pageNum)}
+                    className={pageNum === currentPage ? `bg-purple-600 hover:bg-purple-700 ${isDark ? "text-white" : ""}` : (isDark ? "text-white bg-[#151F28] border-gray-700" : "")}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`${isDark ? "bg-[#151F28] border-gray-700" : ""}`}
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+    );
+};
+
+const ChannelDetailsModal = ({ channel, open, onClose, theme }) => {
+  if (!channel) return null;
+  const isDark = theme === "dark";
+  const cardBg = isDark ? "bg-[#151F28]" : "bg-white";
+  const borderColor = isDark ? "border-[#12212a]" : "border-gray-300";
+  const textColor = isDark ? "text-gray-300" : "text-[#151F28]";
+  const textMuted = isDark ? "text-gray-400" : "text-gray-600";
+
+  const DetailItem = ({ label, value }) => (
+    <div>
+      <p className={`text-sm ${textMuted}`}>{label}</p>
+      <p className={`font-medium ${textColor}`}>{value ?? "N/A"}</p>
+    </div>
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className={`max-w-4xl rounded-xl ${cardBg} border ${borderColor} p-6`}>
+        <DialogHeader>
+          <DialogTitle className={`text-lg font-semibold ${textColor}`}>
+            Channel Details
+          </DialogTitle>
+          <DialogDescription className={textMuted}>
+            Details for active channel: {channel?.channelName}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6 py-4 max-h-[70vh] overflow-y-auto">
+          <DetailItem label="Channel Name" value={channel?.channelName} />
+          <DetailItem label="Account ID" value={channel?.userAccountId} />
+          <DetailItem label="Account Name" value={`${channel?.userId?.firstName || ''} ${channel?.userId?.lastName || ''}`} />
+          
+          <div>
+            <p className={`text-sm ${textMuted}`}>Channel Link</p>
+            <a 
+              href={channel?.channelLink } 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              title={channel?.channelLink }
+              className={`font-medium text-purple-400 hover:underline truncate block`}
+            >
+              {channel?.channelLink  || "N/A"}
+            </a>
+          </div>
+          <div>
+            <p className={`text-sm ${textMuted}`}>Channel Id</p>
+            <a 
+              href={ channel?.youtubeChannelId} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              title={ channel?.youtubeChannelId}
+              className={`font-medium text-purple-400 hover:underline truncate block`}
+            >
+              { channel?.youtubeChannelId || "N/A"}
+            </a>
+          </div>
+
+          <DetailItem label="Revenue Share" value={channel?.revenueShare ? `${channel.revenueShare}%` : "N/A"} />
+          <DetailItem label="Channel Manager" value={channel?.channelManager} />
+          <DetailItem label="Status" value={channel?.status} />
+          <DetailItem label="Monthly Revenue" value={channel?.monthlyRevenue ? `$${channel.monthlyRevenue}`: "$0"} />
+          <DetailItem label="Total Revenue" value={channel?.totalRevenue ? `$${channel.totalRevenue}`: "$0"} />
+          <DetailItem label="Joined Date" value={channel?.joinedDate ? new Date(channel.joinedDate).toLocaleDateString() : 'N/A'} />
+          
+          {channel?.lastRevenueUpdate && <DetailItem label="Last Revenue Update" value={new Date(channel.lastRevenueUpdate).toLocaleDateString()} />}
+          {channel?.notes && <DetailItem label="Notes" value={channel.notes} />}
+          {channel?.suspendedAt && <DetailItem label="Suspended At" value={new Date(channel.suspendedAt).toLocaleDateString()} />}
+          {channel?.suspensionReason && <DetailItem label="Suspension Reason" value={channel.suspensionReason} />}
+          {channel?.reactivatedAt && <DetailItem label="Reactivated At" value={new Date(channel.reactivatedAt).toLocaleDateString()} />}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 
 export default function MCNManagement({ theme = "dark" }) {
   const isDark = theme === "dark";
   const [rows, setRows] = useState([]);
-  const [statsData, setStatsData] = useState({
-    totalRecords: 0,
-    totalUnits: 0,
-    totalRevenue: 0,
-    activeRecords: 0,
-  });
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("request");
-  const [selectedUser, setSelectedUser] = useState(null);
+  
+  // New state for filters and pagination
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [status, setStatus] = useState(""); // "" for all
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
 
+  // State for modals and side effects
+  const [selectedUser, setSelectedUser] = useState(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewData, setViewData] = useState(null);
   const [processing, setProcessing] = useState(false);
-
-
+  const [selectedChannel, setSelectedChannel] = useState(null);
+  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  
+  // State for stats cards
   const [stats, setStats] = useState(null);
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      if(currentPage !== 1) setCurrentPage(1); // Reset page on new search, only if not already 1
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const fetchStats = async () => {
     try {
       const res = await GlobalApi.getMcnStats();
-      const data = res?.data?.data || null;
-      setStats(data);
+      setStats(res?.data?.data || null);
     } catch (err) {
       console.error("❌ Error fetching MCN stats:", err);
-
       toast.error(err?.response?.data?.message || err?.message || "Failed to fetch stats");
       setStats(null);
     }
   };
 
   const fetchRequests = async () => {
+    setLoading(true);
+    setProcessing(false);
     try {
-      setLoading(true);
-      const res = await GlobalApi.getMcnRequests(1, 10);
-      const apiData = res?.data?.data?.requests || [];
-
-     const formatted = apiData.map((r) => {
-  const fullName = r.userId ? `${r.userId.firstName} ${r.userId.lastName}` : "-";
-
-  return {
-    id: r._id,
-    channelName: r.youtubeChannelName,
-    subscribers: r.subscriberCount,
-    submittedAt: new Date(r.createdAt).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }),
-    accountId: r.userAccountId || "-",
-    accountName: fullName, 
-    totalViews28d: r.totalViewsCountsIn28Days,
-    adSenseEnabled: r.isAdSenseEnabled ? "Yes" : "No",
-    copyrightStrikes: r.hasCopyrightStrikes ? "Yes" : "No",
-    hundredPercentOriginal: r.isContentOriginal ? "Yes" : "No",
-    anotherMCN: r.isPartOfAnotherMCN ? "Yes" : "No",
-    lastMonthRevenue: r.channelRevenueLastMonth,
-    monetizationEligibility: r.monetizationEligibility ? "Eligible" : "Not Eligible",
-    status: r.status || "pending",
-    adminNotes: r.adminNotes,
-    rejectionReason: r.rejectionReason,
-    raw: r,
-  };
-});
-
-
-      setRows(formatted);
-
-      const totalRecords = apiData.length;
-      const totalUnits = apiData.reduce((sum, r) => sum + (r.subscriberCount || 0), 0);
-      const totalRevenue = apiData.reduce((sum, r) => sum + (r.channelRevenueLastMonth || 0), 0);
-      const activeRecords = apiData.filter((r) => r.isActive).length;
-
-      setStatsData({ totalRecords, totalUnits, totalRevenue, activeRecords });
+      const params = {
+        page: currentPage,
+        limit: 10,
+        status: status || undefined,
+        search: debouncedSearch || undefined,
+      };
+      const res = await GlobalApi.getMcnRequests(params);
+      const apiData = res?.data?.data;
+      setRows(apiData?.requests || []);
+      setPagination(apiData?.pagination || null);
     } catch (err) {
       console.error("❌ Error fetching MCN requests:", err);
       toast.error(err.response?.data?.message || err.message || "Failed to fetch requests");
+      setRows([]);
+      setPagination(null);
     } finally {
       setLoading(false);
-      setProcessing(false);
     }
   };
 
+  const fetchChannels = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        page: currentPage,
+        limit: 10,
+        status: status || undefined,
+        search: debouncedSearch || undefined,
+      };
+      const res = await GlobalApi.getMcnChannels(params);
+      const apiData = res?.data?.data;
+      setRows(apiData?.channels || []);
+      setPagination(apiData?.pagination || null);
+    } catch (err) {
+      console.error("❌ Error fetching MCN channels:", err);
+      toast.error(err.response?.data?.message || "Failed to fetch channels");
+      setRows([]);
+      setPagination(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Main data fetching effect
   useEffect(() => {
+    if (activeTab === 'request') {
+      fetchRequests();
+    } else if (activeTab === 'active') {
+      fetchChannels();
+    }
+  }, [activeTab, currentPage, debouncedSearch, status]);
 
-    fetchRequests();
-    fetchStats();
-
-  }, []);
-
-
+  // Effect to reset filters and fetch stats on tab change
   useEffect(() => {
+    setCurrentPage(1);
+    setStatus("");
+    setSearchTerm("");
+    setPagination(null);
+    setRows([]);
     fetchStats();
-
   }, [activeTab]);
 
   const handleApprove = async (id, adminNotes) => {
@@ -138,21 +320,15 @@ export default function MCNManagement({ theme = "dark" }) {
     }
   };
 
+  const handleViewChannel = (channel) => {
+    setSelectedChannel(channel);
+    setIsChannelModalOpen(true);
+  };
+
   const formatINR = (n) =>
     typeof n === "number" ? `₹${n.toLocaleString("en-IN")}` : String(n || "-");
 
-const filteredRows = useMemo(() => {
-  const q = search.trim().toLowerCase();
-  if (!q) return rows;
 
-  return rows.filter((r) =>
-    (r.channelName || "").toLowerCase().includes(q) ||
-    (r.accountName || "").toLowerCase().includes(q) ||  
-    (r.accountId || "").toLowerCase().includes(q) ||
-    String(r.subscribers || "").includes(q) ||
-    String(r.lastMonthRevenue || "").includes(q)
-  );
-}, [rows, search]);
 
 
 
@@ -279,34 +455,38 @@ const filteredRows = useMemo(() => {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-3 h-4 w-4 opacity-60" />
               <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by artist, track, or account ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by channel, name, ID..."
                 className={`pl-10 pr-3 py-2 w-full rounded-md text-sm border ${inputBg}`}
               />
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <select className={`text-sm px-3 py-2 rounded-md border ${inputBg}`} defaultValue="all">
-                <option value="all">All Licenses</option>
-                <option value="approved">Approved</option>
-                <option value="pending">Pending</option>
-                <option value="rejected">Rejected</option>
-              </select>
-
-              <select className={`text-sm px-3 py-2 rounded-md border ${inputBg}`} defaultValue="all">
-                <option value="all">All Months</option>
-                <option value="january">January</option>
-                <option value="february">February</option>
-                <option value="march">March</option>
-                <option value="april">April</option>
-              </select>
-
-              <select className={`text-sm px-3 py-2 rounded-md border ${inputBg}`} defaultValue="all">
-                <option value="all">All Accounts</option>
-                <option value="youtube">YouTube</option>
-                <option value="spotify">Spotify</option>
-                <option value="apple">Apple Music</option>
+              <select
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className={`text-sm px-3 py-2 rounded-md border ${inputBg}`}
+              >
+                <option value="">All Status</option>
+                {activeTab === 'request' ? (
+                  <>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="removal_requested">Removal Requested</option>
+                    <option value="removal_approved">Removal Approved</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                  </>
+                )}
               </select>
 
               <select className={`text-sm px-3 py-2 rounded-md border ${inputBg}`} defaultValue="">
@@ -350,7 +530,25 @@ const filteredRows = useMemo(() => {
               transition={{ duration: 0.2 }}
               className={`rounded-xl p-6 ${cardBg} border ${borderColor} shadow-md`}
             >
-              <ActiveChannelTable theme={theme} onRowClick={(user) => setSelectedUser(user)} />
+              {loading ? (
+                <div className="flex justify-center items-center py-12">
+                    <Loader2 className="animate-spin h-6 w-6 mr-2" />
+                    <p>Loading channels...</p>
+                </div>
+              ) : (
+                <>
+                  <ActiveChannelTable 
+                    theme={theme} 
+                    channels={rows}
+                    onViewChannel={handleViewChannel}
+                    onEditStatus={(channel) => {
+                        setSelectedChannel(channel);
+                        setIsStatusModalOpen(true);
+                    }}
+                  />
+                  <PaginationControls pagination={pagination} onPageChange={setCurrentPage} isDark={isDark} />
+                </>
+              )}
             </motion.div>
           )}
 
@@ -364,8 +562,12 @@ const filteredRows = useMemo(() => {
               className={`rounded-xl p-6 ${cardBg} border ${borderColor} shadow-md`}
             >
               {loading ? (
-                <p className="text-center py-6 text-gray-400">Loading...</p>
+                <div className="flex justify-center items-center py-12">
+                    <Loader2 className="animate-spin h-6 w-6 mr-2" />
+                    <p>Loading requests...</p>
+                </div>
               ) : (
+                <>
                 <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400">
                   <table className="min-w-[1000px] w-full text-sm table-auto border-collapse">
                     <thead className="text-gray-500">
@@ -383,6 +585,7 @@ const filteredRows = useMemo(() => {
                           "Another MCN?",
                           "Last Month Revenue",
                           "Monetization Eligibility",
+                          "Status",
                           "Actions",
                         ].map((th, idx) => (
                           <th key={idx} className="text-left px-4 py-3 whitespace-nowrap">
@@ -392,28 +595,33 @@ const filteredRows = useMemo(() => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredRows.map((r) => (
-                        <tr key={r.id} className={`border-t ${borderColor} ${rowHover}`}>
-                          <td className="px-4 py-3">{r.channelName}</td>
-                          <td className="px-4 py-3">{r.accountId}</td>
-                          <td className="px-4 py-3">{r.accountName}</td>
-                          <td className="px-4 py-3">{r.subscribers?.toLocaleString("en-IN")}</td>
-                          <td className="px-4 py-3">{r.submittedAt}</td>
-                          <td className="px-4 py-3 text-center">{r.totalViews28d?.toLocaleString("en-IN")}</td>
-                          <td className="px-4 py-3 text-center">{r.adSenseEnabled}</td>
-                          <td className="px-4 py-3 text-center">{r.copyrightStrikes}</td>
-                          <td className="px-4 py-3 text-center">{r.hundredPercentOriginal}</td>
-                          <td className="px-4 py-3 text-center">{r.anotherMCN}</td>
-                          <td className="px-4 py-3 text-center">{r.lastMonthRevenue?.toLocaleString("en-IN")}</td>
+                      {rows.length > 0 ? rows.map((r) => {
+                        const fullName = r.userId ? `${r.userId.firstName} ${r.userId.lastName}`.trim() : "-";
+                        return (
+                        <tr key={r._id} className={`border-t ${borderColor} ${rowHover}`}>
+                          <td className="px-4 py-3">{r.youtubeChannelName}</td>
+                          <td className="px-4 py-3">{r.userAccountId || "-"}</td>
+                          <td className="px-4 py-3">{fullName}</td>
+                          <td className="px-4 py-3">{r.subscriberCount?.toLocaleString("en-IN")}</td>
+                          <td className="px-4 py-3">{new Date(r.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</td>
+                          <td className="px-4 py-3 text-center">{r.totalViewsCountsIn28Days?.toLocaleString("en-IN")}</td>
+                          <td className="px-4 py-3 text-center">{r.isAdSenseEnabled ? "Yes" : "No"}</td>
+                          <td className="px-4 py-3 text-center">{r.hasCopyrightStrikes ? "Yes" : "No"}</td>
+                          <td className="px-4 py-3 text-center">{r.isContentOriginal ? "Yes" : "No"}</td>
+                          <td className="px-4 py-3 text-center">{r.isPartOfAnotherMCN ? "Yes" : "No"}</td>
+                          <td className="px-4 py-3 text-center">{r.channelRevenueLastMonth?.toLocaleString("en-IN")}</td>
                           <td className="px-4 py-3 text-center">
                             <span
-                              className={`inline-block px-3 py-1 rounded-full text-xs ${r.monetizationEligibility === "Eligible"
+                              className={`inline-block px-3 py-1 rounded-full text-xs ${r.monetizationEligibility
                                 ? "bg-emerald-700/20 text-emerald-400"
                                 : "bg-gray-300 text-gray-700"
                                 }`}
                             >
-                              {r.monetizationEligibility}
+                              {r.monetizationEligibility ? "Eligible" : "Not Eligible"}
                             </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <StatusBadge status={r.status} />
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             <div className="flex items-center gap-2">
@@ -423,7 +631,7 @@ const filteredRows = useMemo(() => {
                                     size="sm"
                                     className="bg-emerald-700 text-white"
                                     onClick={() => {
-                                      setViewData({ ...r.raw, mode: "approve" });
+                                      setViewData({ ...r, mode: "approve" });
                                       setIsViewOpen(true);
                                     }}
                                   >
@@ -433,7 +641,7 @@ const filteredRows = useMemo(() => {
                                     size="sm"
                                     className="bg-red-700 text-white"
                                     onClick={() => {
-                                      setViewData({ ...r.raw, mode: "reject" });
+                                      setViewData({ ...r, mode: "reject" });
                                       setIsViewOpen(true);
                                     }}
                                   >
@@ -445,7 +653,7 @@ const filteredRows = useMemo(() => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => {
-                                    setViewData({ ...r.raw });
+                                    setViewData(r);
                                     setIsViewOpen(true);
                                   }}
                                 >
@@ -455,10 +663,16 @@ const filteredRows = useMemo(() => {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      )}) : (
+                        <tr>
+                            <td colSpan={14} className="text-center py-10 text-gray-400">No requests found.</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
+                <PaginationControls pagination={pagination} onPageChange={setCurrentPage} isDark={isDark} />
+                </>
               )}
             </motion.div>
           )}
@@ -473,6 +687,21 @@ const filteredRows = useMemo(() => {
         onApprove={handleApprove}
         onReject={handleReject}
         processing={processing}
+      />
+      <ChannelDetailsModal 
+        channel={selectedChannel}
+        open={isChannelModalOpen}
+        onClose={() => setIsChannelModalOpen(false)}
+        theme={theme}
+      />
+      <UpdateMCNChannelStatusModal
+        isOpen={isStatusModalOpen}
+        onClose={(shouldRefresh) => {
+          setIsStatusModalOpen(false);
+          if (shouldRefresh) fetchChannels();
+        }}
+        channelId={selectedChannel?._id}
+        currentStatus={selectedChannel?.status?.toLowerCase()}
       />
     </div>
   );

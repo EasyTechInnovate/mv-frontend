@@ -104,7 +104,6 @@ export default function Sidebar({ isCollapsed = false, theme }) {
               links: [
                 { label: "User Management", icon: <Users className="w-4 h-4" /> },
                 { label: "Release Management", icon: <Rocket className="w-4 h-4" /> },
-                { label: "Bonus Management", icon: <DollarSign className="w-4 h-4" /> },
                 { label: "KYC Management", icon: <IdCard className="w-4 h-4" /> },
               ],
             },
@@ -116,9 +115,11 @@ export default function Sidebar({ isCollapsed = false, theme }) {
                 </span>
               ),
               links: [
-                { label: "Analytics Management", icon: <ChartColumnIncreasing className="w-4 h-4" /> },
                 { label: "Month Management", icon: <CalendarDays className="w-4 h-4" /> },
+                { label: "Analytics Management", icon: <ChartColumnIncreasing className="w-4 h-4" /> },
+                { label: "Bonus Management", icon: <DollarSign className="w-4 h-4" /> },
                 { label: "Royalty Management", icon: <DollarSign className="w-4 h-4" /> },
+                { label: "MCN Royality", icon: <CalendarDays className="w-4 h-4" /> },
                 { label: "Wallet & Transactions", icon: <Wallet className="w-4 h-4" /> },
               ],
             },
@@ -131,7 +132,6 @@ export default function Sidebar({ isCollapsed = false, theme }) {
               ),
               links: [
                 { label: "MCN Management", icon: <ShoppingBag className="w-4 h-4" /> },
-                { label: "MCN Royality", icon: <CalendarDays className="w-4 h-4" /> },
                 { label: "Team Management", icon: <Users className="w-4 h-4" /> },
                 { label: "Subscription Plans", icon: <CreditCard className="w-4 h-4" /> },
               ],

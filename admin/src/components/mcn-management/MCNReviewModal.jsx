@@ -7,6 +7,18 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
+
+const DetailItem = ({ label, value, theme }) => {
+    const mutedText = theme === "dark" ? "text-gray-400" : "text-gray-500";
+    const textColor = theme === "dark" ? "text-white" : "text-gray-800";
+    return (
+        <div>
+            <p className={`text-sm ${mutedText}`}>{label}</p>
+            <p className={`font-medium ${textColor}`}>{value ?? "N/A"}</p>
+        </div>
+    )
+};
 
 export default function MCNRequestViewModal({
   open,
@@ -61,7 +73,7 @@ export default function MCNRequestViewModal({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
-        className={`max-w-lg rounded-xl ${bgColor} border ${borderColor} p-6`}
+        className={`max-w-5xl max-h-[90%] overflow-y-auto rounded-xl ${bgColor} border ${borderColor} p-6`}
       >
         <DialogHeader>
           <DialogTitle
@@ -85,50 +97,61 @@ export default function MCNRequestViewModal({
           </DialogTitle>
         </DialogHeader>
 
-        
-        <div className="mt-4 space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className={mutedText}>Channel Name</span>
-            <span className={textColor}>{data.youtubeChannelName}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6 py-4  ">
+          <DetailItem label="Channel Name" value={data.youtubeChannelName} theme={theme} />
+          <div>
+            <p className={`text-sm ${mutedText}`}>Channel ID or Link</p>
+            <p className={`font-medium ${textColor} truncate`} title={data.youtubeChannelId}>
+              {data.youtubeChannelId ?? "N/A"}
+            </p>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className={mutedText}>Channel ID</span>
-            <span className={textColor}>{data.youtubeChannelId}</span>
-          </div>
+          <DetailItem label="Account ID" value={data.userAccountId} theme={theme} />
+          <DetailItem label="Account Name" value={data.userId ? `${data.userId.firstName} ${data.userId.lastName}`: 'N/A'} theme={theme} />
+          <DetailItem label="Subscribers" value={data.subscriberCount?.toLocaleString()} theme={theme} />
+          <DetailItem label="Views (28 days)" value={data.totalViewsCountsIn28Days?.toLocaleString()} theme={theme} />
+          <DetailItem label="Status" value={<Badge className={
+            status === "pending" ? "bg-yellow-500/20 text-yellow-500" :
+            status === "approved" ? "bg-green-500/20 text-green-500" :
+            status === "rejected" ? "bg-red-500/20 text-red-500" :
+            "bg-gray-500/20 text-gray-400"
+          }>
+            {status?.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+          </Badge>} theme={theme} />
+          <DetailItem label="Monetization Eligible" value={data.monetizationEligibility ? "Yes" : "No"} theme={theme} />
+          <DetailItem label="AdSense Enabled" value={data.isAdSenseEnabled ? "Yes" : "No"} theme={theme} />
+          <DetailItem label="Copyright Strikes" value={data.hasCopyrightStrikes ? "Yes" : "No"} theme={theme} />
+          <DetailItem label="Original Content" value={data.isContentOriginal ? "Yes" : "No"} theme={theme} />
+          <DetailItem label="Part of Another MCN" value={data.isPartOfAnotherMCN ? "Yes" : "No"} theme={theme} />
+          {data.isPartOfAnotherMCN && <DetailItem label="Other MCN Details" value={data.otherMCNDetails} theme={theme} />}
+          <DetailItem label="Channel Revenue (Last Month)" value={`$${data.channelRevenueLastMonth}`} theme={theme} />
+          <DetailItem label="Submitted At" value={new Date(data.createdAt).toLocaleDateString()} theme={theme} />
+          <DetailItem label="Legal Owner" value={data.isLegalOwner ? "Yes" : "No"} theme={theme} />
+          <DetailItem label="Agrees To Terms" value={data.agreesToTerms ? "Yes" : "No"} theme={theme} />
+          <DetailItem label="Understands Ownership" value={data.understandsOwnership ? "Yes" : "No"} theme={theme} />
+          <DetailItem label="Consents To Contact" value={data.consentsToContact ? "Yes" : "No"} theme={theme} />
 
-          <div className="flex justify-between text-sm">
-            <span className={mutedText}>Account ID</span>
-            <span className={textColor}>{data.userAccountId}</span>
-          </div>
-
-          <div className="flex justify-between text-sm">
-            <span className={mutedText}>Subscribers</span>
-            <span className={textColor}>
-              {data.subscriberCount?.toLocaleString("en-IN")}
-            </span>
-          </div>
-
-          <div className="flex justify-between text-sm">
-            <span className={mutedText}>Status</span>
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-medium ${
-                isApproved
-                  ? "bg-green-500/20 text-green-400"
-                  : isRejected
-                  ? "bg-red-500/20 text-red-400"
-                  : "bg-yellow-500/20 text-yellow-400"
-              }`}
-            >
-              {isApproved
-                ? "Approved"
-                : isRejected
-                ? "Rejected"
-                : "Pending Review"}
-            </span>
-          </div>
+          {(data.analyticsScreenshotUrl || data.revenueScreenshotUrl) && (
+            <div className="md:col-span-2 lg:col-span-3 flex flex-wrap gap-4">
+              {data.analyticsScreenshotUrl && (
+                <div>
+                  <p className={`text-sm ${mutedText}`}>Analytics Screenshot</p>
+                  <a href={data.analyticsScreenshotUrl} target="_blank" rel="noopener noreferrer">
+                    <img src={data.analyticsScreenshotUrl} alt="Analytics Screenshot" className="max-w-xs h-auto rounded-md border" />
+                  </a>
+                </div>
+              )}
+              {data.revenueScreenshotUrl && (
+                <div>
+                  <p className={`text-sm ${mutedText}`}>Revenue Screenshot</p>
+                  <a href={data.revenueScreenshotUrl} target="_blank" rel="noopener noreferrer">
+                    <img src={data.revenueScreenshotUrl} alt="Revenue Screenshot" className="max-w-xs h-auto rounded-md border" />
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-       
         <div className="mt-5 space-y-4">
           <div>
             <label className={`block text-sm mb-1 ${mutedText}`}>

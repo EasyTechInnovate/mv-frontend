@@ -1,186 +1,40 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { Eye, UserPlus, Edit, Trash, ChevronLeft, ChevronRight } from "lucide-react";
+import React from "react";
+import { Eye, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import GlobalApi from "@/lib/GlobalApi";
-import CreateMCNChannelModal from "./CreateMCNChannel";
-import { toast } from "sonner";
-import UpdateMCNChannelStatusModal from "./UpdateMCNChannelStatusModal";
 
+const StatusBadge = ({ status }) => {
+  const statusConfig = {
+    pending: "bg-yellow-500/20 text-yellow-500",
+    approved: "bg-green-500/20 text-green-500",
+    active: "bg-green-500/20 text-green-500",
+    rejected: "bg-red-500/20 text-red-500",
+    removal_requested: "bg-orange-500/20 text-orange-500",
+    removal_approved: "bg-purple-500/20 text-purple-400",
+    inactive: "bg-gray-500/20 text-gray-400",
+    suspended: "bg-red-700/20 text-red-500",
+  };
+  const normalizedStatus = status?.toLowerCase().replace(/ /g, '_');
+  const className = statusConfig[normalizedStatus] || "bg-gray-500/20 text-gray-400";
+  
+  return (
+    <Badge className={className}>
+      {status?.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+    </Badge>
+  );
+};
 
-export default function ActiveChannelTable({ theme = "dark", onRowClick }) {
+export default function ActiveChannelTable({ 
+  theme = "dark", 
+  channels,
+  onViewChannel,
+  onEditStatus,
+}) {
   const isDark = theme === "dark";
   const textColor = isDark ? "text-gray-300" : "text-[#111A22]";
-  const bgColor = isDark ? "bg-[#151F28]" : "bg-white";
   const borderColor = isDark ? "border-[#1f2d38]" : "border-gray-200";
-  const inputBg = isDark
-    ? "bg-[#111A22] border-[#1f2d38] text-slate-300"
-    : "bg-white border-gray-300 text-[#111A22]";
-
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All Status");
-  const [channels, setChannels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newChannel, setNewChannel] = useState(null);
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-const [selectedChannel, setSelectedChannel] = useState(null);
-
-
-
- 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [limit] = useState(8);
-  const [total, setTotal] = useState(0);
-
- 
-  const fetchChannels = async (page = 1) => {
-    try {
-      setLoading(true);
-
-      const res = await GlobalApi.getMcnChannels(page, limit);
-
-      const apiData = res?.data?.data?.channels || res?.data?.data || [];
-      const totalCount = res?.data?.total || apiData.length;
-
-   const formatted = apiData.map((ch) => {
-  const first = ch.userId?.firstName || "";
-  const last = ch.userId?.lastName || "";
-  const fullName = (first || last) ? `${first} ${last}`.trim() : "Unknown";
-
-  return {
-    id: ch._id,
-    name: ch.channelName,
-    youtubeId: ch.youtubeChannelId,
-    accountId: ch.userAccountId,
-    accountName: fullName, // ✅ added
-    channelLink: ch.channelLink,
-    revenueShare: `${ch.revenueShare}%`,
-    manager: ch.channelManager || "-",
-    status: ch.status
-      ? ch.status.charAt(0).toUpperCase() + ch.status.slice(1).toLowerCase()
-      : "Unknown",
-    raw: ch,
-  };
-});
-
-
-
-      setChannels(formatted);
-      setTotal(totalCount);
-    } catch (err) {
-      console.error("❌ Error fetching channels:", err);
-      toast.error(err.response?.data?.message || "Failed to fetch MCN channels");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchChannels(currentPage);
-  }, [currentPage]);
-
-  useEffect(() => {
-  if (newChannel) {
-    const ch = newChannel;
-    const formatted = {
-      id: ch._id,
-      name: ch.channelName,
-      youtubeId: ch.youtubeChannelId || "-",
-      accountId: ch.userAccountId || "-",
-      accountName:
-  ch.userId
-    ? `${ch.userId.firstName || ""} ${ch.userId.lastName || ""}`.trim()
-    : "Unknown",
-
-      channelLink: ch.channelLink,
-      revenueShare: `${ch.revenueShare}%`,
-      manager: ch.channelManager || "-",
-      status: ch.status
-  ? ch.status.charAt(0).toUpperCase() + ch.status.slice(1)
-  : "Unknown",
-    };
-
-    setChannels((prev) => [formatted, ...prev]);
-    setTotal((prev) => prev + 1);
-    toast.success("MCN Channel added successfully!");
-  }
-}, [newChannel]);
-
-
-  
-  const filteredChannels = useMemo(() => {
-  const q = search.trim().toLowerCase();
-  return channels.filter((channel) => {
-    const matchesSearch =
-      channel.name.toLowerCase().includes(q) ||
-      channel.manager.toLowerCase().includes(q) ||
-     channel.accountId.toLowerCase().includes(q) ||
-channel.accountName.toLowerCase().includes(q) ||   
-channel.youtubeId.toLowerCase().includes(q);
-
-
-    const matchesStatus =
-      statusFilter === "All Status" ||
-      channel.status.toLowerCase() === statusFilter.toLowerCase();
-
-    return matchesSearch && matchesStatus;
-  });
-}, [channels, search, statusFilter]);
-
-
-  
-  const totalPages = Math.ceil(total / limit);
-  const canGoPrev = currentPage > 1;
-  const canGoNext = currentPage < totalPages;
 
   return (
-    <div className={`rounded-2xl p-5 ${bgColor} border ${borderColor} shadow-lg`}>
-     
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-3">
-        <div>
-          <h3 className={`text-xl font-semibold ${textColor}`}>MCN Channels</h3>
-          <p className={`text-sm opacity-75 ${textColor}`}>
-            Manage Multi-Channel Networks and their associated data
-          </p>
-        </div>
-
-        <Button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-purple-600 text-white hover:bg-purple-700"
-        >
-          + Create MCN Channel
-        </Button>
-      </div>
-
-     
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search MCN channels..."
-          className={`flex-1 px-3 py-2 rounded-lg text-sm border focus:ring-2 focus:ring-purple-500 focus:outline-none transition ${inputBg}`}
-        />
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className={`px-3 py-2 rounded-lg text-sm border focus:ring-2 focus:ring-purple-500 focus:outline-none transition ${inputBg}`}
-        >
-          {["All Status", "Active", "Pending", "Inactive", "Suspended"].map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      
       <div className="overflow-x-auto">
-        {loading ? (
-          <p className="text-center py-6 text-gray-400">Loading channels...</p>
-        ) : (
           <table className="min-w-[900px] w-full text-sm border-collapse">
             <thead className="text-gray-500">
               <tr>
@@ -198,160 +52,80 @@ channel.youtubeId.toLowerCase().includes(q);
             </thead>
 
             <tbody>
-              {filteredChannels.length > 0 ? (
-                filteredChannels.map((channel) => (
+              {channels.length > 0 ? (
+                channels.map((channel) => {
+                  const fullName = channel.userId ? `${channel.userId.firstName || ""} ${channel.userId.lastName || ""}`.trim() : "Unknown";
+                  return (
                   <tr
-                    key={channel.id}
-                    className={`border-b ${borderColor} hover:bg-gray-800/10 transition cursor-pointer`}
-                    onClick={() => onRowClick && onRowClick(channel)}
+                    key={channel._id}
+                    className={`border-b ${borderColor} hover:bg-gray-800/10 transition`}
                   >
-                   
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <p className={`font-semibold ${textColor}`}>{channel.name}</p>
+                      <p className={`font-semibold ${textColor}`}>{channel.channelName}</p>
                       <p className="text-xs text-gray-500">
-                        Manager: {channel.manager}
+                        Manager: {channel.channelManager || "-"}
                       </p>
                     </td>
 
-                   
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <Badge
-                        variant={channel.status === "Active" ? "success" : "warning"}
-                      >
-                        {channel.status}
-                      </Badge>
+                      <StatusBadge status={channel.status} />
                     </td>
 
-                   
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <span className={`${textColor}`}>{channel.revenueShare}</span>
+                      <span className={`${textColor}`}>{channel.revenueShare}%</span>
                     </td>
 
-                    
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <span className="text-purple-400 font-medium">{channel.youtubeId}</span>
+                      <span className="text-purple-400 font-medium truncate block max-w-[200px]" title={channel.youtubeChannelId}>{channel.youtubeChannelId}</span>
                     </td>
 
-                   
                     <td className="px-4 py-4 whitespace-nowrap">
                       <span className="text-green-400 font-medium">
-                        {channel.accountId}
+                        {channel.userAccountId}
                       </span>
                     </td>
 
                     <td className="px-4 py-4 whitespace-nowrap">
-  <span className="text-blue-400 font-medium">{channel.accountName}</span>
-</td>
+                      <span className="text-blue-400 font-medium">{fullName}</span>
+                    </td>
 
-
-                   
                     <td className="px-4 py-4 whitespace-nowrap">
-                     <div className="flex items-center gap-2">
- 
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      console.log("View clicked for", channel);
-    }}
-    className={`p-2 rounded-lg ${
-      isDark
-        ? "bg-gray-700 text-white hover:bg-gray-600"
-        : "bg-gray-200 text-black hover:bg-gray-300"
-    } transition`}
-  >
-    <Eye size={16} />
-  </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => onViewChannel && onViewChannel(channel)}
+                          className={`p-2 rounded-lg ${isDark
+                              ? "bg-gray-700 text-white hover:bg-gray-600"
+                              : "bg-gray-200 text-black hover:bg-gray-300"
+                            } transition`}
+                        >
+                          <Eye size={16} />
+                        </button>
 
-  
-  <button
-    onClick={(e) => {
-  e.stopPropagation();
-  setSelectedChannel(channel);
-  setTimeout(() => setIsStatusModalOpen(true), 0);
-}}
-
-    className={`p-2 rounded-lg ${
-      isDark
-        ? "bg-gray-700 text-white hover:bg-gray-600"
-        : "bg-gray-200 text-black hover:bg-gray-300"
-    } transition`}
-  >
-    <Edit size={16} />
-  </button>
-
-</div>
-
+                        <button
+                          onClick={() => onEditStatus && onEditStatus(channel)}
+                          className={`p-2 rounded-lg ${isDark
+                              ? "bg-gray-700 text-white hover:bg-gray-600"
+                              : "bg-gray-200 text-black hover:bg-gray-300"
+                            } transition`}
+                        >
+                          <Edit size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ))
+                )})
               ) : (
                 <tr>
                   <td
-                    colSpan={6}
-                    className="text-center py-6 text-gray-400 italic text-sm"
+                    colSpan={7}
+                    className="text-center py-10 text-gray-400 italic text-sm"
                   >
-                    No channels found matching your criteria.
+                    No channels found.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-        )}
       </div>
-
-      
-      {!loading && totalPages > 1 && (
-        <div className="flex justify-between items-center mt-5">
-          <Button
-            disabled={!canGoPrev}
-            onClick={() => setCurrentPage((p) => p - 1)}
-            variant="outline"
-            className={`flex items-center gap-1 ${!canGoPrev && "opacity-50"}`}
-          >
-            <ChevronLeft size={16} /> Prev
-          </Button>
-
-          <div className={`${textColor} text-sm`}>
-            Page {currentPage} of {totalPages}
-          </div>
-
-          <Button
-            disabled={!canGoNext}
-            onClick={() => setCurrentPage((p) => p + 1)}
-            variant="outline"
-            className={`flex items-center gap-1 ${!canGoNext && "opacity-50"}`}
-          >
-            Next <ChevronRight size={16} />
-          </Button>
-        </div>
-      )}
-
-    
-      <CreateMCNChannelModal
-  isOpen={isModalOpen}
-  onClose={(created) => {
-    setIsModalOpen(false);
-    if (created) setNewChannel(created);
-  }}
-  theme={theme}
-  channelTypes={[
-    { id: 1, name: "Entertainment" },
-    { id: 2, name: "Education" },
-    { id: 3, name: "Music" },
-  ]}
-/>
-
-<UpdateMCNChannelStatusModal
-  isOpen={isStatusModalOpen}
-  onClose={(shouldRefresh) => {
-    setIsStatusModalOpen(false);
-    if (shouldRefresh) fetchChannels(currentPage);
-  }}
-  channelId={selectedChannel?.id}
-  currentStatus={selectedChannel?.status?.toLowerCase()}
-/>
-
-
-    </div>
   );
 }

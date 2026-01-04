@@ -4,6 +4,7 @@ import letTheWorld from '@/public/images/lettheworld.png'
 import { Button } from '../ui/button'
 import { HeadingText } from '../FixedUiComponents'
 import Image from 'next/image'
+import Link from 'next/link'
 const ApplyToJoin = () => {
   return (
     <div style={{ backgroundImage: `url(${letTheWorldbg.src})` }} className='p-12  bg-top bg-cover  '>
@@ -15,7 +16,9 @@ const ApplyToJoin = () => {
 
             <p className='text-gray-300 text-base mb-6'>Get onboard with us and expand your reach! Fill out our simple form to become a part of our trusted aggregator network.</p>
             <div className='flex space-x-4 flex-wrap '>
+              <Link href="/aggregators-form">  
                 <Button variant="blue">Apply Now</Button>
+              </Link>
             </div>
         </div>
         <div className='rounded  w-[100%] md:w-[50%] '>
