@@ -75,7 +75,8 @@ export default function CreateMCNChannelModal({
 
     setFetchingRequests(true);
     try {
-      const res = await GlobalApi.getMcnRequests(page, limit, search);
+      const params = { page, limit, search: search || undefined };
+      const res = await GlobalApi.getMcnRequests(params);
       const apiRequests = res?.data?.data?.requests ?? [];
 
       const approved = apiRequests.filter(

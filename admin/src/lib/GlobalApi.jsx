@@ -265,8 +265,8 @@ const getTeamStatistics = () =>
 
 const createSubLabel = (payload) => axiosClient.post(`/v1/admin/sublabels`, payload);
 
-const getAllSubLabels = (page = 1, limit = 10) =>
-  axiosClient.get(`/v1/admin/sublabels?page=${page}&limit=${limit}`);
+const getAllSubLabels = (page = 1, limit = 10, extraParams = "") =>
+  axiosClient.get(`/v1/admin/sublabels?page=${page}&limit=${limit}${extraParams}`);
 
 const getSubLabelById = (sublabelId) => axiosClient.get(`/v1/admin/sublabels/${sublabelId}`);
 
@@ -281,7 +281,8 @@ const assignSubLabelToUser = (sublabelId, payload) =>
 const removeSubLabelFromUser = (sublabelId, payload) =>
   axiosClient.post(`/v1/admin/sublabels/${sublabelId}/remove-user`, payload);
 
-const getUserSubLabels = (userId) => axiosClient.get(`/v1/admin/users/${userId}/sublabels`);
+const getUserSubLabels = (userId, page = 1, limit = 10, search = "") =>
+  axiosClient.get(`/v1/admin/users/${userId}/sublabels?page=${page}&limit=${limit}&search=${search}`);
 
 const toggleUserSubLabels = (userId, payload) =>
   axiosClient.post(`/v1/admin/users/${userId}/sublabels`, payload);
@@ -389,8 +390,8 @@ const toggleMonthStatus = (monthId, payload) =>
 
 // ---------------------- Release Management (Admin) ----------------------
 
-const getAllReleases = (page = 1, limit = 10) =>
-  axiosClient.get(`/v1/admin/releases?page=${page}&limit=${limit}`);
+const getAllReleases = (params) =>
+  axiosClient.get(`/v1/admin/releases`, { params });
 
 const getPendingReleaseReviews = (page = 1, limit = 10) =>
   axiosClient.get(`/v1/admin/releases/pending-reviews?page=${page}&limit=${limit}`);
@@ -482,6 +483,8 @@ export const deleteTrendingArtist = (artistId) =>
 
 
 
+const getUserById = (userId) => axiosClient.get(`/v1/admin/users/${userId}`);
+
 export default {
   getHealth,
   getSubscriptionPlans,
@@ -540,6 +543,7 @@ export default {
   getUserSubLabels,
   toggleUserSubLabels,
   getUsers,
+  getUserById, // Add this new function
   getAllSupportTickets,
   getSupportTicketStats,
   getSupportTicketAnalytics,

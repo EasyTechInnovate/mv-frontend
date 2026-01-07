@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import MCNRequestViewModal from "../../components/mcn-management/MCNReviewModal";
 import UpdateMCNChannelStatusModal from "../../components/mcn-management/UpdateMCNChannelStatusModal";
+import CreateMCNChannelModal from "../../components/mcn-management/CreateMCNChannel"; // Import CreateMCNChannelModal
 import {
   Dialog,
   DialogContent,
@@ -199,6 +200,9 @@ export default function MCNManagement({ theme = "dark" }) {
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  // States for CreateMCNChannelModal
+  const [isCreateChannelModalOpen, setIsCreateChannelModalOpen] = useState(false);
+  const [newChannel, setNewChannel] = useState(null);
   
   // State for stats cards
   const [stats, setStats] = useState(null);
@@ -287,6 +291,15 @@ export default function MCNManagement({ theme = "dark" }) {
     setRows([]);
     fetchStats();
   }, [activeTab]);
+
+  // Effect to handle new channel creation
+  useEffect(() => {
+    if (newChannel) {
+      toast.success("MCN Channel added successfully!");
+      fetchChannels(); // Refresh the list to include the new channel
+      setNewChannel(null); // Clear newChannel state
+    }
+  }, [newChannel, activeTab]); // Added activeTab to dependencies, as fetchChannels depends on it
 
   const handleApprove = async (id, adminNotes) => {
     try {
@@ -530,6 +543,14 @@ export default function MCNManagement({ theme = "dark" }) {
               transition={{ duration: 0.2 }}
               className={`rounded-xl p-6 ${cardBg} border ${borderColor} shadow-md`}
             >
+              <div className="flex justify-end mb-4">
+                <Button 
+                  onClick={() => setIsCreateChannelModalOpen(true)} 
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  + Create MCN Channel
+                </Button>
+              </div>
               {loading ? (
                 <div className="flex justify-center items-center py-12">
                     <Loader2 className="animate-spin h-6 w-6 mr-2" />
@@ -702,6 +723,22 @@ export default function MCNManagement({ theme = "dark" }) {
         }}
         channelId={selectedChannel?._id}
         currentStatus={selectedChannel?.status?.toLowerCase()}
+      />
+      {/* CreateMCNChannelModal */}
+      <CreateMCNChannelModal
+        isOpen={isCreateChannelModalOpen}
+        onClose={(created) => {
+          setIsCreateChannelModalOpen(false);
+          if (created) setNewChannel(created);
+        }}
+        theme={theme}
+        // channelTypes are likely defined elsewhere or fetched
+        // Placeholder types for now if not available globally
+        channelTypes={[
+          { id: 1, name: "Entertainment" },
+          { id: 2, name: "Education" },
+          { id: 3, name: "Music" },
+        ]}
       />
     </div>
   );

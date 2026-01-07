@@ -93,6 +93,7 @@ function App() {
             <Route path="/admin/dashboard" element={<Dashboard theme={theme} />} />
             <Route path="/admin/user-management" element={<UserManagement theme={theme} />} />
             <Route path="/admin/release-management" element={<ReleaseManagement theme={theme} />} />
+            <Route path="/admin/release-management/:userId/:userName" element={<ReleaseManagement theme={theme} />} />
             <Route path="/admin/bonus-management" element={<BonusManagement theme={theme} />} />
             <Route path="/admin/kyc-management" element={<KycManagement theme={theme} />} />
             <Route path="/admin/analytics-management" element={<AnalyticsManagement theme={theme} />} />

@@ -7,12 +7,25 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Trash2 } from "lucide-react";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import AssignSublabelModal from "./AssignSublabelModal";
+import { Input } from "@/components/ui/input";
+
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+};
 
 export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
   const isDark = theme === "dark";
@@ -21,23 +34,36 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
   const [userName, setUserName] = useState("");
   const [sublabels, setSublabels] = useState([]);
   const [loading, setLoading] = useState(false);
+  
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    totalItems: 0,
+    totalPages: 1,
+  });
 
   const [deleteDialog, setDeleteDialog] = useState({
     open: false,
     id: null,
   });
 
-
-  const fetchUserAssignedSublabels = async () => {
+  const fetchUserAssignedSublabels = async (currentPage = 1) => {
+    if (!userId) return;
     try {
       setLoading(true);
-      const res = await GlobalApi.getUserSubLabels(userId);
+      const res = await GlobalApi.getUserSubLabels(
+        userId,
+        currentPage,
+        10,
+        debouncedSearch
+      );
 
       const data = res.data.data;
       setUserName(data.user?.name || "User");
-
-     
       setSublabels(data.sublabels || []);
+      setPagination(data.pagination || { totalItems: 0, totalPages: 1 });
     } catch (err) {
       console.error("❌ Error fetching assigned sublabels:", err);
       toast.error("Failed to load user sublabels");
@@ -47,44 +73,38 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
   };
 
   useEffect(() => {
-    if (isOpen) fetchUserAssignedSublabels();
-  }, [isOpen]);
-
-
-  const handleToggle = async (sublabelId, value) => {
-    try {
-    
-      await GlobalApi.assignUserToSubLabel(sublabelId, { userId });
-
-      toast.success("Updated assignment");
-
-      setSublabels((prev) =>
-        prev.map((item) =>
-          item.id === sublabelId ? { ...item, isDefault: value } : item
-        )
-      );
-    } catch (err) {
-      toast.error("Failed to update assignment");
-      console.error(err);
+    if (isOpen) {
+      fetchUserAssignedSublabels(page);
     }
-  };
+  }, [isOpen, page, debouncedSearch, userId]);
+
+  useEffect(() => {
+    if (debouncedSearch) {
+      setPage(1);
+    }
+  }, [debouncedSearch]);
 
   const handleRemove = async () => {
     try {
       await GlobalApi.removeSubLabelFromUser(deleteDialog.id, { userId });
       toast.success("User removed from sublabel");
-
       setDeleteDialog({ open: false, id: null });
-      fetchUserAssignedSublabels();
+      fetchUserAssignedSublabels(page); // Refetch current page
     } catch (err) {
       toast.error("Failed to remove sublabel");
       console.error(err);
     }
   };
 
+  const handleClose = () => {
+    onClose();
+    setSearch("");
+    setPage(1);
+  };
+
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
         <DialogContent
           className={`max-w-5xl rounded-2xl p-6 ${
             isDark
@@ -97,7 +117,6 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
               <DialogTitle className="text-lg font-semibold">
                 {userName}'s Sublabels
               </DialogTitle>
-
               <DialogDescription
                 className={`mt-1 ${
                   isDark ? "text-gray-400" : "text-gray-600"
@@ -106,7 +125,6 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
                 Manage label assignments for this user.
               </DialogDescription>
             </div>
-
             <Button
               onClick={() => setIsAssignModalOpen(true)}
               className="bg-gradient-to-r from-purple-500 to-purple-700 hover:opacity-90"
@@ -115,9 +133,32 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
             </Button>
           </DialogHeader>
 
-       
+          <div className="flex items-center justify-between gap-4 my-4">
+            <Input
+              placeholder="Search by label name..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={`w-full md:w-1/3 ${
+                isDark
+                  ? "bg-[#1A242C] border-gray-700"
+                  : "bg-white border-gray-300"
+              }`}
+            />
+            <Button
+              variant="outline"
+              
+              className={`${
+                isDark
+                  ? "border-gray-600 hover:bg-gray-700"
+                  : "border-gray-300"
+              }`}
+            >
+              Export as CSV
+            </Button>
+          </div>
+
           <div
-            className={`mt-6 border ${
+            className={`border ${
               isDark ? "border-gray-700" : "border-gray-200"
             } rounded-lg overflow-hidden`}
           >
@@ -133,15 +174,13 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
                   <th className="py-3 px-4 text-left">#</th>
                   <th className="py-3 px-4 text-left">Label Name</th>
                   <th className="py-3 px-4 text-left">Membership</th>
-                  {/* <th className="py-3 px-4 text-center">Display</th> */}
                   <th className="py-3 px-4 text-center">Remove</th>
                 </tr>
               </thead>
-
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="py-6 text-center text-gray-400">
+                    <td colSpan={4} className="py-6 text-center text-gray-400">
                       Loading...
                     </td>
                   </tr>
@@ -155,10 +194,10 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
                           : "border-b border-gray-200"
                       }`}
                     >
-                      <td className="py-3 px-4">{index + 1}</td>
-
+                      <td className="py-3 px-4">
+                        {index + 1 + (page - 1) * 10}
+                      </td>
                       <td className="py-3 px-4">{item.name}</td>
-
                       <td className="py-3 px-4 capitalize">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -174,14 +213,6 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
                           {item.membershipStatus}
                         </span>
                       </td>
-
-                      {/* <td className="py-3 px-4 text-center">
-                        <Switch
-                          checked={item.isDefault}
-                          onCheckedChange={(v) => handleToggle(item.id, v)}
-                        />
-                      </td> */}
-
                       <td className="py-3 px-4 text-center">
                         <button
                           onClick={() =>
@@ -196,7 +227,7 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-6 text-center text-gray-400">
+                    <td colSpan={4} className="py-6 text-center text-gray-400">
                       No sublabels assigned.
                     </td>
                   </tr>
@@ -205,7 +236,30 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
             </table>
           </div>
 
-       
+          <div className="flex items-center justify-between mt-4 text-sm">
+            <p className="text-gray-400">
+              Showing {(page - 1) * 10 + 1}–
+              {Math.min(page * 10, pagination.totalItems)} of{" "}
+              {pagination.totalItems}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Prev
+              </Button>
+              <Button
+                variant="outline"
+                disabled={page >= pagination.totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+
           {deleteDialog.open && (
             <ConfirmDialog
               theme={theme}
@@ -217,13 +271,12 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
             />
           )}
 
-          
           <AssignSublabelModal
             isOpen={isAssignModalOpen}
             onClose={() => setIsAssignModalOpen(false)}
             theme={theme}
             userId={userId}
-            onAssigned={() => fetchUserAssignedSublabels()}
+            onAssigned={() => fetchUserAssignedSublabels(page)}
           />
         </DialogContent>
       </Dialog>

@@ -13,13 +13,25 @@ import CreateSublabelModal from "./CreateSublabelModal";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import { Input } from "@/components/ui/input";
+
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+};
 
 export default function ManageLabelsModal({
   isOpen,
   onClose,
   theme,
-  userId,
-  userName,
 }) {
   const isDark = theme === "dark";
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -36,11 +48,18 @@ export default function ManageLabelsModal({
     totalItems: 0,
     totalPages: 1,
   });
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
 
   const fetchSublabels = async (currentPage = 1) => {
     try {
       setLoading(true);
-      const res = await GlobalApi.getAllSubLabels(currentPage, 10);
+      const extraParams = debouncedSearch ? `&search=${debouncedSearch}` : "";
+      const res = await GlobalApi.getAllSubLabels(
+        currentPage,
+        10,
+        extraParams
+      );
       const { sublabels, pagination } = res.data.data;
 
       setSublabels(sublabels || []);
@@ -55,7 +74,13 @@ export default function ManageLabelsModal({
 
   useEffect(() => {
     if (isOpen) fetchSublabels(page);
-  }, [isOpen, page]);
+  }, [isOpen, page, debouncedSearch]);
+
+  useEffect(() => {
+    if (debouncedSearch) {
+      setPage(1);
+    }
+  }, [debouncedSearch]);
 
   const handleOpenCreate = () => {
     setEditData(null);
@@ -76,10 +101,8 @@ export default function ManageLabelsModal({
   const handleDelete = async () => {
     try {
       await GlobalApi.deleteSubLabel(deleteDialog.id);
-
       toast.success("Sublabel deleted");
       setDeleteDialog({ open: false, id: null });
-
       fetchSublabels(page);
     } catch (err) {
       toast.error("Failed to delete sublabel");
@@ -102,7 +125,15 @@ export default function ManageLabelsModal({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            onClose();
+            setSearch("");
+          }
+        }}
+      >
         <DialogContent
           className={`max-w-5xl rounded-2xl p-6 ${
             isDark
@@ -110,7 +141,6 @@ export default function ManageLabelsModal({
               : "bg-white text-gray-900 border border-gray-200"
           }`}
         >
-          
           <DialogHeader className="flex flex-row items-center justify-between">
             <div>
               <DialogTitle className="text-lg font-semibold">
@@ -124,7 +154,6 @@ export default function ManageLabelsModal({
                 View and manage label assignments for this user.
               </DialogDescription>
             </div>
-
             <Button
               onClick={handleOpenCreate}
               className="bg-gradient-to-r from-purple-500 to-purple-700 hover:opacity-90"
@@ -133,7 +162,30 @@ export default function ManageLabelsModal({
             </Button>
           </DialogHeader>
 
-          
+          <div className="flex items-center justify-between gap-4 my-4">
+            <Input
+              placeholder="Search by label name..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={`w-full md:w-1/3 ${
+                isDark
+                  ? "bg-[#1A242C] border-gray-700"
+                  : "bg-white border-gray-300"
+              }`}
+            />
+            <Button
+              variant="outline"
+              
+              className={`${
+                isDark
+                  ? "border-gray-600 hover:bg-gray-700"
+                  : "border-gray-300"
+              }`}
+            >
+              Export as CSV
+            </Button>
+          </div>
+
           <div
             className={`mt-6 border ${
               isDark ? "border-gray-700" : "border-gray-200"
@@ -178,9 +230,7 @@ export default function ManageLabelsModal({
                       <td className="py-3 px-4">
                         {index + 1 + (page - 1) * 10}
                       </td>
-
                       <td className="py-3 px-4">{item.name}</td>
-
                       <td className="py-3 px-4">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
@@ -192,11 +242,9 @@ export default function ManageLabelsModal({
                           {item.membershipStatus}
                         </span>
                       </td>
-
                       <td className="py-3 px-4 text-center">
                         {item.assignedUsersCount || 0}
                       </td>
-
                       <td className="py-3 px-4 text-center">
                         <button
                           className="hover:text-purple-400"
@@ -206,14 +254,12 @@ export default function ManageLabelsModal({
                           <Pencil size={16} />
                         </button>
                       </td>
-
                       <td className="py-3 px-4 text-center">
                         <Switch
                           checked={item.isActive}
                           onCheckedChange={(v) => handleToggle(item._id, v)}
                         />
                       </td>
-
                       <td className="py-3 px-4 text-center">
                         <button
                           onClick={() =>
@@ -238,7 +284,6 @@ export default function ManageLabelsModal({
             </table>
           </div>
 
-          
           <div className="flex items-center justify-between mt-4 text-sm">
             <p className="text-gray-400">
               Showing {(page - 1) * 10 + 1}–
@@ -254,7 +299,6 @@ export default function ManageLabelsModal({
               >
                 Prev
               </Button>
-
               <Button
                 variant="outline"
                 disabled={page >= pagination.totalPages}
@@ -265,7 +309,6 @@ export default function ManageLabelsModal({
             </div>
           </div>
 
-          
           {deleteDialog.open && (
             <ConfirmDialog
               theme={theme}
@@ -277,12 +320,11 @@ export default function ManageLabelsModal({
             />
           )}
 
-          
           <CreateSublabelModal
             isOpen={isCreateModalOpen}
             onClose={handleCloseCreate}
             onSaved={() => fetchSublabels(page)}
-            editData={editData} 
+            editData={editData}
             theme={theme}
           />
         </DialogContent>

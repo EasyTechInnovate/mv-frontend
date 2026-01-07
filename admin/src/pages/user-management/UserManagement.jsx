@@ -21,31 +21,63 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
+import UserDetailsModal from "@/components/user-management/UserDetailsModal.jsx";
+
+// Debounce hook
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+};
+
+const EUserType = {
+  ARTIST: 'artist',
+  LABEL: 'label',
+  AGGREGATOR: 'aggregator'
+};
 
 export default function UserManagement({ theme }) {
   const isDark = theme === "dark";
   const [search, setSearch] = useState("");
+  const [userType, setUserType] = useState("all");
+  const debouncedSearch = useDebounce(search, 500);
+
   const [users, setUsers] = useState([]);
   const [isManageLabelsOpen, setIsManageLabelsOpen] = useState(false);
-  const [selectedLabelData, setSelectedLabelData] = useState([]);
-  const [activePage, setActivePage] = useState("list");
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAssignedLabelsOpen, setIsAssignedLabelsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
+  
+  // State for the new details modal
+  const [isUserDetailsModalOpen, setIsUserDetailsModalOpen] = useState(false);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
 
+  const navigate = useNavigate();
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      
+      let extraParams = "&role=user";
+      if (debouncedSearch) {
+        extraParams += `&search=${debouncedSearch}`;
+      }
+      if (userType !== "all") {
+        extraParams += `&userType=${userType}`;
+      }
 
-      const res = await GlobalApi.getUsers(
-        currentPage,
-        10,
-        "&role=user"
-      );
+      const res = await GlobalApi.getUsers(currentPage, 10, extraParams);
 
       setUsers(res.data.data.users || []);
       setTotalPages(res.data.data.pagination?.totalPages || 1);
@@ -59,67 +91,43 @@ export default function UserManagement({ theme }) {
 
   useEffect(() => {
     fetchUsers();
-  }, [currentPage]);
+  }, [currentPage, debouncedSearch, userType]);
+  
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, userType]);
 
-  const handleBack = () => setActivePage("list");
+
+  const handleBack = () => {
+    // This seems to be part of a different view logic not fully shown.
+    // Assuming it's for a details page not currently implemented.
+  };
 
   const handleTopManageLabels = () => {
     setSelectedUser(null);
     setIsManageLabelsOpen(true);
   };
-const filteredUsers = users.filter((u) => {
-  const s = search.toLowerCase();
-  const stageName =
-    u.userType === "artist"
-      ? u?.artistData?.artistName
-      : u.userType === "label"
-        ? u?.labelData?.labelName
-        : u.userType === "aggregator"
-          ? u?.aggregatorData?.companyName
-          : "";
-  const accountName = `${u.firstName || ""} ${u.lastName || ""}`.trim().toLowerCase();
 
-  return (
-    u.accountId?.toLowerCase().includes(s) ||
-    accountName.includes(s) ||
-    (u.firstName || "").toLowerCase().includes(s) ||
-    (u.lastName || "").toLowerCase().includes(s) ||
-    stageName?.toLowerCase().includes(s) ||
-    u.emailAddress?.toLowerCase().includes(s) ||
-    u.userType?.toLowerCase().includes(s)
-  );
-});
-
-
-
+  // Stats are now less accurate as they only reflect the current page of users.
+  // Consider fetching these stats from a separate API endpoint if accuracy is needed.
   const totalUsers = users.length;
   const aggregators = users.filter((u) => u.userType === "aggregator").length;
   const artists = users.filter((u) => u.userType === "artist").length;
   const labels = users.filter((u) => u.userType === "label").length;
 
   const stats = [
-    { label: "Total Users", value: totalUsers },
-    { label: "Aggregators", value: aggregators },
-    { label: "Artists", value: artists },
-    { label: "Labels", value: labels },
+    { label: "Total Users", value: totalPages > 1 ? `${(totalPages -1) * 10 + users.length}` : users.length },
+    { label: "Aggregators", value: users.filter((u) => u.userType === "aggregator").length },
+    { label: "Artists", value: users.filter((u) => u.userType === "artist").length },
+    { label: "Labels", value: users.filter((u) => u.userType === "label").length },
   ];
-
-  if (activePage === "userInfo") {
-    return (
-      <UserInfoPage
-        theme={theme}
-        defaultData={selectedUser}
-        onBack={handleBack}
-      />
-    );
-  }
 
   return (
     <div
       className={`p-4 md:p-6 space-y-6 ${isDark ? "bg-[#111A22] text-gray-200" : "bg-gray-50 text-[#151F28]"
         }`}
     >
-
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-3">
         <div>
           <h1 className="text-2xl font-semibold">User Management</h1>
@@ -142,7 +150,6 @@ const filteredUsers = users.filter((u) => {
           >
             Manage Labels
           </Button>
-
         </div>
       </div>
 
@@ -159,13 +166,29 @@ const filteredUsers = users.filter((u) => {
         ))}
       </div>
 
-      <Input
-        placeholder="Search users by email..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className={`w-full md:w-1/3 ${isDark ? "bg-[#151F28] border-gray-700 text-gray-200" : "bg-white"
-          }`}
-      />
+      <div className="flex flex-col md:flex-row gap-4">
+        <Input
+          placeholder="Search by name, email, ID..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className={`w-full md:w-1/3 ${isDark ? "bg-[#151F28] border-gray-700 text-gray-200" : "bg-white"
+            }`}
+        />
+        <select
+          value={userType}
+          onChange={(e) => setUserType(e.target.value)}
+          className={`rounded-md px-3 py-2 text-sm capitalize ${isDark
+              ? "bg-[#151F28] border border-gray-700 text-gray-200"
+              : "bg-white border border-gray-300"
+            }`}
+        >
+          <option value="all">All User Types</option>
+          {Object.values(EUserType).map((type) => (
+            <option key={type} value={type}>{type}</option>
+          ))}
+        </select>
+      </div>
+
 
       <div
         className={`rounded-lg shadow-md ${isDark ? "bg-[#151F28]" : "bg-white"
@@ -177,7 +200,6 @@ const filteredUsers = users.filter((u) => {
           <div className="p-6 text-center text-gray-400">No users found</div>
         ) : (
           <>
-
             <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[1500px]">
                 <thead
@@ -203,7 +225,7 @@ const filteredUsers = users.filter((u) => {
                 </thead>
 
                 <tbody>
-                  {filteredUsers.map((u) => {
+                  {users.map((u) => {
                     const stageName =
                       u.userType === "artist"
                         ? u?.artistData?.artistName
@@ -221,17 +243,17 @@ const filteredUsers = users.filter((u) => {
                       >
                         <td className="px-4 py-3">{u.accountId}</td>
                         <td className="px-4 py-3">
-  {u.firstName || u.lastName ? `${u.firstName || ""} ${u.lastName || ""}`.trim() : "—"}
-</td>
+                          {u.firstName || u.lastName ? `${u.firstName || ""} ${u.lastName || ""}`.trim() : "—"}
+                        </td>
                         <td className="px-4 py-3">{stageName}</td>
 
                         <td className="px-4 py-3">
                           <span
                             className={`text-xs px-2 py-1 rounded-full ${u.userType === "artist"
-                              ? "bg-purple-500/20 text-purple-400"
-                              : u.userType === "label"
-                                ? "bg-blue-500/20 text-blue-400"
-                                : "bg-orange-500/20 text-orange-400"
+                                ? "bg-purple-500/20 text-purple-400"
+                                : u.userType === "label"
+                                  ? "bg-blue-500/20 text-blue-400"
+                                  : "bg-orange-500/20 text-orange-400"
                               }`}
                           >
                             {u.userType}
@@ -241,8 +263,8 @@ const filteredUsers = users.filter((u) => {
                         <td className="px-4 py-3">
                           <span
                             className={`px-2 py-1 rounded-full text-xs ${u.isActive
-                              ? "bg-green-500/20 text-green-400"
-                              : "bg-gray-500/20 text-gray-400"
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-gray-500/20 text-gray-400"
                               }`}
                           >
                             {u.isActive ? "Active" : "Inactive"}
@@ -266,6 +288,10 @@ const filteredUsers = users.filter((u) => {
                             <Button
                               size="sm"
                               className="bg-purple-600 hover:bg-purple-700 text-white px-3 rounded-lg flex items-center gap-1"
+                              onClick={() => {
+                                const userName = `${u.firstName || ""} ${u.lastName || ""}`.trim();
+                                navigate(`/admin/release-management/${u._id}/${encodeURIComponent(userName)}`);
+                              }}
                             >
                               <Music className="h-4 w-4" />
                               Manage Release
@@ -276,7 +302,7 @@ const filteredUsers = users.filter((u) => {
                               className="bg-purple-600 hover:bg-purple-700 text-white px-3 rounded-lg flex items-center gap-1"
                               onClick={() => {
                                 setSelectedUser(u);
-                                setIsAssignedLabelsOpen(true);   
+                                setIsAssignedLabelsOpen(true);
                               }}
 
                             >
@@ -288,7 +314,7 @@ const filteredUsers = users.filter((u) => {
                               className="bg-purple-600 hover:bg-purple-700 text-white px-3 rounded-lg flex items-center gap-1"
                               onClick={() => {
                                 setSelectedUser(u);
-                                setIsResetPasswordOpen(true);
+setIsResetPasswordOpen(true);
                               }}
                             >
                               <KeyRound className="h-4 w-4" />
@@ -317,11 +343,16 @@ const filteredUsers = users.filter((u) => {
 
                               <DropdownMenuContent
                                 className={`rounded-lg ${isDark
-                                  ? "bg-[#151F28] text-gray-200 border-gray-700"
-                                  : "bg-white text-gray-700 border-gray-200"
+                                    ? "bg-[#151F28] text-gray-200 border-gray-700"
+                                    : "bg-white text-gray-700 border-gray-200"
                                   }`}
                               >
-                                <DropdownMenuItem>KYC Details</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => {
+                                  setSelectedUserForDetails(u);
+                                  setIsUserDetailsModalOpen(true);
+                                }}>
+                                  View Details
+                                </DropdownMenuItem>
                                 <DropdownMenuItem className="text-red-500">
                                   Delete
                                 </DropdownMenuItem>
@@ -352,10 +383,10 @@ const filteredUsers = users.filter((u) => {
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
                     className={`px-3 py-1 rounded-md text-sm ${currentPage === i + 1
-                      ? "bg-purple-600 text-white"
-                      : isDark
-                        ? "bg-[#151F28] text-gray-300"
-                        : "bg-gray-200 text-gray-700"
+                        ? "bg-purple-600 text-white"
+                        : isDark
+                          ? "bg-[#151F28] text-gray-300"
+                          : "bg-gray-200 text-gray-700"
                       }`}
                   >
                     {i + 1}
@@ -374,24 +405,30 @@ const filteredUsers = users.filter((u) => {
           </>
         )}
       </div>
-   <ManageLabelsModal
-  isOpen={isManageLabelsOpen}
-  onClose={() => setIsManageLabelsOpen(false)}
-  theme={theme}
-  userId={null}            
-  userName="All Labels"   
-/>
+      <ManageLabelsModal
+        isOpen={isManageLabelsOpen}
+        onClose={() => setIsManageLabelsOpen(false)}
+        theme={theme}
+        userId={null}
+        userName="All Labels"
+      />
 
-     <AssignedSublabels
-  isOpen={isAssignedLabelsOpen}
-  onClose={() => setIsAssignedLabelsOpen(false)}
-  userId={selectedUser?._id}
-   theme={theme}  
-/>
+      <AssignedSublabels
+        isOpen={isAssignedLabelsOpen}
+        onClose={() => setIsAssignedLabelsOpen(false)}
+        userId={selectedUser?._id}
+        theme={theme}
+      />
       <ResetPasswordModal
         isOpen={isResetPasswordOpen}
         onClose={() => setIsResetPasswordOpen(false)}
         userData={selectedUser}
+        theme={theme}
+      />
+      <UserDetailsModal
+        isOpen={isUserDetailsModalOpen}
+        onClose={() => setIsUserDetailsModalOpen(false)}
+        user={selectedUserForDetails}
         theme={theme}
       />
     </div>
