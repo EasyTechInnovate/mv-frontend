@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import GlobalApi from "@/lib/GlobalApi";
 import SyncLicenseReviewModal from "../../components/synchronization-(sync)/SyncLicenseReviewModal";
+import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 
 
 const enumLabels = {
@@ -157,6 +158,7 @@ export default function SyncManagement({ theme }) {
 
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   
   const normalizeResponse = (res) => {
     if (!res || !res.data || !res.data.data) return { submissions: [], pagination: {} };
@@ -346,8 +348,11 @@ export default function SyncManagement({ theme }) {
             ))}
           </select>
 
-          <Button variant={isDark ? "outline" : "secondary"}>
-            <Download className="w-4 h-4 mr-2" /> Export
+          <Button
+            variant={isDark ? "outline" : "secondary"}
+            onClick={() => setIsExportModalOpen(true)}
+          >
+            <Download className="w-4 h-4 mr-2" /> Export as CSV
           </Button>
 
           <div className="relative" ref={dropdownRef}>
@@ -572,6 +577,56 @@ export default function SyncManagement({ theme }) {
         data={selectedRequest}
         theme={theme}
         refreshList={fetchSyncRequests}
+      />
+      <ExportCsvDialog
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        theme={theme}
+        totalItems={pagination.totalCount || 0}
+        headers={[
+          { label: "S.No.", key: "sno" },
+          { label: "Track Name", key: "trackName" },
+          { label: "Artist Name", key: "artistName" },
+          { label: "Account Name", key: "accountName" },
+          { label: "Account ID", key: "accountId" },
+          { label: "Label Name", key: "labelName" },
+          { label: "ISRC", key: "isrc" },
+          { label: "Genre", key: "genres" },
+          { label: "Language", key: "language" },
+          { label: "Status", key: "status" },
+          { label: "Submit Date", key: "createdAt" }
+        ]}
+        fetchData={async (page, limit) => {
+          try {
+            const params = {
+              page,
+              limit,
+              status: status === "" ? undefined : status,
+              search: debouncedSearch || undefined,
+              sortBy: 'createdAt',
+              sortOrder: 'desc'
+            };
+            const res = await GlobalApi.getAllSyncSubmissions(params);
+            const { submissions } = normalizeResponse(res);
+            return (submissions || []).map(row => ({
+              ...row,
+              trackName: toTitleCase(row.trackName),
+              artistName: toTitleCase(row.artistName),
+              accountName: row.userId ? `${row.userId.firstName || ""} ${row.userId.lastName || ""}`.trim() || "—" : "—",
+              accountId: row.userId?.accountId || "—",
+              labelName: toTitleCase(row.labelName),
+              genres: toReadable(row.genres, "genres"),
+              language: toReadable(row.language, "language"),
+              createdAt: new Date(row.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+            }));
+          } catch (err) {
+            toast.error("Failed to fetch data for export.");
+            return [];
+          }
+        }}
+        filename="sync_submissions"
+        title="Export Sync Submissions"
+        description="Select a data range to export as a CSV file."
       />
     </div>
   );

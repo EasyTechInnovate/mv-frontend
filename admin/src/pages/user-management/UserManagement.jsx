@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import UserDetailsModal from "@/components/user-management/UserDetailsModal.jsx";
+import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -56,8 +57,9 @@ export default function UserManagement({ theme }) {
   const [loading, setLoading] = useState(true);
   const [isAssignedLabelsOpen, setIsAssignedLabelsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [pagination, setPagination] = useState({ totalPages: 1, totalItems: 0 });
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   
   // State for the new details modal
   const [isUserDetailsModalOpen, setIsUserDetailsModalOpen] = useState(false);
@@ -80,7 +82,11 @@ export default function UserManagement({ theme }) {
       const res = await GlobalApi.getUsers(currentPage, 10, extraParams);
 
       setUsers(res.data.data.users || []);
-      setTotalPages(res.data.data.pagination?.totalPages || 1);
+      const apiPagination = res.data.data.pagination;
+      setPagination({
+        totalPages: apiPagination?.totalPages || 1,
+        totalItems: apiPagination?.totalCount || 0,
+      });
     } catch (err) {
       console.error(err);
       toast.error("Failed to load users");
@@ -117,7 +123,7 @@ export default function UserManagement({ theme }) {
   const labels = users.filter((u) => u.userType === "label").length;
 
   const stats = [
-    { label: "Total Users", value: totalPages > 1 ? `${(totalPages -1) * 10 + users.length}` : users.length },
+    { label: "Total Users", value: pagination.totalItems },
     { label: "Aggregators", value: users.filter((u) => u.userType === "aggregator").length },
     { label: "Artists", value: users.filter((u) => u.userType === "artist").length },
     { label: "Labels", value: users.filter((u) => u.userType === "label").length },
@@ -140,8 +146,11 @@ export default function UserManagement({ theme }) {
         </div>
 
         <div className="flex flex-row gap-2 whitespace-nowrap">
-          <Button variant={isDark ? "outline" : "secondary"}>
-            <Download className="h-4 w-4" /> Import CSV/Excel
+          <Button
+            variant={isDark ? "outline" : "secondary"}
+            onClick={() => setIsExportModalOpen(true)}
+          >
+            <Download className="h-4 w-4 mr-2" /> Export as CSV
           </Button>
 
           <Button
@@ -378,7 +387,7 @@ setIsResetPasswordOpen(true);
               </Button>
 
               <div className="flex gap-1">
-                {Array.from({ length: totalPages }, (_, i) => (
+                {Array.from({ length: pagination.totalPages }, (_, i) => (
                   <button
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
@@ -395,7 +404,7 @@ setIsResetPasswordOpen(true);
               </div>
 
               <Button
-                disabled={currentPage === totalPages}
+                disabled={currentPage === pagination.totalPages}
                 variant="outline"
                 onClick={() => setCurrentPage((p) => p + 1)}
               >
@@ -430,6 +439,67 @@ setIsResetPasswordOpen(true);
         onClose={() => setIsUserDetailsModalOpen(false)}
         user={selectedUserForDetails}
         theme={theme}
+      />
+      <ExportCsvDialog
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        theme={theme}
+        totalItems={pagination.totalItems}
+        headers={[
+          { label: "S.No.", key: "sno" },
+          { label: "User ID", key: "accountId" },
+          { label: "Account Name", key: "accountName" },
+          { label: "Stage Name", key: "stageName" },
+          { label: "Account Type", key: "userType" },
+          { label: "Status", key: "isActive" },
+          { label: "Membership", key: "membership" },
+          { label: "Email", key: "emailAddress" },
+          { label: "Join Date", key: "joinDate" },
+        ]}
+        fetchData={async (page, limit) => {
+          try {
+            let extraParams = "&role=user";
+            if (debouncedSearch) {
+              extraParams += `&search=${debouncedSearch}`;
+            }
+            if (userType !== "all") {
+              extraParams += `&userType=${userType}`;
+            }
+            const res = await GlobalApi.getUsers(page, limit, extraParams);
+            const usersToExport = res.data.data.users || [];
+            
+            // Transform data to match headers
+            return usersToExport.map(u => {
+              const stageName =
+                u.userType === "artist"
+                  ? u?.artistData?.artistName
+                  : u.userType === "label"
+                    ? u?.labelData?.labelName
+                    : u.userType === "aggregator"
+                      ? u?.aggregatorData?.companyName
+                      : "—";
+              const accountName = u.firstName || u.lastName ? `${u.firstName || ""} ${u.lastName || ""}`.trim() : "—";
+              
+              return {
+                accountId: u.accountId,
+                accountName: accountName,
+                stageName: stageName,
+                userType: u.userType,
+                isActive: u.isActive ? "Active" : "Inactive",
+                membership: "Active", // Placeholder as in UI
+                emailAddress: u.emailAddress,
+                joinDate: new Date(u.createdAt).toLocaleDateString(),
+              }
+            });
+          } catch (err) {
+            console.error("❌ Error fetching users for export:", err);
+            toast.error("Failed to load data for export");
+            return [];
+          }
+        }}
+        filename="users"
+        title="Export Users"
+        description="Select a data range of users to export as a CSV file."
       />
     </div>
   );

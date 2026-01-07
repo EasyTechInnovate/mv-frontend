@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import GlobalApi from "@/lib/GlobalApi"; 
 import MVProductionUserPage from "@/components/mv-production/MVProductionUserPage"; 
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 export default function MVProductionManagement({ theme = "dark" }) {
   const isDark = theme === "dark";
 
@@ -40,6 +41,7 @@ export default function MVProductionManagement({ theme = "dark" }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const fetchProductions = async () => {
     setLoading(true);
@@ -154,8 +156,12 @@ const handleDeleteConfirm = async () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button variant={isDark ? "outline" : "secondary"} className="flex items-center gap-2 rounded-full px-5">
-            <Upload className="h-4 w-4" /> Import CSV/Excel
+          <Button
+            variant={isDark ? "outline" : "secondary"}
+            className="flex items-center gap-2 rounded-full px-5"
+            onClick={() => setIsExportModalOpen(true)}
+          >
+            <Upload className="h-4 w-4 mr-2" /> Export as CSV
           </Button>
           <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-5">
             + Add New Production
@@ -373,21 +379,66 @@ const handleDeleteConfirm = async () => {
       )}
 
       {showDeleteDialog && (
-  <ConfirmDialog
-    theme={theme}
-    title="Delete MV Production"
-    message={`Are you sure you want to delete this MV Production?\nThis action cannot be undone.`}
-    confirmLabel="Delete"
-    cancelLabel="Cancel"
-    loading={deleteLoading}
-    
-    onConfirm={handleDeleteConfirm}
-    onCancel={() => {
-      setShowDeleteDialog(false);
-      setItemToDelete(null);
-    }}
-  />
-)}
+        <ConfirmDialog
+          theme={theme}
+          title="Delete MV Production"
+          message={`Are you sure you want to delete this MV Production?\nThis action cannot be undone.`}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          loading={deleteLoading}
+          
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => {
+            setShowDeleteDialog(false);
+            setItemToDelete(null);
+          }}
+        />
+      )}
+      <ExportCsvDialog
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        theme={theme}
+        totalItems={pagination.totalCount || 0}
+        headers={[
+          { label: "S.No.", key: "sno" },
+          { label: "Account ID", key: "accountId" },
+          { label: "Account Name", key: "accountName" },
+          { label: "Project Title", key: "projectTitle" },
+          { label: "Budget", key: "budget" },
+          { label: "Email", key: "email" },
+          { label: "Status", key: "status" },
+          { label: "Submitted", key: "submittedDate" },
+        ]}
+        fetchData={async (page, limit) => {
+          try {
+            const params = {
+              page,
+              limit,
+              status: statusFilter === "all" ? undefined : statusFilter,
+              search: debouncedSearch || undefined,
+            };
+            const res = await GlobalApi.getAllMVProductions(params);
+            const data = res?.data?.data || {};
+            const productionsToExport = data.productions || [];
+
+            return productionsToExport.map(p => ({
+              accountId: p.accountId || "-",
+              accountName: `${p.userId?.firstName || ""} ${p.userId?.lastName || ""}`.trim() || "-",
+              projectTitle: p.projectOverview?.projectTitle || "-",
+              budget: p.budgetRequestAndOwnershipProposal?.totalBudgetRequested ?? "-",
+              email: p.userId?.emailAddress || "-",
+              status: p.status || "pending",
+              submittedDate: new Date(p.createdAt).toLocaleDateString(),
+            }));
+          } catch (err) {
+            toast.error("Failed to fetch data for export.");
+            return [];
+          }
+        }}
+        filename="mv_productions"
+        title="Export MV Productions"
+        description="Select a data range to export as a CSV file."
+      />
     </div>
   );
 }

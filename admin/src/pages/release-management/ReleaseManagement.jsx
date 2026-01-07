@@ -5,6 +5,8 @@ import { Download, Eye, ArrowLeft } from "lucide-react"; // Import ArrowLeft
 import ReleaseModal from "../../components/release-management/ReleaseModal";
 import GlobalApi from "@/lib/GlobalApi"; // your API wrapper
 import { useParams, useNavigate } from "react-router-dom"; // Import hooks
+import ExportCsvDialog from "@/components/common/ExportCsvDialog";
+import { toast } from "sonner";
 
 
 const EReleaseStatus = {
@@ -60,6 +62,7 @@ export default function ReleaseManagement({ theme }) {
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
+    totalItems: 0,
     itemsPerPage: 10,
   });
 
@@ -67,7 +70,7 @@ export default function ReleaseManagement({ theme }) {
   const [selectedRelease, setSelectedRelease] = useState(null);
   const [statsData, setStatsData] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
-
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
 
   // Fetch API
@@ -91,9 +94,15 @@ export default function ReleaseManagement({ theme }) {
       const data = res.data.data;
 
       setReleases(data.releases);
-      setPagination(data.pagination);
+      setPagination({
+        currentPage: data.pagination.currentPage,
+        totalPages: data.pagination.totalPages,
+        totalItems: data.pagination.totalItems || data.pagination.totalCount || 0, // API might return totalItems or totalCount
+        itemsPerPage: data.pagination.itemsPerPage,
+      });
     } catch (err) {
       console.log("API ERROR → ", err);
+      toast.error("Failed to load releases");
     }
   };
 
@@ -214,8 +223,9 @@ export default function ReleaseManagement({ theme }) {
           <Button
             variant={isDark ? "outline" : "secondary"}
             className="flex items-center gap-2 rounded-full px-5"
+            onClick={() => setIsExportModalOpen(true)}
           >
-            <Download className="h-4 w-4" /> Import CSV/Excel
+            <Download className="h-4 w-4 mr-2" /> Export as CSV
           </Button>
           <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-5">
             + Add New Release
@@ -415,6 +425,58 @@ export default function ReleaseManagement({ theme }) {
           Next
         </Button>
       </div>
+      <ExportCsvDialog
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        theme={theme}
+        totalItems={pagination.totalItems}
+        headers={[
+          { label: "S.No.", key: "sno" },
+          { label: "Release ID", key: "releaseId" },
+          { label: "Release Name", key: "releaseName" },
+          { label: "Artist", key: "artistName" },
+          { label: "Status", key: "releaseStatus" },
+          { label: "Request Status", key: "requestStatus" },
+          { label: "Tracks", key: "trackCount" },
+          { label: "Account Name", key: "accountName" },
+        ]}
+        fetchData={async (exportPage, exportLimit) => {
+          try {
+            const params = { page: exportPage, limit: exportLimit };
+            if (debouncedSearch) {
+              params.search = debouncedSearch;
+            }
+            if (status !== "all") {
+              params.status = status;
+            }
+            if (trackType !== "all") {
+              params.trackType = trackType;
+            }
+            if (userId) {
+              params.userId = userId;
+            }
+            const res = await GlobalApi.getAllReleases(params);
+            const releasesToExport = res.data.data.releases || [];
+
+            return releasesToExport.map(rel => ({
+              releaseId: rel.releaseId,
+              releaseName: rel.releaseName,
+              artistName: rel.user.name,
+              releaseStatus: rel.releaseStatus,
+              requestStatus: rel.requestStatus || rel.releaseStatus, // Fallback to releaseStatus
+              trackCount: "1 track", // Placeholder as per UI
+              accountName: rel.user.name,
+            }));
+          } catch (err) {
+            console.error("❌ Error fetching releases for export:", err);
+            toast.error("Failed to load data for export");
+            return [];
+          }
+        }}
+        filename={userName ? `${userName}_releases` : "releases"}
+        title={userName ? `Export ${userName}'s Releases` : "Export Releases"}
+        description="Select a data range of releases to export as a CSV file."
+      />
     </div>
   );
 }

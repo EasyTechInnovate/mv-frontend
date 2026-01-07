@@ -13,6 +13,7 @@ import CreateSublabelModal from "./CreateSublabelModal";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 import { Input } from "@/components/ui/input";
 
 const useDebounce = (value, delay) => {
@@ -35,6 +36,7 @@ export default function ManageLabelsModal({
 }) {
   const isDark = theme === "dark";
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [sublabels, setSublabels] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -123,6 +125,26 @@ export default function ManageLabelsModal({
     }
   };
 
+  const exportHeaders = [
+    { label: "S.No.", key: "sno" },
+    { label: "Label Name", key: "name" },
+    { label: "Membership Status", key: "membershipStatus" },
+    { label: "Assigned Users", key: "assignedUsersCount" },
+    { label: "Is Active", key: "isActive" },
+  ];
+
+  const fetchSublabelsForExport = async (page, limit) => {
+    try {
+      const extraParams = debouncedSearch ? `&search=${debouncedSearch}` : "";
+      const res = await GlobalApi.getAllSubLabels(page, limit, extraParams);
+      return res.data.data.sublabels || [];
+    } catch (err) {
+      console.error("❌ Error fetching sublabels for export:", err);
+      toast.error("Failed to load data for export");
+      return [];
+    }
+  };
+
   return (
     <>
       <Dialog
@@ -175,7 +197,7 @@ export default function ManageLabelsModal({
             />
             <Button
               variant="outline"
-              
+              onClick={() => setIsExportModalOpen(true)}
               className={`${
                 isDark
                   ? "border-gray-600 hover:bg-gray-700"
@@ -326,6 +348,18 @@ export default function ManageLabelsModal({
             onSaved={() => fetchSublabels(page)}
             editData={editData}
             theme={theme}
+          />
+          
+          <ExportCsvDialog
+            isOpen={isExportModalOpen}
+            onClose={() => setIsExportModalOpen(false)}
+            theme={theme}
+            totalItems={pagination.totalItems}
+            headers={exportHeaders}
+            fetchData={fetchSublabelsForExport}
+            filename="sublabels"
+            title="Export Sublabels"
+            description="Select a data range to export as a CSV file."
           />
         </DialogContent>
       </Dialog>

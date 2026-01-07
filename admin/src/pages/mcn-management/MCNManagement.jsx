@@ -17,6 +17,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 
 const StatusBadge = ({ status }) => {
   const statusConfig = {
@@ -202,6 +203,7 @@ export default function MCNManagement({ theme = "dark" }) {
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   // States for CreateMCNChannelModal
   const [isCreateChannelModalOpen, setIsCreateChannelModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [newChannel, setNewChannel] = useState(null);
   
   // State for stats cards
@@ -407,18 +409,18 @@ export default function MCNManagement({ theme = "dark" }) {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => alert("Import CSV/Excel (mock)")}
+              onClick={() => setIsExportModalOpen(true)}
               className={`px-3 py-2 rounded-md border ${borderColor} ${isDark ? "bg-transparent" : "bg-white"
                 } text-sm inline-flex items-center gap-2`}
             >
-              <Upload className="w-4 h-4" /> Import CSV/Excel
+              <Download className="w-4 h-4" /> Export as CSV
             </button>
-            <button
+            {/* <button
               onClick={() => alert("Export Analytics (mock)")}
               className="px-4 py-2 rounded-full bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] text-white text-sm inline-flex items-center gap-2 shadow"
             >
               <Download className="w-4 h-4" /> Export Analytics
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -739,6 +741,73 @@ export default function MCNManagement({ theme = "dark" }) {
           { id: 2, name: "Education" },
           { id: 3, name: "Music" },
         ]}
+      />
+       <ExportCsvDialog
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        theme={theme}
+        totalItems={pagination?.totalCount || 0}
+        headers={
+          activeTab === 'request'
+            ? [
+                { label: "S.No.", key: "sno" },
+                { label: "Channel Name", key: "youtubeChannelName" },
+                { label: "Account ID", key: "userAccountId" },
+                { label: "Account Name", key: "accountName" },
+                { label: "Subscribers", key: "subscriberCount" },
+                { label: "Submitted On", key: "createdAt" },
+                { label: "Status", key: "status" },
+              ]
+            : [
+                { label: "S.No.", key: "sno" },
+                { label: "Channel Name", key: "channelName" },
+                { label: "Account ID", key: "userAccountId" },
+                { label: "Account Name", key: "accountName" },
+                { label: "Revenue Share", key: "revenueShare" },
+                { label: "Joined Date", key: "joinedDate" },
+                { label: "Status", key: "status" },
+              ]
+        }
+        fetchData={async (page, limit) => {
+          const params = { page, limit, status: status || undefined, search: debouncedSearch || undefined };
+          try {
+            const res = activeTab === 'request'
+              ? await GlobalApi.getMcnRequests(params)
+              : await GlobalApi.getMcnChannels(params);
+            
+            const data = res?.data?.data;
+            const rows = activeTab === 'request' ? data?.requests : data?.channels;
+
+            return rows.map(row => {
+              const accountName = row.userId ? `${row.userId.firstName} ${row.userId.lastName}`.trim() : "-";
+              if (activeTab === 'request') {
+                return {
+                  youtubeChannelName: row.youtubeChannelName,
+                  userAccountId: row.userAccountId,
+                  accountName: accountName,
+                  subscriberCount: row.subscriberCount,
+                  createdAt: new Date(row.createdAt).toLocaleDateString(),
+                  status: row.status,
+                }
+              } else {
+                return {
+                  channelName: row.channelName,
+                  userAccountId: row.userAccountId,
+                  accountName: accountName,
+                  revenueShare: `${row.revenueShare}%`,
+                  joinedDate: new Date(row.joinedDate).toLocaleDateString(),
+                  status: row.status,
+                }
+              }
+            });
+          } catch (err) {
+            toast.error("Failed to fetch data for export.");
+            return [];
+          }
+        }}
+        filename={activeTab === 'request' ? 'mcn_requests' : 'mcn_active_channels'}
+        title={activeTab === 'request' ? 'Export MCN Requests' : 'Export Active Channels'}
+        description={`Select a data range to export as a CSV file.`}
       />
     </div>
   );

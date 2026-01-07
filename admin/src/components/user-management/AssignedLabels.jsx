@@ -12,6 +12,7 @@ import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import AssignSublabelModal from "./AssignSublabelModal";
+import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 import { Input } from "@/components/ui/input";
 
 const useDebounce = (value, delay) => {
@@ -31,6 +32,7 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
   const isDark = theme === "dark";
 
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [userName, setUserName] = useState("");
   const [sublabels, setSublabels] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -102,6 +104,30 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
     setPage(1);
   };
 
+  const exportHeaders = [
+    { label: "S.No.", key: "sno" },
+    { label: "Label Name", key: "name" },
+    { label: "Membership", key: "membershipStatus" },
+    { label: "Is Default", key: "isDefault" },
+  ];
+
+  const fetchSublabelsForExport = async (page, limit) => {
+    if (!userId) return [];
+    try {
+      const res = await GlobalApi.getUserSubLabels(
+        userId,
+        page,
+        limit,
+        debouncedSearch
+      );
+      return res.data.data.sublabels || [];
+    } catch (err) {
+      console.error("❌ Error fetching assigned sublabels for export:", err);
+      toast.error("Failed to load data for export");
+      return [];
+    }
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -146,7 +172,7 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
             />
             <Button
               variant="outline"
-              
+              onClick={() => setIsExportModalOpen(true)}
               className={`${
                 isDark
                   ? "border-gray-600 hover:bg-gray-700"
@@ -277,6 +303,18 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
             theme={theme}
             userId={userId}
             onAssigned={() => fetchUserAssignedSublabels(page)}
+          />
+
+          <ExportCsvDialog
+            isOpen={isExportModalOpen}
+            onClose={() => setIsExportModalOpen(false)}
+            theme={theme}
+            totalItems={pagination.totalItems}
+            headers={exportHeaders}
+            fetchData={fetchSublabelsForExport}
+            filename={`${userName}_sublabels`}
+            title={`Export ${userName}'s Sublabels`}
+            description="Select a data range to export as a CSV file."
           />
         </DialogContent>
       </Dialog>

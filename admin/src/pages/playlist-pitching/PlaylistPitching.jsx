@@ -15,6 +15,7 @@ import {
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
 import PlaylistPitchingReviewModal from "@/components/playlist-pitching/PlaylistPitchingReviewModal";
+import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 
 function MoodBadge({ mood }) {
   const map = {
@@ -47,6 +48,7 @@ export default function PlaylistPitching({ theme }) {
 
   const [selectedPitch, setSelectedPitch] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const normalizeResponse = (res) => {
     if (!res || !res.data || !res.data.data) return { submissions: [], pagination: {} };
@@ -198,8 +200,11 @@ export default function PlaylistPitching({ theme }) {
             ))}
           </select>
 
-          <Button variant={isDark ? "outline" : "secondary"}>
-            <Download className="h-4 w-4 mr-2" /> Export
+          <Button
+            variant={isDark ? "outline" : "secondary"}
+            onClick={() => setIsExportModalOpen(true)}
+          >
+            <Download className="h-4 w-4 mr-2" /> Export as CSV
           </Button>
         </div>
       </div>
@@ -344,6 +349,54 @@ export default function PlaylistPitching({ theme }) {
         data={selectedPitch}
         theme={theme}
         refreshList={fetchPlaylistPitches}
+      />
+
+      <ExportCsvDialog
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        theme={theme}
+        totalItems={pagination.totalCount || 0}
+        headers={[
+          { label: "S.No.", key: "sno" },
+          { label: "Track Name", key: "trackName" },
+          { label: "Artist Name", key: "artistName" },
+          { label: "Username", key: "username" },
+          { label: "Account ID", key: "accountId" },
+          { label: "Label Name", key: "labelName" },
+          { label: "ISRC", key: "isrc" },
+          { label: "Genre", key: "genres" },
+          { label: "Mood", key: "mood" },
+          { label: "Theme", key: "theme" },
+          { label: "Language", key: "language" },
+          { label: "Store", key: "selectedStore" },
+          { label: "Status", key: "status" },
+          { label: "Submit Date", key: "createdAt" },
+        ]}
+        fetchData={async (page, limit) => {
+          try {
+            const params = {
+              page,
+              limit,
+              status: status === "" ? undefined : status,
+              search: debouncedSearch || undefined,
+            };
+            const res = await GlobalApi.getPlayPitching(params);
+            const { submissions } = normalizeResponse(res);
+            return (submissions || []).map(row => ({
+              ...row,
+              username: row.userId ? `${row.userId.firstName || ""} ${row.userId.lastName || ""}`.trim() : "—",
+              accountId: row.userId?.accountId || "—",
+              genres: (row.genres || []).join(", "),
+              createdAt: row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "—",
+            }));
+          } catch (err) {
+            toast.error("Failed to fetch data for export.");
+            return [];
+          }
+        }}
+        filename="playlist_pitches"
+        title="Export Playlist Pitches"
+        description="Select a data range of playlist pitches to export as a CSV file."
       />
     </div>
   );

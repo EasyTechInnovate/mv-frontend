@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Download, Edit } from "lucide-react";
 import { mockKycData } from "./KYCManagementData";
+import jsonToCsv, { exportToCsv } from "@/lib/csv";
+import { toast } from "sonner";
 
 export default function KycManagement({ theme }) {
   const isDark = theme === "dark";
@@ -48,6 +50,37 @@ export default function KycManagement({ theme }) {
       : badgeClass("bg-red-500/20", "text-red-400");
   };
 
+  const handleExport = () => {
+    if (filteredData.length === 0) {
+      toast.warning("No data to export.");
+      return;
+    }
+
+    const headers = [
+      { label: "S.No.", key: "sno" },
+      { label: "User ID", key: "id" },
+      { label: "Stage Name", key: "stageName" },
+      { label: "Account Type", key: "accountType" },
+      { label: "Status", key: "status" },
+      { label: "Membership Status", key: "membershipStatus" },
+      { label: "Email", key: "email" },
+      { label: "Aadhaar Number", key: "aadhaar" },
+      { label: "PAN Number", key: "pan" },
+      { label: "Bank Information", key: "bankInfo" },
+      { label: "KYC Status", key: "kycStatus" },
+      { label: "Join Date", key: "joinDate" },
+    ];
+
+    const dataToExport = filteredData.map((row, index) => ({
+      ...row,
+      sno: index + 1,
+    }));
+
+    const csvString = jsonToCsv(dataToExport, headers);
+    exportToCsv("kyc_management.csv", csvString);
+    toast.success(`${dataToExport.length} records exported successfully.`);
+  };
+
   return (
     <div className={`p-4 md:p-6 space-y-6 transition-colors duration-300 ${isDark ? "bg-[#111A22] text-gray-200" : "bg-gray-50 text-[#151F28]"}`}>
       {/* Header */}
@@ -59,8 +92,12 @@ export default function KycManagement({ theme }) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant={isDark ? "outline" : "secondary"} className="flex items-center gap-2 rounded-full px-5">
-            <Download className="h-4 w-4" /> Import CSV/Excel
+          <Button 
+            variant={isDark ? "outline" : "secondary"} 
+            className="flex items-center gap-2 rounded-full px-5"
+            onClick={handleExport}
+          >
+            <Download className="h-4 w-4 mr-2" /> Export as CSV
           </Button>
           <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-5">
             Add New User
@@ -98,9 +135,9 @@ export default function KycManagement({ theme }) {
           <select className={`rounded-md px-3 py-2 text-sm ${isDark ? "bg-[#151F28] border border-gray-700 text-gray-200" : "bg-white border border-gray-300"}`}>
             <option>All Types</option>
           </select>
-          <Button variant={isDark ? "outline" : "secondary"} className="flex items-center gap-2 rounded-full px-5">
+          {/* <Button variant={isDark ? "outline" : "secondary"} className="flex items-center gap-2 rounded-full px-5">
             <Download className="h-4 w-4" /> Export
-          </Button>
+          </Button> */}
         </div>
       </div>
 

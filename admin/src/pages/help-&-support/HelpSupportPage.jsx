@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, Download, MessageSquare, Loader2 } from "lucide-react";
 import GlobalApi from "@/lib/GlobalApi";
 import SupportTicketDetail from "@/components/help-&-support/SupportTicketDetail";
+import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 
 export default function HelpSupport({ theme = "dark" }) {
   const [tickets, setTickets] = useState([]);
@@ -20,6 +21,7 @@ export default function HelpSupport({ theme = "dark" }) {
   const [priorityFilter, setPriorityFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
 
 
@@ -295,8 +297,9 @@ export default function HelpSupport({ theme = "dark" }) {
 
           <button
             className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg ${bgColors.button}`}
+            onClick={() => setIsExportModalOpen(true)}
           >
-            <Download className="w-4 h-4" /> Export
+            <Download className="w-4 h-4 mr-2" /> Export as CSV
           </button>
         </div>
       </div>
@@ -447,6 +450,61 @@ export default function HelpSupport({ theme = "dark" }) {
           </button>
         </div>
       )}
+      <ExportCsvDialog
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        theme={theme}
+        totalItems={pagination.totalCount || 0}
+        headers={[
+          { label: "S.No.", key: "sno" },
+          { label: "Ticket #", key: "ticketId" },
+          { label: "User", key: "userName" },
+          { label: "User Email", key: "userEmail" },
+          { label: "Subject", key: "subject" },
+          { label: "Category", key: "category" },
+          { label: "Priority", key: "priority" },
+          { label: "Status", key: "status" },
+          { label: "Assigned To", key: "assignedToName" },
+          { label: "Created Date", key: "createdAt" },
+          { label: "Responses Count", key: "responsesCount" },
+        ]}
+        fetchData={async (page, limit) => {
+          try {
+            const params = {
+              page,
+              limit,
+              search: searchQuery || undefined,
+              status: statusFilter === "All" ? undefined : statusFilter.toLowerCase(),
+              priority: priorityFilter === "All" ? undefined : priorityFilter.toLowerCase(),
+              category: categoryFilter === "All" ? undefined : categoryFilter,
+            };
+            const res = await GlobalApi.getAllSupportTickets(page, limit, params);
+            const ticketsToExport = res?.data?.data?.tickets || [];
+
+            return ticketsToExport.map(t => ({
+              ticketId: t.ticketId,
+              userName: `${t.userId?.firstName || ""} ${t.userId?.lastName || ""}`.trim() || "-",
+              userEmail: t.contactEmail || t.userId?.emailAddress || "-",
+              subject: t.subject,
+              category: t.category,
+              priority: t.priority,
+              status: t.status,
+              assignedToName: typeof t.assignedTo === "object" && t.assignedTo !== null
+                ? `${t.assignedTo.firstName ?? ""} ${t.assignedTo.lastName ?? ""}`.trim()
+                : t.assignedTo || "Unassigned",
+              createdAt: new Date(t.createdAt).toLocaleDateString(),
+              responsesCount: t.responses?.length || 0,
+            }));
+          } catch (err) {
+            console.error("❌ Error fetching tickets for export:", err);
+            toast.error("Failed to fetch data for export.");
+            return [];
+          }
+        }}
+        filename="admin_support_tickets"
+        title="Export Admin Support Tickets"
+        description="Select a data range of support tickets to export as a CSV file."
+      />
     </div>
   );
 }
