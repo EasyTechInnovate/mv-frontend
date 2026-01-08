@@ -65,7 +65,7 @@ export default function ReleaseModal({ theme, defaultData, userId, onBack }) {
 
         if (!data) return;
 
-        
+
         const info = data.step1?.releaseInfo || {};
 
         setReleaseData({
@@ -119,15 +119,15 @@ export default function ReleaseModal({ theme, defaultData, userId, onBack }) {
       className={`p-6 space-y-6 transition-colors duration-200 ${isDark ? "bg-[#111A22] text-gray-200" : "bg-gray-50 text-[#151F28]"
         }`}
     >
-      
+
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button
             onClick={onBack}
             variant="outline"
             className={`px-4 py-2 rounded-md ${isDark
-                ? "bg-[#151F28] border border-gray-700 text-gray-200 hover:bg-[#1d2631]"
-                : "bg-white border border-gray-200 text-gray-800 hover:bg-gray-100"
+              ? "bg-[#151F28] border border-gray-700 text-gray-200 hover:bg-[#1d2631]"
+              : "bg-white border border-gray-200 text-gray-800 hover:bg-gray-100"
               }`}
           >
             ← Back
@@ -149,8 +149,8 @@ export default function ReleaseModal({ theme, defaultData, userId, onBack }) {
               <Button
                 variant="outline"
                 className={`flex items-center gap-2 px-4 py-2 rounded-md ${isDark
-                    ? "bg-[#151F28] border border-gray-700 text-gray-200"
-                    : "bg-white border border-gray-200 text-gray-800"
+                  ? "bg-[#151F28] border border-gray-700 text-gray-200"
+                  : "bg-white border border-gray-200 text-gray-800"
                   }`}
               >
                 <Download className="w-4 h-4" /> Export CSV/Excel
@@ -159,8 +159,8 @@ export default function ReleaseModal({ theme, defaultData, userId, onBack }) {
 
             <DropdownMenuContent
               className={`w-56 ${isDark
-                  ? "bg-gray-800 border border-gray-700 text-gray-200"
-                  : "bg-white border border-gray-200 text-gray-800"
+                ? "bg-gray-800 border border-gray-700 text-gray-200"
+                : "bg-white border border-gray-200 text-gray-800"
                 } rounded-md shadow-md`}
             >
               <DropdownMenuItem>Export Cover Art</DropdownMenuItem>
@@ -169,7 +169,7 @@ export default function ReleaseModal({ theme, defaultData, userId, onBack }) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          
+
           <Select
             value={releaseData.status}
             onValueChange={(v) => handleChange("status", v)}
@@ -192,75 +192,75 @@ export default function ReleaseModal({ theme, defaultData, userId, onBack }) {
         </div>
       </div>
 
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-       
-<div
-  className={`relative rounded-lg p-4 ${isDark
-      ? "bg-[#151F28] border border-gray-700"
-      : "bg-white border border-gray-200"
-    }`}
->
-  <p className="font-medium mb-3">Cover Art</p>
 
-  <div
-    className={`relative rounded-lg border-2 border-dashed h-64 flex items-center justify-center overflow-hidden ${isDark
-        ? "border-gray-700 bg-transparent"
-        : "border-gray-200 bg-white"
-      }`}
-  >
-    {coverArt ? (
-      <>
-        <img
-          src={
-            typeof coverArt === "string"
-              ? coverArt
-              : URL.createObjectURL(coverArt)
-          }
-          className="h-full w-full object-contain"
-        />
-
-        
-        <a
-          href={
-            typeof coverArt === "string"
-              ? coverArt
-              : URL.createObjectURL(coverArt)
-          }
-          download={
-            typeof coverArt === "string" ? "cover-art.jpg" : coverArt.name
-          }
-          className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
+        <div
+          className={`relative rounded-lg p-4 ${isDark
+            ? "bg-[#151F28] border border-gray-700"
+            : "bg-white border border-gray-200"
+            }`}
         >
-          <button
-            className={`px-4 py-2 rounded-md text-sm font-medium ${isDark ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-purple-500 text-white hover:bg-purple-600"
+          <p className="font-medium mb-3">Cover Art</p>
+
+          <div
+            className={`relative rounded-lg border-2 border-dashed h-64 flex items-center justify-center overflow-hidden ${isDark
+              ? "border-gray-700 bg-transparent"
+              : "border-gray-200 bg-white"
               }`}
           >
-            Download Cover Art
-          </button>
-        </a>
-      </>
-    ) : (
-      <p>No Image</p>
-    )}
-  </div>
-</div>
+            {coverArt ? (
+              <>
+                <img
+                  src={
+                    typeof coverArt === "string"
+                      ? coverArt
+                      : URL.createObjectURL(coverArt)
+                  }
+                  className="h-full w-full object-contain"
+                />
+
+
+                <a
+                  href={
+                    typeof coverArt === "string"
+                      ? coverArt
+                      : URL.createObjectURL(coverArt)
+                  }
+                  download={
+                    typeof coverArt === "string" ? "cover-art.jpg" : coverArt.name
+                  }
+                  className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
+                >
+                  <button
+                    className={`px-4 py-2 rounded-md text-sm font-medium ${isDark ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-purple-500 text-white hover:bg-purple-600"
+                      }`}
+                  >
+                    Download Cover Art
+                  </button>
+                </a>
+              </>
+            ) : (
+              <p>No Image</p>
+            )}
+          </div>
+        </div>
 
 
 
 
-        
+
         <div
           className={`md:col-span-2 rounded-lg p-6 ${isDark
-              ? "bg-[#151F28] border border-gray-700"
-              : "bg-white border border-gray-200"
+            ? "bg-[#151F28] border border-gray-700"
+            : "bg-white border border-gray-200"
             }`}
         >
           <p className="font-medium mb-4">Track Information</p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
+
             <div className="md:col-span-2">
               <label className="text-xs mb-2 block">Release Name</label>
               <Input
@@ -269,13 +269,13 @@ export default function ReleaseModal({ theme, defaultData, userId, onBack }) {
                   handleChange("releaseName", e.target.value)
                 }
                 className={`w-full rounded-md ${isDark
-                    ? "bg-[#0f1724] border border-gray-700 text-gray-200"
-                    : "bg-white border border-gray-200 text-[#111A22]"
+                  ? "bg-[#0f1724] border border-gray-700 text-gray-200"
+                  : "bg-white border border-gray-200 text-[#111A22]"
                   }`}
               />
             </div>
 
-            
+
             <div>
               <label className="text-xs mb-2 block">Genre</label>
 
@@ -285,8 +285,8 @@ export default function ReleaseModal({ theme, defaultData, userId, onBack }) {
               >
                 <SelectTrigger
                   className={`w-full rounded-md ${isDark
-                      ? "bg-[#0f1724] border border-gray-700 text-gray-200"
-                      : "bg-white border border-gray-200 text-[#111A22]"
+                    ? "bg-[#0f1724] border border-gray-700 text-gray-200"
+                    : "bg-white border border-gray-200 text-[#111A22]"
                     }`}
                 >
                   <SelectValue placeholder="Select genre" />
@@ -303,7 +303,7 @@ export default function ReleaseModal({ theme, defaultData, userId, onBack }) {
               </Select>
             </div>
 
-            
+
             <div className="md:col-span-3">
               <label className="text-xs mb-2 block">Label Name</label>
               <Input
@@ -312,21 +312,21 @@ export default function ReleaseModal({ theme, defaultData, userId, onBack }) {
                   handleChange("labelName", e.target.value)
                 }
                 className={`w-full rounded-md ${isDark
-                    ? "bg-[#0f1724] border border-gray-700 text-gray-200"
-                    : "bg-white border border-gray-200 text-[#111A22]"
+                  ? "bg-[#0f1724] border border-gray-700 text-gray-200"
+                  : "bg-white border border-gray-200 text-[#111A22]"
                   }`}
               />
             </div>
 
-            
+
             <div className="md:col-span-3">
               <label className="text-xs mb-2 block">UPC</label>
               <Input
                 value={releaseData.upc}
                 onChange={(e) => handleChange("upc", e.target.value)}
                 className={`w-full rounded-md ${isDark
-                    ? "bg-[#0f1724] border border-gray-700 text-gray-200"
-                    : "bg-white border border-gray-200 text-[#111A22]"
+                  ? "bg-[#0f1724] border border-gray-700 text-gray-200"
+                  : "bg-white border border-gray-200 text-[#111A22]"
                   }`}
               />
             </div>
@@ -334,31 +334,31 @@ export default function ReleaseModal({ theme, defaultData, userId, onBack }) {
         </div>
       </div>
 
-      
+
 
       {console.log("TRACK DATA IN PARENT:", trackData)}
       <AudioUploadSection
-  theme={theme}
-  tracks={trackData.map((t) => ({
-    songName: t.trackName || "",
-    genre: t.genre || "",
-    singerName: t.singerName || "",
-    composerName: t.composerName || "",
-    lyricistName: t.lyricistName || "",
-    producerName: t.producerName || "",
-    isrc: t.isrc || "",
-    previewTiming: t.previewTiming
-      ? `${t.previewTiming.startTime}-${t.previewTiming.endTime}`
-      : "",
-    callerTuneTiming: t.callerTuneTiming
-      ? `${t.callerTuneTiming.startTime}-${t.callerTuneTiming.endTime}`
-      : "",
-    audioUrl: t.audioFiles?.[0]?.fileUrl || ""
-  }))}
-/>
+        theme={theme}
+        tracks={trackData.map((t) => ({
+          songName: t.trackName || "",
+          genre: t.genre || "",
+          singerName: t.singerName || "",
+          composerName: t.composerName || "",
+          lyricistName: t.lyricistName || "",
+          producerName: t.producerName || "",
+          isrc: t.isrc || "",
+          previewTiming: t.previewTiming
+            ? `${t.previewTiming.startTime}-${t.previewTiming.endTime}`
+            : "",
+          callerTuneTiming: t.callerTuneTiming
+            ? `${t.callerTuneTiming.startTime}-${t.callerTuneTiming.endTime}`
+            : "",
+          audioUrl: t.audioFiles?.[0]?.fileUrl || ""
+        }))}
+      />
 
 
-      
+
       <StepThreeReview theme={theme} />
     </div>
   );

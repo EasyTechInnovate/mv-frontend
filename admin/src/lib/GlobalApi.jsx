@@ -481,7 +481,23 @@ export const updateTrendingArtist = (artistId, data) =>
 export const deleteTrendingArtist = (artistId) =>
   axiosClient.delete(`/v1/trending-artists/admin/${artistId}`);
 
+const getAllAggregatorApplications = (params) =>
+  axiosClient.get(`/v1/admin/aggregator/applications`, { params });
 
+const getAggregatorApplicationById = (applicationId) =>
+  axiosClient.get(`/v1/admin/aggregator/applications/${applicationId}`);
+
+const reviewAggregatorApplication = (applicationId, payload) =>
+  axiosClient.patch(
+    `/v1/admin/aggregator/applications/${applicationId}/review`,
+    payload
+  );
+
+const createAggregatorAccount = (applicationId, payload) =>
+  axiosClient.post(
+    `/v1/admin/aggregator/applications/${applicationId}/create-account`,
+    payload
+  );
 
 const getUserById = (userId) => axiosClient.get(`/v1/admin/users/${userId}`);
 
@@ -598,4 +614,8 @@ export default {
   createTrendingArtist,
   updateTrendingArtist,
   deleteTrendingArtist,
+  getAllAggregatorApplications,
+  getAggregatorApplicationById,
+  reviewAggregatorApplication,
+  createAggregatorAccount,
 };

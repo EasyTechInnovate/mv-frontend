@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Music, Play, BarChart3, Eye, Download, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Music, Play, BarChart3, Eye, Download, MoreHorizontal, ChevronLeft, ChevronRight, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getBasicReleases, getAdvancedReleases, getBasicReleaseDetails, getAdvancedReleaseDetails } from '../../services/api.services'
 import { showToast } from '../../utils/toast'
+import ExportCsvDialog from '../../components/common/ExportCsvDialog'
 
 // Release Status Enum
 export const EReleaseStatus = Object.freeze({
@@ -482,6 +483,7 @@ const CatalogPage = () => {
     const [currentPage, setCurrentPage] = useState(1)
     const [selectedRelease, setSelectedRelease] = useState(null)
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false)
     const itemsPerPage = 10
 
     // Debounce search
@@ -706,11 +708,13 @@ const CatalogPage = () => {
                         {releaseType === 'basic' ? 'Basic Releases' : 'Advanced Releases'}
                     </CardTitle>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                            Export All
-                        </Button>
-                        <Button variant="outline" size="sm">
-                            <Download className="w-4 h-4" />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsExportModalOpen(true)}
+                        >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Export as CSV
                         </Button>
                     </div>
                 </CardHeader>
@@ -851,6 +855,47 @@ const CatalogPage = () => {
                 }}
                 releaseType={releaseType}
             />
+             <ExportCsvDialog
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                totalItems={pagination?.totalItems || 0}
+                headers={[
+                  { label: "S.No.", key: "sno" },
+                  { label: "Release ID", key: "releaseId" },
+                  { label: "Release Name", key: "releaseName" },
+                  { label: "Type", key: "trackType" },
+                  { label: "Status", key: "releaseStatus" },
+                  { label: "Created Date", key: "createdAt" },
+                  { label: "Tracks", key: "trackCount" },
+                ]}
+                fetchData={async (page, limit) => {
+                  try {
+                    const fetchFunction = releaseType === 'basic' ? getBasicReleases : getAdvancedReleases;
+                    const res = await fetchFunction({
+                      page,
+                      limit,
+                      status: selectedStatus === 'all' ? undefined : selectedStatus,
+                      search: debouncedSearch || undefined,
+                      sortOrder,
+                    });
+                    const releasesToExport = res?.data?.releases || [];
+                    return releasesToExport.map(r => ({
+                      releaseId: r.releaseId,
+                      releaseName: r.releaseName || r.step1?.releaseInfo?.releaseName ||'Untitled Release',
+                      trackType: r.trackType || r.releaseType,
+                      releaseStatus: r.releaseStatus,
+                      createdAt: new Date(r.createdAt).toLocaleDateString(),
+                      trackCount: r.step2?.tracks?.length || r.trackCount || '--',
+                    }));
+                  } catch (err) {
+                    showToast.error("Failed to fetch data for export.");
+                    return [];
+                  }
+                }}
+                filename={releaseType === 'basic' ? 'basic_releases' : 'advanced_releases'}
+                title={`Export ${releaseType === 'basic' ? 'Basic' : 'Advanced'} Releases`}
+                description="Select a data range to export as a CSV file."
+              />
         </div>
     )
 }

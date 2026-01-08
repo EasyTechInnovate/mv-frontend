@@ -33,6 +33,7 @@ import AdminLogin from "./auth/SignIn";
 import KycManagement from "./pages/kyc-management/KYCManagement";
 import UnifiedSettingsPage from "./pages/company-settings/CompanySettings"
 import MVProductionManagement from "./pages/mv-production/MvProductionManagement";
+import AggregatorManagement from "./pages/aggregator-management/AggregatorManagement";
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [theme, setTheme] = useState("dark");
@@ -96,6 +97,7 @@ function App() {
             <Route path="/admin/release-management/:userId/:userName" element={<ReleaseManagement theme={theme} />} />
             <Route path="/admin/bonus-management" element={<BonusManagement theme={theme} />} />
             <Route path="/admin/kyc-management" element={<KycManagement theme={theme} />} />
+            <Route path="/admin/aggregator-management" element={<AggregatorManagement theme={theme} />} />
             <Route path="/admin/analytics-management" element={<AnalyticsManagement theme={theme} />} />
             <Route path="/admin/month-management" element={<MonthManagement theme={theme} />} />
             <Route path="/admin/royalty-management" element={<RoyaltyManagement theme={theme} />} />

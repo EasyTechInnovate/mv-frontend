@@ -376,7 +376,7 @@ export default function ReleaseManagement({ theme }) {
                     </span>
                   </td>
 
-                  <td className="px-4 py-3 whitespace-nowrap">1 track</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{rel.trackCount || 0} track(s)</td>
                   <td className="px-4 py-3 whitespace-nowrap">{rel.user.name}</td>
 
                   <td className="px-4 py-3 flex gap-2 whitespace-nowrap">
@@ -464,7 +464,7 @@ export default function ReleaseManagement({ theme }) {
               artistName: rel.user.name,
               releaseStatus: rel.releaseStatus,
               requestStatus: rel.requestStatus || rel.releaseStatus, // Fallback to releaseStatus
-              trackCount: "1 track", // Placeholder as per UI
+              trackCount: rel.trackCount || 0,
               accountName: rel.user.name,
             }));
           } catch (err) {

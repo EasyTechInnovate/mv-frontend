@@ -602,11 +602,11 @@ export default function MCNManagement({ theme = "dark" }) {
                           "Subscribers",
                           "Submitted On",
                           "Total Views (28d)",
-                          "AdSense Enabled?",
-                          "Copyright Strikes?",
-                          "100% Original",
-                          "Another MCN?",
-                          "Last Month Revenue",
+                          // "AdSense Enabled?",
+                          // "Copyright Strikes?",
+                          // "100% Original",
+                          // "Another MCN?",
+                          // "Last Month Revenue",
                           "Monetization Eligibility",
                           "Status",
                           "Actions",
@@ -628,11 +628,11 @@ export default function MCNManagement({ theme = "dark" }) {
                           <td className="px-4 py-3">{r.subscriberCount?.toLocaleString("en-IN")}</td>
                           <td className="px-4 py-3">{new Date(r.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</td>
                           <td className="px-4 py-3 text-center">{r.totalViewsCountsIn28Days?.toLocaleString("en-IN")}</td>
-                          <td className="px-4 py-3 text-center">{r.isAdSenseEnabled ? "Yes" : "No"}</td>
-                          <td className="px-4 py-3 text-center">{r.hasCopyrightStrikes ? "Yes" : "No"}</td>
-                          <td className="px-4 py-3 text-center">{r.isContentOriginal ? "Yes" : "No"}</td>
-                          <td className="px-4 py-3 text-center">{r.isPartOfAnotherMCN ? "Yes" : "No"}</td>
-                          <td className="px-4 py-3 text-center">{r.channelRevenueLastMonth?.toLocaleString("en-IN")}</td>
+                          {/* <td className="px-4 py-3 text-center">{r.isAdSenseEnabled ? "Yes" : "No"}</td> */}
+                          {/* <td className="px-4 py-3 text-center">{r.hasCopyrightStrikes ? "Yes" : "No"}</td> */}
+                          {/* <td className="px-4 py-3 text-center">{r.isContentOriginal ? "Yes" : "No"}</td> */}
+                          {/* <td className="px-4 py-3 text-center">{r.isPartOfAnotherMCN ? "Yes" : "No"}</td> */}
+                          {/* <td className="px-4 py-3 text-center">{r.channelRevenueLastMonth?.toLocaleString("en-IN")}</td> */}
                           <td className="px-4 py-3 text-center">
                             <span
                               className={`inline-block px-3 py-1 rounded-full text-xs ${r.monetizationEligibility

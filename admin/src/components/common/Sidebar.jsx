@@ -105,6 +105,7 @@ export default function Sidebar({ isCollapsed = false, theme }) {
                 { label: "User Management", icon: <Users className="w-4 h-4" /> },
                 { label: "Release Management", icon: <Rocket className="w-4 h-4" /> },
                 { label: "KYC Management", icon: <IdCard className="w-4 h-4" /> },
+                { label: "Aggregator Management", icon: <Users className="w-4 h-4" /> },
               ],
             },
             {
