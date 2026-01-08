@@ -1,9 +1,18 @@
 import React from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function LegalOwnershipDeclaration({
   theme = "dark",
   className = "",
   data = {}, 
+  editMode = false,
+  handleInputChange
 }) {
   const isDark = theme === "dark";
 
@@ -17,7 +26,7 @@ export default function LegalOwnershipDeclaration({
     ? "text-white placeholder-gray-400"
     : "text-black placeholder-gray-500";
 
-  const labelText = isDark ? "text-gray-300" : "text-gray-700";
+  const labelText = isDark ? "text-gray-300" : "text-gray-600";
   const focusBorder = isDark
     ? "focus:border-purple-600"
     : "focus:border-indigo-500";
@@ -38,14 +47,22 @@ export default function LegalOwnershipDeclaration({
           <label className={`text-sm ${labelText}`}>
             Do you confirm that you retain full creative ownership of the project?
           </label>
-          <input
-            type="text"
-            value={yesNo(data.confirmFullCreativeOwnership)}
-            readOnly
-            className={`w-full rounded-md px-4 py-2 
-              ${inputText} ${inputBg} border border-transparent 
-              ${focusBorder} focus:outline-none`}
-          />
+           {editMode ? (
+            <Select value={data.confirmFullCreativeOwnership} onValueChange={(value) => handleInputChange('confirmFullCreativeOwnership', value)}>
+                <SelectTrigger><SelectValue/></SelectTrigger>
+                <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+            </Select>
+          ) : (
+            <input
+                type="text"
+                value={data.confirmFullCreativeOwnership}
+                readOnly
+                className={`w-full rounded-md px-4 py-2 ${inputText} ${inputBg} border border-transparent ${focusBorder} focus:outline-none`}
+            />
+          )}
         </div>
 
         
@@ -53,14 +70,22 @@ export default function LegalOwnershipDeclaration({
           <label className={`text-sm ${labelText}`}>
             Do you agree to credit MV Production for budget support?
           </label>
-          <input
-            type="text"
-            value={yesNo(data.agreeToCreditMVProduction)}
-            readOnly
-            className={`w-full rounded-md px-4 py-2 
-              ${inputText} ${inputBg} border border-transparent 
-              ${focusBorder} focus:outline-none`}
-          />
+          {editMode ? (
+            <Select value={data.agreeToCreditMVProduction} onValueChange={(value) => handleInputChange('agreeToCreditMVProduction', value)}>
+                <SelectTrigger><SelectValue/></SelectTrigger>
+                <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+            </Select>
+          ) : (
+            <input
+                type="text"
+                value={data.agreeToCreditMVProduction}
+                readOnly
+                className={`w-full rounded-md px-4 py-2 ${inputText} ${inputBg} border border-transparent ${focusBorder} focus:outline-none`}
+            />
+          )}
         </div>
 
         
@@ -68,14 +93,22 @@ export default function LegalOwnershipDeclaration({
           <label className={`text-sm ${labelText}`}>
             Do you agree to share final assets with MV for portfolio and showcase use?
           </label>
-          <input
-            type="text"
-            value={yesNo(data.agreeToShareFinalAssets)}
-            readOnly
-            className={`w-full rounded-md px-4 py-2 
-              ${inputText} ${inputBg} border border-transparent 
-              ${focusBorder} focus:outline-none`}
-          />
+          {editMode ? (
+            <Select value={data.agreeToShareFinalAssets} onValueChange={(value) => handleInputChange('agreeToShareFinalAssets', value)}>
+                <SelectTrigger><SelectValue/></SelectTrigger>
+                <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+            </Select>
+          ) : (
+            <input
+                type="text"
+                value={data.agreeToShareFinalAssets}
+                readOnly
+                className={`w-full rounded-md px-4 py-2 ${inputText} ${inputBg} border border-transparent ${focusBorder} focus:outline-none`}
+            />
+          )}
         </div>
 
         
@@ -83,14 +116,22 @@ export default function LegalOwnershipDeclaration({
           <label className={`text-sm ${labelText}`}>
             Do you require an NDA or custom agreement?
           </label>
-          <input
-            type="text"
-            value={yesNo(data.requireNDAOrCustomAgreement)}
-            readOnly
-            className={`w-full rounded-md px-4 py-2 
-              ${inputText} ${inputBg} border border-transparent 
-              ${focusBorder} focus:outline-none`}
-          />
+          {editMode ? (
+            <Select value={data.requireNDAOrCustomAgreement} onValueChange={(value) => handleInputChange('requireNDAOrCustomAgreement', value)}>
+                <SelectTrigger><SelectValue/></SelectTrigger>
+                <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+            </Select>
+          ) : (
+            <input
+                type="text"
+                value={data.requireNDAOrCustomAgreement}
+                readOnly
+                className={`w-full rounded-md px-4 py-2 ${inputText} ${inputBg} border border-transparent ${focusBorder} focus:outline-none`}
+            />
+          )}
         </div>
 
       </div>

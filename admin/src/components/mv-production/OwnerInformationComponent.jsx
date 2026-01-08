@@ -4,7 +4,8 @@ export default function OwnerInformation({
   theme = "dark",
   className = "",
   data = {},       
-  user = {}        
+  editMode = false,
+  handleInputChange
 }) {
   const isDark = theme === "dark";
 
@@ -40,7 +41,8 @@ export default function OwnerInformation({
           <input
             type="text"
             value={data?.copyrightOwnerName || ""}
-            readOnly
+            readOnly={!editMode}
+            onChange={(e) => handleInputChange('copyrightOwnerName', e.target.value)}
             placeholder="Artist"
             className={`w-full rounded-md px-4 py-2 ${inputText} ${inputBg} border border-transparent ${focusBorder} focus:outline-none`}
           />
@@ -54,7 +56,8 @@ export default function OwnerInformation({
           <input
             type="text"
             value={data?.mobileNumber || ""}
-            readOnly
+            readOnly={!editMode}
+            onChange={(e) => handleInputChange('mobileNumber', e.target.value)}
             placeholder="Mobile number"
             className={`w-full rounded-md px-4 py-2 ${inputText} ${inputBg} border border-transparent ${focusBorder} focus:outline-none`}
           />
@@ -67,8 +70,9 @@ export default function OwnerInformation({
           </label>
           <input
             type="email"
-            value={data?.emailOfCopyrightHolder || user?.emailAddress || ""}
-            readOnly
+            value={data?.emailOfCopyrightHolder || ""}
+            readOnly={!editMode}
+            onChange={(e) => handleInputChange('emailOfCopyrightHolder', e.target.value)}
             placeholder="artist@example.com"
             className={`w-full rounded-md px-4 py-2 ${inputText} ${inputBg} border border-transparent ${focusBorder} focus:outline-none`}
           />

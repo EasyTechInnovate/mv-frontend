@@ -1,25 +1,38 @@
+import React from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  genreOptions,
+  moodOptions,
+  languageOptions,
+  themeOptions,
+} from "@/constants/options";
+
+const locationMap = {
+  indoor_studio: "Indoor Studio",
+  outdoor_and_natural: "Outdoor / Natural",
+  urban_and_street: "Urban / Street",
+};
+
 export default function ProjectOverview({
   theme = "dark",
   className = "",
   data = {},
+  editMode = false,
+  handleInputChange,
+  handleCheckboxChange,
 }) {
   const isDark = theme === "dark";
-
   const cardBg = isDark ? "#151F28" : "#ffffff";
-  const inputBg = isDark ? "#111A22" : "#f1f1f1";
   const textColor = isDark ? "text-white" : "text-black";
-  const labelColor = isDark ? "text-gray-300" : "text-gray-700";
-
-  
-  const genreText = Array.isArray(data.genres) ? data.genres.join(", ") : "";
-
-  const locationMap = {
-    indoor_studio: "Indoor Studio",
-    outdoor_natural: "Outdoor / Natural",
-    urban_street: "Urban / Street",
-  };
-
-  const selectedLocations = data.locationPreference || [];
 
   return (
     <div
@@ -29,64 +42,94 @@ export default function ProjectOverview({
       style={{ backgroundColor: cardBg }}
     >
       <h2 className="text-lg font-semibold mb-6">Project Overview</h2>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        
-        <Input label="Project Title" value={data.projectTitle} isDark={isDark} inputBg={inputBg} />
-
-        
-        <Input label="Artist Name" value={data.artistName} isDark={isDark} inputBg={inputBg} />
-
-        
-        <Input label="Label Name" value={data.labelName} isDark={isDark} inputBg={inputBg} />
-
-        
-        <Input label="Release Timeline" value={data.releaseTimeline} isDark={isDark} inputBg={inputBg} />
-
-        
-        <Input label="Genres" value={genreText} isDark={isDark} inputBg={inputBg} />
-
-        
-        <Input label="Mood" value={data.mood} isDark={isDark} inputBg={inputBg} />
-
-        
-        <Input
-          label="Is this part of an album or EP?"
-          value={data.isPartOfAlbumOrEP ? "Yes" : "No"}
-          isDark={isDark}
-          inputBg={inputBg}
-        />
-
-        <Input label="Language" value={data.language} isDark={isDark} inputBg={inputBg} />
-
-       
-        <div className="flex flex-col gap-2 md:col-span-2">
-          <label className={`text-sm ${labelColor}`}>Theme</label>
-          <input
-            type="text"
-            value={data.theme || ""}
-            readOnly
-            className="w-full rounded-md px-4 py-2 border border-transparent"
-            style={{ backgroundColor: inputBg, color: isDark ? "white" : "black" }}
-          />
+        <div className="space-y-2">
+            <Label>Project Title</Label>
+            <Input value={data.projectTitle} readOnly={!editMode} onChange={(e) => handleInputChange('projectTitle', e.target.value)} />
+        </div>
+        <div className="space-y-2">
+            <Label>Artist Name</Label>
+            <Input value={data.artistName} readOnly={!editMode} onChange={(e) => handleInputChange('artistName', e.target.value)} />
+        </div>
+        <div className="space-y-2">
+            <Label>Label Name</Label>
+            <Input value={data.labelName} readOnly={!editMode} onChange={(e) => handleInputChange('labelName', e.target.value)} />
+        </div>
+        <div className="space-y-2">
+            <Label>Release Timeline</Label>
+            <Input value={data.releaseTimeline} readOnly={!editMode} onChange={(e) => handleInputChange('releaseTimeline', e.target.value)} />
         </div>
 
-       
+        <div className="space-y-2">
+            <Label>Genre</Label>
+            {editMode ? (
+                <Select value={data.genres} onValueChange={(value) => handleInputChange('genres', value)}>
+                    <SelectTrigger><SelectValue placeholder="Select genre" /></SelectTrigger>
+                    <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                        {genreOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            ) : (<Input value={data.genres} readOnly />)}
+        </div>
+        <div className="space-y-2">
+            <Label>Mood</Label>
+            {editMode ? (
+                <Select value={data.mood} onValueChange={(value) => handleInputChange('mood', value)}>
+                    <SelectTrigger><SelectValue placeholder="Select mood" /></SelectTrigger>
+                    <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                        {moodOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            ) : (<Input value={data.mood} readOnly />)}
+        </div>
+        <div className="space-y-2">
+            <Label>Is this part of an album or EP?</Label>
+             {editMode ? (
+                <Select value={data.isPartOfAlbumOrEP} onValueChange={(value) => handleInputChange('isPartOfAlbumOrEP', value)}>
+                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                    </SelectContent>
+                </Select>
+            ) : (<Input value={data.isPartOfAlbumOrEP} readOnly />)}
+        </div>
+        <div className="space-y-2">
+            <Label>Language</Label>
+            {editMode ? (
+                <Select value={data.language} onValueChange={(value) => handleInputChange('language', value)}>
+                    <SelectTrigger><SelectValue placeholder="Select language" /></SelectTrigger>
+                    <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                        {languageOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            ) : (<Input value={data.language} readOnly />)}
+        </div>
+        <div className="space-y-2 md:col-span-2">
+            <Label>Theme</Label>
+            {editMode ? (
+                <Select value={data.theme} onValueChange={(value) => handleInputChange('theme', value)}>
+                    <SelectTrigger><SelectValue placeholder="Select theme" /></SelectTrigger>
+                    <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                        {themeOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            ) : (<Input value={data.theme} readOnly />)}
+        </div>
+        
         <div className="md:col-span-2 flex flex-col gap-3 mt-2">
-          <label className={`text-sm ${labelColor}`}>Location Preference</label>
-
+          <Label>Location Preference</Label>
           <div className="flex items-center gap-6 flex-wrap">
-            {Object.entries(locationMap).map(([apiValue, label], index) => (
-              <label key={index} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={selectedLocations.includes(apiValue)}
-                  readOnly
-                  className="w-4 h-4 accent-purple-600"
+            {Object.entries(locationMap).map(([apiValue, label]) => (
+              <div key={apiValue} className="flex items-center gap-2">
+                <Checkbox
+                  id={apiValue}
+                  checked={data.locationPreference[apiValue]}
+                  disabled={!editMode}
+                  onCheckedChange={(checked) => handleCheckboxChange('locationPreference', apiValue, checked)}
                 />
-                <span className="text-sm">{label}</span>
-              </label>
+                <Label htmlFor={apiValue} className="text-sm cursor-pointer">{label}</Label>
+              </div>
             ))}
           </div>
         </div>
@@ -95,19 +138,3 @@ export default function ProjectOverview({
   );
 }
 
-function Input({ label, value, isDark, inputBg }) {
-  return (
-    <div className="flex flex-col gap-2">
-      <label className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-        {label}
-      </label>
-      <input
-        type="text"
-        value={value || ""}
-        readOnly
-        className="w-full rounded-md px-4 py-2 border border-transparent"
-        style={{ backgroundColor: inputBg, color: isDark ? "white" : "black" }}
-      />
-    </div>
-  );
-}

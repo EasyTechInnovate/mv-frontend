@@ -9,7 +9,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Music, MoreHorizontal, Upload, ChevronLeft, ChevronRight } from "lucide-react";
+import { Music, MoreHorizontal, Upload, ChevronLeft, ChevronRight, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import GlobalApi from "@/lib/GlobalApi"; 
 import MVProductionUserPage from "@/components/mv-production/MVProductionUserPage"; 
@@ -163,9 +163,9 @@ const handleDeleteConfirm = async () => {
           >
             <Upload className="h-4 w-4 mr-2" /> Export as CSV
           </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-5">
+          {/* <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-5">
             + Add New Production
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -256,20 +256,20 @@ const handleDeleteConfirm = async () => {
                 isDark ? "hover:bg-gray-800/10" : "hover:bg-gray-100"
               }`}
             >
-              <td className="px-4 py-3 font-medium">{p.accountId || "-"}</td>
-              <td className="px-4 py-3">{accountName || "-"}</td>
-              <td className="px-4 py-3">{projectTitle}</td>
+              <td className="whitespace-nowrap px-4 py-3 font-medium">{p.accountId || "-"}</td>
+              <td className="whitespace-nowrap px-4 py-3">{accountName || "-"}</td>
+              <td className="whitespace-nowrap px-4 py-3">{projectTitle}</td>
 
-              <td className="px-4 py-3">
+              <td className="whitespace-nowrap px-4 py-3">
                 {"₹" +
                   (typeof budget === "number"
                     ? budget.toLocaleString("en-IN")
                     : budget)}
               </td>
 
-              <td className="px-4 py-3">{email}</td>
+              <td className="whitespace-nowrap px-4 py-3">{email}</td>
 
-              <td className="px-4 py-3">
+              <td className="whitespace-nowrap px-4 py-3">
                 <span
                   className={`px-3 py-1 rounded-full text-xs capitalize ${
                     status === "accept"
@@ -283,34 +283,38 @@ const handleDeleteConfirm = async () => {
                 </span>
               </td>
 
-              <td className="px-4 py-3">
+              <td className="whitespace-nowrap px-4 py-3">
                 {new Date(p.createdAt).toLocaleDateString()}
               </td>
 
-             <td className="px-4 py-3 whitespace-nowrap flex gap-2">
-
-  
-  <Button
-    size="sm"
-    className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2 rounded-full px-5"
-    onClick={() => handleViewDetails(p)}
-  >
-    <Music className="h-4 w-4" />
-    MV Production
-  </Button>
-
-  
-  <Button
-    size="sm"
-    className="bg-red-600 hover:bg-red-700 text-white rounded-full px-4"
-    onClick={() => {
-      setItemToDelete(p);
-      setShowDeleteDialog(true);
-    }}
-  >
-    Delete
-  </Button>
-</td>
+              <td className="whitespace-nowrap px-4 py-3  flex gap-2 items-center ">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleViewDetails(p)}
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  View
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleViewDetails(p)}
+                >
+                  <Pencil className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-red-600 hover:bg-red-700 text-white rounded-full px-4"
+                  onClick={() => {
+                    setItemToDelete(p);
+                    setShowDeleteDialog(true);
+                  }}
+                >
+                  Delete
+                </Button>
+              </td>
 
             </tr>
           );

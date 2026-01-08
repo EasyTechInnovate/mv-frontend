@@ -237,37 +237,34 @@ export default function SyncLicenseReviewModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Enter your comments or feedback..."
-              disabled={data?.status !== "pending"}
               className={`w-full resize-none min-h-[80px] rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
                 isDark
                   ? "bg-[#0E141B] border-gray-700 text-gray-100 focus:ring-cyan-500"
                   : "bg-white border-gray-300 text-gray-800 focus:ring-blue-500"
-              } ${data?.status !== "pending" ? "opacity-70 cursor-not-allowed" : ""}`}
+              }`}
             />
           </div>
 
          
-          {data?.status === "pending" && (
-            <div className="pt-4">
-              <label
-                className={`block mb-2 text-sm font-medium ${
-                  isDark ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                Rejection Reason (required if rejecting)
-              </label>
-              <textarea
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Enter reason for rejection..."
-                className={`w-full resize-none min-h-[80px] rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
-                  isDark
-                    ? "bg-[#0E141B] border-gray-700 text-gray-100 focus:ring-red-500"
-                    : "bg-white border-gray-300 text-gray-800 focus:ring-red-500"
-                }`}
-              />
-            </div>
-          )}
+          <div className="pt-4">
+            <label
+              className={`block mb-2 text-sm font-medium ${
+                isDark ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
+              Rejection Reason (required if rejecting)
+            </label>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Enter reason for rejection..."
+              className={`w-full resize-none min-h-[80px] rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                isDark
+                  ? "bg-[#0E141B] border-gray-700 text-gray-100 focus:ring-red-500"
+                  : "bg-white border-gray-300 text-gray-800 focus:ring-red-500"
+              }`}
+            />
+          </div>
 
          
           {data?.status === "rejected" && data?.rejectionReason && (
@@ -293,30 +290,22 @@ export default function SyncLicenseReviewModal({
         </div>
 
       
-        {data?.status === "pending" ? (
-          <div className={`flex gap-3 px-6 py-4 border-t ${border}`}>
-            <button
-              disabled={loading}
-              onClick={() => handleReview("approve")}
-              className="flex-1 rounded-md bg-green-600 hover:bg-green-700 text-white font-medium py-2 transition-colors disabled:opacity-50"
-            >
-              ✓ {loading ? "Processing..." : "Approve"}
-            </button>
-            <button
-              disabled={loading}
-              onClick={() => handleReview("reject")}
-              className="flex-1 rounded-md bg-red-600 hover:bg-red-700 text-white font-medium py-2 transition-colors disabled:opacity-50"
-            >
-              ✕ {loading ? "Processing..." : "Reject"}
-            </button>
-          </div>
-        ) : (
-          <div
-            className={`px-6 py-3 border-t ${border} text-sm text-gray-500 italic text-center`}
+        <div className={`flex gap-3 px-6 py-4 border-t ${border}`}>
+          <button
+            disabled={loading}
+            onClick={() => handleReview("approve")}
+            className="flex-1 rounded-md bg-green-600 hover:bg-green-700 text-white font-medium py-2 transition-colors disabled:opacity-50"
           >
-            This submission has already been {data?.status}.
-          </div>
-        )}
+            ✓ {loading ? "Processing..." : "Approve"}
+          </button>
+          <button
+            disabled={loading}
+            onClick={() => handleReview("reject")}
+            className="flex-1 rounded-md bg-red-600 hover:bg-red-700 text-white font-medium py-2 transition-colors disabled:opacity-50"
+          >
+            ✕ {loading ? "Processing..." : "Reject"}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -11,10 +11,13 @@ import {
   XCircle,
   ChevronLeft,
   ChevronRight,
+  Trash2,
+  Pencil,
 } from "lucide-react";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
 import PlaylistPitchingReviewModal from "@/components/playlist-pitching/PlaylistPitchingReviewModal";
+import EditPlaylistPitchingModal from "@/components/playlist-pitching/EditPlaylistPitchingModal";
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 
 function MoodBadge({ mood }) {
@@ -48,6 +51,8 @@ export default function PlaylistPitching({ theme }) {
 
   const [selectedPitch, setSelectedPitch] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedPitchForEdit, setSelectedPitchForEdit] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const normalizeResponse = (res) => {
@@ -105,6 +110,11 @@ export default function PlaylistPitching({ theme }) {
     if (shouldRefresh) fetchPlaylistPitches();
   };
 
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setSelectedPitchForEdit(null);
+  };
+
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= (pagination?.totalPages || 1)) {
       setCurrentPage(newPage);
@@ -128,6 +138,26 @@ export default function PlaylistPitching({ theme }) {
   const onReview = (row) => {
     setSelectedPitch(row);
     setIsModalOpen(true);
+  };
+
+  const onEdit = (row) => {
+    setSelectedPitchForEdit(row);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDelete = async (submissionId) => {
+    if (!window.confirm("Are you sure you want to delete this submission?")) {
+      return;
+    }
+
+    try {
+      await GlobalApi.deletePlayPitching(submissionId);
+      toast.success("Submission deleted successfully.");
+      fetchPlaylistPitches(); // Refresh the list
+    } catch (err) {
+      console.error("Failed to delete submission:", err);
+      toast.error(err?.response?.data?.message || "Failed to delete submission.");
+    }
   };
 
   const statusColors = {
@@ -227,7 +257,7 @@ export default function PlaylistPitching({ theme }) {
                 <th className="px-4 py-3 font-medium whitespace-nowrap">ISRC</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">Genre</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">Mood</th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">Theme</th>
+                <th className_name="px-4 py-3 font-medium whitespace-nowrap">Theme</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">Language</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">Store</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">Status</th>
@@ -263,7 +293,7 @@ export default function PlaylistPitching({ theme }) {
                     )}
                   </td>
                   <td className="px-4 py-3">{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "—"}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 flex items-center gap-2">
                     <Button
                       size="sm"
                       variant={isDark ? "secondary" : "outline"}
@@ -271,6 +301,22 @@ export default function PlaylistPitching({ theme }) {
                       onClick={() => onReview(row)}
                     >
                       <Eye className="h-4 w-4 mr-1" /> Review
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full"
+                      onClick={() => onEdit(row)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="rounded-full"
+                      onClick={() => handleDelete(row._id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </td>
                 </tr>
@@ -349,6 +395,14 @@ export default function PlaylistPitching({ theme }) {
         data={selectedPitch}
         theme={theme}
         refreshList={fetchPlaylistPitches}
+      />
+
+      <EditPlaylistPitchingModal
+        isOpen={isEditModalOpen}
+        onClose={handleEditModalClose}
+        data={selectedPitchForEdit}
+        refreshList={fetchPlaylistPitches}
+        theme={theme}
       />
 
       <ExportCsvDialog

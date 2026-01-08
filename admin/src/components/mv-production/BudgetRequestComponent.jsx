@@ -1,11 +1,18 @@
 import React from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function BudgetRequestOwnership({
   theme = "dark",
   className = "",
   data = {},
   editMode = false,
-  onChange, 
+  handleInputChange,
 }) {
   const isDark = theme === "dark";
 
@@ -23,28 +30,12 @@ export default function BudgetRequestOwnership({
 
   const labelText = isDark ? "text-gray-300" : "text-gray-600";
 
-  const breakdown = data?.breakdown || {};
-
-  const handleChange = (field, value) => {
-    const updated = { ...data, [field]: value };
-    onChange(updated);
-  };
-
-  const handleBreakdownChange = (field, value) => {
-    const updated = {
-      ...data,
-      breakdown: { ...breakdown, [field]: value },
-    };
-    onChange(updated);
-  };
-
   return (
     <div className={`p-6 rounded-xl ${containerBg} ${className}`}>
       <h2 className="text-lg font-semibold mb-6">
         Budget Request & Ownership Proposal
       </h2>
 
-      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div>
           <label className={`text-sm ${labelText}`}>
@@ -53,10 +44,8 @@ export default function BudgetRequestOwnership({
           <input
             className={`w-full mt-2 ${fullInput}`}
             readOnly={!editMode}
-            value={data?.totalBudgetRequested || ""}
-            onChange={(e) =>
-              handleChange("totalBudgetRequested", Number(e.target.value))
-            }
+            value={data.totalBudgetRequested || ""}
+            onChange={(e) => handleInputChange("totalBudgetRequested", e.target.value)}
           />
         </div>
 
@@ -67,15 +56,12 @@ export default function BudgetRequestOwnership({
           <input
             className={`w-full mt-2 ${fullInput}`}
             readOnly={!editMode}
-            value={data?.proposedOwnershipDilution || ""}
-            onChange={(e) =>
-              handleChange("proposedOwnershipDilution", Number(e.target.value))
-            }
+            value={data.proposedOwnershipDilution || ""}
+            onChange={(e) => handleInputChange("proposedOwnershipDilution", e.target.value)}
           />
         </div>
       </div>
 
-     
       <p className={`text-sm ${labelText} mb-2`}>Breakdown (Estimated)</p>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
@@ -84,10 +70,8 @@ export default function BudgetRequestOwnership({
           <input
             className={`w-full mt-1 ${underlineInput}`}
             readOnly={!editMode}
-            value={breakdown?.preProduction || ""}
-            onChange={(e) =>
-              handleBreakdownChange("preProduction", Number(e.target.value))
-            }
+            value={data.preProduction || ""}
+            onChange={(e) => handleInputChange("preProduction", e.target.value)}
           />
         </div>
 
@@ -96,10 +80,8 @@ export default function BudgetRequestOwnership({
           <input
             className={`w-full mt-1 ${underlineInput}`}
             readOnly={!editMode}
-            value={breakdown?.shootDay || ""}
-            onChange={(e) =>
-              handleBreakdownChange("shootDay", Number(e.target.value))
-            }
+            value={data.shootDay || ""}
+            onChange={(e) => handleInputChange("shootDay", e.target.value)}
           />
         </div>
 
@@ -108,10 +90,8 @@ export default function BudgetRequestOwnership({
           <input
             className={`w-full mt-1 ${underlineInput}`}
             readOnly={!editMode}
-            value={breakdown?.postProduction || ""}
-            onChange={(e) =>
-              handleBreakdownChange("postProduction", Number(e.target.value))
-            }
+            value={data.postProduction || ""}
+            onChange={(e) => handleInputChange("postProduction", e.target.value)}
           />
         </div>
 
@@ -122,101 +102,77 @@ export default function BudgetRequestOwnership({
           <input
             className={`w-full mt-1 ${underlineInput}`}
             readOnly={!editMode}
-            value={breakdown?.miscellaneousContingency || ""}
-            onChange={(e) =>
-              handleBreakdownChange(
-                "miscellaneousContingency",
-                Number(e.target.value)
-              )
-            }
+            value={data.miscellaneousContingency || ""}
+            onChange={(e) => handleInputChange("miscellaneousContingency", e.target.value)}
           />
         </div>
       </div>
 
-    
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div>
           <label className={`text-sm ${labelText}`}>
             Will you contribute personal funds?
           </label>
-
-          <select
-            className={`w-full mt-2 ${fullInput}`}
-            disabled={!editMode}
-            value={data?.willContributePersonalFunds ? "yes" : "no"}
-            onChange={(e) =>
-              handleChange("willContributePersonalFunds", e.target.value === "yes")
-            }
-          >
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
+            <Select disabled={!editMode} value={data.willContributePersonalFunds} onValueChange={(value) => handleInputChange("willContributePersonalFunds", value)}>
+                <SelectTrigger className={`w-full mt-2 ${fullInput}`}><SelectValue/></SelectTrigger>
+                <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+            </Select>
         </div>
 
-        <div>
-          <label className={`text-sm ${labelText}`}>If yes, amount</label>
-          <input
-            className={`w-full mt-2 ${fullInput}`}
-            readOnly={!editMode}
-            value={data?.personalFundsAmount || ""}
-            onChange={(e) =>
-              handleChange("personalFundsAmount", Number(e.target.value))
-            }
-          />
-        </div>
+        {data.willContributePersonalFunds === "yes" && (
+            <div>
+              <label className={`text-sm ${labelText}`}>If yes, amount</label>
+              <input
+                className={`w-full mt-2 ${fullInput}`}
+                readOnly={!editMode}
+                value={data.personalFundsAmount || ""}
+                onChange={(e) => handleInputChange("personalFundsAmount", e.target.value)}
+              />
+            </div>
+        )}
       </div>
 
-     
-<div>
-  <p className={`text-sm ${labelText} mb-3`}>Revenue Sharing Model Proposed</p>
-
-  <div className="flex flex-wrap items-center gap-10">
-
-   
-    <label className="flex items-center gap-2 cursor-pointer">
-      <input
-        type="checkbox"
-        disabled={!editMode}
-        checked={data?.revenueSharingModelProposed === "flat_buyout"}
-        onChange={() =>
-          handleChange("revenueSharingModelProposed", "flat_buyout")
-        }
-        className="w-4 h-4 accent-purple-500"
-      />
-      <span className="text-sm">Flat Buyout</span>
-    </label>
-
-    
-    <label className="flex items-center gap-2 cursor-pointer">
-      <input
-        type="checkbox"
-        disabled={!editMode}
-        checked={data?.revenueSharingModelProposed === "revenue_split"}
-        onChange={() =>
-          handleChange("revenueSharingModelProposed", "revenue_split")
-        }
-        className="w-4 h-4 accent-purple-500"
-      />
-      <span className="text-sm">Revenue Split</span>
-    </label>
-
-   
-    <label className="flex items-center gap-2 cursor-pointer">
-      <input
-        type="checkbox"
-        disabled={!editMode}
-        checked={data?.revenueSharingModelProposed === "hybrid"}
-        onChange={() =>
-          handleChange("revenueSharingModelProposed", "hybrid")
-        }
-        className="w-4 h-4 accent-purple-500"
-      />
-      <span className="text-sm">Hybrid (Buyout + Royalties)</span>
-    </label>
-
-  </div>
-</div>
-
+      <div>
+        <p className={`text-sm ${labelText} mb-3`}>Revenue Sharing Model Proposed</p>
+        <div className="flex flex-wrap items-center gap-10">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="revenueSharingModel"
+              disabled={!editMode}
+              checked={data.revenueSharingModelProposed === "flat_buyout"}
+              onChange={() => handleInputChange("revenueSharingModelProposed", "flat_buyout")}
+              className="w-4 h-4 accent-purple-500"
+            />
+            <span className="text-sm">Flat Buyout</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="revenueSharingModel"
+              disabled={!editMode}
+              checked={data.revenueSharingModelProposed === "revenue_split"}
+              onChange={() => handleInputChange("revenueSharingModelProposed", "revenue_split")}
+              className="w-4 h-4 accent-purple-500"
+            />
+            <span className="text-sm">Revenue Split</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="revenueSharingModel"
+              disabled={!editMode}
+              checked={data.revenueSharingModelProposed === "hybrid"}
+              onChange={() => handleInputChange("revenueSharingModelProposed", "hybrid")}
+              className="w-4 h-4 accent-purple-500"
+            />
+            <span className="text-sm">Hybrid (Buyout + Royalties)</span>
+          </label>
+        </div>
+      </div>
     </div>
   );
 }

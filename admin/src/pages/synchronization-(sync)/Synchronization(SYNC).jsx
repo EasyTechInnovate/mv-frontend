@@ -1,6 +1,3 @@
-import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Search,
   Download,
@@ -14,11 +11,17 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  Trash2,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import GlobalApi from "@/lib/GlobalApi";
 import SyncLicenseReviewModal from "../../components/synchronization-(sync)/SyncLicenseReviewModal";
+import EditSyncLicenseModal from "../../components/synchronization-(sync)/EditSyncLicenseModal";
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
+import { useState , useRef , useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 
 const enumLabels = {
@@ -158,6 +161,8 @@ export default function SyncManagement({ theme }) {
 
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedRequestForEdit, setSelectedRequestForEdit] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   
   const normalizeResponse = (res) => {
@@ -233,6 +238,26 @@ export default function SyncManagement({ theme }) {
     setIsModalOpen(true);
   };
 
+  const handleEditClick = (row) => {
+    setSelectedRequestForEdit(row);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDelete = async (submissionId) => {
+    if (!window.confirm("Are you sure you want to delete this submission?")) {
+      return;
+    }
+
+    try {
+      await GlobalApi.deleteSyncSubmission(submissionId);
+      toast.success("Submission deleted successfully.");
+      fetchSyncRequests(); // Refresh the list
+    } catch (err) {
+      console.error("Failed to delete submission:", err);
+      toast.error(err?.response?.data?.message || "Failed to delete submission.");
+    }
+  };
+
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= (pagination?.totalPages || 1)) {
       setCurrentPage(newPage);
@@ -242,6 +267,11 @@ export default function SyncManagement({ theme }) {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedRequest(null);
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setSelectedRequestForEdit(null);
   };
 
   const statusColors = {
@@ -492,6 +522,20 @@ export default function SyncManagement({ theme }) {
                 >
                   <Eye className="w-4 h-4 mr-1" /> Review
                 </Button>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEditClick(row)}
+                >
+                    <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleDelete(row._id)}
+                >
+                    <Trash2 className="h-4 w-4" />
+                </Button>
               </td>
             </tr>
           ))
@@ -578,6 +622,15 @@ export default function SyncManagement({ theme }) {
         theme={theme}
         refreshList={fetchSyncRequests}
       />
+
+      <EditSyncLicenseModal
+        isOpen={isEditModalOpen}
+        onClose={handleEditModalClose}
+        data={selectedRequestForEdit}
+        refreshList={fetchSyncRequests}
+        theme={theme}
+      />
+
       <ExportCsvDialog
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
