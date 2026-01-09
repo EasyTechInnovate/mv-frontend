@@ -1,74 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-} from '@/components/ui/card';
+import toast from 'react-hot-toast';
+
+// UI Components
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { 
-  ChevronDown, 
-  Eye, 
-  MessageCircle, 
-  Mail, 
-  Phone, 
-  Play, 
-  FileText, 
-  Users,
-  Clock,
-  AlertCircle,
-  Plus,
-  Ticket,
-  CheckCircle,
-  AlertTriangle,
-  Star,
-} from 'lucide-react';
-import {
-  createSupportTicket,
-  getMyTickets,
-  getMyTicketStats,
-  getTicketById,
-  addTicketResponse,
-  addTicketRating,
-  getFaqs,
-  getContactInfo
-} from '@/services/api.services';
-import toast from 'react-hot-toast';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, Eye, MessageCircle, Mail, Phone, Play, FileText, Users, Clock, AlertCircle, Plus, Ticket, CheckCircle, Star } from 'lucide-react';
+
+// App Services & State
+import { createSupportTicket, getMyTickets, getMyTicketStats, getTicketById, addTicketResponse, addTicketRating, getFaqs, getContactInfo } from '@/services/api.services';
+import { useAuthStore } from '@/store/authStore';
+import { ETicketType } from '@/config/constants';
+
+// Form Components
+import NormalTicketForm from './components/NormalTicketForm';
+import MetaClaimReleaseForm from './components/MetaClaimReleaseForm';
+import MetaManualClaimForm from './components/MetaManualClaimForm';
+import YoutubeClaimReleaseForm from './components/YoutubeClaimReleaseForm';
+import YoutubeManualClaimForm from './components/YoutubeManualClaimForm';
+import MetaProfileMappingForm from './components/MetaProfileMappingForm';
+import YoutubeOACMappingForm from './components/YoutubeOACMappingForm';
+
+// Details Components
+import NormalTicketDetails from './components/NormalTicketDetails';
+import MetaClaimReleaseDetails from './components/MetaClaimReleaseDetails';
+import MetaManualClaimDetails from './components/MetaManualClaimDetails';
+import YoutubeClaimReleaseDetails from './components/YoutubeClaimReleaseDetails';
+import YoutubeManualClaimDetails from './components/YoutubeManualClaimDetails';
+import MetaProfileMappingDetails from './components/MetaProfileMappingDetails';
+import YoutubeOACMappingDetails from './components/YoutubeOACMappingDetails';
 
 const HelpSupport = () => {
-  const [activeTab, setActiveTab] = useState('tickets');
+  const { user } = useAuthStore();
+  const [activeMainTab, setActiveMainTab] = useState('tickets');
   const [modalState, setModalState] = useState({ type: null, ticket: null });
+  const [claimModal, setClaimModal] = useState({ open: false, type: null, title: '' });
   const [openFAQ, setOpenFAQ] = useState(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [faqSearchQuery, setFaqSearchQuery] = useState('');
@@ -105,23 +77,7 @@ const HelpSupport = () => {
 
   // React Query
   const queryClient = useQueryClient();
-  const [ticketFilters, setTicketFilters] = useState({ page: 1, limit: 10, status: 'open' });
-
-  const ClaimModal = ({ title, children, trigger }) => (
-    <Dialog >
-      <DialogTrigger asChild>
-        {trigger}
-      </DialogTrigger>
-      <DialogContent className="max-lg:min-w-[90vw] lg:min-w-6xl max-h-[90vh] overflow-y-auto  border-slate-700">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-6">
-          {children}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+  const [ticketFilters, setTicketFilters] = useState({ page: 1, limit: 10, status: undefined });
 
   const FormField = ({ label, children, required = false }) => (
     <div className="space-y-2">
@@ -160,17 +116,25 @@ const HelpSupport = () => {
     enabled: !!modalState.ticket && modalState.type === 'details', // Only fetch when a ticket is selected and details modal is open
   });
 
+  const handleMutationSuccess = () => {
+    toast.success('Support ticket created successfully!');
+    queryClient.invalidateQueries(['myTickets']);
+    queryClient.invalidateQueries({ queryKey: ['myTicketStats'] });
+    setClaimModal({ open: false, type: null, title: '' });
+  };
+
+  const handleMutationError = (error) => {
+    let errorMessage = 'Failed to create ticket.';
+    if (error.response?.data?.errors) {
+      errorMessage = error.response.data.errors.map(e => e.message).join(' \n');
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    }
+    toast.error(errorMessage);
+  };
+
   const createTicketMutation = useMutation({
     mutationFn: createSupportTicket,
-    onSuccess: () => {
-      toast.success('Support ticket created successfully!');
-      queryClient.invalidateQueries(['myTickets']);
-      queryClient.invalidateQueries({ queryKey: ['myTicketStats'] });
-      // Optionally reset form state here
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to create ticket.');
-    },
   });
 
   const addResponseMutation = useMutation({
@@ -188,15 +152,6 @@ const HelpSupport = () => {
 
   const addRatingMutation = useMutation({
     mutationFn: addTicketRating,
-    onSuccess: (data, variables) => {
-      toast.success('Feedback submitted successfully!');
-      queryClient.invalidateQueries({ queryKey: ['ticketDetails', variables.ticketId] });
-      queryClient.invalidateQueries({ queryKey: ['myTickets'] });
-      setModalState({ type: null, ticket: null });
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to submit feedback.');
-    },
   });
 
   const filteredFaqs = React.useMemo(() => {
@@ -225,20 +180,44 @@ const HelpSupport = () => {
     return filtered;
   }, [faqsData, faqSearchQuery]);
 
-  const handleCreateTicket = (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const data = Object.fromEntries(formData.entries());
-    // Basic validation
-    if (!data.subject || !data.description || !data.category) {
-      toast.warning('Please fill all required fields.');
-      return;
-    }
-    createTicketMutation.mutate(data);
+  const handleClaimSubmit = (details) => {
+    const payload = {
+        subject: claimModal.title,
+        ticketType: claimModal.type,
+        details: details,
+    };
+    createTicketMutation.mutate(payload, {
+        onSuccess: handleMutationSuccess,
+        onError: handleMutationError,
+    });
   };
 
   const tickets = ticketsData?.data?.tickets || [];
   const pagination = ticketsData?.data?.pagination || {};
+
+  const renderTicketDetails = (ticket) => {
+    if (!ticket?.details) return null;
+
+    switch (ticket.ticketType) {
+        case ETicketType.NORMAL:
+            return <NormalTicketDetails details={ticket.details} />;
+        case ETicketType.META_CLAIM_RELEASE:
+            return <MetaClaimReleaseDetails details={ticket.details} />;
+        case ETicketType.YOUTUBE_CLAIM_RELEASE:
+            return <YoutubeClaimReleaseDetails details={ticket.details} />;
+        case ETicketType.YOUTUBE_MANUAL_CLAIM:
+            return <YoutubeManualClaimDetails details={ticket.details} />;
+        case ETicketType.META_PROFILE_MAPPING:
+            return <MetaProfileMappingDetails details={ticket.details} />;
+        case ETicketType.YOUTUBE_OAC_MAPPING:
+            return <YoutubeOACMappingDetails details={ticket.details} />;
+        case ETicketType.META_MANUAL_CLAIM:
+            return <MetaManualClaimDetails details={ticket.details} />;
+        default:
+            // Fallback for older tickets or unknown types
+            return <p>{ticket.description || 'No additional details available.'}</p>;
+    }
+  };
 
   const TicketDetailModal = ({ ticket }) => (
     <Dialog open={modalState.type === 'details'} onOpenChange={() => setModalState({ type: null, ticket: null })}>
@@ -277,10 +256,7 @@ const HelpSupport = () => {
                   <p className="text-muted-foreground mb-1">Subject</p>
                   <p className="font-semibold">{ticketDetails.data.subject}</p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground mb-1">Description</p>
-                  <p className="p-3 bg-muted-foreground/10 rounded-md">{ticketDetails.data.description}</p>
-                </div>
+                {renderTicketDetails(ticketDetails.data)}
                 {/* TODO: Render responses and attachments */}
               </div>
             )}
@@ -320,6 +296,16 @@ const HelpSupport = () => {
       addResponseMutation.mutate({
         ticketId: ticket.ticketId,
         responseData: { message },
+      }, {
+        onSuccess: (data, variables) => {
+          toast.success('Reply sent successfully!');
+          queryClient.invalidateQueries({ queryKey: ['ticketDetails', variables.ticketId] });
+          queryClient.invalidateQueries({ queryKey: ['myTickets'] });
+          setModalState({ type: null, ticket: null });
+        },
+        onError: (error) => {
+          toast.error(error.response?.data?.message || 'Failed to send reply.');
+        },
       });
     };
 
@@ -361,6 +347,16 @@ const HelpSupport = () => {
       addRatingMutation.mutate({
         ticketId: ticket.ticketId,
         ratingData: { rating, feedback },
+      }, {
+        onSuccess: () => {
+            toast.success('Feedback submitted successfully!');
+            queryClient.invalidateQueries({ queryKey: ['ticketDetails', ticket.ticketId] });
+            queryClient.invalidateQueries({ queryKey: ['myTickets'] });
+            setModalState({ type: null, ticket: null });
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || 'Failed to submit feedback.');
+        }
       });
     };
 
@@ -403,7 +399,7 @@ const HelpSupport = () => {
             <Button 
               className="bg-purple-600 text-white hover:bg-purple-700"
               onClick={() => {
-                setActiveTab('tickets');
+                setActiveMainTab('tickets');
                 // Use a short timeout to ensure the tab content is rendered before scrolling
                 setTimeout(() => {
                   document.getElementById('newticket')?.scrollIntoView({ 
@@ -420,424 +416,52 @@ const HelpSupport = () => {
 
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap gap-3 mb-6">
-            <ClaimModal 
-              title="Meta Claim Release"
-              trigger={
-                <Button className="bg-purple-600 text-white hover:bg-purple-700">
-                  Meta Claim Release
-                </Button>
-              }
+            <Button 
+                className="bg-purple-600 text-white hover:bg-purple-700"
+                onClick={() => setClaimModal({ open: true, type: ETicketType.META_CLAIM_RELEASE, title: 'Meta Claim Release' })}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField label="Full Name" required>
-                  <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                </FormField>
-                <FormField label="Account ID" required>
-                  <Select>
-                    <SelectTrigger className=" border-slate-700">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Billing">Billing</SelectItem>
-                      <SelectItem value="Technical">Technical</SelectItem>
-                      <SelectItem value="Account">Account</SelectItem>
-                      <SelectItem value="Content">Content</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <FormField label="Mobile Number">
-                  <Select>
-                    <SelectTrigger className=" border-slate-700">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="critical">Critical</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <FormField label="Email Associated with Account">
-                  <Input placeholder="your@email.com" className=" border-slate-700" />
-                </FormField>
-                <FormField label="Facebook / Instagram Video Link">
-                  <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                </FormField>
-                <FormField label="Meta Audio Link">
-                  <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                </FormField>
-                <FormField label="ISRC of the Release" required>
-                  <div className="flex items-center gap-2">
-                    <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                    <Button size="sm" className="bg-purple-600 text-white hover:bg-purple-700">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </FormField>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" id="confirm-meta" className="rounded" />
-                <label htmlFor="confirm-meta" className="text-sm">
-                  I confirm that all submitted designs are original and do not infringe on third-party rights.
-                </label>
-              </div>
-              <Button className="w-full bg-purple-600 text-white hover:bg-purple-700">
-                Submit Ticket
-              </Button>
-            </ClaimModal>
+                Meta Claim Release
+            </Button>
 
-            <ClaimModal 
-              title="Youtube Claim Release"
-              trigger={
-                <Button className="bg-purple-600 text-white hover:bg-purple-700">
-                  Youtube Claim Release
-                </Button>
-              }
+            <Button
+                className="bg-purple-600 text-white hover:bg-purple-700"
+                onClick={() => setClaimModal({ open: true, type: ETicketType.YOUTUBE_CLAIM_RELEASE, title: 'Youtube Claim Release' })}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField label="Full Name" required>
-                  <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                </FormField>
-                <FormField label="Account ID" required>
-                  <Select>
-                    <SelectTrigger className=" border-slate-700">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="billing">Billing</SelectItem>
-                      <SelectItem value="technical">Technical</SelectItem>
-                      <SelectItem value="general">General</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <FormField label="Mobile Number">
-                  <Select>
-                    <SelectTrigger className=" border-slate-700">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <FormField label="Email Associated with Account">
-                  <Input placeholder="your@email.com" className=" border-slate-700" />
-                </FormField>
-                <FormField label="Youtube Video Link">
-                  <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                </FormField>
-                <FormField label="Official Video Link">
-                  <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                </FormField>
-                <FormField label="ISRC of the Release" required>
-                  <div className="flex items-center gap-2">
-                    <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                    <Button size="sm" className="bg-purple-600 text-white hover:bg-purple-700">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </FormField>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" id="confirm-youtube" className="rounded" />
-                <label htmlFor="confirm-youtube" className="text-sm">
-                  I confirm that all submitted designs are original and do not infringe on third-party rights.
-                </label>
-              </div>
-              <Button className="w-full bg-purple-600 text-white hover:bg-purple-700">
-                Submit Ticket
-              </Button>
-            </ClaimModal>
+                Youtube Claim Release
+            </Button>
 
-            <ClaimModal 
-              title="Youtube Manual Claiming Form"
-              trigger={
-                <Button className="bg-purple-600 text-white hover:bg-purple-700">
-                  Youtube Manual Claim
-                </Button>
-              }
+            <Button
+                className="bg-purple-600 text-white hover:bg-purple-700"
+                onClick={() => setClaimModal({ open: true, type: ETicketType.YOUTUBE_MANUAL_CLAIM, title: 'Youtube Manual Claiming Form' })}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField label="Full Name" required>
-                  <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                </FormField>
-                <FormField label="Account ID" required>
-                  <Select>
-                    <SelectTrigger className=" border-slate-700">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="billing">Billing</SelectItem>
-                      <SelectItem value="technical">Technical</SelectItem>
-                      <SelectItem value="general">General</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <FormField label="Mobile Number">
-                  <Select>
-                    <SelectTrigger className=" border-slate-700">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <FormField label="Email Associated with Account">
-                  <Input placeholder="your@email.com" className=" border-slate-700" />
-                </FormField>
-                <FormField label="Youtube Video Link">
-                  <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                </FormField>
-                <FormField label="Official Video Link">
-                  <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                </FormField>
-                <FormField label="ISRC of the Release" required>
-                  <div className="flex items-center gap-2">
-                    <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                    <Button size="sm" className="bg-purple-600 text-white hover:bg-purple-700">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </FormField>
-                <FormField label="Start Date">
-                  <Input type="date" className=" border-slate-700" />
-                </FormField>
-                <FormField label="End Date">
-                  <Input type="date" className=" border-slate-700" />
-                </FormField>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" id="confirm-manual" className="rounded" />
-                <label htmlFor="confirm-manual" className="text-sm">
-                  I confirm that all submitted designs are original and do not infringe on third-party rights.
-                </label>
-              </div>
-              <Button className="w-full bg-purple-600 text-white hover:bg-purple-700">
-                Submit Ticket
-              </Button>
-            </ClaimModal>
+                Youtube Manual Claim
+            </Button>
 
-            <ClaimModal 
-              title="Meta Profile/Page Mapping"
-              trigger={
-                <Button className="bg-purple-600 text-white hover:bg-purple-700">
-                  Meta Profile Form
-                </Button>
-              }
+            <Button
+                className="bg-purple-600 text-white hover:bg-purple-700"
+                onClick={() => setClaimModal({ open: true, type: ETicketType.META_PROFILE_MAPPING, title: 'Meta Profile/Page Mapping' })}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField label="Full Name" required>
-                  <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                </FormField>
-                <FormField label="Account ID" required>
-                  <Select>
-                    <SelectTrigger className=" border-slate-700">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="billing">Billing</SelectItem>
-                      <SelectItem value="technical">Technical</SelectItem>
-                      <SelectItem value="general">General</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <FormField label="Mobile Number">
-                  <Select>
-                    <SelectTrigger className=" border-slate-700">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <FormField label="Email Associated with Account">
-                  <Input placeholder="your@email.com" className=" border-slate-700" />
-                </FormField>
-                <FormField label="Which Profile/page do you want to Map?">
-                  <Select>
-                    <SelectTrigger className=" border-slate-700">
-                      <SelectValue placeholder="Both" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="profile">Profile</SelectItem>
-                      <SelectItem value="page">Page</SelectItem>
-                      <SelectItem value="both">Both</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <div></div>
-                <FormField label="Youtube Video Link">
-                  <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                </FormField>
-                <FormField label="ISRC of the Release" required>
-                  <div className="flex items-center gap-2">
-                    <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                    <Button size="sm" className="bg-purple-600 text-white hover:bg-purple-700">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </FormField>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" id="confirm-meta-profile" className="rounded" />
-                <label htmlFor="confirm-meta-profile" className="text-sm">
-                  I confirm that all submitted designs are original and do not infringe on third-party rights.
-                </label>
-              </div>
-              <Button className="w-full bg-purple-600 text-white hover:bg-purple-700">
-                Submit Ticket
-              </Button>
-            </ClaimModal>
+                Meta Profile Form
+            </Button>
             
-            {/* NEWLY ADDED CODE */}
-            <ClaimModal 
-              title="Meta Manual Claiming Form"
-              trigger={
-                <Button className="bg-purple-600 text-white hover:bg-purple-700">
-                  Meta Manual Claim
-                </Button>
-              }
+            <Button 
+                className="bg-purple-600 text-white hover:bg-purple-700"
+                onClick={() => setClaimModal({ open: true, type: ETicketType.META_MANUAL_CLAIM, title: 'Meta Manual Claiming Form' })}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField label="Full Name" required>
-                  <Input placeholder="Enter your full name" className="border-slate-700" />
-                </FormField>
-                <FormField label="Account ID" required>
-                  <Input placeholder="Enter your account ID" className="border-slate-700" />
-                </FormField>
-                <FormField label="Mobile Number">
-                  <Input placeholder="Enter your mobile number" className="border-slate-700" />
-                </FormField>
-                <FormField label="Email Associated with Account">
-                  <Input placeholder="your@email.com" className="border-slate-700" />
-                </FormField>
-                <FormField label="Which Profile/Page Do you want to Map?">
-                  <Select>
-                    <SelectTrigger className="border-slate-700">
-                      <SelectValue placeholder="Both" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="profile">Profile</SelectItem>
-                      <SelectItem value="page">Page</SelectItem>
-                      <SelectItem value="both">Both</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <FormField label="Release Date">
-                  <Input type="date" className="border-slate-700" />
-                </FormField>
-                <FormField label="Youtube Video Link">
-                  <Input placeholder="Link to the YouTube video" className="border-slate-700" />
-                </FormField>
-                <FormField label="ISRC of the Release" required>
-                  <div className="flex items-center gap-2">
-                    <Input placeholder="Enter ISRC of the release" className="border-slate-700" />
-                    <Button size="sm" className="bg-purple-600 text-white hover:bg-purple-700">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </FormField>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" id="confirm-meta-manual" className="rounded" />
-                <label htmlFor="confirm-meta-manual" className="text-sm">
-                  I confirm that all submitted designs are original and do not infringe on third-party rights.
-                </label>
-              </div>
-              <Button className="w-full bg-purple-600 text-white hover:bg-purple-700">
-                Submit Ticket
-              </Button>
-            </ClaimModal>
-            {/* END OF NEWLY ADDED CODE */}
+                Meta Manual Claim
+            </Button>
 
-            <ClaimModal 
-              title="Youtube Channel OAC / Release Mapping"
-              trigger={
-                <Button className="bg-purple-600 text-white hover:bg-purple-700">
-                  Youtube OAC
-                </Button>
-              }
+            <Button
+                className="bg-purple-600 text-white hover:bg-purple-700"
+                onClick={() => setClaimModal({ open: true, type: ETicketType.YOUTUBE_OAC_MAPPING, title: 'Youtube Channel OAC / Release Mapping' })}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField label="Full Name" required>
-                  <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                </FormField>
-                <FormField label="Account ID" required>
-                  <Select>
-                    <SelectTrigger className=" border-slate-700">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="billing">Billing</SelectItem>
-                      <SelectItem value="technical">Technical</SelectItem>
-                      <SelectItem value="general">General</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <FormField label="Mobile Number">
-                  <Select>
-                    <SelectTrigger className=" border-slate-700">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <FormField label="Email Associated with Account">
-                  <Input placeholder="your@email.com" className=" border-slate-700" />
-                </FormField>
-                <FormField label="Which Profile/page do you want to Map?">
-                  <Select>
-                    <SelectTrigger className=" border-slate-700">
-                      <SelectValue placeholder="OAC" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="oac">OAC</SelectItem>
-                      <SelectItem value="release">Release Mapping</SelectItem>
-                      <SelectItem value="both">Both</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <div></div>
-                <FormField label="Youtube OAC Link">
-                  <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                </FormField>
-                <FormField label="ISRC of the Release" required>
-                  <div className="flex items-center gap-2">
-                    <Input placeholder="Brief description of your issue" className=" border-slate-700" />
-                    <Button size="sm" className="bg-purple-600 text-white hover:bg-purple-700">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </FormField>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" id="confirm-oac" className="rounded" />
-                <label htmlFor="confirm-oac" className="text-sm">
-                  I confirm that all submitted designs are original and do not infringe on third-party rights.
-                </label>
-              </div>
-              <Button className="w-full bg-purple-600 text-white hover:bg-purple-700">
-                Submit Ticket
-              </Button>
-            </ClaimModal>
+                Youtube OAC
+            </Button>
           </div>
         </div>
 
         {/* Main Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-4">
             <TabsTrigger value="faq" >FAQ</TabsTrigger>
             <TabsTrigger value="tickets" >My Tickets</TabsTrigger>
@@ -947,7 +571,39 @@ const HelpSupport = () => {
                   )}
                 </CardContent>
               </Card>
+              <Card className=" py-2 border-slate-700">
+                <CardContent className="p-4">
+                  {isLoadingStats ? <p>Loading...</p> : (
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm">Closed</p>
+                        <p className="text-2xl font-bold">{ticketStats?.data?.overallStats?.closedTickets || 0}</p>
+                      </div>
+                      <CheckCircle className="w-8 h-8 text-gray-500" /> {/* Using gray for closed */}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
+
+            {/* Ticket Status Filter Tabs */}
+            <Tabs
+                value={ticketFilters.status || 'all'}
+                onValueChange={(value) => setTicketFilters(prev => ({ 
+                    ...prev, 
+                    status: value === 'all' ? undefined : value,
+                    page: 1 // Reset page when status changes
+                }))}
+                className="w-full mb-6"
+            >
+                <TabsList className="grid w-full grid-cols-5">
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="open">Open</TabsTrigger>
+                    <TabsTrigger value="pending">Pending</TabsTrigger>
+                    <TabsTrigger value="resolved">Resolved</TabsTrigger>
+                    <TabsTrigger value="closed">Closed</TabsTrigger>
+                </TabsList>
+            </Tabs>
 
             {/* Ticket List (as cards) */}
             <Card className=" border-slate-700">
@@ -1058,50 +714,20 @@ const HelpSupport = () => {
                 <CardTitle>Submit New Support Ticket</CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleCreateTicket} className="space-y-4">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <FormField label="Subject" required>
-                      <Input name="subject" placeholder="Brief description of your issue" className=" border-slate-700" />
-                    </FormField>
-                    <FormField label="Category" required>
-                      <Select name="category">
-                        <SelectTrigger className=" border-slate-700">
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Billing">Billing</SelectItem>
-                          <SelectItem value="Technical">Technical</SelectItem>
-                          <SelectItem value="General">General</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormField>
-                    <FormField label="Priority">
-                      <Select name="priority" defaultValue="medium">
-                        <SelectTrigger className=" border-slate-700">
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormField>
-                    <FormField label="Contact Email">
-                      <Input name="contactEmail" placeholder="your@email.com" className=" border-slate-700" />
-                    </FormField>
-                  </div>
-                  <FormField label="Description" required>
-                    <Textarea 
-                      name="description"
-                      placeholder="Please provide detailed information about your issue..." 
-                      className=" border-slate-700 min-h-[120px]"
-                    />
-                  </FormField>
-                  <Button type="submit" disabled={createTicketMutation.isLoading} className="w-full bg-purple-600 text-white hover:bg-purple-700">
-                    {createTicketMutation.isLoading ? 'Submitting...' : 'Submit Ticket'}
-                  </Button>
-                </form>
+                <NormalTicketForm 
+                    user={user}
+                    isLoading={createTicketMutation.isLoading}
+                    onSubmit={(ticketData) => {
+                        const payload = {
+                            ...ticketData,
+                            ticketType: ETicketType.NORMAL,
+                        };
+                        createTicketMutation.mutate(payload, {
+                            onSuccess: handleMutationSuccess,
+                            onError: handleMutationError,
+                        });
+                    }}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -1375,6 +1001,58 @@ const HelpSupport = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Dialog open={claimModal.open} onOpenChange={() => setClaimModal({ open: false, type: null, title: '' })}>
+            <DialogContent className="max-lg:min-w-[90vw] lg:min-w-6xl max-h-[90vh] overflow-y-auto  border-slate-700">
+                <DialogHeader>
+                    <DialogTitle>{claimModal.title}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6">
+                    {claimModal.type === ETicketType.META_MANUAL_CLAIM && (
+                        <MetaManualClaimForm 
+                            onSubmit={handleClaimSubmit}
+                            isLoading={createTicketMutation.isLoading}
+                            user={user}
+                        />
+                    )}
+                    {claimModal.type === ETicketType.YOUTUBE_MANUAL_CLAIM && (
+                        <YoutubeManualClaimForm 
+                            onSubmit={handleClaimSubmit}
+                            isLoading={createTicketMutation.isLoading}
+                            user={user}
+                        />
+                    )}
+                    {claimModal.type === ETicketType.META_CLAIM_RELEASE && (
+                        <MetaClaimReleaseForm
+                            onSubmit={handleClaimSubmit}
+                            isLoading={createTicketMutation.isLoading}
+                            user={user}
+                        />
+                    )}
+                     {claimModal.type === ETicketType.YOUTUBE_CLAIM_RELEASE && (
+                        <YoutubeClaimReleaseForm
+                            onSubmit={handleClaimSubmit}
+                            isLoading={createTicketMutation.isLoading}
+                            user={user}
+                        />
+                    )}
+                    {claimModal.type === ETicketType.META_PROFILE_MAPPING && (
+                        <MetaProfileMappingForm
+                            onSubmit={handleClaimSubmit}
+                            isLoading={createTicketMutation.isLoading}
+                            user={user}
+                        />
+                    )}
+                    {claimModal.type === ETicketType.YOUTUBE_OAC_MAPPING && (
+                        <YoutubeOACMappingForm
+                            onSubmit={handleClaimSubmit}
+                            isLoading={createTicketMutation.isLoading}
+                            user={user}
+                        />
+                    )}
+                </div>
+            </DialogContent>
+        </Dialog>
 
         {/* Ticket Detail Modal */}
         <TicketDetailModal ticket={modalState.ticket} />

@@ -8,6 +8,14 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { toast } from "sonner";
 import AttachmentModal from "./AttachmentModal";
 import InternalNoteModal from "./InternalNoteModal";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import AdminNormalTicketDetails from "./details/AdminNormalTicketDetails";
+import AdminDefaultClaimDetails from "./details/AdminClaimDetails";
+import AdminMetaProfileMappingDetails from "./details/AdminMetaProfileMappingDetails";
+import AdminYoutubeOACMappingDetails from "./details/AdminYoutubeOACMappingDetails";
+import { ETicketType } from "@/config/constants";
+
 
 export default function TicketDetailPanel({ theme = "dark", ticket, onBack }) {
   const isDark = theme === "dark";
@@ -25,19 +33,60 @@ const [showInternalModal, setShowInternalModal] = useState(false);
 
 
 useEffect(() => {
-  if (!ticket?._id) return;
+  if (!ticket?.ticketId) return;
   fetchTicket();
-}, [ticket?._id]);
+}, [ticket?.ticketId]);
 
 const fetchTicket = async () => {
   try {
-    const res = await GlobalApi.getSupportTicketById(ticket._id);
-    setCurrentTicket(res.data);  // overwrite current ticket with fresh data
+    const res = await GlobalApi.getSupportTicketById(ticket.ticketId);
+    setCurrentTicket(res.data.data);  // overwrite current ticket with fresh data
   } catch (err) {
     console.error("Failed to fetch ticket", err);
+    toast.error("Failed to load ticket details.");
+    onBack(); // Go back to list if fetching fails
   }
 };
 
+const handleDownloadPdf = () => {
+    const doc = new jsPDF();
+    const publicResponses = currentTicket.responses.filter(r => !r.isInternal);
+
+    doc.setFontSize(18);
+    doc.text(`Support Ticket: ${currentTicket.ticketId}`, 14, 22);
+    
+    doc.setFontSize(12);
+    doc.text(`Subject: ${currentTicket.subject}`, 14, 32);
+
+    const customerName = `${currentTicket.userId?.firstName || ''} ${currentTicket.userId?.lastName || ''}`.trim();
+    doc.text(`Customer: ${customerName} (${currentTicket.userId?.emailAddress})`, 14, 42);
+    doc.text(`Status: ${currentTicket.status}`, 14, 52);
+
+
+    const tableData = publicResponses.map(res => [
+        new Date(res.createdAt).toLocaleString(),
+        `${res.respondedBy?.firstName || ''} ${res.respondedBy?.lastName || ''}`.trim(),
+        res.message
+    ]);
+
+    autoTable(doc, {
+        startY: 60,
+        head: [['Date', 'Author', 'Message']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [41, 128, 185] },
+        styles: {
+            cellPadding: 3,
+            fontSize: 10,
+            overflow: 'linebreak'
+        },
+        columnStyles: {
+            2: { cellWidth: 'auto' }
+        }
+    });
+
+    doc.save(`ticket-${currentTicket.ticketId}.pdf`);
+  };
 
 const handleSendReply = async () => {
   if (!replyMessage.trim()) {
@@ -79,25 +128,57 @@ const handleSendReply = async () => {
 
 
 
-const handleEscalateTicket = async () => {
-  try {
-    setLoading(true);
+  const handleEscalateTicket = async () => {
+    try {
+      setLoading(true);
 
-    const updated = await GlobalApi.escalateSupportTicket(ticket.ticketId, {});    
-    setCurrentTicket((prev) => ({
-      ...prev,
-      escalationLevel: (prev.escalationLevel ?? 0) + 1,
-    }));
+      const updated = await GlobalApi.escalateSupportTicket(ticket.ticketId, {});    
+      setCurrentTicket((prev) => ({
+        ...prev,
+        escalationLevel: (prev.escalationLevel ?? 0) + 1,
+      }));
 
-    setShowDialog(false);
-    toast.success("Ticket escalated successfully");
-  } catch (error) {
-    console.error("Escalation failed:", error);
-    toast.error("Failed to escalate ticket");
-  } finally {
-    setLoading(false);
-  }
-};
+      setShowDialog(false);
+      toast.success("Ticket escalated successfully");
+    } catch (error) {
+      console.error("Escalation failed:", error);
+      toast.error("Failed to escalate ticket");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderTicketDetails = () => {
+    if (!currentTicket || !currentTicket.details) {
+      return <p>No ticket details available.</p>;
+    }
+  
+    const { ticketType, details } = currentTicket;
+  
+    switch (ticketType) {
+      case ETicketType.NORMAL:
+        return <AdminNormalTicketDetails details={details} />;
+      case ETicketType.META_CLAIM_RELEASE:
+      case ETicketType.YOUTUBE_CLAIM_RELEASE:
+      case ETicketType.META_MANUAL_CLAIM:
+      case ETicketType.YOUTUBE_MANUAL_CLAIM:
+        return <AdminDefaultClaimDetails details={details} type={ticketType} />;
+      case ETicketType.META_PROFILE_MAPPING:
+        return <AdminMetaProfileMappingDetails details={details} />;
+      case ETicketType.YOUTUBE_OAC_MAPPING:
+        return <AdminYoutubeOACMappingDetails details={details} />;
+      default:
+        // Fallback for older tickets before the ticketType was introduced
+        return (
+            <div className="mt-8">
+                <p className="text-xs" style={{ color: "var(--muted)" }}>Description</p>
+                <div className="mt-2 p-4 rounded-lg" style={{ background: "var(--bg-main)" }}>
+                    <p className="text-sm whitespace-pre-wrap">{currentTicket.description}</p>
+                </div>
+            </div>
+        );
+    }
+  };
 
   if (!ticket) return null;
 
@@ -148,13 +229,6 @@ const handleEscalateTicket = async () => {
               </p>
             </div>
           </div>
-
-          <button
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm"
-            style={{ background: "transparent", color: "var(--muted)" }}
-          >
-            <Download size={16} /> Download Thread
-          </button>
         </div>
 
         <div className="col-span-8">
@@ -182,113 +256,8 @@ const handleEscalateTicket = async () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-8">
-
-              <div className="flex flex-col items-start">
-                <div className="text-xs mb-1" style={{ color: "var(--muted)" }}>User</div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#0F1720] flex items-center justify-center">
-                    <User size={18} style={{ color: "var(--muted)" }} />
-                  </div>
-
-                  <div>
-                    <div className="font-semibold leading-tight">
-                      {(ticket?.userId?.firstName || "") + " " + (ticket?.userId?.lastName || "")}
-                    </div>
-
-                    <div className="text-sm leading-tight mt-0.5" style={{ color: "var(--muted)" }}>
-                      {ticket?.userId?.emailAddress || "—"}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col items-center text-center">
-                <div className="text-xs mb-1" style={{ color: "var(--muted)" }}>Created</div>
-
-                <div className="flex items-center gap-2 text-sm mt-1">
-                  <Calendar size={16} style={{ color: "var(--muted)" }} />
-                  <span className="font-medium">
-                    {ticket?.createdAt ? new Date(currentTicket.createdAt).toLocaleDateString() : "—"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-col items-end text-right w-full">
-                <div className="text-xs mb-1 pr-[22px]" style={{ color: "var(--muted)" }}>
-                  Category
-                </div>
-
-                <div className="w-full flex justify-end">
-                  <span
-                    className="inline-block px-3 py-1 text-xs font-medium rounded-full mt-1"
-                    style={{
-                      background: "rgba(124,58,237,0.18)",
-                      color: "var(--accent)",
-                    }}
-                  >
-                    {ticket?.category || "—"}
-                  </span>
-                </div>
-
-
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-8 mt-10">
-              <div>
-                <div className="text-xs mb-1" style={{ color: "var(--muted)" }}>Subject</div>
-
-                <div className="text-base font-semibold leading-tight">
-                  {ticket?.subject || "—"}
-                </div>
-              </div>
-
-              <div className="flex flex-col items-center text-center">
-                <div className="text-xs mb-1" style={{ color: "var(--muted)" }}>Tags</div>
-
-                {ticket?.tags?.length > 0 ? (
-                  <div className="flex gap-2 justify-center">
-                    {currentTicket.tags.map((tag, i) => (
-                      <span
-                        key={i}
-                        className="flex items-center gap-1 px-4 py-1 rounded-full text-xs font-medium border"
-                        style={{
-                          background: "var(--chip-bg)",
-                          borderColor: "rgba(255,255,255,0.08)",
-                          color: "var(--muted)",
-                        }}
-                      >
-                        <Tag size={12} /> {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                ) : (
-                  <div className="text-sm" style={{ color: "var(--muted)" }}>—</div>
-                )}
-              </div>
-
-              <div>
-                <div className="flex flex-col items-end text-right">
-                  <div className="text-xs mb-1" style={{ color: "var(--muted)" }}>
-                    Escalation Level
-                  </div>
-
-                  <span
-                    className="inline-block px-3 py-1 text-xs font-medium rounded-full mt-1"
-                    style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                      color: "var(--accent)",
-                    }}
-                  >
-                    Level {currentTicket.escalationLevel || 0}
-                  </span>
-                </div>
-              </div>
-            </div>
+            {renderTicketDetails()}
+            
           </div>
 
           <div
@@ -299,8 +268,15 @@ const handleEscalateTicket = async () => {
               <h3 className="text-md font-medium">
                 Conversation ({currentTicket.responses?.length || 0})
               </h3>
+              <button
+                onClick={handleDownloadPdf}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs"
+                style={{ background: "transparent", color: "var(--muted)", border: '1px solid var(--border)' }}
+              >
+                <Download size={14} /> Download Thread
+              </button>
             </div>
-
+      
             <div className="space-y-4">
        {currentTicket.responses?.map((chat, index) => {
   // Use respondedBy object from API directly
@@ -641,5 +617,4 @@ function MessageBubble({ message }) {
     </div>
   );
 }
-
 

@@ -22,89 +22,111 @@ export default function HelpSupport({ theme = "dark" }) {
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+        const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+      
+        const cardClass = `${theme === "dark" ? "bg-[#151F28]" : "bg-white"
+          } p-5 rounded-2xl shadow flex flex-col`;
+      
+        const textColors =
+          theme === "dark"
+            ? {
+              primary: "text-white",
+              secondary: "text-gray-400",
+              muted: "text-gray-500",
+            }
+            : {
+              primary: "text-black",
+              secondary: "text-gray-600",
+              muted: "text-gray-500",
+            };
+      
+        const bgColors =
+          theme === "dark"
+            ? {
+              input: "bg-[#111A22] text-white",
+              select: "bg-[#111A22] text-white hover:bg-gray-700",
+              button: "bg-[#111A22] text-white hover:bg-gray-700",
+              rowHover: "hover:bg-gray-800/40 border-gray-800",
+            }
+            : {
+              input: "bg-gray-200 text-black",
+              select: "bg-gray-200 text-black hover:bg-gray-300",
+              button: "bg-gray-200 text-black hover:bg-gray-300",
+              rowHover: "hover:bg-gray-100 border-gray-200",
+            };
+      
+        const badgeColors = {
+          category: {
+            Technical:
+              "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+            Billing:
+              "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
+            Account:
+              "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
+            Content:
+              "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
+            General:
+              "bg-gray-200 text-gray-600 dark:bg-gray-700/30 dark:text-gray-300",
+          },
+          priority: {
+            High: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+            Medium:
+              "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400",
+            Low: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
+            Critical:
+              "bg-red-200 text-red-700 dark:bg-red-800/40 dark:text-red-300",
+          },
+          status: {
+            open: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+            pending:
+              "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400",
+            resolved:
+              "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
+            closed:
+              "bg-gray-200 text-gray-600 dark:bg-gray-700/30 dark:text-gray-400",
+          },
+        };
+      
+        // Debounce search query
+        useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      setPage(1); // Reset to first page on search
+    }, 500);
 
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
 
-
-
-  const cardClass = `${theme === "dark" ? "bg-[#151F28]" : "bg-white"
-    } p-5 rounded-2xl shadow flex flex-col`;
-
-  const textColors =
-    theme === "dark"
-      ? {
-        primary: "text-white",
-        secondary: "text-gray-400",
-        muted: "text-gray-500",
-      }
-      : {
-        primary: "text-black",
-        secondary: "text-gray-600",
-        muted: "text-gray-500",
-      };
-
-  const bgColors =
-    theme === "dark"
-      ? {
-        input: "bg-[#111A22] text-white",
-        select: "bg-[#111A22] text-white hover:bg-gray-700",
-        button: "bg-[#111A22] text-white hover:bg-gray-700",
-        rowHover: "hover:bg-gray-800/40 border-gray-800",
-      }
-      : {
-        input: "bg-gray-200 text-black",
-        select: "bg-gray-200 text-black hover:bg-gray-300",
-        button: "bg-gray-200 text-black hover:bg-gray-300",
-        rowHover: "hover:bg-gray-100 border-gray-200",
-      };
-
-  const badgeColors = {
-    category: {
-      Technical:
-        "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
-      Billing:
-        "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
-      Account:
-        "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
-      Content:
-        "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
-      General:
-        "bg-gray-200 text-gray-600 dark:bg-gray-700/30 dark:text-gray-300",
-    },
-    priority: {
-      High: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
-      Medium:
-        "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400",
-      Low: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
-      Critical:
-        "bg-red-200 text-red-700 dark:bg-red-800/40 dark:text-red-300",
-    },
-    status: {
-      open: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
-      pending:
-        "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400",
-      resolved:
-        "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
-      closed:
-        "bg-gray-200 text-gray-600 dark:bg-gray-700/30 dark:text-gray-400",
-    },
-  };
 
   useEffect(() => {
     const fetchTickets = async () => {
       try {
         setLoading(true);
-        const res = await GlobalApi.getAllSupportTickets(page, limit);
+
+        const params = {
+          page,
+          limit,
+          search: debouncedSearchQuery || undefined,
+          status: statusFilter === "All" ? undefined : statusFilter.toLowerCase(),
+          priority: priorityFilter === "All" ? undefined : priorityFilter.toLowerCase(),
+          // category is no longer a top-level filter
+        };
+        
+        const res = await GlobalApi.getAllSupportTickets(params);
         const { tickets, pagination } = res.data.data;
-        setTickets(tickets);
-        setPagination(pagination);
+        setTickets(tickets || []);
+        setPagination(pagination || {});
       } catch (err) {
         console.error("Failed to fetch tickets:", err);
+        setTickets([]);
       } finally {
         setLoading(false);
       }
     };
     fetchTickets();
-  }, [page, limit]);
+  }, [page, limit, debouncedSearchQuery, statusFilter, priorityFilter]);
 
 
   useEffect(() => {
@@ -118,31 +140,6 @@ export default function HelpSupport({ theme = "dark" }) {
     };
     fetchStats();
   }, []);
-
-
-  const filteredTickets = tickets.filter((t) => {
-    const matchesSearch =
-      t.ticketId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.userId?.firstName
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      t.userId?.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.contactEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.subject?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "All" || t.status?.toLowerCase() === statusFilter.toLowerCase();
-    const matchesPriority =
-      priorityFilter === "All" ||
-      t.priority?.toLowerCase() === priorityFilter.toLowerCase();
-    const matchesCategory =
-      categoryFilter === "All" ||
-      t.category?.toLowerCase() === categoryFilter.toLowerCase();
-
-    return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
-  });
-
-
 
   if (selectedTicket) {
     return (
@@ -282,19 +279,6 @@ export default function HelpSupport({ theme = "dark" }) {
             <option>Critical</option>
           </select>
 
-          <select
-            className={`text-sm rounded-lg px-3 py-2 ${bgColors.select}`}
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            <option>All</option>
-            <option>Technical</option>
-            <option>Billing</option>
-            <option>Account</option>
-            <option>Content</option>
-            <option>General</option>
-          </select>
-
           <button
             className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg ${bgColors.button}`}
             onClick={() => setIsExportModalOpen(true)}
@@ -325,7 +309,7 @@ export default function HelpSupport({ theme = "dark" }) {
                 <th className="text-left py-3 px-4">Ticket #</th>
                 <th className="text-left py-3 px-4">User</th>
                 <th className="text-left py-3 px-4">Subject</th>
-                <th className="text-left py-3 px-4">Category</th>
+                <th className="text-left py-3 px-4">Ticket Type</th>
                 <th className="text-left py-3 px-4">Priority</th>
                 <th className="text-left py-3 px-4">Status</th>
                 <th className="text-left py-3 px-4">Assigned To</th>
@@ -335,7 +319,7 @@ export default function HelpSupport({ theme = "dark" }) {
               </tr>
             </thead>
             <tbody>
-              {filteredTickets.length === 0 ? (
+              {tickets.length === 0 ? (
                 <tr>
                   <td
                     colSpan={10}
@@ -345,7 +329,7 @@ export default function HelpSupport({ theme = "dark" }) {
                   </td>
                 </tr>
               ) : (
-                filteredTickets.map((t, i) => (
+                tickets.map((t, i) => (
                   <tr key={i} className={`last:border-none ${bgColors.rowHover}`}>
                     <td className="py-3 px-4">{t.ticketId}</td>
                     <td className="py-3 px-4">
@@ -358,14 +342,13 @@ export default function HelpSupport({ theme = "dark" }) {
                         </p>
                       </div>
                     </td>
-                    <td className="py-3 px-4">{t.subject}</td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 whitespace-nowrap">{t.subject}</td>
+                    <td className="py-3 px-4 whitespace-nowrap">
                       <span
-                        className={`text-xs px-2.5 py-1 rounded-full ${badgeColors.category[t.category] ||
-                          "bg-gray-200 text-gray-600"
+                        className={`text-xs px-2.5 py-1 rounded-full ${"bg-gray-200 text-gray-600 dark:bg-gray-700/30 dark:text-gray-300"
                           }`}
                       >
-                        {t.category}
+                        {t.ticketType}
                       </span>
                     </td>
                     <td className="py-3 px-4">

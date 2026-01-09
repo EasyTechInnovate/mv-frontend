@@ -313,8 +313,8 @@ const getUsers = (page = 1, limit = 10, extraParams = "") =>
 
 // ---------------------- Support Tickets (Admin) ----------------------
 
-const getAllSupportTickets = (page = 1, limit = 10) =>
-  axiosClient.get(`/v1/admin/support-tickets?page=${page}&limit=${limit}`);
+const getAllSupportTickets = (params) =>
+  axiosClient.get(`/v1/admin/support-tickets`, { params });
 
 const getSupportTicketStats = (timeframe = "month") =>
   axiosClient.get(`/v1/admin/support-tickets/stats?timeframe=${timeframe}`);

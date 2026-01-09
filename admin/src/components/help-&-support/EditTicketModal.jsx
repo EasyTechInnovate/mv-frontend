@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import GlobalApi from "@/lib/GlobalApi";
-
-export const ETicketCategory = {
-  TECHNICAL: "Technical",
-  BILLING: "Billing",
-  ACCOUNT: "Account",
-  CONTENT: "Content",
-};
+import { ETicketType } from "@/config/constants";
+import AdminNormalTicketForm from "./forms/AdminNormalTicketForm";
+import AdminClaimForm from "./forms/AdminClaimForm";
+import AdminMetaProfileMappingForm from "./forms/AdminMetaProfileMappingForm";
+import AdminYoutubeOACMappingForm from "./forms/AdminYoutubeOACMappingForm";
 
 export const ETicketPriority = {
   CRITICAL: "critical",
@@ -24,28 +22,17 @@ export const ETicketStatus = {
 };
 
 export const EDepartment = Object.freeze({
-  MANAGEMENT: "Management",
-  CONTENT: "Content",
-  TECHNOLOGY: "Technology",
-  MARKETING: "Marketing",
-  SUPPORT: "Support",
+    MANAGEMENT: "Management",
+    CONTENT: "Content",
+    TECHNOLOGY: "Technology",
+    MARKETING: "Marketing",
+    SUPPORT: "Support",
 });
 
 const normalizeAssignedTo = (raw) => {
   if (!raw) return "";
   if (typeof raw === "string") return raw;
   if (typeof raw === "object" && raw._id) return raw._id;
-  return "";
-};
-
-const normalizeDepartment = (raw) => {
-  if (!raw) return "";
-  if (typeof raw === "string") return raw;
-  if (typeof raw === "object") {
-    if (raw.department) return raw.department;
-    if (raw.name) return raw.name;
-    if (raw.title) return raw.title;
-  }
   return "";
 };
 
@@ -71,27 +58,25 @@ export default function EditTicketModal({
 
   const [form, setForm] = useState({
     subject: ticket.subject || "",
-    description: ticket.description || "",
-    category: ticket.category || "",
     tags: ticket.tags?.join(", ") || "",
     status: ticket.status?.toLowerCase() || ETicketStatus.OPEN,
     priority: ticket.priority?.toLowerCase() || ETicketPriority.MEDIUM,
     assignedTo: normalizeAssignedTo(ticket.assignedTo),
-    assignedDepartment: normalizeDepartment(ticket.assignedDepartment),
+    assignedDepartment: ticket.assignedDepartment || "",
   });
 
+  const [details, setDetails] = useState(ticket.details || {});
 
   useEffect(() => {
     setForm({
       subject: ticket.subject || "",
-      description: ticket.description || "",
-      category: ticket.category || "",
       tags: ticket.tags?.join(", ") || "",
       status: ticket.status?.toLowerCase() || ETicketStatus.OPEN,
       priority: ticket.priority?.toLowerCase() || ETicketPriority.MEDIUM,
       assignedTo: normalizeAssignedTo(ticket.assignedTo),
-      assignedDepartment: normalizeDepartment(ticket.assignedDepartment),
+      assignedDepartment: ticket.assignedDepartment || "",
     });
+    setDetails(ticket.details || {});
   }, [ticket]);
 
   const updateField = (field, value) =>
@@ -103,21 +88,16 @@ export default function EditTicketModal({
 
   useEffect(() => {
     if (!isOpen) return;
-
     let mounted = true;
-
     const fetchMembers = async () => {
       setMembersLoading(true);
       setMembersError(null);
-
       try {
         const res = await GlobalApi.getAllTeamMembers(1, 100);
         const members = res?.data?.data?.teamMembers || [];
-
         const filtered = members.filter(
           (m) => m.isInvitationAccepted && m.isActive
         );
-
         if (mounted) setTeamMembers(filtered);
       } catch (err) {
         if (mounted)
@@ -126,32 +106,23 @@ export default function EditTicketModal({
         if (mounted) setMembersLoading(false);
       }
     };
-
     fetchMembers();
-
     return () => (mounted = false);
   }, [isOpen]);
 
   const handleSave = async () => {
     try {
-      const payload = {};
-
-      if (form.subject.trim()) payload.subject = form.subject.trim();
-      if (form.description.trim()) payload.description = form.description.trim();
-      if (form.category) payload.category = form.category;
-      if (form.status) payload.status = form.status;
-      if (form.priority) payload.priority = form.priority;
+      const payload = { ...form, details };
+      
+      if (form.tags) {
+        payload.tags = form.tags.split(",").map((t) => t.trim()).filter(Boolean);
+      } else {
+        payload.tags = [];
+      }
 
       payload.assignedTo = form.assignedTo || null;
       payload.assignedDepartment = form.assignedDepartment || null;
-
-      if (form.tags.trim()) {
-        payload.tags = form.tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean);
-      }
-
+      
       const res = await GlobalApi.updateSupportTicket(ticket.ticketId, payload);
 
       onSave?.(res.data.data);
@@ -160,6 +131,26 @@ export default function EditTicketModal({
       console.error("Update Ticket Error", err?.response?.data || err);
     }
   };
+
+  const renderDetailsForm = () => {
+    const { ticketType } = ticket;
+    
+    switch (ticketType) {
+        case ETicketType.NORMAL:
+            return <AdminNormalTicketForm initialDetails={details} onDetailsChange={setDetails} />;
+        case ETicketType.META_CLAIM_RELEASE:
+        case ETicketType.YOUTUBE_CLAIM_RELEASE:
+        case ETicketType.YOUTUBE_MANUAL_CLAIM:
+        case ETicketType.META_MANUAL_CLAIM:
+            return <AdminClaimForm initialDetails={details} onDetailsChange={setDetails} type={ticketType} />;
+        case ETicketType.META_PROFILE_MAPPING:
+            return <AdminMetaProfileMappingForm initialDetails={details} onDetailsChange={setDetails} />;
+        case ETicketType.YOUTUBE_OAC_MAPPING:
+            return <AdminYoutubeOACMappingForm initialDetails={details} onDetailsChange={setDetails} />;
+        default:
+            return <p style={{color: 'var(--muted)'}}>This ticket type does not have editable details.</p>
+    }
+  }
 
   return (
     <div
@@ -212,28 +203,25 @@ export default function EditTicketModal({
             </div>
 
             <div>
-              <label className="text-xs" style={{ color: "var(--muted)" }}>
-                Category
-              </label>
-              <select
-                value={form.category}
-                onChange={(e) => updateField("category", e.target.value)}
-                className="w-full mt-1 rounded-lg px-3 py-2 text-sm"
-                style={{
-                  background: "var(--surface)",
-                  color: "var(--text)",
-                  border: "1px solid var(--border)",
-                }}
-              >
-                <option value="">Select</option>
-                {Object.values(ETicketCategory).map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+                 <label className="text-xs" style={{ color: "var(--muted)" }}>
+                    Ticket Type
+                </label>
+                <input
+                    value={ticket.ticketType}
+                    disabled
+                    className="w-full mt-1 rounded-lg px-3 py-2 text-sm"
+                    style={{
+                    background: "var(--surface)",
+                    color: "var(--muted)",
+                    border: "1px solid var(--border)",
+                    }}
+                />
             </div>
           </div>
+          
+          <hr style={{borderColor: "var(--border)", margin: "20px 0"}}/>
+          
+          <h3 className="text-md font-semibold mb-4">Ticket Properties</h3>
 
           <div className="mb-4">
             <label className="text-xs" style={{ color: "var(--muted)" }}>
@@ -352,23 +340,13 @@ export default function EditTicketModal({
               </select>
             </div>
           </div>
+          
+          <hr style={{borderColor: "var(--border)", margin: "20px 0"}}/>
+          
+          <h3 className="text-md font-semibold mb-4">Details</h3>
 
-          <div className="mb-2">
-            <label className="text-xs" style={{ color: "var(--muted)" }}>
-              Description
-            </label>
-            <textarea
-              rows={8}
-              value={form.description}
-              onChange={(e) => updateField("description", e.target.value)}
-              className="w-full mt-1 rounded-lg px-3 py-2 text-sm resize-none"
-              style={{
-                background: "var(--surface)",
-                color: "var(--text)",
-                border: "1px solid var(--border)",
-              }}
-            />
-          </div>
+          {renderDetailsForm()}
+
         </div>
 
         <div
@@ -398,3 +376,4 @@ export default function EditTicketModal({
     </div>
   );
 }
+
