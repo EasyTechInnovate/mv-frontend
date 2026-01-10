@@ -1,4 +1,4 @@
-import React, { useState, useEffect  } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Calendar, Paperclip, Send, Download, User, SquarePen, Tag } from "lucide-react";
 import EditTicketModal from "./EditTicketModal";
 import AssignTicketModal from "./AssignTicketModal";
@@ -25,17 +25,38 @@ export default function TicketDetailPanel({ theme = "dark", ticket, onBack }) {
   const [loading, setLoading] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [replyMessage, setReplyMessage] = useState("");
-const [draftAttachments, setDraftAttachments] = useState([]);
-const [sendingReply, setSendingReply] = useState(false);
-const [showAttachmentModal, setShowAttachmentModal] = useState(false);
-const [isInternal, setIsInternal] = useState(false);
-const [showInternalModal, setShowInternalModal] = useState(false);
+  const [draftAttachments, setDraftAttachments] = useState([]);
+  const [sendingReply, setSendingReply] = useState(false);
+  const [showAttachmentModal, setShowAttachmentModal] = useState(false);
+  const [isInternal, setIsInternal] = useState(false);
+  const [showInternalModal, setShowInternalModal] = useState(false);
+  const chatContainerRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
 
 useEffect(() => {
   if (!ticket?.ticketId) return;
   fetchTicket();
 }, [ticket?.ticketId]);
+
+// Auto-scroll to bottom of chat when messages update
+useEffect(() => {
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    } else if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  };
+
+  // Scroll immediately
+  scrollToBottom();
+
+  // Also scroll after a short delay to ensure DOM is ready
+  const timer = setTimeout(scrollToBottom, 100);
+
+  return () => clearTimeout(timer);
+}, [currentTicket?.responses]);
 
 const fetchTicket = async () => {
   try {
@@ -277,7 +298,11 @@ const handleSendReply = async () => {
               </button>
             </div>
       
-            <div className="space-y-4">
+            <div 
+              ref={chatContainerRef}
+              className="h-[400px] overflow-y-auto space-y-4 mb-6"
+              style={{ background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)" }}
+            >
        {currentTicket.responses?.map((chat, index) => {
   // Use respondedBy object from API directly
   const responder = chat.respondedBy || {};
@@ -297,9 +322,7 @@ const handleSendReply = async () => {
     />
   );
 })}
-
-
-
+              <div ref={messagesEndRef} />
             </div>
 
             <div className="mt-6">
@@ -357,12 +380,12 @@ const handleSendReply = async () => {
 </button>
 
 
-                  <Button
+                  {/* <Button
                     onClick={() => setShowDialog(true)}
                     className="bg-orange-600 hover:bg-orange-700 text-white"
                   >
                     Escalate Ticket
-                  </Button>
+                  </Button> */}
 
                   <button
   onClick={handleSendReply}

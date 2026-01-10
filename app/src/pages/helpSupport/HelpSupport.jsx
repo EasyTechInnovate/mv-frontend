@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
@@ -35,6 +35,33 @@ import YoutubeClaimReleaseDetails from './components/YoutubeClaimReleaseDetails'
 import YoutubeManualClaimDetails from './components/YoutubeManualClaimDetails';
 import MetaProfileMappingDetails from './components/MetaProfileMappingDetails';
 import YoutubeOACMappingDetails from './components/YoutubeOACMappingDetails';
+
+function MessageBubble({ message, currentUser }) {
+  const isCurrentUser = currentUser && message.respondedBy && message.respondedBy._id === currentUser._id;
+  const isAgent = !isCurrentUser;
+
+  const bgColor = isCurrentUser ? "bg-purple-600" : "bg-muted-foreground/20";
+  const textColor = isCurrentUser ? "text-white" : "text-foreground";
+  const alignment = isCurrentUser ? "justify-end" : "justify-start";
+  const authorName = isCurrentUser
+    ? "You"
+    : (message.respondedBy?.firstName && message.respondedBy?.lastName)
+      ? `${message.respondedBy.firstName} ${message.respondedBy.lastName}`
+      : "Support Team";
+
+  return (
+    <div className={`flex ${alignment}`}>
+      <div
+        className={`max-w-[80%] rounded-lg p-3 shadow-sm text-sm leading-relaxed ${bgColor} ${textColor}`}
+      >
+        <div className="text-xs mb-1 opacity-80">
+          {authorName} • {new Date(message.createdAt).toLocaleString()}
+        </div>
+        <div>{message.message}</div>
+      </div>
+    </div>
+  );
+}
 
 const HelpSupport = () => {
   const { user } = useAuthStore();
@@ -219,121 +246,175 @@ const HelpSupport = () => {
     }
   };
 
-  const TicketDetailModal = ({ ticket }) => (
-    <Dialog open={modalState.type === 'details'} onOpenChange={() => setModalState({ type: null, ticket: null })}>
-      <DialogContent className="max-w-2xl  border-slate-700">
-        <DialogHeader>
-          <DialogTitle>Ticket Details</DialogTitle>
-        </DialogHeader>
-        {ticket && (
-          <div className="space-y-4 text-sm">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-muted-foreground">Ticket ID</p>
-                <p className="font-semibold">{ticket.ticketId}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Status</p>
-                <Badge className={getStatusColor(ticket.status)}>
-                  {ticket.status}
-                </Badge>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Priority</p>
-                <Badge className={getPriorityColor(ticket.priority)}>
-                  {ticket.priority}
-                </Badge>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Created</p>
-                <p>{new Date(ticket.createdAt).toLocaleString()}</p>
-              </div>
-            </div>
-            {isLoadingTicketDetails && <p>Loading details...</p>}
-            {ticketDetails?.data && (
-              <div className="space-y-3 pt-2">
-                <div>
-                  <p className="text-muted-foreground mb-1">Subject</p>
-                  <p className="font-semibold">{ticketDetails.data.subject}</p>
+      const TicketDetailModal = ({ ticket }) => (
+        <Dialog open={modalState.type === 'details'} onOpenChange={() => setModalState({ type: null, ticket: null })}>
+          <DialogContent className="max-w-2xl  border-slate-700">
+            <DialogHeader>
+              <DialogTitle>Ticket Details</DialogTitle>
+            </DialogHeader>
+            {ticket && (
+              <div className="space-y-4 text-sm">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-muted-foreground">Ticket ID</p>
+                    <p className="font-semibold">{ticket.ticketId}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Status</p>
+                    <Badge className={getStatusColor(ticket.status)}>
+                      {ticket.status}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Priority</p>
+                    <Badge className={getPriorityColor(ticket.priority)}>
+                      {ticket.priority}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Created</p>
+                    <p>{new Date(ticket.createdAt).toLocaleString()}</p>
+                  </div>
                 </div>
-                {renderTicketDetails(ticketDetails.data)}
-                {/* TODO: Render responses and attachments */}
+                {isLoadingTicketDetails && <p>Loading details...</p>}
+                {ticketDetails?.data && (
+                  <div className="space-y-3 pt-2">
+                    <div>
+                      <p className="text-muted-foreground mb-1">Subject</p>
+                      <p className="font-semibold">{ticketDetails.data.subject}</p>
+                    </div>
+                    {renderTicketDetails(ticketDetails.data)}
+                    {/* TODO: Render responses and attachments */}
+                  </div>
+                )}
+                <div className="flex gap-2 pt-4">
+                  <Button
+                    className="bg-purple-600 text-white hover:bg-purple-700"
+                    onClick={() => setModalState({ type: 'reply', ticket })}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Reply
+                  </Button>
+                  {(ticket.status === 'resolved' || ticket.status === 'closed') && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setModalState({ type: 'rating', ticket })}
+                    >
+                      <Star className="w-4 h-4 mr-2" />
+                      Give Feedback
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
-            <div className="flex gap-2 pt-4">
-              <Button 
-                className="bg-purple-600 text-white hover:bg-purple-700"
-                onClick={() => setModalState({ type: 'reply', ticket })}
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Reply
-              </Button>
-              {(ticket.status === 'resolved' || ticket.status === 'closed') && (
-                <Button 
-                  variant="outline"
-                  onClick={() => setModalState({ type: 'rating', ticket })}
-                >
-                  <Star className="w-4 h-4 mr-2" />
-                  Give Feedback
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
+          </DialogContent>
+        </Dialog>
+      );
+    
+        const ReplyModal = ({ ticket }) => {
+          const chatContainerRef = useRef(null); // Ref for scrolling chat history
+          const [replyMessage, setReplyMessage] = useState(''); // State for reply input
+          const messagesEndRef = useRef(null); // Virtual ref at the end of messages
+      
+          // Fetch ticket details specifically for this modal
+          const { data: currentTicketDetails, isLoading: isLoadingCurrentTicketDetails } = useQuery({
+            queryKey: ['ticketDetailsForReplyModal', ticket?.ticketId],
+            queryFn: () => getTicketById(ticket.ticketId),
+            enabled: !!ticket?.ticketId && modalState.type === 'reply', // Only fetch when ticket is selected and modal is open
+          });
+      
+          // Auto-scroll to bottom of chat when messages update or modal opens
+          useEffect(() => {
+            const scrollToBottom = () => {
+              if (messagesEndRef.current) {
+                messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              } else if (chatContainerRef.current) {
+                chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+              }
+            };
 
-  const ReplyModal = ({ ticket }) => {
-    const handleReplySubmit = (event) => {
-      event.preventDefault();
-      const formData = new FormData(event.target);
-      const message = formData.get('message');
-      if (!message?.trim()) {
-        toast.error('Reply message cannot be empty.');
-        return;
-      }
-      addResponseMutation.mutate({
-        ticketId: ticket.ticketId,
-        responseData: { message },
-      }, {
-        onSuccess: (data, variables) => {
-          toast.success('Reply sent successfully!');
-          queryClient.invalidateQueries({ queryKey: ['ticketDetails', variables.ticketId] });
-          queryClient.invalidateQueries({ queryKey: ['myTickets'] });
-          setModalState({ type: null, ticket: null });
-        },
-        onError: (error) => {
-          toast.error(error.response?.data?.message || 'Failed to send reply.');
-        },
-      });
-    };
+            // Scroll immediately
+            scrollToBottom();
 
-    return (
-      <Dialog open={modalState.type === 'reply'} onOpenChange={() => setModalState({ type: null, ticket: null })}>
-        <DialogContent className="max-w-lg border-slate-700">
-          <DialogHeader>
-            <DialogTitle>Reply to Ticket: {ticket?.ticketId}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleReplySubmit} className="space-y-4">
-            <FormField label="Your Message" required>
-              <Textarea
-                name="message"
-                placeholder="Type your reply here..."
-                className="border-slate-700 min-h-[150px]"
-              />
-            </FormField>
-            {/* TODO: Add attachment functionality if needed */}
-            <Button type="submit" disabled={addResponseMutation.isLoading} className="w-full bg-purple-600 text-white hover:bg-purple-700">
-              {addResponseMutation.isLoading ? 'Sending...' : 'Send Reply'}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
-    );
-  };
+            // Also scroll after a short delay to ensure DOM is ready
+            const timer = setTimeout(scrollToBottom, 100);
 
-  const RatingModal = ({ ticket }) => {
+            return () => clearTimeout(timer);
+          }, [currentTicketDetails?.data?.responses, isLoadingCurrentTicketDetails, modalState.type]);
+      
+      
+          const handleReplySubmit = async (event) => {
+            event.preventDefault();
+            if (!replyMessage.trim()) {
+              toast.error('Reply message cannot be empty.');
+              return;
+            }
+            addResponseMutation.mutate({
+              ticketId: ticket.ticketId,
+              responseData: { message: replyMessage },
+            }, {
+              onSuccess: (data, variables) => {
+                // toast.success('Reply sent successfully!');
+                setReplyMessage(''); // Clear input field
+                queryClient.invalidateQueries({ queryKey: ['ticketDetailsForReplyModal', variables.ticketId] }); // Invalidate this query
+                queryClient.invalidateQueries({ queryKey: ['ticketDetails', variables.ticketId] }); // Invalidate main details query too
+                queryClient.invalidateQueries({ queryKey: ['myTickets'] });
+                // No longer close modal, keep it open to continue chat
+              },
+              onError: (error) => {
+                toast.error(error.response?.data?.message || 'Failed to send reply.');
+              },
+            });
+          };
+      
+          return (
+            <Dialog open={modalState.type === 'reply'} onOpenChange={() => {
+              setModalState({ type: null, ticket: null });
+              setReplyMessage(''); // Clear reply message when closing
+            }}>
+              <DialogContent className="max-w-lg border-slate-700 flex flex-col gap-0 p-0">
+                <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-700">
+                  <DialogTitle>Chat on Ticket: {ticket?.ticketId}</DialogTitle>
+                </DialogHeader>
+      
+                <div className="h-[400px] overflow-hidden flex flex-col">
+                  {isLoadingCurrentTicketDetails ? (
+                    <p className="text-center py-4">Loading conversation...</p>
+                  ) : (
+                    <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-3 px-6 py-4">
+                      {currentTicketDetails && currentTicketDetails.data?.responses?.length === 0 ? (
+                        <p className="text-center text-muted-foreground mt-4">No conversation yet.</p>
+                      ) : (
+                        <>
+                          {currentTicketDetails?.data?.responses?.map((response) => (
+                            <MessageBubble key={response._id} message={response} currentUser={user} />
+                          ))}
+                          <div ref={messagesEndRef} />
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+      
+                <form onSubmit={handleReplySubmit} className="space-y-3 px-6 py-4 border-t border-slate-700">
+                  <FormField label="Your Message" required>
+                    <Textarea
+                      name="message"
+                      placeholder="Type your reply here..."
+                      className="border-slate-700 min-h-[80px]"
+                      value={replyMessage}
+                      onChange={(e) => setReplyMessage(e.target.value)}
+                      disabled={addResponseMutation.isLoading}
+                    />
+                  </FormField>
+                  <Button type="submit" disabled={addResponseMutation.isLoading} className="w-full bg-purple-600 text-white hover:bg-purple-700">
+                    {addResponseMutation.isLoading ? 'Sending...' : 'Send Reply'}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          );
+        };      const RatingModal = ({ ticket }) => {
     const [rating, setRating] = useState(0);
 
     const handleRatingSubmit = (event) => {

@@ -3,6 +3,7 @@ import { Search, Download, MessageSquare, Loader2 } from "lucide-react";
 import GlobalApi from "@/lib/GlobalApi";
 import SupportTicketDetail from "@/components/help-&-support/SupportTicketDetail";
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
+import { toast } from "sonner";
 
 export default function HelpSupport({ theme = "dark" }) {
   const [tickets, setTickets] = useState([]);
@@ -306,16 +307,17 @@ export default function HelpSupport({ theme = "dark" }) {
                     : "text-gray-600 border-b border-gray-200"
                 }
               >
-                <th className="text-left py-3 px-4">Ticket #</th>
-                <th className="text-left py-3 px-4">User</th>
-                <th className="text-left py-3 px-4">Subject</th>
-                <th className="text-left py-3 px-4">Ticket Type</th>
-                <th className="text-left py-3 px-4">Priority</th>
-                <th className="text-left py-3 px-4">Status</th>
-                <th className="text-left py-3 px-4">Assigned To</th>
-                <th className="text-left py-3 px-4">Created</th>
-                <th className="text-left py-3 px-4">Responses</th>
-                <th className="text-left py-3 px-4">Actions</th>
+                <th className="text-left whitespace-nowrap py-3 px-4">Ticket Id</th>
+                <th className="text-left whitespace-nowrap py-3 px-4">Account Id</th>
+                <th className="text-left whitespace-nowrap py-3 px-4">User</th>
+                <th className="text-left whitespace-nowrap py-3 px-4">Subject</th>
+                <th className="text-left whitespace-nowrap py-3 px-4">Ticket Type</th>
+                <th className="text-left whitespace-nowrap py-3 px-4">Priority</th>
+                <th className="text-left whitespace-nowrap py-3 px-4">Status</th>
+                <th className="text-left whitespace-nowrap py-3 px-4">Assigned To</th>
+                <th className="text-left whitespace-nowrap py-3 px-4">Created</th>
+                <th className="text-left whitespace-nowrap py-3 px-4">Responses</th>
+                <th className="text-left whitespace-nowrap py-3 px-4">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -332,6 +334,7 @@ export default function HelpSupport({ theme = "dark" }) {
                 tickets.map((t, i) => (
                   <tr key={i} className={`last:border-none ${bgColors.rowHover}`}>
                     <td className="py-3 px-4">{t.ticketId}</td>
+                    <td className="py-3 px-4">{t.userId?.accountId}</td>
                     <td className="py-3 px-4">
                       <div>
                         <p>
@@ -441,6 +444,7 @@ export default function HelpSupport({ theme = "dark" }) {
         headers={[
           { label: "S.No.", key: "sno" },
           { label: "Ticket #", key: "ticketId" },
+          { label: "Account ID", key: "accountId" },
           { label: "User", key: "userName" },
           { label: "User Email", key: "userEmail" },
           { label: "Subject", key: "subject" },
@@ -453,19 +457,23 @@ export default function HelpSupport({ theme = "dark" }) {
         ]}
         fetchData={async (page, limit) => {
           try {
+            // Build params object with page, limit and filters
             const params = {
               page,
               limit,
-              search: searchQuery || undefined,
-              status: statusFilter === "All" ? undefined : statusFilter.toLowerCase(),
-              priority: priorityFilter === "All" ? undefined : priorityFilter.toLowerCase(),
-              category: categoryFilter === "All" ? undefined : categoryFilter,
             };
-            const res = await GlobalApi.getAllSupportTickets(page, limit, params);
+            if (searchQuery) params.search = searchQuery;
+            if (statusFilter !== "All") params.status = statusFilter.toLowerCase();
+            if (priorityFilter !== "All") params.priority = priorityFilter.toLowerCase();
+            if (categoryFilter !== "All") params.category = categoryFilter;
+
+            const res = await GlobalApi.getAllSupportTickets(params);
             const ticketsToExport = res?.data?.data?.tickets || [];
 
-            return ticketsToExport.map(t => ({
+            return ticketsToExport.map((t, index) => ({
+              sno: index + 1,
               ticketId: t.ticketId,
+              accountId: t.userId?.accountId || "-",
               userName: `${t.userId?.firstName || ""} ${t.userId?.lastName || ""}`.trim() || "-",
               userEmail: t.contactEmail || t.userId?.emailAddress || "-",
               subject: t.subject,
