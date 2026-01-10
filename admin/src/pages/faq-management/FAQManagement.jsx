@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import GlobalApi from "@/lib/GlobalApi";
-import { MoreHorizontal, Search, Trash2, Pencil, Filter } from "lucide-react";
+import { MoreHorizontal, Search, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,10 +20,10 @@ import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger
-
+  AccordionTrigger,
 } from "@/components/ui/accordion";
-import FaqStatsModal from "@/components/faq-section/FaqModal";
+import FaqModal from "@/components/faq-section/FaqModal";
+import { toast } from "sonner";
 
 const CATEGORY_OPTIONS = [
   "All",
@@ -34,41 +34,76 @@ const CATEGORY_OPTIONS = [
   "Technical Support",
 ];
 
+const useDebounce = (value, delay) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [value, delay]);
+    return debouncedValue;
+};
+
 export default function FaqManager({ theme }) {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [editingFaq, setEditingFaq] = useState(null);
   const [deleting, setDeleting] = useState(null);
-
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ totalPages: 1 });
+  const [stats, setStats] = useState({});
 
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
+  const fetchFaqs = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page,
+        limit: 10,
+      };
+      if (debouncedSearch) params.search = debouncedSearch;
+      if (categoryFilter !== "All") params.category = categoryFilter;
+      if (statusFilter !== "All") params.status = statusFilter === "Published";
+
+      const res = await GlobalApi.getFaqs(params);
+      const apiData = res.data?.data?.faqs || [];
+      const sortedFaqs = [...apiData].sort((a, b) => a.displayOrder - b.displayOrder);
+      setData(sortedFaqs);
+      setPagination(res.data?.data?.pagination || { totalPages: 1 });
+    } catch (err) {
+      console.error("❌ Error fetching FAQs:", err);
+      setError("Failed to load FAQs. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+        const res = await GlobalApi.getFaqStats();
+        setStats(res.data?.data || {});
+    } catch (err) {
+        console.error("❌ Error fetching FAQ stats:", err);
+    }
+  }
 
   useEffect(() => {
-    const fetchFaqs = async () => {
-      try {
-        setLoading(true);
-        const res = await GlobalApi.getFaqs(1, 10);
-        const apiData = res.data?.data?.faqs || [];
-
-
-        const sortedFaqs = [...apiData].sort((a, b) => a.displayOrder - b.displayOrder);
-
-        setData(sortedFaqs);
-      } catch (err) {
-        console.error("❌ Error fetching FAQs:", err);
-        setError("Failed to load FAQs. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchFaqs();
-  }, []);
-
+    fetchStats();
+  }, [page, debouncedSearch, categoryFilter, statusFilter]);
+  
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, categoryFilter, statusFilter]);
 
   const handleDelete = async (faqId) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this FAQ?");
@@ -78,9 +113,10 @@ export default function FaqManager({ theme }) {
       setDeleting(faqId);
       await GlobalApi.deleteFaq(faqId);
       setData((prev) => prev.filter((f) => f._id !== faqId));
+      fetchStats(); // refetch stats after deleting
     } catch (err) {
       console.error("❌ Error deleting FAQ:", err);
-      alert(err?.response?.data?.message || "Failed to delete FAQ. Please try again.");
+      toast.error(err?.response?.data?.message || "Failed to delete FAQ. Please try again.");
     } finally {
       setDeleting(null);
     }
@@ -91,60 +127,14 @@ export default function FaqManager({ theme }) {
     try {
       const res = await GlobalApi.getFaqById(faqId);
       const faq = res.data?.data;
-      if (!faq) return alert("Failed to load FAQ details.");
+      if (!faq) return toast.error("Failed to load FAQ details.");
       setEditingFaq(faq);
       setOpenModal(true);
     } catch (err) {
       console.error("❌ Error fetching FAQ for edit:", err);
-      alert("Failed to fetch FAQ details. Please try again.");
+      toast.error("Failed to fetch FAQ details. Please try again.");
     }
   };
-
-
-  const stats = useMemo(() => {
-    const total = data.length;
-    const published = data.filter((f) => f.status === true).length;
-    const draft = data.filter((f) => f.status === false).length;
-    const validCategories = new Set(
-      data
-        .map((f) => f.category)
-        .filter((c) =>
-          [
-            "Upload Process",
-            "Distribution",
-            "Royalties",
-            "Release Management",
-            "Technical Support",
-          ].includes(c)
-        )
-    );
-
-    return {
-      total,
-      published,
-      draft,
-      categories: validCategories.size,
-    };
-  }, [data]);
-
-
-  const filtered = useMemo(() => {
-    return data.filter((f) => {
-      const matchesSearch =
-        f.question.toLowerCase().includes(search.toLowerCase()) ||
-        f.category.toLowerCase().includes(search.toLowerCase());
-
-      const matchesCategory =
-        categoryFilter === "All" || f.category === categoryFilter;
-
-      const matchesStatus =
-        statusFilter === "All" ||
-        (statusFilter === "Published" && f.status) ||
-        (statusFilter === "Draft" && !f.status);
-
-      return matchesSearch && matchesCategory && matchesStatus;
-    });
-  }, [search, data, categoryFilter, statusFilter]);
 
   const cardClass =
     theme === "dark"
@@ -177,25 +167,25 @@ export default function FaqManager({ theme }) {
         <Card className={cardClass}>
           <CardContent className="p-4">
             <p className="text-sm">Total FAQs</p>
-            <p className="text-2xl font-bold">{stats.total}</p>
+            <p className="text-2xl font-bold">{stats.total || 0}</p>
           </CardContent>
         </Card>
         <Card className={cardClass}>
           <CardContent className="p-4">
             <p className="text-sm">Published</p>
-            <p className="text-2xl font-bold text-green-500">{stats.published}</p>
+            <p className="text-2xl font-bold text-green-500">{stats.published || 0}</p>
           </CardContent>
         </Card>
         <Card className={cardClass}>
           <CardContent className="p-4">
             <p className="text-sm">Categories</p>
-            <p className="text-2xl font-bold">{stats.categories}</p>
+            <p className="text-2xl font-bold">{stats.categories || 0}</p>
           </CardContent>
         </Card>
         <Card className={cardClass}>
           <CardContent className="p-4">
             <p className="text-sm">Draft FAQs</p>
-            <p className="text-2xl font-bold text-yellow-500">{stats.draft}</p>
+            <p className="text-2xl font-bold text-yellow-500">{stats.draft || 0}</p>
           </CardContent>
         </Card>
       </div>
@@ -283,13 +273,17 @@ export default function FaqManager({ theme }) {
       >
         <div className="p-4 border-b border-gray-700 flex items-center justify-between">
           <h2 className="text-lg font-semibold">FAQ Preview</h2>
-          <p className="text-sm text-gray-500">{filtered.length} total</p>
+          <p className="text-sm text-gray-500">{pagination.totalCount || 0} total</p>
         </div>
 
         <div className="p-4">
-          {filtered.length > 0 ? (
+          {loading ? (
+             <div className="text-center py-6 text-sm text-gray-400">
+                Loading FAQs...
+             </div>
+          ) : data.length > 0 ? (
             <Accordion type="single" collapsible className="w-full">
-              {filtered.map((f, index) => (
+              {data.map((f, index) => (
                 <div key={f._id}>
                   <AccordionItem value={f._id} className="border-none">
                     <AccordionTrigger
@@ -316,7 +310,7 @@ export default function FaqManager({ theme }) {
                   </AccordionItem>
 
 
-                  {index !== filtered.length - 1 && (
+                  {index !== data.length - 1 && (
                     <div
                       className={`my-2 border-t ${theme === "dark" ? "border-[#1E2A33]" : "border-gray-200"
                         }`}
@@ -365,7 +359,7 @@ export default function FaqManager({ theme }) {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((f) => (
+              {data.map((f) => (
                 <tr
                   key={f._id}
                   className={`border-b ${theme === "dark"
@@ -429,8 +423,30 @@ export default function FaqManager({ theme }) {
         </div>
       )}
 
+      {pagination.totalPages > 1 && (
+          <div className="flex justify-end items-center gap-3">
+              <Button
+                  disabled={page === 1}
+                  variant="outline"
+                  onClick={() => setPage((p) => p - 1)}
+              >
+                  Previous
+              </Button>
+              <span>
+                  Page {page} of {pagination.totalPages}
+              </span>
+              <Button
+                  disabled={page >= pagination.totalPages}
+                  variant="outline"
+                  onClick={() => setPage((p) => p + 1)}
+              >
+                  Next
+              </Button>
+          </div>
+      )}
 
-      <FaqStatsModal
+
+      <FaqModal
         open={openModal}
         onClose={() => {
           setOpenModal(false);
@@ -440,11 +456,10 @@ export default function FaqManager({ theme }) {
         initialFaq={editingFaq}
         isEdit={!!editingFaq}
         onCreated={(newFaq) => setData((prev) => [newFaq, ...prev])}
-        onUpdated={(updatedFaq) =>
-          setData((prev) =>
-            prev.map((faq) => (faq._id === updatedFaq._id ? updatedFaq : faq))
-          )
-        }
+        onUpdated={(updatedFaq) => {
+            fetchFaqs();
+            fetchStats();
+        }}
       />
     </div>
   );

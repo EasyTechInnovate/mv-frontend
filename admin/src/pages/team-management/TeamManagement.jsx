@@ -5,24 +5,38 @@ import InviteTeamMemberModal from "@/components/team-management/InviteTeamMember
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
+import { ETeamRole, EDepartment, ETeamMemberStatus } from "./teamEnums";
+
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+};
 
 export default function TeamManagement({ theme }) {
   const isDark = theme === "dark";
   const [search, setSearch] = useState("");
-  const [data, setData] = useState({
-    totalMembers: 0,
-    activeMembers: 0,
-    pendingInvites: 0,
-    inactiveTeamMembers: "-",
-    avgResponseChange: "",
-    members: [],
-  });
+  const debouncedSearch = useDebounce(search, 500);
+  const [members, setMembers] = useState([]);
+  const [stats, setStats] = useState({});
   const [isInviteModalOpen, setInviteModalOpen] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState(null);
   const [editingMemberData, setEditingMemberData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ totalPages: 1 });
+  
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
@@ -30,36 +44,26 @@ export default function TeamManagement({ theme }) {
     memberName: "",
   });
 
-
-  const fetchTeamStats = async () => {
-    try {
-      const res = await GlobalApi.getTeamStatistics();
-      const stats = res?.data?.data;
-
-      setData((prev) => ({
-        ...prev,
-        totalMembers: stats?.totalTeamMembers ?? prev.totalMembers,
-        activeMembers: stats?.activeTeamMembers ?? prev.activeMembers,
-        pendingInvites: stats?.pendingInvitations ?? prev.pendingInvites,
-        inactiveTeamMembers: stats?.inactiveTeamMembers ?? prev.inactiveTeamMembers,
-        departmentDistribution: stats?.departmentDistribution ?? [],
-        roleDistribution: stats?.roleDistribution ?? [],
-      }));
-    } catch (err) {
-      console.error("Error fetching stats:", err);
-    }
-  };
-
-
-
-  const fetchTeamMembers = async (page = 1, limit = 10) => {
+  const fetchTeamData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await GlobalApi.getAllTeamMembers(page, limit);
-      const payload = res?.data?.data?.teamMembers ?? [];
+      const params = {
+        page,
+        limit: 10,
+      };
+      if (debouncedSearch) params.search = debouncedSearch;
+      if (roleFilter !== "all") params.teamRole = roleFilter;
+      if (departmentFilter !== "all") params.department = departmentFilter;
+      if (statusFilter !== "all") params.status = statusFilter;
 
-      const mappedMembers = payload.map((m) => {
+      const [membersRes, statsRes] = await Promise.all([
+        GlobalApi.getAllTeamMembers(params),
+        GlobalApi.getTeamStatistics(),
+      ]);
+
+      const membersPayload = membersRes?.data?.data?.teamMembers ?? [];
+      const mappedMembers = membersPayload.map((m) => {
         const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || "-";
         const email = m.emailAddress ?? "-";
         const role = m.teamRole ?? m.role ?? "-";
@@ -70,40 +74,42 @@ export default function TeamManagement({ theme }) {
         else if (!m.isInvitationAccepted) status = "Pending";
 
         return {
-          _id: m._id,
-          name,
-          email,
-          role,
-          department,
-          status,
+          _id: m._id, name, email, role, department, status,
           isInvitationAccepted: m.isInvitationAccepted ?? false,
-          joinDate: m.createdAt
-            ? new Date(m.createdAt).toLocaleDateString()
-            : "-",
-          lastActive: m.loginInfo?.lastLogin
-            ? new Date(m.loginInfo.lastLogin).toLocaleDateString()
-            : "-",
+          joinDate: m.createdAt ? new Date(m.createdAt).toLocaleDateString() : "-",
+          lastActive: m.loginInfo?.lastLogin ? new Date(m.loginInfo.lastLogin).toLocaleDateString() : "-",
           raw: m,
         };
       });
 
+      setMembers(mappedMembers);
+      setPagination(membersRes?.data?.data?.pagination ?? { totalPages: 1 });
+      
+      const statsPayload = statsRes?.data?.data;
+      setStats({
+        totalMembers: statsPayload?.totalTeamMembers,
+        activeMembers: statsPayload?.activeTeamMembers,
+        pendingInvites: statsPayload?.pendingInvitations,
+        inactiveTeamMembers: statsPayload?.inactiveTeamMembers,
+      });
 
-      setData((prev) => ({
-        ...prev,
-        members: mappedMembers,
-      }));
     } catch (err) {
-      console.error("Error fetching team members:", err);
-      setError("Failed to load team members.");
+      console.error("Error fetching team data:", err);
+      setError("Failed to load team data.");
+      toast.error("Failed to load team data.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTeamMembers();
-    fetchTeamStats();
-  }, []);
+    fetchTeamData();
+  }, [page, debouncedSearch, roleFilter, departmentFilter, statusFilter]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, roleFilter, departmentFilter, statusFilter]);
+
 
   const handleEditClick = async (id) => {
     try {
@@ -115,6 +121,7 @@ export default function TeamManagement({ theme }) {
         setInviteModalOpen(true);
       }
     } catch (err) {
+      toast.error("Failed to fetch member details.");
       console.error("Failed to fetch member by ID:", err);
     }
   };
@@ -125,7 +132,6 @@ export default function TeamManagement({ theme }) {
     setEditingMemberData(null);
   };
 
-
   const handleRemoveClick = (member) => {
     setConfirmDialog({
       isOpen: true,
@@ -134,17 +140,12 @@ export default function TeamManagement({ theme }) {
     });
   };
 
-
   const confirmRemove = async () => {
     const { memberId, memberName } = confirmDialog;
     try {
       await GlobalApi.deleteTeamMember(memberId);
       toast.success(`Member "${memberName}" removed successfully`);
-      setData((prev) => ({
-        ...prev,
-        members: prev.members.filter((m) => m._id !== memberId),
-      }));
-      fetchTeamStats();
+      fetchTeamData();
     } catch (err) {
       console.error("Failed to delete member:", err);
       toast.error("Failed to remove member");
@@ -163,69 +164,36 @@ export default function TeamManagement({ theme }) {
     }
   };
 
-
-  const filteredMembers = data.members.filter(
-    (m) =>
-      m.name.toLowerCase().includes(search.toLowerCase()) ||
-      m.email.toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
     <div
       className={`p-4 md:p-6 space-y-6 transition-colors duration-300 ${isDark ? "bg-[#111A22] text-gray-200" : "bg-gray-50 text-[#151F28]"
         }`}
     >
-
       <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
         <div>
           <h1 className="text-2xl font-semibold">Team Management</h1>
-          <p
-            className={`${isDark ? "text-gray-400" : "text-gray-600"
-              } text-sm`}
-          >
+          <p className={`${isDark ? "text-gray-400" : "text-gray-600"} text-sm`}>
             Manage team members, roles, permissions, and departments
           </p>
         </div>
-
-
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <Input
-            placeholder="Search team members..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className={`w-full md:w-64 ${isDark
-              ? "bg-[#151F28] border-gray-700 text-gray-200"
-              : "bg-white"
-              }`}
-          />
-          <select
-            className={`rounded-md px-3 py-2 text-sm ${isDark
-              ? "bg-[#151F28] border border-gray-700 text-gray-200"
-              : "bg-white border border-gray-300"
-              }`}
-          >
-            <option>All Roles</option>
-          </select>
-          <Button
-            className="bg-purple-600 hover:bg-purple-700 text-white"
-            onClick={() => {
-              setEditingMemberId(null);
-              setEditingMemberData(null);
-              setInviteModalOpen(true);
-            }}
-          >
-            Add Member
-          </Button>
-        </div>
+        <Button
+          className="bg-purple-600 hover:bg-purple-700 text-white"
+          onClick={() => {
+            setEditingMemberId(null);
+            setEditingMemberData(null);
+            setInviteModalOpen(true);
+          }}
+        >
+          Add Member
+        </Button>
       </div>
-
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Team Members", value: data.totalMembers },
-          { label: "Active Members", value: data.activeMembers },
-          { label: "Pending Invitations", value: data.pendingInvites },
-          { label: "Inactive Members", value: data.inactiveTeamMembers },
+          { label: "Total Team Members", value: stats.totalMembers },
+          { label: "Active Members", value: stats.activeMembers },
+          { label: "Pending Invitations", value: stats.pendingInvites },
+          { label: "Inactive Members", value: stats.inactiveTeamMembers },
         ].map((s, idx) => (
           <div
             key={idx}
@@ -237,8 +205,59 @@ export default function TeamManagement({ theme }) {
           </div>
         ))}
       </div>
-
-
+      
+      <div className="flex flex-col md:flex-row gap-4">
+        <Input
+          placeholder="Search by name or email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className={`w-full md:w-1/3 ${
+            isDark ? "bg-[#151F28] border-gray-700 text-gray-200" : "bg-white"
+          }`}
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className={`rounded-md px-3 py-2 text-sm ${
+            isDark
+              ? "bg-[#151F28] border border-gray-700 text-gray-200"
+              : "bg-white border border-gray-300"
+          }`}
+        >
+          <option value="all">All Status</option>
+          {Object.values(ETeamMemberStatus).map(status => (
+            <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+          ))}
+        </select>
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+          className={`rounded-md px-3 py-2 text-sm ${
+            isDark
+              ? "bg-[#151F28] border border-gray-700 text-gray-200"
+              : "bg-white border border-gray-300"
+          }`}
+        >
+          <option value="all">All Roles</option>
+          {Object.values(ETeamRole).map(role => (
+            <option key={role} value={role}>{role}</option>
+          ))}
+        </select>
+        <select
+          value={departmentFilter}
+          onChange={(e) => setDepartmentFilter(e.target.value)}
+          className={`rounded-md px-3 py-2 text-sm ${
+            isDark
+              ? "bg-[#151F28] border border-gray-700 text-gray-200"
+              : "bg-white border border-gray-300"
+          }`}
+        >
+          <option value="all">All Departments</option>
+          {Object.values(EDepartment).map(dept => (
+            <option key={dept} value={dept}>{dept}</option>
+          ))}
+        </select>
+      </div>
 
       <div
         className={`rounded-lg overflow-x-auto shadow-md ${isDark ? "bg-[#151F28]" : "bg-white"
@@ -266,7 +285,7 @@ export default function TeamManagement({ theme }) {
               </tr>
             </thead>
             <tbody>
-              {filteredMembers.map((m, idx) => (
+              {members.length > 0 ? members.map((m, idx) => (
                 <tr
                   key={m._id ?? idx}
                   className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"
@@ -278,7 +297,7 @@ export default function TeamManagement({ theme }) {
                       <p className="text-xs text-gray-500">{m.email}</p>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span
                       className={`px-2 py-1 rounded-md text-xs ${isDark
                         ? "bg-gray-800 text-gray-300"
@@ -322,8 +341,6 @@ export default function TeamManagement({ theme }) {
                       </span>
                     )}
                   </td>
-
-
                   <td className="px-4 py-3">{m.joinDate}</td>
                   <td className="px-4 py-3">{m.lastActive}</td>
                   <td className="px-4 py-3 flex flex-wrap gap-2">
@@ -334,7 +351,6 @@ export default function TeamManagement({ theme }) {
                     >
                       Edit
                     </Button>
-
                     <Button
                       size="sm"
                       variant="outline"
@@ -343,8 +359,6 @@ export default function TeamManagement({ theme }) {
                     >
                       Remove
                     </Button>
-
-
                     {!m.isInvitationAccepted && (
                       <Button
                         size="sm"
@@ -355,12 +369,10 @@ export default function TeamManagement({ theme }) {
                       </Button>
                     )}
                   </td>
-
                 </tr>
-              ))}
-              {filteredMembers.length === 0 && (
+              )) : (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-gray-500">
+                  <td colSpan={8} className="p-6 text-center text-gray-500">
                     No team members found.
                   </td>
                 </tr>
@@ -370,6 +382,27 @@ export default function TeamManagement({ theme }) {
         )}
       </div>
 
+      {pagination.totalPages > 1 && (
+        <div className="flex justify-end items-center gap-3">
+          <Button
+            disabled={page === 1}
+            variant="outline"
+            onClick={() => setPage((p) => p - 1)}
+          >
+            Previous
+          </Button>
+          <span>
+            Page {page} of {pagination.totalPages}
+          </span>
+          <Button
+            disabled={page >= pagination.totalPages}
+            variant="outline"
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
 
       <InviteTeamMemberModal
         isOpen={isInviteModalOpen}
@@ -377,12 +410,8 @@ export default function TeamManagement({ theme }) {
         theme={theme}
         memberId={editingMemberId}
         memberData={editingMemberData}
-        onSuccess={() => {
-          fetchTeamMembers();
-          fetchTeamStats();
-        }}
+        onSuccess={fetchTeamData}
       />
-
 
       {confirmDialog.isOpen && (
         <ConfirmDialog

@@ -1,43 +1,103 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Download, Edit } from "lucide-react";
-import { mockKycData } from "./KYCManagementData";
-import jsonToCsv, { exportToCsv } from "@/lib/csv";
 import { toast } from "sonner";
+import GlobalApi from "@/lib/GlobalApi";
+import jsonToCsv, { exportToCsv } from "@/lib/csv";
+
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+};
 
 export default function KycManagement({ theme }) {
   const isDark = theme === "dark";
   const [search, setSearch] = useState("");
-  const [kycData] = useState(mockKycData);
+  const debouncedSearch = useDebounce(search, 500);
+  const [kycData, setKycData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ totalPages: 1, totalItems: 0 });
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeUsers: 0,
+    artists: 0,
+    labels: 0,
+  });
 
-  // Stats
-  const totalUsers = kycData.length;
-  const activeUsers = kycData.filter(u => u.status === "Active").length;
-  const artists = kycData.filter(u => u.accountType === "Artist").length;
-  const labels = kycData.filter(u => u.accountType === "Label").length;
+  const fetchKycData = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        page,
+        limit: 10,
+      };
+      if (debouncedSearch) {
+        params.search = debouncedSearch;
+      }
+      if (statusFilter !== "all") {
+        params.isActive = statusFilter;
+      }
+      if (typeFilter !== "all") {
+        params.userType = typeFilter;
+      }
+      const res = await GlobalApi.getKycUsers(params);
+      const data = res.data.data;
+      setKycData(data.users || []);
+      setPagination(data.pagination || { totalPages: 1, totalItems: 0 });
+      
+      // I am assuming the stats will come from a separate endpoint or calculated here.
+      // For now, I'll calculate from the fetched data, but this is not ideal for pagination.
+      // A dedicated stats endpoint would be better.
+      setStats({
+        totalUsers: data.pagination.totalCount || 0,
+        activeUsers: data.users.filter(u => u.isActive).length,
+        artists: data.users.filter(u => u.userType === "Artist").length,
+        labels: data.users.filter(u => u.userType === "Label").length,
+      })
 
-  // Filters
-  const filteredData = kycData.filter(u =>
-    u.stageName.toLowerCase().includes(search.toLowerCase()) ||
-    u.id.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
-  );
+    } catch (err) {
+      console.error("Failed to load KYC data:", err);
+      toast.error("Failed to load KYC data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Badge classes
+  useEffect(() => {
+    fetchKycData();
+  }, [page, debouncedSearch, statusFilter, typeFilter]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, statusFilter, typeFilter]);
+
+
   const badgeClass = (bg, text) =>
     `px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap inline-block ${bg} ${text}`;
 
   const accountBadge = (type) => {
     switch (type) {
-      case "Artist": return badgeClass("bg-purple-500/20", "text-purple-400");
-      case "Label": return badgeClass("bg-blue-500/20", "text-blue-400");
+      case "artist": return badgeClass("bg-purple-500/20", "text-purple-400");
+      case "label": return badgeClass("bg-blue-500/20", "text-blue-400");
       default: return badgeClass("bg-orange-500/20", "text-orange-400");
     }
   };
 
   const statusBadge = (status) =>
-    status === "Active"
+    status 
       ? badgeClass("bg-green-500/20", "text-green-400")
       : badgeClass("bg-red-500/20", "text-red-400");
 
@@ -45,20 +105,21 @@ export default function KycManagement({ theme }) {
     if (membership === "Not Applicable") {
       return badgeClass("bg-gray-500/20", "text-gray-400");
     }
-    return membership === "Active"
+    return membership === "active"
       ? badgeClass("bg-green-500/20", "text-green-400")
       : badgeClass("bg-red-500/20", "text-red-400");
   };
 
   const handleExport = () => {
-    if (filteredData.length === 0) {
+    if (kycData.length === 0) {
       toast.warning("No data to export.");
       return;
     }
 
     const headers = [
       { label: "S.No.", key: "sno" },
-      { label: "User ID", key: "id" },
+      { label: "Account ID", key: "id" },
+      { label: "User Name", key: "userName" },
       { label: "Stage Name", key: "stageName" },
       { label: "Account Type", key: "accountType" },
       { label: "Status", key: "status" },
@@ -71,9 +132,20 @@ export default function KycManagement({ theme }) {
       { label: "Join Date", key: "joinDate" },
     ];
 
-    const dataToExport = filteredData.map((row, index) => ({
+    const dataToExport = kycData.map((row, index) => ({
       ...row,
       sno: index + 1,
+      id: row.accountId,
+      userName: `${row.personalInfo.firstName} ${row.personalInfo.lastName}`,
+      stageName: `${row.personalInfo.firstName} ${row.personalInfo.lastName}`,
+      accountType: row.userType,
+      status: row.isActive ? 'Active' : 'Inactive',
+      email: row.emailAddress,
+      aadhaar: row.kyc?.aadhaar?.number || 'N/A',
+      pan: row.kyc?.pan?.number || 'N/A',
+      bankInfo: row.bankInfo?.bankName || 'N/A',
+      kycStatus: row.kyc?.status || 'Pending',
+      joinDate: new Date(row.createdAt).toLocaleDateString(),
     }));
 
     const csvString = jsonToCsv(dataToExport, headers);
@@ -108,10 +180,10 @@ export default function KycManagement({ theme }) {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Users", value: totalUsers },
-          { label: "Active Users", value: activeUsers, color: "text-green-500" },
-          { label: "Artists", value: artists },
-          { label: "Labels", value: labels },
+          { label: "Total Users", value: stats.totalUsers },
+          { label: "Active Users", value: stats.activeUsers, color: "text-green-500" },
+          { label: "Artists", value: stats.artists },
+          { label: "Labels", value: stats.labels },
         ].map((stat, i) => (
           <div key={i} className={`rounded-lg p-4 shadow-md ${isDark ? "bg-[#151F28]" : "bg-white"}`}>
             <p className={`text-sm mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{stat.label}</p>
@@ -129,55 +201,96 @@ export default function KycManagement({ theme }) {
           className={`w-full md:w-1/3 ${isDark ? "bg-[#151F28] border-gray-700 text-gray-200" : "bg-white"}`}
         />
         <div className="flex flex-wrap gap-2">
-          <select className={`rounded-md px-3 py-2 text-sm ${isDark ? "bg-[#151F28] border border-gray-700 text-gray-200" : "bg-white border border-gray-300"}`}>
-            <option>All Status</option>
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className={`rounded-md px-3 py-2 text-sm ${isDark ? "bg-[#151F28] border border-gray-700 text-gray-200" : "bg-white border border-gray-300"}`}
+          >
+            <option value="all">All Status</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
           </select>
-          <select className={`rounded-md px-3 py-2 text-sm ${isDark ? "bg-[#151F28] border border-gray-700 text-gray-200" : "bg-white border border-gray-300"}`}>
-            <option>All Types</option>
+          <select 
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className={`rounded-md px-3 py-2 text-sm ${isDark ? "bg-[#151F28] border border-gray-700 text-gray-200" : "bg-white border border-gray-300"}`}
+          >
+            <option value="all">All Types</option>
+            <option value="Artist">Artist</option>
+            <option value="Label">Label</option>
           </select>
-          {/* <Button variant={isDark ? "outline" : "secondary"} className="flex items-center gap-2 rounded-full px-5">
-            <Download className="h-4 w-4" /> Export
-          </Button> */}
         </div>
       </div>
 
       {/* Table */}
       <div className={`rounded-lg overflow-x-auto shadow-md ${isDark ? "bg-[#151F28]" : "bg-white"}`}>
+      {loading ? (
+          <div className="p-6 text-center text-gray-400">Loading KYC data...</div>
+        ) : (
         <table className="w-full text-sm min-w-[900px]">
           <thead className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left`}>
             <tr>
-              {["User ID", "Stage Name", "Account Type", "Status", "Membership Status", "Email", "Adhaar Number", "Pan Number", "Bank Information", "KYC Status", "Join Date", "Action"].map((h) => (
+              {["Account ID", "User Name", "Stage Name", "Account Type", "Status", "Membership Status", "Email", "Adhaar Number", "Pan Number", "Bank Information", "KYC Status", "Join Date", "Action"].map((h) => (
                 <th key={h} className="px-4 py-3 font-medium">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((u) => (
-              <tr key={u.id} className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
-                <td className="px-4 py-3">{u.id}</td>
+            {kycData.length > 0 ? kycData.map((u) => (
+              <tr key={u._id} className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                <td className="px-4 py-3">{u.accountId}</td>
+                <td className="px-4 py-3 whitespace-nowrap">{`${u.firstName || ""} ${u.lastName || ""}`}</td>
                 <td className="px-4 py-3 flex items-center gap-2">
-                  <img src={u.avatar} alt="avatar" className="h-6 w-6 rounded-full object-cover" />
-                  {u.stageName}
+                  <img src={u.personalInfo?.profileImage || '/avatar-placeholder.png'} alt="avatar" className="h-6 w-6 rounded-full object-cover" />
+                  {u.personalInfo?.firstName} {u.personalInfo?.lastName}
                 </td>
-                <td className="px-4 py-3"><span className={accountBadge(u.accountType)}>{u.accountType}</span></td>
-                <td className="px-4 py-3"><span className={statusBadge(u.status)}>{u.status}</span></td>
-                <td className="px-4 py-3"><span className={membershipBadge(u.membershipStatus)}>{u.membershipStatus}</span></td>
-                <td className="px-4 py-3">{u.email}</td>
-                <td className="px-4 py-3">{u.aadhaar}</td>
-                <td className="px-4 py-3">{u.pan}</td>
-                <td className="px-4 py-3">{u.bankInfo}</td>
-                <td className="px-4 py-3"><span className={statusBadge(u.kycStatus)}>{u.kycStatus}</span></td>
-                <td className="px-4 py-3">{u.joinDate}</td>
+                <td className="px-4 py-3"><span className={accountBadge(u.userType)}>{u.userType}</span></td>
+                <td className="px-4 py-3"><span className={statusBadge(u.isActive)}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
+                <td className="px-4 py-3"><span className={membershipBadge(u.subscription?.status || "Not Applicable")}>{u.subscription?.status || "Not Applicable"}</span></td>
+                <td className="px-4 py-3">{u.emailAddress}</td>
+                <td className="px-4 py-3">{u.kyc?.aadhaar?.number || 'N/A'}</td>
+                <td className="px-4 py-3">{u.kyc?.pan?.number || 'N/A'}</td>
+                <td className="px-4 py-3">{u.bankInfo?.bankName || 'N/A'}</td>
+                <td className="px-4 py-3"><span className={statusBadge(u.kyc?.status === 'verified')}>{u.kyc?.status || 'Pending'}</span></td>
+                <td className="px-4 py-3">{new Date(u.createdAt).toLocaleDateString()}</td>
                 <td className="px-4 py-3">
                   <Button size="sm" variant={isDark ? "outline" : "secondary"} className="rounded-full px-4 flex items-center gap-1">
                     <Edit className="h-4 w-4" /> Edit
                   </Button>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colSpan="12" className="text-center py-6 text-gray-400">
+                  No KYC data found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
+        )}
       </div>
+      {pagination.totalPages > 1 && (
+        <div className="flex justify-end items-center gap-3 mt-4">
+          <Button
+            disabled={page === 1}
+            variant="outline"
+            onClick={() => setPage((p) => p - 1)}
+          >
+            Previous
+          </Button>
+          <span>
+            Page {page} of {pagination.totalPages}
+          </span>
+          <Button
+            disabled={page >= pagination.totalPages}
+            variant="outline"
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -132,3 +132,14 @@ export const getSocialMediaLinks = async () => {
     const response = await servicesAxiosInstance.get('/v1/company-settings/social-media');
     return response.data;
 };
+
+// ============= Testimonials APIs =============
+
+/**
+ * Get all published testimonials
+ * @returns {Promise} Response with list of testimonials
+ */
+export const getPublicTestimonials = async () => {
+    const response = await servicesAxiosInstance.get('/v1/testimonials');
+    return response.data;
+};

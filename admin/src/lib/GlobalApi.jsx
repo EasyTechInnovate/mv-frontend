@@ -104,8 +104,8 @@ const deactivatePlan = (planId) =>
 
 // ---------------------- FAQs ----------------------
 
-const getFaqs = (page = 1, limit = 10) =>
-  axiosClient.get(`/v1/admin/faqs?page=${page}&limit=${limit}`);
+const getFaqs = (params) =>
+  axiosClient.get(`/v1/admin/faqs`, { params });
 
 const createFaq = (payload) => axiosClient.post("/v1/admin/faqs", payload);
 
@@ -114,6 +114,8 @@ const deleteFaq = (faqId) => axiosClient.delete(`/v1/admin/faqs/${faqId}`);
 const updateFaq = (id, data) => axiosClient.put(`/v1/admin/faqs/${id}`, data);
 
 const getFaqById = (faqId) => axiosClient.get(`/v1/admin/faqs/${faqId}`);
+
+const getFaqStats = () => axiosClient.get(`/v1/admin/faqs/stats`);
 
 
 
@@ -202,8 +204,8 @@ const createTrendingLabel = (payload) =>
 
 // ---------------------- Testimonials (Admin) ----------------------
 
-const getAllTestimonials = (page = 1, limit = 10) =>
-  axiosClient.get(`/v1/admin/testimonials?page=${page}&limit=${limit}`);
+const getAllTestimonials = (params) =>
+  axiosClient.get(`/v1/admin/testimonials`, { params });
 
 const createTestimonial = (payload) =>
   axiosClient.post(`/v1/admin/testimonials`, payload);
@@ -253,8 +255,8 @@ const getMcnStats = () => axiosClient.get("/v1/mcn/admin/stats");
 const createTeamMember = (payload) =>
   axiosClient.post(`/v1/admin/team-members`, payload);
 
-const getAllTeamMembers = (page = 1, limit = 10) =>
-  axiosClient.get(`/v1/admin/team-members?page=${page}&limit=${limit}`);
+const getAllTeamMembers = (params) =>
+  axiosClient.get(`/v1/admin/team-members`, { params });
 
 const getTeamMemberById = (teamMemberId) =>
   axiosClient.get(`/v1/admin/team-members/${teamMemberId}`);
@@ -524,6 +526,12 @@ const getUserById = (userId) => axiosClient.get(`/v1/admin/users/${userId}`);
 const applyForAggregator = (payload) =>
   axiosClient.post(`/v1/aggregator/apply`, payload);
 
+const getKycUsers = (params) =>
+  axiosClient.get(`/v1/admin/users`, { params });
+
+const getTestimonialStats = () =>
+  axiosClient.get(`/v1/admin/testimonials/stats`);
+
 export default {
   getHealth,
   getSubscriptionPlans,
@@ -539,6 +547,7 @@ export default {
   deleteFaq,
   updateFaq,
   getFaqById,
+  getFaqStats,
   getPendingSyncSubmissions,
   getAllSyncSubmissions,
   reviewSyncSubmission,
@@ -561,6 +570,7 @@ export default {
   updateTestimonial,
   updateTestimonialStatus,
   deleteTestimonial,
+  getTestimonialStats,
   getMcnRequests,
   getPendingMcnRequests,
   reviewMcnRequest,
@@ -647,4 +657,5 @@ export default {
   reviewAggregatorApplication,
   createAggregatorAccount,
   applyForAggregator,
+  getKycUsers,
 };

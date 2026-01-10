@@ -166,7 +166,7 @@ export default function WebsiteHeader() {
                     </div>
 
                     <Link
-                        href="/blogs"
+                        href="/blog"
                         className="text-gray-300 hover:text-white transition-colors duration-200">
                         Blogs
                     </Link>
