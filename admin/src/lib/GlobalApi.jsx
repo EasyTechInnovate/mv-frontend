@@ -521,6 +521,9 @@ const createAggregatorAccount = (applicationId, payload) =>
 
 const getUserById = (userId) => axiosClient.get(`/v1/admin/users/${userId}`);
 
+const applyForAggregator = (payload) =>
+  axiosClient.post(`/v1/aggregator/apply`, payload);
+
 export default {
   getHealth,
   getSubscriptionPlans,
@@ -643,4 +646,5 @@ export default {
   getAggregatorApplicationById,
   reviewAggregatorApplication,
   createAggregatorAccount,
+  applyForAggregator,
 };

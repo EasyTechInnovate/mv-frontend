@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Search } from "lucide-react";
+import { Download, Plus, Search } from "lucide-react";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
 import AggregatorRequestReviewModal from "@/components/aggregator-management/AggregatorRequestReviewModal";
 import CreateAccountModal from "@/components/aggregator-management/CreateAccountModal";
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
+import AddNewAggregatorRequestModal from "@/components/aggregator-management/AddNewAggregatorRequestModal";
 
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -36,6 +37,7 @@ export default function AggregatorManagement({ theme }) {
 
   const [isCreateAccountModalOpen, setIsCreateAccountModalOpen] = useState(false);
   const [selectedAppIdForCreation, setSelectedAppIdForCreation] = useState(null);
+  const [isAddNewAggregatorModalOpen, setIsAddNewAggregatorModalOpen] = useState(false);
 
 
   const fetchApplications = async () => {
@@ -89,6 +91,10 @@ export default function AggregatorManagement({ theme }) {
   };
 
   const handleAccountCreated = () => {
+    fetchApplications();
+  };
+
+  const handleApplicationCreated = () => {
     fetchApplications();
   };
 
@@ -149,6 +155,13 @@ export default function AggregatorManagement({ theme }) {
             onClick={() => setIsExportModalOpen(true)}
           >
             <Download className="h-4 w-4 mr-2" /> Export as CSV
+          </Button>
+          <Button
+            variant={isDark ? "outline" : "secondary"}
+            className="flex items-center gap-2 rounded-full px-5"
+            onClick={() => setIsAddNewAggregatorModalOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" /> Add New Aggregator Request
           </Button>
         </div>
       </div>
@@ -307,6 +320,13 @@ export default function AggregatorManagement({ theme }) {
           onSuccess={handleAccountCreated}
         />
       )}
+
+      <AddNewAggregatorRequestModal
+        isOpen={isAddNewAggregatorModalOpen}
+        onClose={() => setIsAddNewAggregatorModalOpen(false)}
+        onSuccess={handleApplicationCreated}
+        theme={theme}
+      />
 
       <ExportCsvDialog
         isOpen={isExportModalOpen}

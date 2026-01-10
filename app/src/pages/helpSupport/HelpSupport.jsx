@@ -599,7 +599,7 @@ const HelpSupport = () => {
           {/* My Tickets Tab */}
           <TabsContent value="tickets" className="space-y-6">
             {/* Ticket Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               <Card className=" py-2 border-slate-700">
                 <CardContent className="p-4">
                   {isLoadingStats ? <p>Loading...</p> : (
@@ -717,17 +717,7 @@ const HelpSupport = () => {
                           <MessageCircle className="w-4 h-4 mr-1" />
                           Reply
                         </Button>
-                        {(ticket.status === 'resolved' || ticket.status === 'closed') && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setModalState({ type: 'rating', ticket })}
-                            className="border-slate-600"
-                          >
-                            <Star className="w-4 h-4 mr-1" />
-                            Feedback
-                          </Button>
-                        )}
+                        
                         <Button
                           variant="outline"
                           size="sm"
@@ -739,7 +729,7 @@ const HelpSupport = () => {
                           <Eye className="w-4 h-4 mr-1" />
                           View Details
                         </Button>
-                        {(ticket.status === 'resolved' || ticket.status === 'closed') && (
+                        {(ticket.status === 'resolved' || ticket.status === 'closed') && !ticket.satisfaction?.rating && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -749,6 +739,19 @@ const HelpSupport = () => {
                             <Star className="w-4 h-4 mr-1" />
                             Feedback
                           </Button>
+                        )}
+                        {ticket.satisfaction?.rating && (
+                          <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/30 rounded-lg">
+                            <div className="flex gap-0.5">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star 
+                                  key={star} 
+                                  className={`w-3 h-3 ${star <= ticket.satisfaction.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`} 
+                                />
+                              ))}
+                            </div>
+                            <span className="text-xs text-green-400 ml-1">Feedback Submitted</span>
+                          </div>
                         )}
                       </div>
                     </div>

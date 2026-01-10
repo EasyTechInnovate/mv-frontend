@@ -544,6 +544,48 @@ const handleSendReply = async () => {
                 </div>
 
               </div>
+
+              {/* Customer Satisfaction Section */}
+              {currentTicket.satisfaction?.rating && (
+                <div>
+                  <label className="text-xs" style={{ color: "var(--muted)" }}>
+                    Customer Satisfaction
+                  </label>
+                  <div className="mt-3 p-4 rounded-lg" style={{
+                    background: isDark ? "rgba(52, 211, 153, 0.1)" : "rgba(52, 211, 153, 0.05)",
+                    border: "1px solid rgba(52, 211, 153, 0.3)"
+                  }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span key={star} style={{
+                            color: star <= currentTicket.satisfaction.rating ? "#FBBF24" : "#6B7280"
+                          }}>
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                      <span className="text-sm font-medium" style={{ color: "#34D399" }}>
+                        {currentTicket.satisfaction.rating}/5
+                      </span>
+                    </div>
+                    {currentTicket.satisfaction.feedback && (
+                      <div className="mt-2">
+                        <p className="text-xs" style={{ color: "var(--muted)" }}>Feedback:</p>
+                        <p className="text-sm mt-1" style={{ color: "var(--text)" }}>
+                          {currentTicket.satisfaction.feedback}
+                        </p>
+                      </div>
+                    )}
+                    {currentTicket.satisfaction.submittedAt && (
+                      <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
+                        Submitted: {new Date(currentTicket.satisfaction.submittedAt).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         </aside>
