@@ -68,11 +68,11 @@ export default function MVMarketing() {
   // --- FORM DATA ---
 
   const initialSyncFormData = {
-    trackName: "", artistName: "", labelName: "", isrc: "", genres: "pop", mood: "uplifting", isVocalsPresent: false, language: "beats", theme: "journey & travel", tempoBPM: "", masterRightsOwner: "artist", publishingRightsOwner: "artist", isFullyClearedForSync: true, proAffiliation: "", projectSuitability: { ad_campaigns: false, ott_web_series: false, tv_film_score: false, trailers: false, podcasts: false, corporate_films: false, fashion_or_product_launch: false, gaming_animation: false, festival_documentaries: false, short_films_student_projects: false }, trackLinks: ""
+    trackName: "", artistName: "", labelName: "", isrc: "", genres: "pop", mood: "uplifting", isVocalsPresent: false, language: "", theme: "journey & travel", tempoBPM: "", masterRightsOwner: "artist", publishingRightsOwner: "artist", isFullyClearedForSync: true, proAffiliation: "", projectSuitability: { ad_campaigns: false, ott_web_series: false, tv_film_score: false, trailers: false, podcasts: false, corporate_films: false, fashion_or_product_launch: false, gaming_animation: false, festival_documentaries: false, short_films_student_projects: false }, trackLinks: ""
   };
   
   const initialPitchingFormData = {
-    trackName: "", artistName: "", labelName: "", isrc: "", genres: "pop", mood: "uplifting", isVocalsPresent: false, language: "beats", theme: "journey & travel", selectedStore: "", trackLinks: [{platform: '', url: ''}]
+    trackName: "", artistName: "", labelName: "", isrc: "", genres: "pop", mood: "uplifting", isVocalsPresent: false, language: "", theme: "journey & travel", selectedStore: "", trackLinks: [{platform: '', url: ''}]
   };
 
   // --- HANDLERS ---
@@ -144,21 +144,23 @@ export default function MVMarketing() {
   const handleFormSubmit = (tab) => {
     const formData = viewState[tab].data;
     if (tab === 'sync') {
+      const { language, ...restOfFormData } = formData;
       const payload = {
-        ...formData,
+        ...restOfFormData,
         genres: [formData.genres], // Already lowercase
         proAffiliation: formData.proAffiliation.toLowerCase(),
-        language: formData.language.toLowerCase(),
+        ...(language && { language: language.toLowerCase() }),
         theme: formData.theme.toLowerCase(),
         projectSuitability: Object.keys(formData.projectSuitability).filter(key => formData.projectSuitability[key]),
         trackLinks: [{ platform: "Spotify", url: formData.trackLinks }] // Assuming Spotify for now
       };
       syncMutation.mutate(payload);
     } else {
+      const { language, ...restOfFormData } = formData;
       const payload = {
-        ...formData,
+        ...restOfFormData,
         genres: [formData.genres], // Already lowercase
-        language: formData.language.toLowerCase(),
+        ...(language && { language: language.toLowerCase() }),
         theme: formData.theme.toLowerCase(),
         trackLinks: formData.trackLinks,
       };
@@ -267,7 +269,7 @@ export default function MVMarketing() {
                           <div className="md:col-span-2">
                              <SelectWithLabel id="theme" label="Theme" value={data.theme} disabled={isViewOnly} onValueChange={(value) => handleInputChange('sync', 'theme', value)} options={themeOptions} />
                           </div>
-                          <InputWithLabel id="tempoBPM" label="Tempo/BPM" placeholder="Lorem ipsum" value={data.tempoBPM} disabled={isViewOnly} onChange={(e) => handleInputChange('sync', 'tempoBPM', e.target.value)} />
+                          <InputWithLabel id="tempoBPM" label="Tempo/BPM" placeholder="Tempo/BPM" value={data.tempoBPM} disabled={isViewOnly} onChange={(e) => handleInputChange('sync', 'tempoBPM', e.target.value)} />
                       </div>
                   </div>
 
@@ -280,7 +282,7 @@ export default function MVMarketing() {
                           <div className="md:col-span-2">
                             <SelectWithLabel id="isFullyClearedForSync" label="Is the Track fully cleared for sync use?" value={data.isFullyClearedForSync} disabled={isViewOnly} onValueChange={(value) => handleInputChange('sync', 'isFullyClearedForSync', value)} options={syncClearedOptions} />
                           </div>
-                          <InputWithLabel id="proAffiliation" label="PRO affiliation (e.g. BMI, IPRS, ASCAP)" placeholder="Lorem ipsum" value={data.proAffiliation} disabled={isViewOnly} onChange={(e) => handleInputChange('sync', 'proAffiliation', e.target.value)} />
+                          <InputWithLabel id="proAffiliation" label="PRO affiliation (e.g. BMI, IPRS, ASCAP)" placeholder="e.g. BMI, IPRS, ASCAP" value={data.proAffiliation} disabled={isViewOnly} onChange={(e) => handleInputChange('sync', 'proAffiliation', e.target.value)} />
                       </div>
                   </div>
                   

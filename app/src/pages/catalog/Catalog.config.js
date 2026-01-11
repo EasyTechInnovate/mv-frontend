@@ -20,13 +20,13 @@ export const yourReleases = [
     audioFile: null,
     releaseInfo: {
       releaseName: "Bollywood Hits 2024",
-      genre: "Bollywood",
+      genre: "Indian Bollywood",
       upc: "123456789012",
       labelName: "Bollywood Records"
     },
     trackInfo: {
       songName: "Main Title Song",
-      genre: "Bollywood",
+      genre: "Indian Bollywood",
       singerName: "Arijit Singh",
       composerName: "A.R. Rahman",
       lyricsName: "Gulzar",
@@ -165,13 +165,13 @@ export const yourReleases = [
     audioFile: null,
     releaseInfo: {
       releaseName: "Urban Beats",
-      genre: "Hip Hop",
+      genre: "Hip-Hop/Rap",
       upc: "123456789017",
       labelName: "Urban Music"
     },
     trackInfo: {
       songName: "City Life",
-      genre: "Hip Hop",
+      genre: "Hip-Hop/Rap",
       singerName: "City Rapper",
       composerName: "City Rapper",
       lyricsName: "City Rapper",

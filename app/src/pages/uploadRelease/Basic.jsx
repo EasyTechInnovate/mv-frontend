@@ -12,221 +12,11 @@ import { useMutation } from '@tanstack/react-query';
 import { createRelease, updateReleaseStep1, updateReleaseStep2, updateReleaseStep3, submitRelease } from '../../services/api.services';
 import { showToast } from '../../utils/toast';
 import { uploadToImageKit } from '../../utils/imagekitUploader.js';
+import { languageOptions, genreOptions } from '../../constants/options';
 
-const languages = [
-   "Afrikaans",
-   "Albanian - shqip",
-   "Amharic - አማርኛ",
-   "Arabic - العربية",
-   "Aragonese - aragonés",
-   "Armenian - հայերեն",
-   "Asturian - asturianu",
-   "Azerbaijani - azərbaycan dili",
-   "Basque - euskara",
-   "Belarusian - беларуская",
-   "Bengali - বাংলা",
-   "Bosnian - bosanski",
-   "Breton - brezhoneg",
-   "Bulgarian - български",
-   "Catalan - català",
-   "Central Kurdish - کوردی (دەستنوسی عەرەبی)",
-   "Chinese - 中文",
-   "Chinese (Hong Kong) - 中文（香港）",
-   "Chinese (Simplified) - 中文（简体）",
-   "Chinese (Traditional) - 中文（繁體）",
-   "Corsican",
-   "Croatian - hrvatski",
-   "Czech - čeština",
-   "Danish - dansk",
-   "Dutch - Nederlands",
-   "English",
-   "English (Australia)",
-   "English (Canada)",
-   "English (India)",
-   "English (New Zealand)",
-   "English (South Africa)",
-   "English (United Kingdom)",
-   "English (United States)",
-   "Esperanto - esperanto",
-   "Estonian - eesti",
-   "Faroese - føroyskt",
-   "Filipino",
-   "Finnish - suomi",
-   "French - français",
-   "French (Canada) - français (Canada)",
-   "French (France) - français (France)",
-   "French (Switzerland) - français (Suisse)",
-   "Galician - galego",
-   "Georgian - ქართული",
-   "German - Deutsch",
-   "German (Austria) - Deutsch (Österreich)",
-   "German (Germany) - Deutsch (Deutschland)",
-   "German (Liechtenstein) - Deutsch (Liechtenstein)",
-   "German (Switzerland) - Deutsch (Schweiz)",
-   "Greek - Ελληνικά",
-   "Guarani",
-   "Gujarati - ગુજરાતી",
-   "Hausa",
-   "Hawaiian - ʻŌlelo Hawaiʻi",
-   "Hebrew - עברית",
-   "Hindi - हिन्दी",
-   "Hungarian - magyar",
-   "Icelandic - íslenska",
-   "Indonesian - Indonesia",
-   "Interlingua",
-   "Irish - Gaeilge",
-   "Italian - italiano",
-   "Italian (Italy) - italiano (Italia)",
-   "Italian (Switzerland) - italiano (Svizzera)",
-   "Japanese - 日本語",
-   "Kannada - ಕನ್ನಡ",
-   "Kazakh - қазақ тілі",
-   "Khmer - ខ្មែរ",
-   "Korean - 한국어",
-   "Kurdish - Kurdî",
-   "Kyrgyz - кыргызча",
-   "Lao - ລາວ",
-   "Latin",
-   "Latvian - latviešu",
-   "Lingala - lingála",
-   "Lithuanian - lietuvių",
-   "Macedonian - македонски",
-   "Malay - Bahasa Melayu",
-   "Malayalam - മലയാളം",
-   "Maltese - Malti",
-   "Marathi - मराठी",
-   "Mongolian - монгол",
-   "Nepali - नेपाली",
-   "Norwegian - norsk",
-   "Norwegian Bokmål - norsk bokmål",
-   "Norwegian Nynorsk - nynorsk",
-   "Occitan",
-   "Oriya - ଓଡ଼ିଆ",
-   "Oromo - Oromoo",
-   "Pashto - پښتو",
-   "Persian - فارسی",
-   "Polish - polski",
-   "Portuguese - português",
-   "Portuguese (Brazil) - português (Brasil)",
-   "Portuguese (Portugal) - português (Portugal)",
-   "Punjabi - ਪੰਜਾਬੀ",
-   "Quechua",
-   "Romanian - română",
-   "Romanian (Moldova) - română (Moldova)",
-   "Romansh - rumantsch",
-   "Russian - русский",
-   "Scottish Gaelic",
-   "Serbian - српски",
-   "Serbo-Croatian - Srpskohrvatski",
-   "Shona - chiShona",
-   "Sindhi",
-   "Sinhala - සිංහල",
-   "Slovak - slovenčina",
-   "Slovenian - slovenščina",
-   "Somali - Soomaali",
-   "Southern Sotho",
-   "Spanish - español",
-   "Spanish (Argentina) - español (Argentina)",
-   "Spanish (Latin America) - español (Latinoamérica)",
-   "Spanish (Mexico) - español (México)",
-   "Spanish (Spain) - español (España)",
-   "Spanish (United States) - español (Estados Unidos)",
-   "Sundanese",
-   "Swahili - Kiswahili",
-   "Swedish - svenska",
-   "Tajik - тоҷикӣ",
-   "Tamil - தமிழ்",
-   "Tatar",
-   "Telugu - తెలుగు",
-   "Thai - ไทย",
-   "Tigrinya - ትግርኛ",
-   "Tongan - lea fakatonga",
-   "Turkish - Türkçe",
-   "Turkmen",
-   "Twi",
-   "Ukrainian - українська",
-   "Urdu - اردو",
-   "Uyghur",
-   "Uzbek - o'zbek",
-   "Vietnamese - Tiếng Việt",
-   "Walloon - wa",
-   "Welsh - Cymraeg",
-   "Western Frisian",
-   "Xhosa",
-   "Yiddish",
-   "Yoruba - Èdè Yorùbá",
-   "Zulu - isiZulu"
-];
 
-const genres = [
-  "bollywood",
-  "Alternative",
-  "Alternative Rock",
-  "Alternative & Rock Latino",
-  "Anime",
-  "Baladas Y Boleros",
-  "Big Band",
-  "Blues",
-  "Brazilian",
-  "C-Pop",
-  "Cantopop / HK-Pop",
-  "Children's",
-  "Chinese",
-  "Christian",
-  "Classical",
-  "Comedy",
-  "Contemporary Latin",
-  "Country",
-  "Dance",
-  "Easy Listening",
-  "Educational",
-  "Electronic",
-  "Enka",
-  "Experimental",
-  "Fitness & Workout",
-  "Folk",
-  "French Pop",
-  "German Pop",
-  "German Folk",
-  "Hip-Hop / Rap",
-  "Holiday",
-  "Instrumental",
-  "Indo Pop",
-  "Inspirational",
-  "Indian",
-  "Indian Pop",
-  "Indian Rap",
-  "Indian Folk",
-  "Indian Bollywood",
-  "Indian Devotional & Spiritual",
-  "Indian Fusion",
-  "Indian Gazal",
-  "Indian Classical / Vocal",
-  "Indian Dance",
-  "Indian Electronic",
-  "Jazz",
-  "J-Pop",
-  "K-Pop",
-  "Karaoke",
-  "Latin Jazz",
-  "Metal",
-  "New Age",
-  "Opera",
-  "Pop",
-  "R&B",
-  "Reggae",
-  "Reggaeton y Hip-Hop",
-  "Regional Mexicano",
-  "Rock",
-  "Salas y Topical",
-  "Soul",
-  "Soundtrack",
-  "Spoken Word",
-  "Thai Pop",
-  "Trot",
-  "Vocal / Nostalgia",
-  "World"
-];
+
+
 
 const labelNames = [
   "Maheshwari Vishual"
@@ -765,9 +555,9 @@ const BasicReleaseBuilder = () => {
                     <SelectValue placeholder="Select genre" />
                   </SelectTrigger>
                   <SelectContent className="max-h-60">
-                    {genres.map((genre) => (
-                      <SelectItem key={genre} value={genre.toLowerCase().replace(/\s+/g, '-')}>
-                        {genre}
+                    {genreOptions.map((genre) => (
+                      <SelectItem key={genre.value} value={genre.value}>
+                        {genre.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -886,9 +676,9 @@ const BasicReleaseBuilder = () => {
                       <SelectValue placeholder="Select genre" />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
-                      {genres.map((genre) => (
-                        <SelectItem key={genre} value={genre.toLowerCase().replace(/\s+/g, '-')}>
-                          {genre}
+                      {genreOptions.map((genre) => (
+                        <SelectItem key={genre.value} value={genre.value}>
+                          {genre.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -955,12 +745,11 @@ const BasicReleaseBuilder = () => {
                       <SelectValue placeholder="Select language" />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
-                      {languages.map((language) => (
-                        <SelectItem key={language} value={language}>
-                          {language}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                                            {languageOptions.map((language) => (
+                                                <SelectItem key={language.value} value={language.value}>
+                                                  {language.label}
+                                                </SelectItem>
+                                              ))}                    </SelectContent>
                   </Select>
                 </div>
               </div>
@@ -1251,7 +1040,7 @@ const BasicReleaseBuilder = () => {
             startTime: 45,
             endTime: 75
           },
-          language: track.language
+          ...(track.language && { language: track.language })
         }));
 
         const step2Data = {

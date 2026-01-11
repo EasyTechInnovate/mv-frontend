@@ -18,31 +18,11 @@ import {
 } from '../../services/api.services';
 import { showToast } from '../../utils/toast';
 import { uploadToImageKit } from '../../utils/imagekitUploader.js';
+import { languageOptions, genreOptions } from '../../constants/options';
 
-const languages = [
-   "Afrikaans", "Albanian - shqip", "Amharic - አማርኛ", "Arabic - العربية", "Armenian - հայերեն",
-   "Azerbaijani - azərbaycan dili", "Basque - euskara", "Bengali - বাংলা", "Bulgarian - български",
-   "Catalan - català", "Chinese - 中文", "Chinese (Simplified) - 中文（简体）", "Chinese (Traditional) - 中文（繁體）",
-   "Croatian - hrvatski", "Czech - čeština", "Danish - dansk", "Dutch - Nederlands", "English",
-   "English (United States)", "English (United Kingdom)", "Filipino", "Finnish - suomi",
-   "French - français", "German - Deutsch", "Greek - Ελληνικά", "Gujarati - ગુજરાતી",
-   "Hebrew - עברית", "Hindi - हिन्दी", "Hungarian - magyar", "Indonesian - Indonesia",
-   "Italian - italiano", "Japanese - 日本語", "Kannada - ಕನ್ನಡ", "Korean - 한국어",
-   "Malayalam - മലയാളം", "Marathi - मराठी", "Norwegian - norsk", "Polish - polski",
-   "Portuguese - português", "Portuguese (Brazil) - português (Brasil)", "Punjabi - ਪੰਜਾਬੀ",
-   "Romanian - română", "Russian - русский", "Spanish - español", "Swedish - svenska",
-   "Tamil - தமிழ்", "Telugu - తెలుగు", "Thai - ไทย", "Turkish - Türkçe", "Ukrainian - українська",
-   "Urdu - اردو", "Vietnamese - Tiếng Việt"
-];
 
-const PrimaryGenres = [
-   "bollywood","romantic","Alternative", "Alternative Rock", "Blues", "Classical", "Country", "Dance", "Electronic",
-  "Hip-Hop / Rap", "Jazz", "Metal", "Pop", "R&B", "Reggae", "Rock", "Soul", "World"
-];
 
-const SecondaryGenres = [
-  "bollywood", "romantic","Acid Jazz", "Afrobeat", "Bluegrass", "Chillout", "Disco", "Drum & Bass", "Dubstep",
-];
+
 
 const labelNames = ["Maheshwari Vishual"];
 
@@ -675,8 +655,8 @@ const AdvancedReleaseBuilder = () => {
                       <SelectValue placeholder="Please select" />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
-                      {PrimaryGenres.map((genre) => (
-                        <SelectItem key={genre} value={genre.toLowerCase().replace(/\s+/g, '-')}>{genre}</SelectItem>
+                      {genreOptions.map((genre) => (
+                        <SelectItem key={genre.value} value={genre.value}>{genre.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -688,8 +668,8 @@ const AdvancedReleaseBuilder = () => {
                       <SelectValue placeholder="Please select" />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
-                      {SecondaryGenres.map((genre) => (
-                        <SelectItem key={genre} value={genre.toLowerCase().replace(/\s+/g, '-')}>{genre}</SelectItem>
+                      {genreOptions.map((genre) => (
+                        <SelectItem key={genre.value} value={genre.value}>{genre.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -955,8 +935,8 @@ const AdvancedReleaseBuilder = () => {
                           <SelectValue placeholder="Please select" />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
-                          {PrimaryGenres.map((genre) => (
-                            <SelectItem key={genre} value={genre.toLowerCase().replace(/\s+/g, '-')}>{genre}</SelectItem>
+                          {genreOptions.map((genre) => (
+                            <SelectItem key={genre.value} value={genre.value}>{genre.label}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -968,8 +948,8 @@ const AdvancedReleaseBuilder = () => {
                           <SelectValue placeholder="Please select" />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
-                          {SecondaryGenres.map((genre) => (
-                            <SelectItem key={genre} value={genre.toLowerCase().replace(/\s+/g, '-')}>{genre}</SelectItem>
+                          {genreOptions.map((genre) => (
+                            <SelectItem key={genre.value} value={genre.value}>{genre.label}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -1016,8 +996,8 @@ const AdvancedReleaseBuilder = () => {
                           <SelectValue placeholder="Select language" />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
-                          {languages.map((language) => (
-                            <SelectItem key={language} value={language}>{language}</SelectItem>
+                          {languageOptions.map((language) => (
+                            <SelectItem key={language.value} value={language.value}>{language.label}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -1367,7 +1347,7 @@ const AdvancedReleaseBuilder = () => {
           primaryGenre: track.primaryGenre,
           secondaryGenre: track.secondaryGenre,
           hasHumanVocals: track.hasHumanVocals === 'yes',
-          language: track.language,
+          ...(track.language && { language: track.language }),
           explicitStatus: track.explicitStatus,
           isAvailableForDownload: track.isAvailableForDownload === 'yes'
         }))
