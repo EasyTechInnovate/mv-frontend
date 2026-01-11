@@ -78,23 +78,10 @@ const Page = () => {
         <div>
 
         {/* Form Title */}
-        <h2 className="text-4xl font-bold mb-2">
+        <h2 className="text-4xl font-bold mb-6">
           {isLogin ? "Login" : "Sign Up"}
         </h2>
-        <p className="mb-10 ">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-          <button
-            type="button"
-            className="text-[#652CD6] underline"
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setFormData({ fullName: "", emailAddress: "", password: "" }); // reset form
-            }}
-          >
-            {isLogin ? "Sign Up" : "Login"}
-          </button>
-        </p>
-
+        
         {/* Form */}
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           {!isLogin && (
@@ -158,8 +145,12 @@ const Page = () => {
             type="button"
             className="text-[#652CD6] underline"
             onClick={() => {
-              setIsLogin(!isLogin);
-              setFormData({ fullName: "", emailAddress: "", password: "" }); // reset form
+              if (isLogin) {
+                router.push('/signup'); // Redirect to signup page
+              } else {
+                setIsLogin(true); // Toggle to login
+                setFormData({ fullName: "", emailAddress: "", password: "" }); // reset form
+              }
             }}
           >
             {isLogin ? "Sign Up" : "Login"}

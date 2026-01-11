@@ -48,6 +48,8 @@ const RequestDetailsModal = ({ request, isOpen, onClose }) => {
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6 py-4 max-h-[70vh] overflow-y-auto">
           <DetailItem label="Channel Name" value={request.youtubeChannelName} />
+          <DetailItem label="User Name" value={`${request.userId?.firstName} ${request.userId?.lastName}`} />
+          <DetailItem label="User Account ID" value={request.userAccountId} />
           <div>
             <p className="text-sm text-muted-foreground">Channel ID or Link</p>
             <p className="font-medium truncate" title={request.youtubeChannelId}>
@@ -118,6 +120,8 @@ const ChannelDetailsModal = ({ channel, isOpen, onClose }) => {
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 py-4 max-h-[70vh] overflow-y-auto">
           <DetailItem label="Channel Name" value={channel.channelName} />
+          <DetailItem label="User Name" value={`${channel.userId?.firstName} ${channel.userId?.lastName}`} />
+          <DetailItem label="User Account ID" value={channel.userAccountId} />
           <div>
             <p className="text-sm text-muted-foreground">Channel Link</p>
             <a href={channel.channelLink} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-500 hover:underline truncate" title={channel.channelLink}>
@@ -248,6 +252,8 @@ export default function YouTubeMCN() {
                   <table className="w-full text-sm">
                     <thead className="text-left text-muted-foreground">
                       <tr className="whitespace-nowrap">
+                        <th className="p-2">User Name</th>
+                        <th className="p-2">Account Id</th>
                         <th className="p-2">Channel Name</th>
                         <th className="p-2">Subscribers</th>
                         <th className="p-2">Monetized</th>
@@ -259,6 +265,8 @@ export default function YouTubeMCN() {
                     <tbody>
                       {myRequests.map((request) => (
                         <tr key={request._id} className="border-t border-border whitespace-nowrap">
+                          <td className="p-2 font-medium">{`${request.userId?.firstName} ${request.userId?.lastName}`}</td>
+                          <td className="p-2 font-medium">{request.userAccountId}</td>
                           <td className="p-2 font-medium">{request.youtubeChannelName}</td>
                           <td className="p-2">{request.subscriberCount.toLocaleString()}</td>
                           <td className="p-2">{request.monetizationEligibility ? "Yes" : "No"}</td>
@@ -268,7 +276,7 @@ export default function YouTubeMCN() {
                           <td className="p-2">{new Date(request.createdAt).toLocaleDateString()}</td>
                           <td className="p-2">
                             <div className="flex items-center gap-2">
-                              {request.status === 'approved' && (
+                              {/* {request.status === 'approved' && (
                                 <Button
                                   size="sm"
                                   onClick={() => handleOptRequest(request._id, request.status)}
@@ -277,7 +285,7 @@ export default function YouTubeMCN() {
                                 >
                                   {isRequestingRemoval ? <Loader2 className="h-3 w-3 animate-spin" /> : "Opt Request"}
                                 </Button>
-                              )}
+                              )} */}
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -352,6 +360,8 @@ export default function YouTubeMCN() {
                     <table className="w-full text-sm">
                       <thead className="text-left text-muted-foreground">
                         <tr className="whitespace-nowrap">
+                          <th className="p-2">User Name</th>
+                          <th className="p-2">Account Id</th>
                           <th className="p-2">Channel Name</th>
                           <th className="p-2">Revenue Share</th>
                           <th className="p-2">Status</th>
@@ -362,6 +372,8 @@ export default function YouTubeMCN() {
                       <tbody>
                         {activeChannels.map((channel) => (
                           <tr key={channel._id} className="border-t border-border whitespace-nowrap">
+                            <td className="p-2 font-medium">{`${channel.userId?.firstName} ${channel.userId?.lastName}`}</td>
+                            <td className="p-2 font-medium">{channel.userAccountId}</td>
                             <td className="p-2 font-medium">{channel.channelName}</td>
                             <td className="p-2">{channel.revenueShare}%</td>
                             <td className="p-2">

@@ -27,6 +27,7 @@ export default function ActiveChannelTable({
   theme = "dark", 
   channels,
   onViewChannel,
+  onEditChannel,
   onEditStatus,
 }) {
   const isDark = theme === "dark";
@@ -102,13 +103,23 @@ export default function ActiveChannelTable({
                         </button>
 
                         <button
-                          onClick={() => onEditStatus && onEditStatus(channel)}
+                          onClick={() => onEditChannel && onEditChannel(channel)}
                           className={`p-2 rounded-lg ${isDark
                               ? "bg-gray-700 text-white hover:bg-gray-600"
                               : "bg-gray-200 text-black hover:bg-gray-300"
                             } transition`}
                         >
                           <Edit size={16} />
+                        </button>
+
+                        <button
+                          onClick={() => onEditStatus && onEditStatus(channel)}
+                          className={`p-2 rounded-lg ${isDark
+                              ? "bg-gray-700 text-white hover:bg-gray-600"
+                              : "bg-gray-200 text-black hover:bg-gray-300"
+                            } transition`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-toggle-right"><rect width="20" height="12" x="2" y="6" rx="6" ry="6"/><circle cx="16" cy="12" r="2"/></svg>
                         </button>
                       </div>
                     </td>

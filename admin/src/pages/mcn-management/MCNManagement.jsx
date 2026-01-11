@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import MCNRequestViewModal from "../../components/mcn-management/MCNReviewModal";
 import UpdateMCNChannelStatusModal from "../../components/mcn-management/UpdateMCNChannelStatusModal";
+import UpdateMCNChannelModal from "../../components/mcn-management/UpdateMCNChannelModal";
 import CreateMCNChannelModal from "../../components/mcn-management/CreateMCNChannel"; // Import CreateMCNChannelModal
 import {
   Dialog,
@@ -201,6 +202,7 @@ export default function MCNManagement({ theme = "dark" }) {
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isUpdateChannelModalOpen, setIsUpdateChannelModalOpen] = useState(false);
   // States for CreateMCNChannelModal
   const [isCreateChannelModalOpen, setIsCreateChannelModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -338,6 +340,11 @@ export default function MCNManagement({ theme = "dark" }) {
   const handleViewChannel = (channel) => {
     setSelectedChannel(channel);
     setIsChannelModalOpen(true);
+  };
+
+  const handleEditChannel = (channel) => {
+    setSelectedChannel(channel);
+    setIsUpdateChannelModalOpen(true);
   };
 
   const formatINR = (n) =>
@@ -564,6 +571,7 @@ export default function MCNManagement({ theme = "dark" }) {
                     theme={theme} 
                     channels={rows}
                     onViewChannel={handleViewChannel}
+                    onEditChannel={handleEditChannel}
                     onEditStatus={(channel) => {
                         setSelectedChannel(channel);
                         setIsStatusModalOpen(true);
@@ -725,6 +733,15 @@ export default function MCNManagement({ theme = "dark" }) {
         }}
         channelId={selectedChannel?._id}
         currentStatus={selectedChannel?.status?.toLowerCase()}
+      />
+      <UpdateMCNChannelModal
+        isOpen={isUpdateChannelModalOpen}
+        onClose={(shouldRefresh) => {
+          setIsUpdateChannelModalOpen(false);
+          if (shouldRefresh) fetchChannels();
+        }}
+        channel={selectedChannel}
+        theme={theme}
       />
       {/* CreateMCNChannelModal */}
       <CreateMCNChannelModal

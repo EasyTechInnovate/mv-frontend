@@ -28,7 +28,7 @@ const Footer = () => {
     { title: 'About', href: '/about-us' },
     { title: 'Careers', href: '/career' },
     { title: 'Contact', href: '/contact-us' },
-    { title: 'Blog', href: '#' },
+    { title: 'Blog', href: '/blog' },
     { title: 'Sign up', href: '/signin' },
     { title: 'Log in', href: '/signin' },
   ];
@@ -50,7 +50,7 @@ const Footer = () => {
     { title: 'Cookie Policy', href: '#' },
     { title: 'Privacy Policy', href: '#' },
     { title: 'Terms of Service', href: '#' },
-    { title: 'Distribution Agreement', href: '#' },
+    { title: 'Distribution Agreement', href: '/signup/distribution-agreement' },
   ];
 
   return (

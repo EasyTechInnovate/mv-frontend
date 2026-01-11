@@ -245,6 +245,9 @@ const getMcnChannels = (params) =>
 const updateMcnChannelStatus = (channelId, data) =>
   axiosClient.patch(`/v1/mcn/admin/channels/${channelId}/status`, data);
 
+const updateMcnChannel = (channelId, data) =>
+  axiosClient.put(`/v1/mcn/admin/channels/${channelId}`, data);
+
 const getMcnStats = () => axiosClient.get("/v1/mcn/admin/stats");
 
 
@@ -577,6 +580,7 @@ export default {
   createMcnChannel,
   getMcnChannels,
   updateMcnChannelStatus,
+  updateMcnChannel,
   getMcnStats,
   createTeamMember,
   getAllTeamMembers,
