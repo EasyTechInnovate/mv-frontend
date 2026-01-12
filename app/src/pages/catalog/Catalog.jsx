@@ -82,6 +82,19 @@ const ReleaseDetailsModal = ({ release, isOpen, onClose, releaseType }) => {
     }
 
     if (!release) return null
+    
+    const renderContributors = (title, contributors) => (
+        <div>
+            <Label>{title}</Label>
+            <Card className="p-2 mt-1 border border-muted bg-muted/20">
+                {contributors.map((c, i) => (
+                    <div key={i} className="text-sm bg-background px-2 py-1 rounded mb-1">
+                        <span className="font-semibold capitalize">{c.profession.replace(/_/g, ' ')}:</span> {c.contributors}
+                    </div>
+                ))}
+            </Card>
+        </div>
+    );
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -98,10 +111,9 @@ const ReleaseDetailsModal = ({ release, isOpen, onClose, releaseType }) => {
                     <div className="space-y-6">
                         {/* Track Information Section */}
                         <div className="space-y-6">
-                            {/* Cover Art Upload */}
                             <div className="md:flex gap-4 max-md:space-y-6">
                                 <Card className="p-6">
-                                    <CardHeader className="p-0">
+                                    <CardHeader className="p-0 mb-4">
                                         <CardTitle>Cover Art</CardTitle>
                                     </CardHeader>
                                     <div className="border-2 border-dashed border-muted-foreground rounded-lg flex flex-col p-6 gap-2 items-center justify-center">
@@ -120,105 +132,88 @@ const ReleaseDetailsModal = ({ release, isOpen, onClose, releaseType }) => {
                                     </div>
                                 </Card>
 
-                                {/* Form Fields */}
                                 <Card className="flex-1 p-6">
-                                    <CardHeader className="p-0">
-                                        <CardTitle>Track Information</CardTitle>
+                                    <CardHeader className="p-0 mb-4">
+                                        <CardTitle>Release Information</CardTitle>
                                     </CardHeader>
-                                    <CardContent className="grid grid-cols-2 gap-4 p-0">
+                                    <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-0">
                                         <div>
                                             <Label>Release Name</Label>
-                                            <Input
-                                                value={releaseDetails.step1?.releaseInfo?.releaseName || ''}
-                                                disabled
-                                                placeholder="Enter release name"
-                                            />
+                                            <Input value={releaseDetails.step1?.releaseInfo?.releaseName || ''} disabled />
                                         </div>
                                         {releaseType === 'advanced' && (
                                             <>
                                                 <div>
                                                     <Label>Release Version</Label>
-                                                    <Input
-                                                        value={releaseDetails.step1?.releaseInfo?.releaseVersion || ''}
-                                                        disabled
-                                                        placeholder="Enter release version"
-                                                    />
+                                                    <Input value={releaseDetails.step1?.releaseInfo?.releaseVersion || ''} disabled />
                                                 </div>
                                                 <div>
                                                     <Label>Catalog #</Label>
-                                                    <Input
-                                                        value={releaseDetails.step1?.releaseInfo?.catalog || ''}
-                                                        disabled
-                                                        placeholder="Enter catalog number"
-                                                    />
+                                                    <Input value={releaseDetails.step1?.releaseInfo?.catalog || ''} disabled />
                                                 </div>
+                                                <div>
+                                                    <Label>Primary Artists</Label>
+                                                    <Input value={releaseDetails.step1?.releaseInfo?.primaryArtists?.join(', ') || ''} disabled />
+                                                </div>
+                                                {releaseDetails.step1?.releaseInfo?.featuringArtists?.length > 0 && <div>
+                                                    <Label>Featuring Artists</Label>
+                                                    <Input value={releaseDetails.step1.releaseInfo.featuringArtists.join(', ')} disabled />
+                                                </div>}
                                             </>
-                                        )}
-                                        {releaseType === 'advanced' && releaseDetails.step1?.releaseInfo?.primaryArtists && (
-                                            <div>
-                                                <Label>Primary Artists</Label>
-                                                <Input
-                                                    value={releaseDetails.step1.releaseInfo.primaryArtists.join(', ') || ''}
-                                                    disabled
-                                                    placeholder="Primary artists"
-                                                />
-                                            </div>
                                         )}
                                         <div>
                                             <Label>Genre</Label>
-                                            <Input
-                                                value={releaseDetails.step1?.releaseInfo?.genre || releaseDetails.step1?.releaseInfo?.primaryGenre || ''}
-                                                disabled
-                                                placeholder="Select genre"
-                                            />
+                                            <Input value={releaseDetails.step1?.releaseInfo?.genre || releaseDetails.step1?.releaseInfo?.primaryGenre || ''} disabled />
                                         </div>
-                                        <div>
-                                            <Label>Label Name</Label>
-                                            <Input
-                                                value={releaseDetails.step1?.releaseInfo?.labelName || ''}
-                                                disabled
-                                                placeholder="Label name"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label>UPC Code</Label>
-                                            <Input
-                                                value={releaseDetails.step1?.releaseInfo?.upcCode || releaseDetails.step1?.releaseInfo?.upc || ''}
-                                                disabled
-                                                placeholder="upc code"
-                                            />
-                                        </div>
-
                                         {releaseType === 'advanced' && releaseDetails.step1?.releaseInfo?.secondaryGenre && (
                                             <div>
                                                 <Label>Secondary Genre</Label>
-                                                <Input
-                                                    value={releaseDetails.step1.releaseInfo.secondaryGenre || ''}
-                                                    disabled
-                                                    placeholder="Select secondary genre"
-                                                />
+                                                <Input value={releaseDetails.step1.releaseInfo.secondaryGenre} disabled />
                                             </div>
+                                        )}
+                                        <div>
+                                            <Label>Label Name</Label>
+                                            <Input value={releaseDetails.step1?.releaseInfo?.labelName?.name || releaseDetails.step1?.releaseInfo?.labelName || ''} disabled />
+                                        </div>
+                                        <div>
+                                            <Label>UPC Code</Label>
+                                            <Input value={releaseDetails.step1?.releaseInfo?.upcCode || releaseDetails.step1?.releaseInfo?.upc || 'Auto-generated'} disabled />
+                                        </div>
+                                        {releaseType === 'advanced' && (
+                                            <>
+                                                {releaseDetails.step1?.releaseInfo?.cLine && <div>
+                                                    <Label>C-Line</Label>
+                                                    <Input value={`© ${releaseDetails.step1.releaseInfo.cLine.year} ${releaseDetails.step1.releaseInfo.cLine.text}`} disabled />
+                                                </div>}
+                                                {releaseDetails.step1?.releaseInfo?.pLine && <div>
+                                                    <Label>P-Line</Label>
+                                                    <Input value={`℗ ${releaseDetails.step1.releaseInfo.pLine.year} ${releaseDetails.step1.releaseInfo.pLine.text}`} disabled />
+                                                </div>}
+                                                {releaseDetails.step1?.releaseInfo?.releasePricingTier && <div>
+                                                    <Label>Pricing Tier</Label>
+                                                    <Input value={releaseDetails.step1.releaseInfo.releasePricingTier} disabled className="capitalize"/>
+                                                </div>}
+                                            </>
                                         )}
                                     </CardContent>
                                 </Card>
                             </div>
                         </div>
 
-                        {/* Audio & Track Details */}
                         {releaseDetails.step2?.tracks && releaseDetails.step2.tracks.length > 0 && (
                             <div className="space-y-6">
                                 {releaseDetails.step2.tracks.map((track, index) => (
                                     <div key={index} className="md:flex gap-4 max-md:space-y-6">
-                                        <Card className="p-6">
-                                            <CardHeader className="p-0">
+                                        <Card className="p-6 basis-1/4">
+                                            <CardHeader className="p-0 mb-4">
                                                 <CardTitle>Audio file - Track {index + 1}</CardTitle>
                                             </CardHeader>
                                             <div className="border-2 border-dashed border-muted-foreground rounded-lg flex flex-col p-6 gap-2 items-center justify-center">
                                                 <Music className="w-18 h-18 text-muted-foreground bg-muted/50 p-4 rounded-lg" />
-                                                <div className="mt-2 space-y-3">
-                                                    <h1 className="font-semibold">{track.audioFileName || track.trackName || 'Audio File'}</h1>
-                                                    {track.audioFiles?.[0]?.fileUrl && (
-                                                        <a href={track.audioFiles[0].fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary text-sm hover:underline block">
+                                                <div className="mt-2 space-y-1 text-center">
+                                                    <h1 className="font-semibold break-all">{track.audioFileName || track.trackName || 'Audio File'}</h1>
+                                                    {(track.audioFiles?.[0]?.fileUrl || track.trackLink) && (
+                                                        <a href={track.audioFiles?.[0]?.fileUrl || track.trackLink} target="_blank" rel="noopener noreferrer" className="text-primary text-sm hover:underline block">
                                                             View Audio File
                                                         </a>
                                                     )}
@@ -226,146 +221,76 @@ const ReleaseDetailsModal = ({ release, isOpen, onClose, releaseType }) => {
                                             </div>
                                         </Card>
 
-                                        {/* Form Fields */}
                                         <Card className="flex-1 p-6">
-                                            <CardHeader className="p-0">
-                                                <CardTitle>Track Information</CardTitle>
+                                            <CardHeader className="p-0 mb-4">
+                                                <CardTitle>Track {index + 1} Information</CardTitle>
                                             </CardHeader>
-                                            <div className="flex-1 grid grid-cols-2 lg:grid-cols-3 gap-4">
+                                            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-0">
                                                 <div>
                                                     <Label>Song Name</Label>
-                                                    <Input
-                                                        value={track.trackName || track.songName || ''}
-                                                        disabled
-                                                        placeholder="Enter song name"
-                                                    />
+                                                    <Input value={track.trackName || track.songName || ''} disabled />
                                                 </div>
                                                 {releaseType === 'advanced' && track.mixVersion && (
                                                     <div>
                                                         <Label>Mix Version</Label>
-                                                        <Input
-                                                            value={track.mixVersion || ''}
-                                                            disabled
-                                                            placeholder="Enter mix version"
-                                                        />
+                                                        <Input value={track.mixVersion} disabled />
                                                     </div>
                                                 )}
                                                 <div>
                                                     <Label>Genre</Label>
-                                                    <Input
-                                                        value={track.genre || track.primaryGenre || ''}
-                                                        disabled
-                                                        placeholder="Select genre"
-                                                    />
+                                                    <Input value={track.genre || track.primaryGenre || ''} disabled />
                                                 </div>
+                                                 {releaseType === 'advanced' && track.secondaryGenre && (
+                                                    <div>
+                                                        <Label>Secondary Genre</Label>
+                                                        <Input value={track.secondaryGenre} disabled />
+                                                    </div>
+                                                )}
                                                 {releaseType === 'basic' && (
                                                     <>
-                                                        <div>
-                                                            <Label>Singer Name</Label>
-                                                            <Input
-                                                                value={track.singerName || ''}
-                                                                disabled
-                                                                placeholder="Enter singer name"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <Label>Composer Name</Label>
-                                                            <Input
-                                                                value={track.composerName || ''}
-                                                                disabled
-                                                                placeholder="Enter composer name"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <Label>Lyricist Name</Label>
-                                                            <Input
-                                                                value={track.lyricistName || ''}
-                                                                disabled
-                                                                placeholder="Enter lyricist name"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <Label>Producer Name</Label>
-                                                            <Input
-                                                                value={track.producerName || ''}
-                                                                disabled
-                                                                placeholder="Enter producer name"
-                                                            />
-                                                        </div>
+                                                        <div><Label>Singer Name</Label><Input value={track.singerName || ''} disabled /></div>
+                                                        <div><Label>Composer Name</Label><Input value={track.composerName || ''} disabled /></div>
+                                                        <div><Label>Lyricist Name</Label><Input value={track.lyricistName || ''} disabled /></div>
+                                                        <div><Label>Producer Name</Label><Input value={track.producerName || ''} disabled /></div>
                                                     </>
                                                 )}
-                                                {releaseType === 'advanced' && track.primaryArtists && (
+                                                {releaseType === 'advanced' && track.primaryArtists?.length > 0 && (
                                                     <div>
                                                         <Label>Primary Artists</Label>
-                                                        <Input
-                                                            value={track.primaryArtists.join(', ') || ''}
-                                                            disabled
-                                                            placeholder="Primary artists"
-                                                        />
+                                                        <Input value={track.primaryArtists.join(', ')} disabled />
                                                     </div>
                                                 )}
-                                                {releaseType === 'advanced' && track.featuringArtists && track.featuringArtists.length > 0 && (
+                                                {releaseType === 'advanced' && track.featuringArtists?.length > 0 && (
                                                     <div>
                                                         <Label>Featuring Artists</Label>
-                                                        <Input
-                                                            value={track.featuringArtists.join(', ') || ''}
-                                                            disabled
-                                                            placeholder="Featuring artists"
-                                                        />
+                                                        <Input value={track.featuringArtists.join(', ')} disabled />
                                                     </div>
                                                 )}
-                                                <div>
-                                                    <Label>Label Name</Label>
-                                                    <Input
-                                                        value={releaseDetails.step1?.releaseInfo?.labelName?.name || releaseDetails.step1?.releaseInfo?.labelName || ''}
-                                                        disabled
-                                                        placeholder="Enter label name"
-                                                    />
-                                                </div>
+                                                 {releaseType === 'advanced' && track.contributorsToSoundRecording?.length > 0 && renderContributors('Sound Recording Contributors', track.contributorsToSoundRecording)}
+                                                 {releaseType === 'advanced' && track.contributorsToMusicalWork?.length > 0 && renderContributors('Musical Work Contributors', track.contributorsToMusicalWork)}
                                                 <div>
                                                     <Label>ISRC</Label>
-                                                    <Input
-                                                        value={track.isrc || track.isrcCode || 'Auto-generated'}
-                                                        disabled
-                                                        placeholder="Enter ISRC"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label>UPC</Label>
-                                                    <Input
-                                                        value={releaseDetails.step1?.releaseInfo?.upc || releaseDetails.step1?.releaseInfo?.upcCode || 'Auto-generated'}
-                                                        disabled
-                                                        placeholder="Enter UPC"
-                                                    />
+                                                    <Input value={track.isrc || track.isrcCode || 'Auto-generated'} disabled />
                                                 </div>
                                                 {track.language && (
                                                     <div>
                                                         <Label>Language</Label>
-                                                        <Input
-                                                            value={track.language || ''}
-                                                            disabled
-                                                            placeholder="Select language"
-                                                        />
+                                                        <Input value={track.language} disabled />
                                                     </div>
                                                 )}
                                                 {releaseType === 'advanced' && track.explicitStatus && (
                                                     <div>
                                                         <Label>Explicit Status</Label>
-                                                        <Input
-                                                            value={track.explicitStatus || ''}
-                                                            disabled
-                                                            placeholder="Explicit status"
-                                                        />
+                                                        <Input value={track.explicitStatus} disabled className="capitalize"/>
                                                     </div>
                                                 )}
-                                            </div>
+                                            </CardContent>
                                         </Card>
                                     </div>
                                 ))}
                             </div>
                         )}
 
-                        {/* Release Details Section */}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Step 3 - Release Settings</CardTitle>

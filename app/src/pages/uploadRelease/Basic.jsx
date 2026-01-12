@@ -12,7 +12,7 @@ import { useMutation } from '@tanstack/react-query';
 import { createRelease, updateReleaseStep1, updateReleaseStep2, updateReleaseStep3, submitRelease } from '../../services/api.services';
 import { showToast } from '../../utils/toast';
 import { uploadToImageKit } from '../../utils/imagekitUploader.js';
-import { languageOptions, genreOptions } from '../../constants/options';
+import { languageOptions, genreOptions, territoryOptions, partnerOptions } from '../../constants/options';
 
 
 
@@ -141,121 +141,9 @@ const BasicReleaseBuilder = () => {
     }
   });
 
-  // const territories = [
-  //    'India' , 'Canada', 'USA' , 'UK' ,'Afghanistan', 'Albania', 'Algeria', 'Greece', 'Grenada', 'Guatemala',
-  //   'Oman', 'Pakistan', 'Palestine'
-  // ];
-  const territories = [
-  'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
-  'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi',
-  'Cabo Verde', 'Cambodia', 'Cameroon', 'Canada', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo (Congo-Brazzaville)', 'Costa Rica', 'Cote d\'Ivoire', 'Croatia', 'Cuba', 'Cyprus', 'Czechia',
-  'Democratic Republic of the Congo', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic',
-  'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini (formerly Swaziland)', 'Ethiopia',
-  'Fiji', 'Finland', 'France',
-  'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana',
-  'Haiti', 'Honduras', 'Hungary',
-  'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy',
-  'Jamaica', 'Japan', 'Jordan',
-  'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan',
-  'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg',
-  'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar (formerly Burma)',
-  'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia (formerly Macedonia)', 'Norway',
-  'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal',
-  'Qatar',
-  'Romania', 'Russia', 'Rwanda',
-  'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria',
-  'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu',
-  'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States of America', 'Uruguay', 'Uzbekistan',
-  'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam',
-  'Yemen',
-  'Zambia', 'Zimbabwe'
-];
 
-  const partners = {
-    callerTunePartners: [
-      "Jio",
-      "Airtel",
-      "BSNL",
-      "VI"
-    ],
 
-    indianStores: [
-      "Gaana",
-      "Hungama",
-      "Jiosaavn",
-      "Wynk"
-    ],
 
-    internationalStores: [
-      "7Digital",
-      "MixUpload",
-      "Deezer",
-      "SoundCloud",
-      "AMI Entertainment",
-      "Simfy",
-      "Slacker",
-      "SoundExchange",
-      "Gracenote",
-      "Lickd",
-      "8tracks",
-      "Likee",
-      "MonkingMe",
-      "iMusica",
-      "Appler Music",
-      "TouchTunes",
-      "Traxsource",
-      "Pandora",
-      "Tidal",
-      "Juno Downloads",
-      "Shazam",
-      "SberZvuk",
-      "Spotify",
-      "BMAT",
-      "KKBOX",
-      "MediaNet",
-      "Amazon",
-      "Napster",
-      "DailyMotion",
-      "AWA",
-      "iHeart Radio",
-      "BoomPlay",
-      "Facebook Audio Library",
-      "Facebook Audio Footprinting",
-      "Alibaba",
-      "NetEase",
-      "Tencent",
-      "Audible Magic",
-      "Muso.ai",
-      "Saavn",
-      "United Media Agency",
-      "MixCloud",
-      "Kuack Media Group",
-      "SiriusXM",
-      "Anghami",
-      "Qobuz",
-      "ClickNClear",
-      "TunedGlobal",
-      "FLO",
-      "ACRCloud",
-      "MoodAgent",
-      "Enaza",
-      "YouTube Art Tracks",
-      "YouTube Content Id",
-      "JOOX",
-      "IPEX",
-      "Jaxsta",
-      "Melon",
-      "Pretzel",
-      "Resso",
-      "TikTok",
-      "SCPP",
-      "Soundmouse",
-      "Triller",
-      "Yandex",
-      "Zaycev",
-      "AudioMack"
-    ]
-  };
 
 
   // Handle cover art upload
@@ -312,12 +200,14 @@ const BasicReleaseBuilder = () => {
       setUploadingTrackId(trackId);
       try {
         const response = await uploadToImageKit(file, 'basic_release/tracks');
-        const updatedTracks = formData.tracks.map(track => 
-          track.id === trackId 
-            ? { ...track, trackLink: response.url, audioFileName: file.name }
-            : track
-        );
-        setFormData(prev => ({ ...prev, tracks: updatedTracks }));
+        setFormData(prev => ({
+          ...prev,
+          tracks: prev.tracks.map(track =>
+            track.id === trackId
+              ? { ...track, trackLink: response.url, audioFileName: file.name }
+              : track
+          )
+        }));
       } catch (error) {
         console.error("Audio upload failed for track:", trackId, error);
       } finally {
@@ -328,16 +218,14 @@ const BasicReleaseBuilder = () => {
 
   // Handle track field changes
   const handleTrackFieldChange = (trackId, field, value) => {
-    const updatedTracks = formData.tracks.map(track => 
-      track.id === trackId 
-        ? { ...track, [field]: value }
-        : track
-    );
-    
-    setFormData({
-      ...formData,
-      tracks: updatedTracks
-    });
+    setFormData(prev => ({
+        ...prev,
+        tracks: prev.tracks.map(track =>
+          track.id === trackId
+            ? { ...track, [field]: value }
+            : track
+        )
+    }));
   };
 
   const addTrack = () => {
@@ -361,66 +249,68 @@ const BasicReleaseBuilder = () => {
       previewCallTiming: '',
       language: ''
     };
-   setFormData({
-    ...formData,
-    tracks: [...formData.tracks, newTrack]
-  });
+    setFormData(prev => ({
+        ...prev,
+        tracks: [...prev.tracks, newTrack]
+    }));
   };
 
   const removeTrack = (trackId) => {
-    if (formData.tracks.length > 1) {
-      setFormData({
-      ...formData,
-      tracks: formData.tracks.filter(track => track.id !== trackId)
+    setFormData(prev => {
+        if (prev.tracks.length <= 1) return prev;
+        return {
+            ...prev,
+            tracks: prev.tracks.filter(track => track.id !== trackId)
+        }
     });
-    }
   };
 
   const handleTerritoryChange = (territory, checked) => {
-    let updatedTerritories;
-    if (checked) {
-      updatedTerritories = [...selectedTerritories, territory];
-    } else {
-      updatedTerritories = selectedTerritories.filter(t => t !== territory);
-    }
-    setSelectedTerritories(updatedTerritories);
-    setFormData({ ...formData, territories: updatedTerritories });
+    setSelectedTerritories(prev => {
+      const updatedTerritories = checked
+        ? [...prev, territory]
+        : prev.filter(t => t !== territory);
+      setFormData(prevData => ({ ...prevData, territories: updatedTerritories }));
+      return updatedTerritories;
+    });
   };
 
   const handlePartnerChange = (partner, checked) => {
-    let updatedPartners;
-    if (checked) {
-      updatedPartners = [...selectedPartners, partner];
-    } else {
-      updatedPartners = selectedPartners.filter(p => p !== partner);
-      setSelectAllPartners(false);
-    }
-    setSelectedPartners(updatedPartners);
-    setFormData({ ...formData, partners: updatedPartners });
+    setSelectedPartners(prev => {
+      const updatedPartners = checked
+        ? [...prev, partner]
+        : prev.filter(p => p !== partner);
+      
+      if (!checked) {
+        setSelectAllPartners(false);
+      }
+      
+      setFormData(prevData => ({ ...prevData, partners: updatedPartners }));
+      return updatedPartners;
+    });
   };
 
   const handleSelectAllPartners = (checked) => {
     setSelectAllPartners(checked);
 
-    // flatten all category arrays into one single array
     const allPartnerNames = [
-      ...partners.callerTunePartners,
-      ...partners.indianStores,
-      ...partners.internationalStores
+      ...partnerOptions.callerTunePartners,
+      ...partnerOptions.indianStores,
+      ...partnerOptions.internationalStores
     ];
 
     if (checked) {
       setSelectedPartners(allPartnerNames);
-      setFormData({ ...formData, partners: allPartnerNames });
+      setFormData(prev => ({ ...prev, partners: allPartnerNames }));
     } else {
       setSelectedPartners([]);
-      setFormData({ ...formData, partners: [] });
+      setFormData(prev => ({ ...prev, partners: [] }));
     }
   };
 
   const handleCopyrightOptionChange = (option) => {
     setCopyrightOption(option);
-    setFormData({ ...formData, copyrightOption: option });
+    setFormData(prev => ({ ...prev, copyrightOption: option }));
   };
 
   const handleCopyrightDocumentUpload = async (event) => {
@@ -544,13 +434,13 @@ const BasicReleaseBuilder = () => {
                   id="releaseName"
                   placeholder="Enter release name"
                   value={formData.releaseName}
-                  onChange={(e) => setFormData({...formData, releaseName: e.target.value})}
+                  onChange={(e) => setFormData(prev => ({...prev, releaseName: e.target.value}))}
                   className="mt-1"
                 />
               </div>
               <div>
                 <Label htmlFor="genre" className="text-foreground">Genre</Label>
-                <Select onValueChange={(value) => setFormData({...formData, genre: value})}>
+                <Select onValueChange={(value) => setFormData(prev => ({...prev, genre: value}))}>
                   <SelectTrigger className="mt-1 w-full">
                     <SelectValue placeholder="Select genre" />
                   </SelectTrigger>
@@ -569,13 +459,13 @@ const BasicReleaseBuilder = () => {
                   id="upc"
                   placeholder="Enter UPC code"
                   value={formData.upc}
-                  onChange={(e) => setFormData({...formData, upc: e.target.value})}
+                  onChange={(e) => setFormData(prev => ({...prev, upc: e.target.value}))}
                   className="mt-1"
                 />
               </div>
               <div className="">
                 <Label htmlFor="labelName" className="text-foreground">Label name</Label>
-                <Select onValueChange={(value) => setFormData({...formData, labelName: value})}>
+                <Select onValueChange={(value) => setFormData(prev => ({...prev, labelName: value}))}>
                   <SelectTrigger className="mt-1 w-full">
                     <SelectValue placeholder="Select label" />
                   </SelectTrigger>
@@ -641,6 +531,7 @@ const BasicReleaseBuilder = () => {
                     </>
                   )}
                   <input
+                    id={`audio-upload-${track.id}`}
                     type="file"
                     accept="audio/*"
                     onChange={(e) => handleAudioUpload(track.id, e)}
@@ -648,7 +539,7 @@ const BasicReleaseBuilder = () => {
                     disabled={uploadingTrackId === track.id}
                   />
                 </div>
-                <Button variant="outline" size="sm" onClick={() => document.querySelector(`input[type="file"][accept="audio/*"]`).click()} disabled={uploadingTrackId === track.id}>
+                <Button variant="outline" size="sm" onClick={() => document.getElementById(`audio-upload-${track.id}`).click()} disabled={uploadingTrackId === track.id}>
                   {uploadingTrackId === track.id ? 'Uploading...' : 'Choose Audio'}
                 </Button>
               </div>
@@ -782,7 +673,7 @@ const BasicReleaseBuilder = () => {
                 placeholder="mm/dd/yyyy" 
                 className=" w-full  [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3  [&::-webkit-calendar-picker-indicator]:invert-0 dark:[&::-webkit-calendar-picker-indicator]:invert" 
                 value={formData.forFutureRelease}
-                onChange={(e) => setFormData({...formData, forFutureRelease: e.target.value})}
+                onChange={(e) => setFormData(prev => ({...prev, forFutureRelease: e.target.value}))}
                 min={(() => {
                   const today = new Date();
                   const oneWeekLater = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -802,7 +693,7 @@ const BasicReleaseBuilder = () => {
                 placeholder="mm/dd/yyyy" 
                 className=" w-full  [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3  [&::-webkit-calendar-picker-indicator]:invert-0 dark:[&::-webkit-calendar-picker-indicator]:invert" 
                 value={formData.forPreorderPreSave}
-                onChange={(e) => setFormData({...formData, forPreorderPreSave: e.target.value})}
+                onChange={(e) => setFormData(prev => ({...prev, forPreorderPreSave: e.target.value}))}
                  max={(() => {
                   const today = new Date();
                   const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
@@ -826,7 +717,7 @@ const BasicReleaseBuilder = () => {
                 value={worldWideRelease} 
                 onValueChange={(value) => {
                   setWorldWideRelease(value);
-                  setFormData({...formData, worldWideRelease: value});
+                  setFormData(prev => ({...prev, worldWideRelease: value}));
                 }}
                 className="flex space-x-6 mt-2"
               >
@@ -845,7 +736,7 @@ const BasicReleaseBuilder = () => {
               <Card className="p-6 border border-muted bg-background rounded-lg">
                 <Label className="text-foreground">Select The Territories, Where you own the rights</Label>
                 <div className="grid grid-cols-3 gap-4 mt-4 max-h-60 overflow-y-auto custom-scroll">
-                  {territories.map((territory) => (
+                  {territoryOptions.map((territory) => (
                     <div key={territory} className="flex items-center space-x-2">
                       <Checkbox 
                         id={territory}
@@ -876,7 +767,7 @@ const BasicReleaseBuilder = () => {
           </div>
 
           {/* Render Each Category */}
-          {Object.entries(partners).map(([category, list]) => (
+          {Object.entries(partnerOptions).map(([category, list]) => (
             <Card key={category} className="p-6 border border-muted bg-background rounded-lg mb-6">
               <Label className="text-primary font-medium">
                 {category === "callerTunePartners" && "CallerTune Partners"}
@@ -1057,7 +948,7 @@ const BasicReleaseBuilder = () => {
           // World Wide Release - add all territories
           territorialRightsData = {
             hasRights: true,
-            territories: territories.map(t => t.toLowerCase().replace(/\s+/g, '_').replace(/\(/g, '').replace(/\)/g, ''))
+            territories: territoryOptions.map(t => t.toLowerCase().replace(/\s+/g, '_').replace(/\(/g, '').replace(/\)/g, ''))
           };
         } else {
           // Specific territories selected
@@ -1071,9 +962,14 @@ const BasicReleaseBuilder = () => {
         let partnerSelectionData;
         if (selectAllPartners) {
           // All partners selected - add all partners
+          const allPartnerNames = [
+            ...partnerOptions.callerTunePartners,
+            ...partnerOptions.indianStores,
+            ...partnerOptions.internationalStores
+          ];
           partnerSelectionData = {
             hasPartners: true,
-            partners: partners.map(p => p.name.toLowerCase().replace(/\s+/g, '_'))
+            partners: allPartnerNames.map(p => p.toLowerCase().replace(/\s+/g, '_'))
           };
         } else {
           // Specific partners selected

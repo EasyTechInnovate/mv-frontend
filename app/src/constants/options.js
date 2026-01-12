@@ -255,14 +255,48 @@ export const storeOptions = [
 
 export const masterRightsOptions = [
   { value: 'artist', label: 'Artist' },
-  { value: 'label', label: 'Label' },
-  { value: 'distributor', label: 'Distributor' },
-  { value: 'other', label: 'Other' },
+  { value: "label", label: "Label" },
+  { value: "distributor", label: "Distributor" },
+  { value: "other", label: "Other" },
 ];
 
 export const publishingRightsOptions = [
-  { value: 'artist', label: 'Artist' },
-  { value: 'publisher', label: 'Publisher' },
-  { value: 'co_writer_s', label: 'Co-writer(s)' },
-  { value: 'pro_registered', label: 'PRO Registered' },
+  { value: "artist", label: "Artist" },
+  { value: "publisher", label: "Publisher" },
+  { value: "co_writer_s", label: "Co-writer(s)" },
+  { value: "pro_registered", label: "PRO Registered" },
 ];
+
+export const territoryOptions = [
+  'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
+  'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi',
+  'Cabo Verde', 'Cambodia', 'Cameroon', 'Canada', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo (Congo-Brazzaville)', 'Costa Rica', 'Cote divoire', 'Croatia', 'Cuba', 'Cyprus', 'Czechia',
+  'Democratic Republic of the United States of America', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic',
+  'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini (formerly Swaziland)', 'Ethiopia',
+  'Fiji', 'Finland', 'France',
+  'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana',
+  'Haiti', 'Honduras', 'Hungary',
+  'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy',
+  'Jamaica', 'Japan', 'Jordan',
+  'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan',
+  'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg',
+  'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar (formerly Burma)',
+  'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia (formerly Macedonia)', 'Norway',
+  'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal',
+  'Qatar',
+  'Romania', 'Russia', 'Rwanda',
+  'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria',
+  'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu',
+  'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States of America', 'Uruguay', 'Uzbekistan',
+  'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam',
+  'Yemen',
+  'Zambia', 'Zimbabwe'
+];
+
+export const partnerOptions = {
+  callerTunePartners: [ "Jio", "Airtel", "BSNL", "VI" ],
+  indianStores: [ "Gaana", "Hungama", "Jiosaavn", "Wynk" ],
+  internationalStores: [
+    "7Digital", "MixUpload", "Deezer", "SoundCloud", "AMI Entertainment", "Simfy", "Slacker", "SoundExchange", "Gracenote", "Lickd", "8tracks", "Likee", "MonkingMe", "iMusica", "Appler Music", "TouchTunes", "Traxsource", "Pandora", "Tidal", "Juno Downloads", "Shazam", "SberZvuk", "Spotify", "BMAT", "KKBOX", "MediaNet", "Amazon", "Napster", "DailyMotion", "AWA", "iHeart Radio", "BoomPlay", "Facebook Audio Library", "Facebook Audio Footprinting", "Alibaba", "NetEase", "Tencent", "Audible Magic", "Muso.ai", "Saavn", "United Media Agency", "MixCloud", "Kuack Media Group", "SiriusXM", "Anghami", "Qobuz", "ClickNClear", "TunedGlobal", "FLO", "ACRCloud", "MoodAgent", "Enaza", "YouTube Art Tracks", "YouTube Content Id", "JOOX", "IPEX", "Jaxsta", "Melon", "Pretzel", "Resso", "TikTok", "SCPP", "Soundmouse", "Triller", "Yandex", "Zaycev", "AudioMack", "YouTube Music", "Instagram Reels", "Snapchat", "Bandcamp"
+  ]
+};

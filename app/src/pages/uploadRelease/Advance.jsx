@@ -18,7 +18,7 @@ import {
 } from '../../services/api.services';
 import { showToast } from '../../utils/toast';
 import { uploadToImageKit } from '../../utils/imagekitUploader.js';
-import { languageOptions, genreOptions } from '../../constants/options';
+import { languageOptions, genreOptions, territoryOptions, partnerOptions } from '../../constants/options';
 
 
 
@@ -99,7 +99,7 @@ const AdvancedReleaseBuilder = () => {
       primaryArtists: [{ id: generateUniqueId(), value: '' }],
       featuringArtists: [{ id: generateUniqueId(), value: '' }], // Added for track-level featuring artists
       contributorsToSound: [{ id: generateUniqueId(), profession: '', contributors: '' }],
-      contributorsToMusical: [{ id: generateUniqueId(), role: '', contributors: '' }],
+      contributorsToMusical: [{ id: generateUniqueId(), profession: '', contributors: '' }],
       needISRC: 'yes',
       isrc: '',
       primaryGenre: '',
@@ -120,102 +120,9 @@ const AdvancedReleaseBuilder = () => {
     copyrightDocument: ''
   });
 
-  const territories = [
-    'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Australia', 'Austria', 'Bangladesh',
-    'Belgium', 'Brazil', 'Canada', 'Chile', 'China', 'Colombia', 'Denmark', 'Egypt',
-    'Finland', 'France', 'Germany', 'Greece', 'India', 'Indonesia', 'Iran', 'Iraq',
-    'Ireland', 'Israel', 'Italy', 'Japan', 'Kenya', 'Malaysia', 'Mexico', 'Netherlands',
-    'New Zealand', 'Nigeria', 'Norway', 'Oman', 'Pakistan', 'Palestine', 'Philippines',
-    'Poland', 'Portugal', 'Qatar', 'Russia', 'Saudi Arabia', 'Singapore', 'South Africa',
-    'South Korea', 'Spain', 'Sweden', 'Switzerland', 'Thailand', 'Turkey', 'Ukraine',
-    'United Arab Emirates', 'United Kingdom', 'United States of America', 'Vietnam'
-  ];
 
-  const partners = {
-  callerTunePartners: [
-    "Jio",
-    "Airtel",
-    "BSNL",
-    "VI"
-  ],
 
-  indianStores: [
-    "Gaana",
-    "Hungama",
-    "Jiosaavn",
-    "Wynk"
-  ],
 
-  internationalStores: [
-    "7Digital",
-    "MixUpload",
-    "Deezer",
-    "SoundCloud",
-    "AMI Entertainment",
-    "Simfy",
-    "Slacker",
-    "SoundExchange",
-    "Gracenote",
-    "Lickd",
-    "8tracks",
-    "Likee",
-    "MonkingMe",
-    "iMusica",
-    "Appler Music",
-    "TouchTunes",
-    "Traxsource",
-    "Pandora",
-    "Tidal",
-    "Juno Downloads",
-    "Shazam",
-    "SberZvuk",
-    "Spotify",
-    "BMAT",
-    "KKBOX",
-    "MediaNet",
-    "Amazon",
-    "Napster",
-    "DailyMotion",
-    "AWA",
-    "iHeart Radio",
-    "BoomPlay",
-    "Facebook Audio Library",
-    "Facebook Audio Footprinting",
-    "Alibaba",
-    "NetEase",
-    "Tencent",
-    "Audible Magic",
-    "Muso.ai",
-    "Saavn",
-    "United Media Agency",
-    "MixCloud",
-    "Kuack Media Group",
-    "SiriusXM",
-    "Anghami",
-    "Qobuz",
-    "ClickNClear",
-    "TunedGlobal",
-    "FLO",
-    "ACRCloud",
-    "MoodAgent",
-    "Enaza",
-    "YouTube Art Tracks",
-    "YouTube Content Id",
-    "JOOX",
-    "IPEX",
-    "Jaxsta",
-    "Melon",
-    "Pretzel",
-    "Resso",
-    "TikTok",
-    "SCPP",
-    "Soundmouse",
-    "Triller",
-    "Yandex",
-    "Zaycev",
-    "AudioMack"
-  ]
-};
 
 
   // API Mutations
@@ -266,7 +173,7 @@ const AdvancedReleaseBuilder = () => {
     mutationFn: () => submitAdvancedRelease(releaseId),
     onSuccess: () => {
       showToast.success('Release submitted successfully for review!');
-      navigate('/app/upload-release');
+      navigate('/app/catalog');
     },
     onError: (error) => {
       showToast.error(error?.response?.data?.message || 'Failed to submit release');
@@ -308,77 +215,84 @@ const AdvancedReleaseBuilder = () => {
   };
 
   const addDynamicField = (section, trackId = null) => {
-    if (trackId) {
-      const updatedTracks = formData.tracks.map(track => {
-        if (track.id === trackId) {
-          let newItem;
-          if (section === 'contributorsToSound') {
-            newItem = { id: generateUniqueId(), profession: '', contributors: '' };
-          } else if (section === 'contributorsToMusical') {
-            newItem = { id: generateUniqueId(), role: '', contributors: '' };
-          } else {
-            newItem = { id: generateUniqueId(), value: '' };
+    setFormData(prev => {
+      if (trackId) {
+        const updatedTracks = prev.tracks.map(track => {
+          if (track.id === trackId) {
+            let newItem;
+            if (section === 'contributorsToSound') {
+              newItem = { id: generateUniqueId(), profession: '', contributors: '' };
+            } else if (section === 'contributorsToMusical') {
+              newItem = { id: generateUniqueId(), profession: '', contributors: '' };
+            } else {
+              newItem = { id: generateUniqueId(), value: '' };
+            }
+            return {
+              ...track,
+              [section]: [...track[section], newItem]
+            };
           }
-          return {
-            ...track,
-            [section]: [...track[section], newItem]
-          };
-        }
-        return track;
-      });
-      setFormData({ ...formData, tracks: updatedTracks });
-    } else {
-      setFormData({
-        ...formData,
-        [section]: [...formData[section], { id: generateUniqueId(), value: '' }]
-      });
-    }
+          return track;
+        });
+        return { ...prev, tracks: updatedTracks };
+      } else {
+        return {
+          ...prev,
+          [section]: [...prev[section], { id: generateUniqueId(), value: '' }]
+        };
+      }
+    });
   };
 
   const removeDynamicField = (section, fieldId, trackId = null) => {
-    if (trackId) {
-      const updatedTracks = formData.tracks.map(track => {
-        if (track.id === trackId && track[section].length > 1) {
+    setFormData(prev => {
+      if (trackId) {
+        const updatedTracks = prev.tracks.map(track => {
+          if (track.id === trackId && track[section].length > 1) {
+            return {
+              ...track,
+              [section]: track[section].filter(item => item.id !== fieldId)
+            };
+          }
+          return track;
+        });
+        return { ...prev, tracks: updatedTracks };
+      } else {
+        if (prev[section].length > 1) {
           return {
-            ...track,
-            [section]: track[section].filter(item => item.id !== fieldId)
+            ...prev,
+            [section]: prev[section].filter(item => item.id !== fieldId)
           };
         }
-        return track;
-      });
-      setFormData({ ...formData, tracks: updatedTracks });
-    } else {
-      if (formData[section].length > 1) {
-        setFormData({
-          ...formData,
-          [section]: formData[section].filter(item => item.id !== fieldId)
-        });
+        return prev;
       }
-    }
+    });
   };
 
   const updateDynamicField = (section, fieldId, value, trackId = null, fieldName = 'value') => {
-    if (trackId) {
-      const updatedTracks = formData.tracks.map(track => {
-        if (track.id === trackId) {
-          return {
-            ...track,
-            [section]: track[section].map(item => 
-              item.id === fieldId ? { ...item, [fieldName]: value } : item
-            )
-          };
-        }
-        return track;
-      });
-      setFormData({ ...formData, tracks: updatedTracks });
-    } else {
-      setFormData({
-        ...formData,
-        [section]: formData[section].map(item => 
-          item.id === fieldId ? { ...item, [fieldName]: value } : item
-        )
-      });
-    }
+    setFormData(prev => {
+      if (trackId) {
+        const updatedTracks = prev.tracks.map(track => {
+          if (track.id === trackId) {
+            return {
+              ...track,
+              [section]: track[section].map(item =>
+                item.id === fieldId ? { ...item, [fieldName]: value } : item
+              )
+            };
+          }
+          return track;
+        });
+        return { ...prev, tracks: updatedTracks };
+      } else {
+        return {
+          ...prev,
+          [section]: prev[section].map(item =>
+            item.id === fieldId ? { ...item, [fieldName]: value } : item
+          )
+        };
+      }
+    });
   };
 
   const handleAudioUpload = async (trackId, event) => {
@@ -387,10 +301,12 @@ const AdvancedReleaseBuilder = () => {
       setUploadingTrackId(trackId);
       try {
         const response = await uploadToImageKit(file, 'advanced_release/tracks');
-        const updatedTracks = formData.tracks.map(track =>
-          track.id === trackId ? { ...track, trackLink: response.url, audioFileName: file.name } : track
-        );
-        setFormData(prev => ({ ...prev, tracks: updatedTracks }));
+        setFormData(prev => ({
+          ...prev,
+          tracks: prev.tracks.map(track =>
+            track.id === trackId ? { ...track, trackLink: response.url, audioFileName: file.name } : track
+          )
+        }));
       } catch (error) {
         console.error("Audio upload failed for track:", trackId, error);
       } finally {
@@ -400,18 +316,20 @@ const AdvancedReleaseBuilder = () => {
   };
 
   const handleTrackFieldChange = (trackId, field, value) => {
-    const updatedTracks = formData.tracks.map(track => 
-      track.id === trackId ? { ...track, [field]: value } : track
-    );
-    setFormData({ ...formData, tracks: updatedTracks });
+    setFormData(prev => ({
+      ...prev,
+      tracks: prev.tracks.map(track =>
+        track.id === trackId ? { ...track, [field]: value } : track
+      )
+    }));
   };
 
   const handleReleaseTypeSelection = async (type) => {
     const loadingToast = showToast.loading('Creating advanced release...');
     try {
-      const response = await createReleaseMutation.mutateAsync(type);
+      await createReleaseMutation.mutateAsync(type);
       setSelectedReleaseType(type);
-      setFormData({ ...formData, releaseType: type });
+      setFormData(prev => ({ ...prev, releaseType: type }));
       showToast.dismiss(loadingToast);
       setCurrentStep(0);
     } catch (error) {
@@ -421,12 +339,10 @@ const AdvancedReleaseBuilder = () => {
   };
 
   const addTrack = () => {
-    // Validate track count for single and ringtone releases
     if ((selectedReleaseType === 'single' || selectedReleaseType === 'ringtonerelease') && formData.tracks.length >= 1) {
       showToast.error('Single and Ringtone releases can only have one track');
       return;
     }
-
     const newTrack = {
       id: generateUniqueId(),
       trackLink: '',
@@ -434,9 +350,9 @@ const AdvancedReleaseBuilder = () => {
       trackName: '',
       mixVersion: '',
       primaryArtists: [{ id: generateUniqueId(), value: '' }],
-      featuringArtists: [{ id: generateUniqueId(), value: '' }], // Added for track-level featuring artists
-      contributorsToSound: [{ id: generateUniqueId(), year: '', contributors: '' }],
-      contributorsToMusical: [{ id: generateUniqueId(), year: '', contributors: '' }],
+      featuringArtists: [{ id: generateUniqueId(), value: '' }],
+      contributorsToSound: [{ id: generateUniqueId(), profession: '', contributors: '' }],
+      contributorsToMusical: [{ id: generateUniqueId(), profession: '', contributors: '' }],
       needISRC: 'yes',
       isrc: '',
       primaryGenre: '',
@@ -447,45 +363,52 @@ const AdvancedReleaseBuilder = () => {
       isAvailableForDownload: 'no',
       previewStartTiming: ''
     };
-    setFormData({ ...formData, tracks: [...formData.tracks, newTrack] });
+    setFormData(prev => ({ ...prev, tracks: [...prev.tracks, newTrack] }));
   };
 
   const removeTrack = (trackId) => {
-    if (formData.tracks.length > 1) {
-      setFormData({ ...formData, tracks: formData.tracks.filter(track => track.id !== trackId) });
-    }
+    setFormData(prev => {
+      if (prev.tracks.length > 1) {
+        return { ...prev, tracks: prev.tracks.filter(track => track.id !== trackId) };
+      }
+      return prev;
+    });
   };
 
   const handleTerritoryChange = (territory, checked) => {
-    let updatedTerritories = checked 
-      ? [...selectedTerritories, territory]
-      : selectedTerritories.filter(t => t !== territory);
-    setSelectedTerritories(updatedTerritories);
-    setFormData({ ...formData, territories: updatedTerritories });
+    setSelectedTerritories(prev => {
+      const updatedTerritories = checked
+        ? [...prev, territory]
+        : prev.filter(t => t !== territory);
+      setFormData(prevData => ({ ...prevData, territories: updatedTerritories }));
+      return updatedTerritories;
+    });
   };
 
   const handlePartnerChange = (partner, checked) => {
-    let updatedPartners = checked
-      ? [...selectedPartners, partner]
-      : selectedPartners.filter(p => p !== partner);
-    if (!checked) setSelectAllPartners(false);
-    setSelectedPartners(updatedPartners);
-    setFormData({ ...formData, partners: updatedPartners });
+    setSelectedPartners(prev => {
+      const updatedPartners = checked
+        ? [...prev, partner]
+        : prev.filter(p => p !== partner);
+      if (!checked) {
+        setSelectAllPartners(false);
+      }
+      setFormData(prevData => ({ ...prevData, partners: updatedPartners }));
+      return updatedPartners;
+    });
   };
 
   const handleSelectAllPartners = (checked) => {
     setSelectAllPartners(checked);
-
     const allPartnerNames = checked
       ? [
-          ...partners.callerTunePartners,
-          ...partners.indianStores,
-          ...partners.internationalStores
+          ...partnerOptions.callerTunePartners,
+          ...partnerOptions.indianStores,
+          ...partnerOptions.internationalStores
         ]
       : [];
-
     setSelectedPartners(allPartnerNames);
-    setFormData({ ...formData, partners: allPartnerNames });
+    setFormData(prev => ({ ...prev, partners: allPartnerNames }));
   };
 
   const renderStep1 = () => (
@@ -538,16 +461,16 @@ const AdvancedReleaseBuilder = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label className="text-foreground">Release Name</Label>
-                  <Input placeholder="Enter release name" className="mt-1" value={formData.releaseName} onChange={(e) => setFormData({...formData, releaseName: e.target.value})} />
+                  <Input placeholder="Enter release name" className="mt-1" value={formData.releaseName} onChange={(e) => setFormData(prev => ({...prev, releaseName: e.target.value}))} />
                 </div>
                 <div>
                   <Label className="text-foreground">Release Version</Label>
-                  <Input placeholder="Enter release version" className="mt-1" value={formData.releaseVersion} onChange={(e) => setFormData({...formData, releaseVersion: e.target.value})} />
+                  <Input placeholder="Enter release version" className="mt-1" value={formData.releaseVersion} onChange={(e) => setFormData(prev => ({...prev, releaseVersion: e.target.value}))} />
                   <p className="text-[10px] text-muted-foreground mt-1">Use for non-original release EG: Remastered, Live, Remixes etc</p>
                 </div>
                 <div>
                   <Label className="text-foreground">Catalog #</Label>
-                  <Input placeholder="Enter catalog number" className="mt-1" value={formData.catalogNumber} onChange={(e) => setFormData({...formData, catalogNumber: e.target.value})} />
+                  <Input placeholder="Enter catalog number" className="mt-1" value={formData.catalogNumber} onChange={(e) => setFormData(prev => ({...prev, catalogNumber: e.target.value}))} />
                   <p className="text-[10px] text-muted-foreground mt-1">Your internal identifier for this release. This cannot be changed after audio is uploaded to the release.</p>
                 </div>
                 <div>
@@ -561,7 +484,7 @@ const AdvancedReleaseBuilder = () => {
                 </div>
                 <div>
                   <Label className="text-foreground">Account ID</Label>
-                  <Input placeholder="Enter account ID" className="mt-1" value={formData.accountId} onChange={(e) => setFormData({...formData, accountId: e.target.value})} />
+                  <Input placeholder="Enter account ID" className="mt-1" value={formData.accountId} onChange={(e) => setFormData(prev => ({...prev, accountId: e.target.value}))} />
                 </div>
               </div>
 
@@ -582,7 +505,7 @@ const AdvancedReleaseBuilder = () => {
                   </div>
                 ))}
                 <div className="flex items-center space-x-2 mt-2">
-                  <Checkbox id="variousArtist" checked={formData.variousArtist} onCheckedChange={(checked) => setFormData({...formData, variousArtist: checked})} />
+                  <Checkbox id="variousArtist" checked={formData.variousArtist} onCheckedChange={(checked) => setFormData(prev => ({...prev, variousArtist: checked}))} />
                   <Label htmlFor="variousArtist" className="text-sm">Various Artist</Label>
                 </div>
                 
@@ -627,7 +550,7 @@ const AdvancedReleaseBuilder = () => {
 
               <div>
                 <Label className="text-foreground font-medium">Do you need a UPC for this release?</Label>
-                <RadioGroup value={formData.needUPC} onValueChange={(value) => setFormData({...formData, needUPC: value})} className="flex space-x-6 mt-2">
+                <RadioGroup value={formData.needUPC} onValueChange={(value) => setFormData(prev => ({...prev, needUPC: value}))} className="flex space-x-6 mt-2">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="yes" id="upc-yes" />
                     <Label htmlFor="upc-yes">Yes</Label>
@@ -643,14 +566,14 @@ const AdvancedReleaseBuilder = () => {
               {formData.needUPC === 'no' && (
                 <div>
                   <Label className="text-foreground">UPC</Label>
-                  <Input placeholder="Enter UPC code" className="mt-1" value={formData.upc} onChange={(e) => setFormData({...formData, upc: e.target.value})} />
+                  <Input placeholder="Enter UPC code" className="mt-1" value={formData.upc} onChange={(e) => setFormData(prev => ({...prev, upc: e.target.value}))} />
                 </div>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-foreground">Primary Genre</Label>
-                  <Select onValueChange={(value) => setFormData({...formData, primaryGenre: value})}>
+                  <Select onValueChange={(value) => setFormData(prev => ({...prev, primaryGenre: value}))}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Please select" />
                     </SelectTrigger>
@@ -663,7 +586,7 @@ const AdvancedReleaseBuilder = () => {
                 </div>
                 <div>
                   <Label className="text-foreground">Secondary Genre</Label>
-                  <Select onValueChange={(value) => setFormData({...formData, secondaryGenre: value})}>
+                  <Select onValueChange={(value) => setFormData(prev => ({...prev, secondaryGenre: value}))}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Please select" />
                     </SelectTrigger>
@@ -679,7 +602,7 @@ const AdvancedReleaseBuilder = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-foreground">Label Name</Label>
-                  <Select onValueChange={(value) => setFormData({...formData, labelName: value})}>
+                  <Select onValueChange={(value) => setFormData(prev => ({...prev, labelName: value}))}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Please select" />
                     </SelectTrigger>
@@ -693,38 +616,38 @@ const AdvancedReleaseBuilder = () => {
                 <div>
                   <Label className="text-foreground">CLine</Label>
                   <div className="flex gap-2 mt-1">
-                    <Select onValueChange={(value) => setFormData({...formData, cLineYear: value})} className="w-32">
+                    <Select onValueChange={(value) => setFormData(prev => ({...prev, cLineYear: value}))} className="w-32">
                       <SelectTrigger>
                         <SelectValue placeholder="Year" />
                       </SelectTrigger>
                       <SelectContent>
-                        {Array.from({length: 50}, (_, i) => new Date().getFullYear() - i).map(year => (
+                        {Array.from({length: new Date().getFullYear() - 1950 + 1}, (_, i) => new Date().getFullYear() - i).map(year => (
                           <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Input placeholder="Enter CLine details" className="flex-1" value={formData.cLine} onChange={(e) => setFormData({...formData, cLine: e.target.value})} />
+                    <Input placeholder="Enter CLine details" className="flex-1" value={formData.cLine} onChange={(e) => setFormData(prev => ({...prev, cLine: e.target.value}))} />
                   </div>
                 </div>
                 <div>
                   <Label className="text-foreground">PLine</Label>
                   <div className="flex gap-2 mt-1">
-                    <Select onValueChange={(value) => setFormData({...formData, pLineYear: value})} className="w-32">
+                    <Select onValueChange={(value) => setFormData(prev => ({...prev, pLineYear: value}))} className="w-32">
                       <SelectTrigger>
                         <SelectValue placeholder="Year" />
                       </SelectTrigger>
                       <SelectContent>
-                        {Array.from({length: 50}, (_, i) => new Date().getFullYear() - i).map(year => (
+                        {Array.from({length: new Date().getFullYear() - 1950 + 1}, (_, i) => new Date().getFullYear() - i).map(year => (
                           <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Input placeholder="Enter PLine details" className="flex-1" value={formData.pLine} onChange={(e) => setFormData({...formData, pLine: e.target.value})} />
+                    <Input placeholder="Enter PLine details" className="flex-1" value={formData.pLine} onChange={(e) => setFormData(prev => ({...prev, pLine: e.target.value}))} />
                   </div>
                 </div>
                 <div>
                   <Label className="text-foreground">Release pricing tier</Label>
-                  <Select onValueChange={(value) => setFormData({...formData, releasePricingTier: value})}>
+                  <Select onValueChange={(value) => setFormData(prev => ({...prev, releasePricingTier: value}))}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Front" />
                     </SelectTrigger>
@@ -786,6 +709,7 @@ const AdvancedReleaseBuilder = () => {
                       </>
                     )}
                     <input
+                      id={`audio-upload-${track.id}`}
                       type="file"
                       accept="audio/*"
                       onChange={(e) => handleAudioUpload(track.id, e)}
@@ -793,7 +717,7 @@ const AdvancedReleaseBuilder = () => {
                       disabled={uploadingTrackId === track.id}
                     />
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => document.querySelector(`input[type="file"][accept="audio/*"]`).click()} disabled={uploadingTrackId === track.id}>
+                  <Button variant="outline" size="sm" onClick={() => document.getElementById(`audio-upload-${track.id}`).click()} disabled={uploadingTrackId === track.id}>
                     {uploadingTrackId === track.id ? 'Uploading...' : 'Choose Audio'}
                   </Button>
                 </div>
@@ -879,12 +803,12 @@ const AdvancedReleaseBuilder = () => {
                   </div>
 
                   <div>
-                    <Label className="text-foreground mb-2 block">Contributors to Musicial Work</Label>
+                    <Label className="text-foreground mb-2 block">Contributors to Musical Work</Label>
                     {track.contributorsToMusical.map((contributor, idx) => (
                       <div key={contributor.id} className="flex items-center gap-2 mb-2">
-                        <Select onValueChange={(value) => updateDynamicField('contributorsToMusical', contributor.id, value, track.id, 'role')}>
+                        <Select onValueChange={(value) => updateDynamicField('contributorsToMusical', contributor.id, value, track.id, 'profession')}>
                           <SelectTrigger className="w-48">
-                            <SelectValue placeholder="Select role" />
+                            <SelectValue placeholder="Select profession" />
                           </SelectTrigger>
                           <SelectContent>
                             {musicalWorkRoles.map((role) => (
@@ -1053,7 +977,7 @@ const AdvancedReleaseBuilder = () => {
                 placeholder="mm/dd/yyyy" 
                 className="w-full [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:invert-0 dark:[&::-webkit-calendar-picker-indicator]:invert" 
                 value={formData.forFutureRelease}
-                onChange={(e) => setFormData({...formData, forFutureRelease: e.target.value})}
+                onChange={(e) => setFormData(prev => ({...prev, forFutureRelease: e.target.value}))}
                 min={(() => {
                   const today = new Date();
                   const oneWeekLater = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -1070,7 +994,7 @@ const AdvancedReleaseBuilder = () => {
                 placeholder="mm/dd/yyyy" 
                 className="w-full [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:invert-0 dark:[&::-webkit-calendar-picker-indicator]:invert" 
                 value={formData.forPreorderPreSave}
-                onChange={(e) => setFormData({...formData, forPreorderPreSave: e.target.value})}
+                onChange={(e) => setFormData(prev => ({...prev, forPreorderPreSave: e.target.value}))}
                 max={(() => {
                   const today = new Date();
                   const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
@@ -1088,7 +1012,7 @@ const AdvancedReleaseBuilder = () => {
               <Label className="text-foreground font-medium">World Wide Release</Label>
               <RadioGroup value={worldWideRelease} onValueChange={(value) => {
                 setWorldWideRelease(value);
-                setFormData({...formData, worldWideRelease: value});
+                setFormData(prev => ({...prev, worldWideRelease: value}));
               }} className="flex space-x-6 mt-2">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="yes" id="worldwide-yes" />
@@ -1105,7 +1029,7 @@ const AdvancedReleaseBuilder = () => {
               <Card className="p-6 border border-muted bg-background rounded-lg">
                 <Label className="text-foreground font-medium">Select The Territories, Where you own the rights</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 max-h-60 overflow-y-auto custom-scroll">
-                  {territories.map((territory) => (
+                  {territoryOptions.map((territory) => (
                     <div key={territory} className="flex items-center space-x-2">
                       <Checkbox 
                         id={territory}
@@ -1136,7 +1060,7 @@ const AdvancedReleaseBuilder = () => {
           </div>
 
           {/* Render Each Category */}
-          {Object.entries(partners).map(([category, list]) => (
+          {Object.entries(partnerOptions).map(([category, list]) => (
             <Card key={category} className="p-6 border  border-muted bg-background rounded-lg mb-6">
               <Label className="text-primary font-medium">
                 {category === "callerTunePartners" && "CallerTune Partners"}
@@ -1171,10 +1095,10 @@ const AdvancedReleaseBuilder = () => {
                 onCheckedChange={(checked) => {
                   if (checked) {
                     setCopyrightOption('proceed');
-                    setFormData({...formData, copyrightOption: 'proceed'});
+                    setFormData(prev => ({...prev, copyrightOption: 'proceed'}));
                   } else if (copyrightOption === 'proceed') {
                     setCopyrightOption('');
-                    setFormData({...formData, copyrightOption: ''});
+                    setFormData(prev => ({...prev, copyrightOption: ''}));
                   }
                 }}
               />
@@ -1187,10 +1111,10 @@ const AdvancedReleaseBuilder = () => {
                 onCheckedChange={(checked) => {
                   if (checked) {
                     setCopyrightOption('upload');
-                    setFormData({...formData, copyrightOption: 'upload'});
+                    setFormData(prev => ({...prev, copyrightOption: 'upload'}));
                   } else if (copyrightOption === 'upload') {
                     setCopyrightOption('');
-                    setFormData({...formData, copyrightOption: ''});
+                    setFormData(prev => ({...prev, copyrightOption: ''}));
                   }
                 }}
               />
@@ -1337,9 +1261,9 @@ const AdvancedReleaseBuilder = () => {
               contributors: c.contributors
             })),
           contributorsToMusicalWork: track.contributorsToMusical
-            .filter(c => c.role && c.contributors)
+            .filter(c => c.profession && c.contributors)
             .map(c => ({
-              role: c.role,
+              profession: c.profession,
               contributors: c.contributors
             })),
           needsISRC: track.needISRC === 'yes',
@@ -1369,7 +1293,11 @@ const AdvancedReleaseBuilder = () => {
           isWorldwide: worldWideRelease === 'yes'
         },
         distributionPartners: selectAllPartners
-          ? partners.map(p => p.name.toLowerCase().replace(/\s+/g, '_'))
+          ? [
+              ...partnerOptions.callerTunePartners,
+              ...partnerOptions.indianStores,
+              ...partnerOptions.internationalStores
+            ].map(p => p.toLowerCase().replace(/\s+/g, '_'))
           : selectedPartners.map(p => p.toLowerCase().replace(/\s+/g, '_')),
         copyrightOptions: {
           proceedWithoutCopyright: copyrightOption === 'proceed',
