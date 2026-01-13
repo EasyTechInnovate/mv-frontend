@@ -535,6 +535,32 @@ const getKycUsers = (params) =>
 const getTestimonialStats = () =>
   axiosClient.get(`/v1/admin/testimonials/stats`);
 
+// ---------------------- Report Management (Admin) ----------------------
+
+const uploadReport = (monthId, reportType, file) => {
+  const formData = new FormData();
+  formData.append('monthId', monthId);
+  formData.append('reportType', reportType);
+  formData.append('file', file);
+  return axiosClient.post(`/v1/admin/reports/upload`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+const getReportData = (reportId, params) =>
+  axiosClient.get(`/v1/admin/reports/${reportId}/data`, { params });
+
+const getReportById = (reportId) =>
+  axiosClient.get(`/v1/admin/reports/${reportId}`);
+
+const deleteReport = (reportId) =>
+  axiosClient.delete(`/v1/admin/reports/${reportId}`);
+
+const getReportStats = (reportType = "") =>
+  axiosClient.get(`/v1/admin/reports/stats`, { params: { reportType } });
+
 export default {
   getHealth,
   getSubscriptionPlans,
@@ -662,4 +688,9 @@ export default {
   createAggregatorAccount,
   applyForAggregator,
   getKycUsers,
+  uploadReport,
+  getReportData,
+  getReportById,
+  deleteReport,
+  getReportStats,
 };

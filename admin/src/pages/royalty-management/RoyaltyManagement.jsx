@@ -1,135 +1,172 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Papa from "papaparse";
-import { Upload, Edit, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import RoyaltyManagementModal from "./RoyaltyManagementTable";
+import { Download, Upload, Loader2, Search, ChevronLeft } from "lucide-react";
+import GlobalApi from "@/lib/GlobalApi";
+import ReportData from "@/components/common/ReportData";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
+import { toast } from "sonner";
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, BarChart, FileText, DollarSign } from "lucide-react";
+
+const iconMap = {
+  totalMonths: Calendar,
+  activeMonths: BarChart,
+  totalReports: FileText,
+  totalRevenue: DollarSign,
+};
 
 export default function RoyaltyManagement({ theme = "dark" }) {
   const isDark = theme === "dark";
   const fileInputRef = useRef(null);
-  const [uploadingFromMonth, setUploadingFromMonth] = useState("");
-  const [uploadedData, setUploadedData] = useState(null);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef();
+  const [uploadingFromMonth, setUploadingFromMonth] = useState(null);
+  const [uploadingFileForMonthId, setUploadingFileForMonthId] = useState(null);
+  const [uploadingMonthId, setUploadingMonthId] = useState(null);
+  
+  const [months, setMonths] = useState([]);
+  const [loadingMonths, setLoadingMonths] = useState(true);
+  const [stats, setStats] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(true);
 
-  // === Normalizer ===
-  function normalizeRow(raw = {}, defaultMonth = "") {
-    const pick = (...names) => {
-      for (const n of names) {
-        if (raw[n] != null && String(raw[n]).trim() !== "") return String(raw[n]).trim();
+  const [showReportPage, setShowReportPage] = useState(false);
+  const [selectedReportId, setSelectedReportId] = useState(null);
+
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, id: null, busy: false });
+
+  const fetchMonths = async () => {
+    try {
+      setLoadingMonths(true);
+      const res = await GlobalApi.getMonthsByType("royalty");
+      if (res?.data?.data) {
+        setMonths(res.data.data);
       }
-      return "";
-    };
-    const parseIntSafe = (v) => {
-      if (v == null || v === "") return 0;
-      const s = String(v).replace(/[\,\s₹$]/g, "");
-      const n = parseInt(s, 10);
-      return Number.isFinite(n) ? n : 0;
-    };
-    const parseFloatSafe = (v) => {
-      if (v == null || v === "") return 0;
-      const s = String(v).replace(/[\,\s₹$]/g, "");
-      const n = parseFloat(s);
-      return Number.isFinite(n) ? n : 0;
-    };
+    } catch (err) {
+      console.error("Error fetching royalty months:", err);
+      toast.error("Failed to load months.");
+    } finally {
+      setLoadingMonths(false);
+    }
+  };
 
-    return {
-      licence: pick("Licence", "Licence Type", "license", "licence"),
-      licensor: pick("Licensor", "Licensor Name", "licensor"),
-      musicService: pick("Music Service", "Service", "musicService"),
-      month: pick("Month", "month") || defaultMonth || "",
-      accountId: pick("Account ID", "accountId", "Account"),
-      label: pick("Label", "label"),
-      artist: pick("Artist", "artist"),
-      trackTitle: pick("Track Title", "Track", "Title", "trackTitle"),
-      album: pick("Album", "album"),
-      upc: pick("UPC", "upc"),
-      isrc: pick("ISRC", "isrc"),
-      totalUnits: parseIntSafe(raw["Total Units"] ?? raw["Units"] ?? raw.units ?? raw.totalUnits),
-      sr: parseFloatSafe(raw["SR (₹)"] ?? raw["SR"] ?? raw.sr ?? raw.rate ?? raw["Revenue"] ?? raw.revenue),
-      country: pick("Country", "country"),
-      usageType: pick("Usage Type", "usageType", "usage"),
-      status: pick("Status", "status") || "Active",
-      id:
-        (pick("Account ID", "accountId", "Account") ||
-          pick("Track", "Track Title", "Title", "trackTitle") ||
-          Math.random().toString(36).slice(2, 8)) +
-        "-" +
-        Math.random().toString(36).slice(2, 6),
-    };
-  }
+  const fetchStats = async () => {
+    try {
+      setLoadingStats(true);
+      const res = await GlobalApi.getReportStats("royalty");
+      if (res?.data?.data) {
+        setStats(res.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching royalty stats:", err);
+      toast.error("Failed to load statistics.");
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
-  const handleUploadClick = (month) => {
-    setUploadingFromMonth(month);
+  useEffect(() => {
+    if (!showReportPage) {
+        fetchMonths();
+        fetchStats();
+    }
+  }, [showReportPage]);
+
+  // Handlers for file upload
+  const handleUploadClick = (monthId, monthDisplayName) => {
+    if (uploadingMonthId) return;
+    setUploadingFromMonth(monthDisplayName);
+    setUploadingFileForMonthId(monthId);
     fileInputRef.current?.click();
   };
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const ext = file.name.split(".").pop().toLowerCase();
 
+    const monthIdToUpload = uploadingFileForMonthId;
+    if (!monthIdToUpload) {
+      toast.error("Month not selected for upload.");
+      e.target.value = "";
+      return;
+    }
+
+    setUploadingMonthId(monthIdToUpload);
     try {
-      if (ext === "csv" || ext === "txt") {
-        Papa.parse(file, {
-          header: true,
-          skipEmptyLines: true,
-          worker: true,
-          complete: (res) => {
-            const parsed = (res.data || []).map((r) => normalizeRow(r, uploadingFromMonth));
-            sessionStorage.setItem("royaltyCsvData", JSON.stringify(parsed));
-            sessionStorage.setItem("analyticsCsvData", JSON.stringify(parsed));
-            setUploadedData(parsed);
-          },
-          error: (err) => {
-            console.error("CSV parse error:", err);
-            alert("Failed to parse CSV. Check the file format.");
-          },
-        });
-      } else if (ext === "xls" || ext === "xlsx") {
-        try {
-          const XLSX = await import("xlsx");
-          const data = await file.arrayBuffer();
-          const workbook = XLSX.read(data, { type: "array" });
-          const sheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-          const parsed = json.map((r) => normalizeRow(r, uploadingFromMonth));
-          sessionStorage.setItem("royaltyCsvData", JSON.stringify(parsed));
-          sessionStorage.setItem("analyticsCsvData", JSON.stringify(parsed));
-          setUploadedData(parsed);
-        } catch (err) {
-          console.error(err);
-          alert("Install 'xlsx' to import Excel files, or upload CSV.");
-        }
-      } else {
-        alert("Unsupported file type. Use CSV or XLSX.");
-      }
+      toast.info(`Uploading report for ${uploadingFromMonth}...`);
+      await GlobalApi.uploadReport(monthIdToUpload, "royalty", file);
+      toast.success(`Report for ${uploadingFromMonth} uploaded successfully!`);
+      fetchMonths();
+      fetchStats();
+    } catch (err) {
+      console.error("Error uploading file:", err);
+      toast.error(err?.response?.data?.message || "Failed to upload report.");
     } finally {
       e.target.value = "";
-      setUploadingFromMonth("");
+      setUploadingFromMonth(null);
+      setUploadingFileForMonthId(null);
+      setUploadingMonthId(null);
     }
   };
 
-  // If data is uploaded, open modal
-  if (uploadedData) {
+  const handleConfirmDeleteReport = async () => {
+    if (!deleteDialog.id) return;
+    setDeleteDialog((d) => ({ ...d, busy: true }));
+    try {
+      await GlobalApi.deleteReport(deleteDialog.id);
+      toast.success("Report deleted successfully!");
+      fetchMonths();
+      fetchStats();
+    } catch (err) {
+      console.error("Error deleting report:", err);
+      toast.error(err?.response?.data?.message || "Failed to delete report.");
+    } finally {
+      setDeleteDialog({ open: false, id: null, busy: false });
+    }
+  };
+
+  const handleDownloadReport = async (reportId, fileName) => {
+    try {
+      toast.info("Preparing download...");
+      const res = await GlobalApi.getReportById(reportId);
+      const reportData = res.data?.data;
+
+      if (!reportData || !reportData.data || !reportData.data.royalty) {
+        toast.error("No royalty data found for this report.");
+        return;
+      }
+      
+      const csv = Papa.unparse(reportData.data.royalty);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute("download", `${fileName}_Royalty_Report.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Report downloaded successfully!");
+
+    } catch (err) {
+      console.error("Error downloading report:", err);
+      toast.error(err?.response?.data?.message || "Failed to download report.");
+    }
+  };
+
+  if (showReportPage) {
     return (
-      <RoyaltyManagementModal
-        data={uploadedData}
+      <ReportData
         theme={theme}
-        onBack={() => {
-          setUploadedData(null);
-          sessionStorage.removeItem("royaltyCsvData");
-          sessionStorage.removeItem("analyticsCsvData");
-        }}
-        onImportClick={() => fileInputRef.current?.click()}
-        updateData={(newData) => {
-          setUploadedData(newData);
-          sessionStorage.setItem("royaltyCsvData", JSON.stringify(newData));
-          sessionStorage.setItem("analyticsCsvData", JSON.stringify(newData));
-        }}
+        onBack={() => setShowReportPage(false)}
+        reportId={selectedReportId}
+        reportType="royalty"
       />
     );
   }
+
+  const statCards = [
+    { key: "totalMonths", label: "Total Royalty Months", value: stats?.overview?.totalMonths ?? "..." },
+    { key: "activeMonths", label: "Active Months", value: stats?.overview?.activeMonths ?? "..." },
+    { key: "totalReports", label: "Total Reports", value: stats?.overview?.totalReports ?? "..." },
+    { key: "totalRevenue", label: "Total Revenue (INR)", value: `₹${(stats?.overview?.totalRevenue || 0).toLocaleString()}` ?? "..." },
+  ];
 
   return (
     <div className={`p-6 min-h-screen ${isDark ? "bg-[#111A22] text-gray-200" : "bg-gray-50 text-[#151F28]"}`}>
@@ -141,75 +178,161 @@ export default function RoyaltyManagement({ theme = "dark" }) {
             Manage and view royalty distribution data
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant={isDark ? "outline" : "secondary"} className="flex items-center gap-2 rounded-full px-5" onClick={() => fileInputRef.current?.click()}>
-            <Download className="h-4 w-4" /> Import CSV/Excel
-          </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700 text-white px-5 rounded-full">Export Royalties</Button>
-        </div>
+        {/* <div className="flex items-center gap-3">
+          <Button className="bg-purple-600 hover:bg-purple-700 text-white px-5 rounded-full">Export All Royalty Data</Button>
+        </div> */}
       </div>
 
-      {/* Stats */}
+      {/* Stats Section */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {["Total Records", "Total Units", "Total Revenue", "Active Records"].map((title, idx) => (
-          <div key={idx} className={`rounded-xl p-4 shadow ${isDark ? "bg-[#151F28]" : "bg-white"}`}>
-            <p className={`text-sm mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{title}</p>
-            <p className={`text-2xl font-semibold ${title === "Total Revenue" ? "text-green-500" : ""}`}>
-              {idx === 0 ? "5" : idx === 1 ? "15,200" : idx === 2 ? "₹1,25,000" : "3"}
-            </p>
-          </div>
-        ))}
+        {statCards.map((s) => {
+          const Icon = iconMap[s.key];
+          return (
+            <div
+              key={s.key}
+              className={`rounded-xl p-4 shadow ${isDark ? "bg-[#151F28]" : "bg-white"}`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>{s.label}</p>
+                {Icon && <Icon className={`h-5 w-5 ${isDark ? "text-gray-400" : "text-gray-500"}`} />}
+              </div>
+              <p className={`text-2xl font-semibold ${s.key === "totalRevenue" ? "text-green-500" : ""}`}>
+                {s.value}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Search & Filters */}
+      {/* Search + Filters */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-3 mb-4">
-        <input type="text" placeholder="Search by artist, track, or account ID..." className={`w-full md:w-1/2 px-3 py-2 rounded-md border ${isDark ? "bg-[#151F28] border-gray-700 text-gray-200" : "bg-white border-gray-300"}`} />
+        <input type="text" placeholder="Search by month..." className={`w-full md:w-1/2 px-3 py-2 rounded-md border ${isDark ? "bg-[#151F28] border-gray-700 text-gray-200" : "bg-white border-gray-300"}`} />
         <div className="flex items-center gap-2">
-          <select className={`rounded-md px-3 py-2 text-sm ${isDark ? "bg-[#151F28] border border-gray-700 text-gray-200" : "bg-white border border-gray-300"}`}>
-            <option>All Licences</option>
-          </select>
-          <select className={`rounded-md px-3 py-2 text-sm ${isDark ? "bg-[#151F28] border border-gray-700 text-gray-200" : "bg-white border border-gray-300"}`}>
-            <option>All Months</option>
-          </select>
-          <select className={`rounded-md px-3 py-2 text-sm ${isDark ? "bg-[#151F28] border border-gray-700 text-gray-200" : "bg-white border border-gray-300"}`}>
-            <option>All Accounts</option>
-          </select>
+          {/* Filters can go here if needed */}
         </div>
       </div>
 
-      {/* Table */}
+      {/* Months Table */}
       <div className="overflow-x-auto rounded-xl border border-gray-700">
         <table className="min-w-full text-sm">
           <thead className={`${isDark ? "bg-[#151F28] text-gray-400" : "bg-gray-100"}`}>
             <tr>
-              <th className="text-left px-4 py-3">Months</th>
+              <th className="text-left px-4 py-3">SR No.</th>
+              <th className="text-left px-4 py-3">Month</th>
+              <th className="text-left px-4 py-3">Status</th>
+              <th className="text-left px-4 py-3">Report Status</th>
               <th className="text-left px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {["Jan 25", "Feb 25", "Mar 25"].map((month) => (
-              <tr key={month} className={`${isDark ? "border-t border-gray-700 hover:bg-gray-800" : "border-t border-gray-300 hover:bg-gray-100"}`}>
-                <td className="px-4 py-3">{month}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => handleUploadClick(month)} className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full">
-                      <Upload className="h-4 w-4" /> Upload Sheet
-                    </button>
-                    <button className="bg-transparent border border-gray-700 px-4 py-1 rounded-2xl text-sm flex items-center gap-1">
-                      <Edit className="h-4 w-4" /> Edit
-                    </button>
-                    <button className="bg-transparent border border-red-700 px-3 py-1 rounded-2xl text-sm text-red-500 flex items-center gap-1">
-                      <Trash2 className="h-4 w-4" /> Delete
-                    </button>
-                  </div>
+            {loadingMonths ? (
+              <tr>
+                <td colSpan={5} className="text-center py-10">
+                  <Loader2 className="h-6 w-6 animate-spin text-purple-500 mx-auto" />
+                  Loading months...
                 </td>
               </tr>
-            ))}
+            ) : months.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="text-center py-6 text-gray-400">
+                  No royalty months found.
+                </td>
+              </tr>
+            ) : (
+              months.map((month, idx) => (
+                <tr
+                  key={month._id}
+                  className={`${isDark
+                    ? "border-t border-gray-700 hover:bg-gray-800"
+                    : "border-t border-gray-300 hover:bg-gray-100"
+                  }`}
+                >
+                  <td className="px-4 py-3">{idx + 1}</td>
+                  <td className="px-4 py-3 font-medium">{month.displayName}</td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 text-xs rounded-full ${month.isActive ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
+                      {month.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      month.reportDetails?.isSubmitted
+                        ? (month.reportDetails.status === 'completed' ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400")
+                        : "bg-red-500/20 text-red-400"
+                    }`}>
+                      {month.reportDetails?.isSubmitted ? (month.reportDetails.status || "Submitted") : "Not Uploaded"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => handleUploadClick(month._id, month.displayName)}
+                        className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full"
+                        disabled={month.reportDetails?.isSubmitted || uploadingMonthId === month._id}
+                      >
+                        {uploadingMonthId === month._id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                        {uploadingMonthId === month._id ? "Uploading..." : "Upload Sheet"}
+                      </Button>
+                      
+                      {month.reportDetails?.isSubmitted && (
+                        <>
+                          <Button
+                            onClick={() => {
+                              setSelectedReportId(month.reportDetails.reportId);
+                              setShowReportPage(true);
+                            }}
+                            variant="outline"
+                            className="px-4 py-1 rounded-2xl text-sm"
+                          >
+                            Show Data
+                          </Button>
+                          {/* <Button
+                            onClick={() => handleDownloadReport(month.reportDetails.reportId, month.displayName)}
+                            variant="outline"
+                            className="px-4 py-1 rounded-2xl text-sm"
+                          >
+                            <Download className="h-4 w-4 mr-2" /> Download CSV
+                          </Button> */}
+                          <Button
+                            onClick={() => setDeleteDialog({ open: true, id: month.reportDetails.reportId, busy: false })}
+                            variant="outline"
+                            className="px-4 py-1 rounded-2xl text-sm text-red-500 border-red-500"
+                          >
+                            Delete Report
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      <input type="file" accept=".csv,.txt,.xls,.xlsx" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
+      <input
+        type="file"
+        accept=".csv,.txt"
+        ref={fileInputRef}
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      {deleteDialog.open && (
+        <ConfirmDialog
+          theme={theme}
+          title="Delete Report?"
+          message="Are you sure you want to delete this report? This action cannot be undone."
+          onCancel={() => setDeleteDialog({ open: false, id: null, busy: false })}
+          onConfirm={handleConfirmDeleteReport}
+          loading={deleteDialog.busy}
+        />
+      )}
     </div>
   );
 }

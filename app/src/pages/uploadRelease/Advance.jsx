@@ -20,10 +20,6 @@ import { showToast } from '../../utils/toast';
 import { uploadToImageKit } from '../../utils/imagekitUploader.js';
 import { languageOptions, genreOptions, territoryOptions, partnerOptions } from '../../constants/options';
 
-
-
-
-
 const labelNames = ["Maheshwari Vishual"];
 
 const soundRecordingProfessions = [

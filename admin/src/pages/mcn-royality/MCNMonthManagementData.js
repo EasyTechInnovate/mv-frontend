@@ -1,12 +1,11 @@
 export const mockMCNStats = [
-  { key: "months", label: "Total Months", value: 3 },
-  { key: "active", label: "Active Months", value: 1 },
-  { key: "royalties", label: "Total Royalties", value: "₹333,000" },
-  { key: "analytics", label: "Total Analytics Value", value: "₹239,000" },
+  { key: "months", label: "Total Months", value: "2" },
+  { key: "active", label: "Active Months", value: "2" },
+  { key: "royalties", label: "Total Royalties", value: "₹84,700" },
+  { key: "analytics", label: "Total Analytics", value: "₹23,500" },
 ];
 
 export const mockMonths = [
-  { id: 1, month: "January", isActive: true },
-  { id: 2, month: "February", isActive: true },
-  { id: 3, month: "March", isActive: false },
+  { id: "1", month: "Jan 25", isActive: true },
+  { id: "2", month: "Feb 25", isActive: true },
 ];

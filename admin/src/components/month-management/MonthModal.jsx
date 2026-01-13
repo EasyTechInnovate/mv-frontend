@@ -127,6 +127,7 @@ export default function AddMonthModal({
               <option value="analytics">Analytics</option>
               <option value="royalty">Royalty</option>
               <option value="bonus">Bonus</option>
+              <option value="mcn">MCN Royalty</option>
             </select>
           </div>
 

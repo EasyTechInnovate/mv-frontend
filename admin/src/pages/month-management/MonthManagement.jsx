@@ -8,6 +8,7 @@ import GlobalApi from "@/lib/GlobalApi";
 import AnalyticsMonthManagement from "../../components/month-management/AnalyticsMonthManagement";
 import RoyaltyMonthManagement from "../../components/month-management/RoyaltyMonthManagement";
 import BonusMonthManagement from "../../components/month-management/BonusMonthManagement";
+import McnRoyaltyMonthManagement from "../../components/month-management/McnRoyaltyMonthManagement";
 import AddMonthModal from "../../components/month-management/MonthModal";
 
 export default function MonthManagement({ theme }) {
@@ -21,6 +22,7 @@ export default function MonthManagement({ theme }) {
   const [showAnalyticsPage, setShowAnalyticsPage] = useState(false);
   const [showRoyaltyPage, setShowRoyaltyPage] = useState(false);
   const [showBonusPage, setShowBonusPage] = useState(false);
+  const [showMcnRoyaltyPage, setShowMcnRoyaltyPage] = useState(false);
 
   // 🔥 Fetch Stats From API
   useEffect(() => {
@@ -47,6 +49,10 @@ export default function MonthManagement({ theme }) {
 
   if (showBonusPage) {
     return <BonusMonthManagement theme={theme} onBack={() => setShowBonusPage(false)} />;
+  }
+
+  if (showMcnRoyaltyPage) {
+    return <McnRoyaltyMonthManagement theme={theme} onBack={() => setShowMcnRoyaltyPage(false)} />;
   }
 
   return (
@@ -172,6 +178,13 @@ export default function MonthManagement({ theme }) {
             onClick={() => setShowBonusPage(true)}
           >
             Bonus Royalty Month Management
+          </li>
+
+          <li
+            className="p-3 text-sm cursor-pointer hover:bg-gray-700/40"
+            onClick={() => setShowMcnRoyaltyPage(true)}
+          >
+            MCN Royalty Month Management
           </li>
         </ul>
       </div>
