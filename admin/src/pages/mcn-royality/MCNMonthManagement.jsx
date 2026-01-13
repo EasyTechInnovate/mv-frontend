@@ -21,6 +21,7 @@ export default function MCNMonthManagement({ theme = "dark" }) {
   const fileInputRef = useRef(null);
   const [uploadingFromMonth, setUploadingFromMonth] = useState(null);
   const [uploadingFileForMonthId, setUploadingFileForMonthId] = useState(null);
+  const [uploadingMonthId, setUploadingMonthId] = useState(null);
   
   const [months, setMonths] = useState([]);
   const [loadingMonths, setLoadingMonths] = useState(true);
@@ -71,6 +72,7 @@ export default function MCNMonthManagement({ theme = "dark" }) {
 
   // Handlers for file upload
   const handleUploadClick = (monthId, monthDisplayName) => {
+    if (uploadingMonthId) return; // Prevent new uploads while one is in progress
     setUploadingFromMonth(monthDisplayName);
     setUploadingFileForMonthId(monthId);
     fileInputRef.current?.click();
@@ -80,15 +82,17 @@ export default function MCNMonthManagement({ theme = "dark" }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!uploadingFileForMonthId) {
+    const monthIdToUpload = uploadingFileForMonthId;
+    if (!monthIdToUpload) {
       toast.error("Month not selected for upload.");
       e.target.value = "";
       return;
     }
 
+    setUploadingMonthId(monthIdToUpload);
     try {
       toast.info(`Uploading report for ${uploadingFromMonth}...`);
-      await GlobalApi.uploadReport(uploadingFileForMonthId, "mcn", file);
+      await GlobalApi.uploadReport(monthIdToUpload, "mcn", file);
       toast.success(`Report for ${uploadingFromMonth} uploaded successfully!`);
       fetchMonths();
       fetchStats();
@@ -99,6 +103,7 @@ export default function MCNMonthManagement({ theme = "dark" }) {
       e.target.value = "";
       setUploadingFromMonth(null);
       setUploadingFileForMonthId(null);
+      setUploadingMonthId(null);
     }
   };
 
@@ -263,10 +268,14 @@ export default function MCNMonthManagement({ theme = "dark" }) {
                       <Button
                         onClick={() => handleUploadClick(month._id, month.displayName)}
                         className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full"
-                        disabled={month.reportDetails?.isSubmitted && month.reportDetails.status === 'processing'}
+                        disabled={month.reportDetails?.isSubmitted || uploadingMonthId === month._id}
                       >
-                        <Upload className="h-4 w-4" />{" "}
-                        {month.reportDetails?.isSubmitted ? "Re-upload Sheet" : "Upload Sheet"}
+                        {uploadingMonthId === month._id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                        {uploadingMonthId === month._id ? "Uploading..." : "Upload Sheet"}
                       </Button>
                       
                       {month.reportDetails?.isSubmitted && (
