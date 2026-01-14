@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { ArrowLeft, IndianRupee, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { showToast } from '../../utils/toast';
 
 import {
   Card,
@@ -11,33 +12,114 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { getMyWallet, createPayoutRequest, getMyPayoutRequests } from "@/services/api.services";
 
 const INR = new Intl.NumberFormat("en-IN");
 
-export default function WithdrawFund({ backIconSrc }) {
+const StatusBadge = ({ status }) => {
+  const statusConfig = {
+    pending: "bg-yellow-500/20 text-yellow-500",
+    approved: "bg-blue-500/20 text-blue-400",
+    paid: "bg-green-500/20 text-green-500",
+    rejected: "bg-red-500/20 text-red-500",
+    cancelled: "bg-gray-500/20 text-gray-400",
+  };
+  const normalizedStatus = status?.toLowerCase().replace(/ /g, '_');
+  const className = statusConfig[normalizedStatus] || "bg-gray-500/20 text-gray-400";
+  
+  return (
+    <Badge className={className} variant="outline">
+      {status?.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+    </Badge>
+  );
+};
+
+const PAYOUT_METHODS = [
+  { value: "bank_transfer", label: "Bank Transfer" },
+  { value: "upi", label: "UPI" },
+  { value: "cheque", label: "Cheque" },
+];
+
+export default function WithdrawFund() {
   const navigate = useNavigate();
   const [amount, setAmount] = useState("");
-  const [remarks, setRemarks] = useState("");
-  const min = 1000;
-  const max = 45000;
+  const [payoutMethod, setPayoutMethod] = useState(PAYOUT_METHODS[0].value);
+  const [wallet, setWallet] = useState(null);
+  const [loadingWallet, setLoadingWallet] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [recentWithdrawals, setRecentWithdrawals] = useState([]);
+  const [loadingRecentWithdrawals, setLoadingRecentWithdrawals] = useState(true);
 
+  const min = 1000;
+  const max = useMemo(() => wallet?.withdrawableBalance || 0, [wallet]);
+
+  useEffect(() => {
+    const fetchWalletAndRecentWithdrawals = async () => {
+      try {
+        setLoadingWallet(true);
+        setLoadingRecentWithdrawals(true);
+
+        const [walletResponse, recentWithdrawalsResponse] = await Promise.all([
+          getMyWallet(),
+          getMyPayoutRequests({ page: 1, limit: 5 })
+        ]);
+        
+        if (walletResponse.success) {
+          setWallet(walletResponse.data.wallet);
+        } else {
+          showToast.error(walletResponse.message || "Failed to fetch wallet data.");
+        }
+
+        if (recentWithdrawalsResponse.success) {
+          setRecentWithdrawals(recentWithdrawalsResponse.data.requests);
+        } else {
+          showToast.error(recentWithdrawalsResponse.message || "Failed to fetch recent withdrawals.");
+        }
+
+      } catch (error) {
+        showToast.error("An error occurred while fetching data.");
+        console.error(error);
+      } finally {
+        setLoadingWallet(false);
+        setLoadingRecentWithdrawals(false);
+      }
+    };
+    fetchWalletAndRecentWithdrawals();
+  }, []);
+  
   const valid = useMemo(() => {
     const n = Number(amount);
     return Number.isFinite(n) && n >= min && n <= max;
-  }, [amount]);
+  }, [amount, min, max]);
 
-  const recent = [
-    { amt: 15000, method: "HDFC Bank", date: "2024-03-10", ref: "TXN123456789", status: "Completed" },
-    { amt: 8500, method: "Google Pay", date: "2024-03-15", ref: "TXN123456790", status: "Processing" },
-    { amt: 12000, method: "Paytm", date: "2024-03-08", ref: "TXN123456788", status: "Completed" },
-  ];
-
-  const onSubmit = () => {
-    console.log("Submitting withdrawal:", { amount, remarks });
-    setAmount("");
-    setRemarks("");
+  const onSubmit = async () => {
+    if (!valid) return;
+    setIsSubmitting(true);
+    try {
+      const response = await createPayoutRequest({
+        amount: Number(amount),
+        payoutMethod,
+      });
+      if (response.success) {
+        showToast.success("Withdrawal request submitted successfully!");
+        navigate("/app/finance-and-wallet");
+      } else {
+        showToast.error(response.message || "Failed to submit withdrawal request.");
+      }
+    } catch (error) {
+      showToast.error("An error occurred while submitting the request.");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -66,16 +148,26 @@ export default function WithdrawFund({ backIconSrc }) {
               <CardTitle>Available Balance</CardTitle>
             </CardHeader>
             <CardContent className="rounded-lg border bg-muted/30 p-10 text-center">
-              <IndianRupee size='40' className="text-[#711CE9] w-full"/>
-              <div className="text-3xl font-bold">₹{INR.format(45230)}</div>
-              <p className="text-sm text-muted-foreground">Available for withdrawal</p>
+              {loadingWallet ? (
+                <div className="animate-pulse">
+                  <div className="mx-auto h-10 w-10 rounded-full bg-muted-foreground/20"></div>
+                  <div className="mt-4 h-8 w-1/2 mx-auto rounded bg-muted-foreground/20"></div>
+                  <div className="mt-2 h-4 w-1/3 mx-auto rounded bg-muted-foreground/20"></div>
+                </div>
+              ) : (
+                <>
+                  <IndianRupee size='40' className="text-[#711CE9] w-full"/>
+                  <div className="text-3xl font-bold">₹{INR.format(wallet?.withdrawableBalance || 0)}</div>
+                  <p className="text-sm text-muted-foreground">Available for withdrawal</p>
+                </>
+              )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
               <CardTitle>Withdrawal Details</CardTitle>
-              <CardDescription>Enter the amount and remarks</CardDescription>
+              <CardDescription>Enter the amount and select a payout method</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
               <div>
@@ -87,28 +179,37 @@ export default function WithdrawFund({ backIconSrc }) {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="Enter amount"
+                  disabled={loadingWallet}
                 />
                 <div className="mt-1 flex justify-between text-xs text-muted-foreground">
                   <span>Minimum: ₹{min}</span>
-                  <span>Maximum: ₹{max}</span>
+                  <span>Maximum: ₹{INR.format(max)}</span>
                 </div>
+              </div>
+              
+              <div>
+                <label className="mb-2 block text-sm font-medium">
+                  Payout Method
+                </label>
+                <Select value={payoutMethod} onValueChange={setPayoutMethod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAYOUT_METHODS.map(method => (
+                      <SelectItem key={method.value} value={method.value}>
+                        {method.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex items-start gap-2 rounded-md border p-3 text-sm">
                 <Info className="h-4 w-4 text-muted-foreground" />
                 <span>
-                  Withdrawal must be between ₹{min} and ₹{max}. Fees may apply.
+                  Withdrawal must be between ₹{min} and ₹{INR.format(max)}. Fees may apply.
                 </span>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium">Remarks (Optional)</label>
-                <Textarea
-                  rows={3}
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="Add notes for your withdrawal request..."
-                />
               </div>
 
               <div className="flex items-start gap-2 rounded-md border p-3 text-sm">
@@ -117,13 +218,14 @@ export default function WithdrawFund({ backIconSrc }) {
               </div>
 
               <div className="flex gap-3 w-full">
-                <Button className="w-[80%] bg-[#711CE9] text-white hover:bg-[#6f14ef]" disabled={!valid} onClick={onSubmit}>
-                  Send Request ₹{INR.format(Number(amount || 0))}
+                <Button className="w-[80%] bg-[#711CE9] text-white hover:bg-[#6f14ef]" disabled={!valid || isSubmitting} onClick={onSubmit}>
+                  {isSubmitting ? "Submitting..." : `Send Request ₹${INR.format(Number(amount || 0))}`}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => navigate("/app/finance-and-wallet")}
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </Button>
@@ -138,26 +240,24 @@ export default function WithdrawFund({ backIconSrc }) {
               <CardTitle>Recent Withdrawals</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {recent.map((r, i) => (
-                <div key={i} className="flex items-center justify-between rounded-lg border p-4">
-                  <div>
-                    <p className="font-medium">
-                      ₹{INR.format(r.amt)} • {r.method}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{r.date}</p>
-                    <p className="text-xs text-muted-foreground">Ref: {r.ref}</p>
+              {loadingRecentWithdrawals ? (
+                <p className="text-center text-muted-foreground">Loading recent withdrawals...</p>
+              ) : recentWithdrawals.length > 0 ? (
+                recentWithdrawals.map((r) => (
+                  <div key={r.requestId} className="flex items-center justify-between rounded-lg border p-4">
+                    <div>
+                      <p className="font-medium">
+                        ₹{INR.format(r.amount)} • {r.payoutMethod.replace("_", " ")}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{new Date(r.requestedAt).toLocaleDateString()}</p>
+                      <p className="text-xs text-muted-foreground">Ref: {r.requestId}</p>
+                    </div>
+                    <StatusBadge status={r.status} />
                   </div>
-                  <Badge
-                    className={
-                      r.status === "Completed"
-                        ? "bg-emerald-500/15 text-emerald-400"
-                        : "bg-amber-500/15 text-amber-400"
-                    }
-                  >
-                    {r.status}
-                  </Badge>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground">No recent withdrawals.</p>
+              )}
             </CardContent>
           </Card>
         </div>

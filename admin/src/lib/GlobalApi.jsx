@@ -535,6 +535,26 @@ const getKycUsers = (params) =>
 const getTestimonialStats = () =>
   axiosClient.get(`/v1/admin/testimonials/stats`);
 
+// ---------------------- Admin Payout Management ----------------------
+
+const getAdminPayoutRequests = (params) =>
+  axiosClient.get(`/v1/admin/payout-requests`, { params });
+
+const getAdminPendingPayoutRequests = (params) =>
+  axiosClient.get(`/v1/admin/payout-requests/pending`, { params });
+
+const getAdminPayoutStats = () =>
+  axiosClient.get(`/v1/admin/payout-requests/stats`);
+
+const approvePayoutRequest = (requestId, data) =>
+    axiosClient.patch(`/v1/admin/payout-requests/${requestId}/approve`, data);
+
+const rejectPayoutRequest = (requestId, data) =>
+    axiosClient.patch(`/v1/admin/payout-requests/${requestId}/reject`, data);
+
+const markPayoutRequestAsPaid = (requestId, data) =>
+    axiosClient.patch(`/v1/admin/payout-requests/${requestId}/mark-paid`, data);
+
 // ---------------------- Report Management (Admin) ----------------------
 
 const uploadReport = (monthId, reportType, file) => {
@@ -688,6 +708,12 @@ export default {
   createAggregatorAccount,
   applyForAggregator,
   getKycUsers,
+  getAdminPayoutRequests,
+  getAdminPendingPayoutRequests,
+  getAdminPayoutStats,
+  approvePayoutRequest,
+  rejectPayoutRequest,
+  markPayoutRequestAsPaid,
   uploadReport,
   getReportData,
   getReportById,

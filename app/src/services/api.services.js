@@ -336,3 +336,26 @@ export const deleteMerchStore = async (storeId) => {
     const response = await servicesAxiosInstance.delete(`/v1/merch-store/${storeId}`)
     return response.data
 }
+
+// Wallet APIs
+export const getMyWallet = async () => {
+    const response = await servicesAxiosInstance.get('/v1/wallet/my-wallet');
+    return response.data;
+};
+
+
+// Payout APIs
+export const createPayoutRequest = async (data) => {
+    const response = await servicesAxiosInstance.post('/v1/payout-requests/create', data);
+    return response.data;
+};
+
+export const getMyPayoutRequests = async (params) => {
+    const response = await servicesAxiosInstance.get('/v1/payout-requests/my-requests', { params });
+    return response.data;
+};
+
+export const cancelPayoutRequest = async (requestId, data) => {
+    const response = await servicesAxiosInstance.patch(`/v1/payout-requests/${requestId}/cancel`, data);
+    return response.data;
+};

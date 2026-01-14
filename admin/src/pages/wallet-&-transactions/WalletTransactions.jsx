@@ -1,239 +1,274 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Search, ChevronDown, Info } from "lucide-react";
+import { Download, Search, Info, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import WithdrawalRow from "./WalletRequestTab";
-import {
-  walletStats as mockStats,
-  walletTransactions as mockRows,
-  statusOptions as mockStatusOptions,
-  licenceOptions as mockLicenceOptions,
-  monthOptions as mockMonthOptions,
-  accountOptions as mockAccountOptions,
-} from "./WalletTransactionsData";
-import UserWalletPage from "./WalletDetailsComp";
+import GlobalApi from "@/lib/GlobalApi";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import TransactionDetailsModal from "@/components/wallet-transactions/TransactionDetailsModal";
+import ExportCsvDialog from "@/components/common/ExportCsvDialog";
+import PayoutActionModal from "@/components/wallet-transactions/PayoutActionModal";
+import MarkAsPaidModal from "@/components/wallet-transactions/MarkAsPaidModal";
+
+const StatusBadge = ({ status }) => {
+  const statusConfig = {
+    pending: "bg-yellow-500/20 text-yellow-500",
+    approved: "bg-blue-500/20 text-blue-400",
+    paid: "bg-green-500/20 text-green-500",
+    rejected: "bg-red-500/20 text-red-500",
+    cancelled: "bg-gray-500/20 text-gray-400",
+  };
+  const normalizedStatus = status?.toLowerCase().replace(/ /g, '_');
+  const className = statusConfig[normalizedStatus] || "bg-gray-500/20 text-gray-400";
+  
+  return (
+    <Badge className={className}>
+      {status?.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+    </Badge>
+  );
+};
+
+const PaginationControls = ({ pagination, onPageChange, isDark }) => {
+    if (!pagination || !pagination.totalPages || pagination.totalPages <= 1) {
+        return null;
+    }
+
+    const { currentPage, totalPages, totalCount } = pagination;
+    const itemsPerPage = 10;
+
+    return (
+        <div className="flex items-center justify-between mt-6">
+          <div className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} results
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`${isDark ? "bg-[#151F28] border-gray-700" : ""}`}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Previous
+            </Button>
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={pageNum === currentPage ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => onPageChange(pageNum)}
+                    className={pageNum === currentPage ? `bg-purple-600 hover:bg-purple-700 ${isDark ? "text-white" : ""}` : (isDark ? "text-white bg-[#151F28] border-gray-700" : "")}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`${isDark ? "bg-[#151F28] border-gray-700" : ""}`}
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+    );
+};
+
 
 export default function WalletTransactions({ theme }) {
   const isDark = theme === "dark";
 
-  const [stats, setStats] = useState(mockStats);
-  const [rows, setRows] = useState(mockRows);
+  // Refactored State
+  const [stats, setStats] = useState(null);
+  const [rows, setRows] = useState([]);
+  const [pagination, setPagination] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState(""); // "" for 'All Status'
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const [globalSearch, setGlobalSearch] = useState("");
-  const [topSearch, setTopSearch] = useState("");
-
-  const [statusFilter, setStatusFilter] = useState("All Status");
-  const [licenceFilter, setLicenceFilter] = useState("All Licences");
-  const [monthFilter, setMonthFilter] = useState("All Months");
-  const [accountFilter, setAccountFilter] = useState("All Accounts");
-  const [searchQuery, setSearchQuery] = useState(""); 
   const [activeTab, setActiveTab] = useState("history");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [payoutActionModalOpen, setPayoutActionModalOpen] = useState(false);
+  const [selectedPayoutRequest, setSelectedPayoutRequest] = useState(null);
+  const [payoutAction, setPayoutAction] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [isMarkAsPaidModalOpen, setIsMarkAsPaidModalOpen] = useState(false);
+  
+  const handleViewDetails = (transaction) => {
+    setSelectedTransaction(transaction);
+    setIsModalOpen(true);
+  };
 
+  const handleApprove = (request) => {
+    setSelectedPayoutRequest(request);
+    setPayoutAction('approve');
+    setPayoutActionModalOpen(true);
+  };
 
-   // NEW: withdrawal requests filtered from mock data
+  const handleReject = (request) => {
+    setSelectedPayoutRequest(request);
+    setPayoutAction('reject');
+    setPayoutActionModalOpen(true);
+  };
+  
+  const handleOpenMarkAsPaidModal = (request) => {
+    setSelectedPayoutRequest(request);
+    setIsMarkAsPaidModalOpen(true);
+  };
 
- const [withdrawalRequests, setWithdrawalRequests] = useState(
-   mockRows.filter((r) => r.description.toLowerCase().includes("withdrawal") || r.status === "Pending")
- );
+  const handlePayoutActionSubmit = async (data) => {
+    setActionLoading(true);
+    try {
+      let res;
+      if (payoutAction === 'approve') {
+        res = await GlobalApi.approvePayoutRequest(selectedPayoutRequest.requestId, { adminNotes: data.adminNotes });
+      } else {
+        res = await GlobalApi.rejectPayoutRequest(selectedPayoutRequest.requestId, data);
+      }
 
+      if (res.data && res.data.success) {
+        toast.success(`Request ${payoutAction}ed successfully.`);
+        fetchData();
+        fetchStats();
+        setPayoutActionModalOpen(false);
+      } else {
+        toast.error(res.data.message || `Failed to ${payoutAction} request.`);
+      }
+    } catch (error) {
+      toast.error(`An error occurred while ${payoutAction}ing the request.`);
+      console.error(error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
+  const handleMarkAsPaidSubmit = async (data) => {
+    setActionLoading(true);
+    try {
+      const res = await GlobalApi.markPayoutRequestAsPaid(selectedPayoutRequest.requestId, data);
+      if (res.data && res.data.success) {
+        toast.success("Request marked as paid successfully.");
+        fetchData();
+        fetchStats();
+        setIsMarkAsPaidModalOpen(false);
+      } else {
+        toast.error(res.data.message || "Failed to mark request as paid.");
+      }
+    } catch (error) {
+      toast.error("An error occurred while marking the request as paid.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
-
-
-  // --- NEW: SPA selection state ---
-  // selectedUser will hold { user: {...}, transactions: [...] } when a row is opened
-  const [selectedUser, setSelectedUser] = useState(null);
-
-  const [showBulk, setShowBulk] = useState(false);
-  const dropdownRef = useRef(null);
   useEffect(() => {
-    const onClick = (e) => {
-      if (!dropdownRef.current) return;
-      if (!dropdownRef.current.contains(e.target)) setShowBulk(false);
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      if(currentPage !== 1) setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const fetchStats = async () => {
+    try {
+      const res = await GlobalApi.getAdminPayoutStats();
+      if (res.data && res.data.success) {
+        setStats(res.data.data.stats);
+      } else {
+        toast.error("Failed to fetch stats.");
+      }
+    } catch (error) {
+      toast.error("An error occurred while fetching stats.");
+      console.error(error);
+    }
+  };
+  
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        page: currentPage,
+        limit: 10,
+        status: statusFilter || undefined,
+        search: debouncedSearch || undefined,
+      };
+
+      const res = activeTab === 'history' 
+        ? await GlobalApi.getAdminPayoutRequests(params)
+        : await GlobalApi.getAdminPendingPayoutRequests(params);
+        
+      const apiData = res?.data?.data;
+      setRows(apiData?.requests || []);
+      setPagination(apiData?.pagination || null);
+
+    } catch (err) {
+      console.error("❌ Error fetching data:", err);
+      toast.error(err.response?.data?.message || err.message || "Failed to fetch data");
+      setRows([]);
+      setPagination(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [activeTab, currentPage, debouncedSearch, statusFilter]);
+
+  useEffect(() => {
+    fetchStats();
   }, []);
 
   const formatINR = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
-  const formatINRShort = (n) => {
-    if (n >= 1_000_000) return `₹${(n / 1_000_000).toFixed(1)}M`;
-    if (n >= 1_000) return `₹${(n / 1_000).toFixed(1)}K`;
-    return formatINR(n);
-  };
 
-  const ChangePill = ({ value }) => {
-    const up = value >= 0;
-    return (
-      <span
-        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${up
-            ? isDark
-              ? "bg-green-900/30 text-green-400"
-              : "bg-green-100 text-green-700"
-            : isDark
-              ? "bg-red-900/30 text-red-400"
-              : "bg-red-100 text-red-700"
-          }`}
-      >
-        {up ? "↑" : "↓"} {Math.abs(value)}%
-      </span>
-    );
-  };
+  const statCards = useMemo(() => {
+    if (!stats) return [
+        { label: "Pending Requests", value: 0 },
+        { label: "Pending Amount", value: formatINR(0) },
+        { label: "Approved", value: 0 },
+        { label: "Paid", value: 0 },
+    ];
+    const { byStatus, pendingSummary } = stats;
 
-  const TypeDot = ({ type }) => (
-    <span className="inline-flex items-center gap-2">
-      <span
-        className={`inline-block h-2 w-2 rounded-full ${type === "credit" ? "bg-green-500" : "bg-red-500"}`}
-      />
-      <span className="capitalize">{type}</span>
-    </span>
-  );
+    const approved = byStatus.find(s => s._id === 'approved')?.count || 0;
+    const paid = byStatus.find(s => s._id === 'paid')?.count || 0;
 
-  const StatusBadge = ({ status }) => {
-    const cls =
-      status === "Completed"
-        ? "bg-purple-600 text-white"
-        : status === "Pending"
-          ? isDark
-            ? "bg-gray-700 text-gray-200"
-            : "bg-gray-200 text-gray-800"
-          : "bg-gray-600 text-white";
-    return <span className={`text-xs px-2 py-1 rounded-full ${cls}`}>{status}</span>;
-  };
-
-  // ---- Filtering ----
-  const filteredRows = useMemo(() => {
-    const q = (globalSearch + " " + topSearch).trim().toLowerCase();
-    return rows.filter((r) => {
-      const textHit =
-        !q ||
-        (r.id && r.id.toLowerCase().includes(q)) ||
-        (r.user && r.user.toLowerCase().includes(q)) ||
-        (r.description && r.description.toLowerCase().includes(q));
-      const statusHit = statusFilter === "All Status" || r.status === statusFilter;
-      const licenceHit = licenceFilter === "All Licences" || r.licence === licenceFilter;
-      const monthHit = monthFilter === "All Months" || r.month === monthFilter;
-      const accountHit = accountFilter === "All Accounts" || r.account === accountFilter;
-      return textHit && statusHit && licenceHit && monthHit && accountHit;
-    });
-  }, [rows, globalSearch, topSearch, statusFilter, licenceFilter, monthFilter, accountFilter]);
-
-  const filteredRequests = useMemo(() => {
-  const q = (globalSearch + " " + topSearch).trim().toLowerCase();
-  return withdrawalRequests.filter((r) => {
-    const textHit =
-      !q ||
-      (r.id && r.id.toLowerCase().includes(q)) ||
-      (r.user && r.user.toLowerCase().includes(q)) ||
-      (r.description && r.description.toLowerCase().includes(q));
-    return textHit;
-  });
-}, [withdrawalRequests, globalSearch, topSearch]);
-
-
-  const handleBulkDelete = () => setShowBulk(false);
-  const handleBulkEdit = () => setShowBulk(false);
-
-  // --- NEW: open user wallet (map the transaction row -> user object used by subcomponent)
-  const openUserWallet = (row) => {
-    if (!row) return;
-    const userObj = {
-      name: row.user,
-      // map possible field names to the subcomponent's expected props
-      availableBalance: row.availableBalance ?? row.available_balance ?? row.available ?? 0,
-      thisMonthEarnings: row.monthEarnings ?? row.month_earnings ?? row.monthEarning ?? 0,
-      type: row.type ?? "Artist",
-      walletStatus: row.walletStatus ?? row.wallet_status ?? "Active",
-      bankAccount: row.bankAccount ?? row.bank_account ?? "",
-      irfcCode: row.ifsc ?? row.ifscCode ?? row.irfc ?? "",
-    };
-
-    // assemble the full transaction list for this user (all rows that share the same user name)
-    const transactionsForUser = rows.filter((r) => r.user === row.user);
-
-    setSelectedUser({ user: userObj, transactions: transactionsForUser });
-  };
-
-  // --- NEW: save handler when subcomponent calls onSave(updatedUser)
-  const handleSaveUser = (updatedUser) => {
-    // reflect changes back into rows array for display consistency
-    setRows((prev) =>
-      prev.map((r) => {
-        if (r.user === updatedUser.name) {
-          return {
-            ...r,
-            // update fields that exist in mock data shape
-            availableBalance: updatedUser.availableBalance,
-            monthEarnings: updatedUser.thisMonthEarnings,
-            walletStatus: updatedUser.walletStatus,
-            bankAccount: updatedUser.bankAccount,
-            ifsc: updatedUser.irfcCode ?? r.ifsc,
-          };
-        }
-        return r;
-      })
-    );
-
-    // keep the subcomponent open and update selectedUser.user as well
-    setSelectedUser((prev) => (prev ? { ...prev, user: updatedUser } : prev));
-  };
-
-  // If a user is selected, render the subcomponent (SPA-style)
-  if (selectedUser) {
-    return (
-      <UserWalletPage
-        theme={theme}
-        user={selectedUser.user}
-        transactions={selectedUser.transactions}
-        onBack={() => setSelectedUser(null)}
-        onSave={handleSaveUser}
-      />
-    );
-  }
-
-
-    // --- Handlers for Approve / Reject ---
-  const handleApprove = (id) => {
-    setWithdrawalRequests((prev) =>
-      prev.map((req) =>
-        req.id === id ? { ...req, status: "Approved" } : req
-      )
-    );
-
-     setRows((prev) =>
-    prev.map((r) =>
-     r.id === id ? { ...r, status: "Approved" } : r
-   )
-   );
-
-
-  };
-
-  const handleReject = (id) => {
-    setWithdrawalRequests((prev) =>
-      prev.map((req) =>
-        req.id === id ? { ...req, status: "Rejected" } : req
-      )
-    );
-   
-   setRows((prev) =>
-     prev.map((r) =>
-       r.id === id ? { ...r, status: "Rejected" } : r
-     )
-   );
-
-
-  };
-
-
-
-
-
-  // ---- Main Wallet Transactions UI (unchanged layout) ----
+    return [
+      { label: "Pending Requests", value: pendingSummary?.count || 0 },
+      { label: "Pending Amount", value: formatINR(pendingSummary?.totalAmount || 0) },
+      { label: "Approved", value: approved },
+      { label: "Paid", value: paid },
+    ];
+  }, [stats]);
+  
   return (
     <div
-      className={`p-4 md:p-6 space-y-6 transition-colors duration-300 ${isDark ? "bg-[#111A22] text-gray-200" : "bg-gray-50 text-[#151F28]"
-        }`}
+      className={`p-4 md:p-6 space-y-6 transition-colors duration-300 ${isDark ? "bg-[#111A22] text-gray-200" : "bg-gray-50 text-[#151F28]"}`}
     >
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-3">
@@ -244,137 +279,16 @@ export default function WalletTransactions({ theme }) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
-          <div className={`relative w-64 ${isDark ? "bg-[#151F28]" : "bg-white"} rounded-md`}>
-            <Search className="absolute left-2 top-2.5 h-4 w-4 opacity-70" />
-            <input
-              value={topSearch}
-              onChange={(e) => setTopSearch(e.target.value)}
-              placeholder="Search transactions..."
-              className={`pl-8 pr-3 py-2 w-full text-sm rounded-md outline-none ${isDark
-                  ? "bg-[#151F28] border border-gray-700 text-gray-200"
-                  : "bg-white border border-gray-300"
-                }`}
-            />
-          </div>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className={`px-3 py-2 text-sm rounded-md ${isDark
-                ? "bg-[#151F28] border border-gray-700 text-gray-200"
-                : "bg-white border border-gray-300"
-              }`}
-          >
-            {mockStatusOptions.map((o) => (
-              <option key={o}>{o}</option>
-            ))}
-          </select>
-
-          <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-5">
+          <Button onClick={() => setIsExportModalOpen(true)} className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-5">
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
         </div>
       </div>
 
-      {/* Search + Filters row */}
-      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 opacity-70" />
-          <Input
-            value={globalSearch}
-            onChange={(e) => setGlobalSearch(e.target.value)}
-            placeholder="Search by artist, track, or account ID..."
-            className={`pl-9 ${isDark ? "bg-[#151F28] border-gray-700 text-gray-200" : "bg-white"
-              }`}
-          />
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <select
-            value={licenceFilter}
-            onChange={(e) => setLicenceFilter(e.target.value)}
-            className={`px-3 py-2 text-sm rounded-md ${isDark
-                ? "bg-[#151F28] border border-gray-700 text-gray-200"
-                : "bg-white border border-gray-300"
-              }`}
-          >
-            {mockLicenceOptions.map((o) => (
-              <option key={o}>{o}</option>
-            ))}
-          </select>
-
-          <select
-            value={monthFilter}
-            onChange={(e) => setMonthFilter(e.target.value)}
-            className={`px-3 py-2 text-sm rounded-md ${isDark
-                ? "bg-[#151F28] border border-gray-700 text-gray-200"
-                : "bg-white border border-gray-300"
-              }`}
-          >
-            {mockMonthOptions.map((o) => (
-              <option key={o}>{o}</option>
-            ))}
-          </select>
-
-          <select
-            value={accountFilter}
-            onChange={(e) => setAccountFilter(e.target.value)}
-            className={`px-3 py-2 text-sm rounded-md ${isDark
-                ? "bg-[#151F28] border border-gray-700 text-gray-200"
-                : "bg-white border border-gray-300"
-              }`}
-          >
-            {mockAccountOptions.map((o) => (
-              <option key={o}>{o}</option>
-            ))}
-          </select>
-
-          {/* Bulk Action dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <Button
-              variant="outline"
-              className="px-5 text-red-500"
-              onClick={() => setShowBulk((s) => !s)}
-            >
-              Bulk Action
-              <ChevronDown className="ml-1 h-4 w-4" />
-            </Button>
-            {showBulk && (
-              <div
-                className={`absolute top-11 right-0 w-36 rounded-md shadow-md border z-20 ${isDark
-                    ? "bg-[#151F28] text-gray-200 border-gray-700"
-                    : "bg-white text-gray-800 border-gray-200"
-                  }`}
-              >
-                <button
-                  onClick={handleBulkDelete}
-                  className={`w-full text-left px-3 py-2 text-sm hover:${isDark ? "bg-gray-700" : "bg-gray-100"
-                    }`}
-                >
-                  Bulk Delete
-                </button>
-                <button
-                  onClick={handleBulkEdit}
-                  className={`w-full text-left px-3 py-2 text-sm hover:${isDark ? "bg-gray-700" : "bg-gray-100"
-                    }`}
-                >
-                  Bulk Edit
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[
-          { label: "Total Balance", value: formatINRShort(stats.totalBalance), change: stats.changes.totalBalance },
-          { label: "Total Credits", value: formatINRShort(stats.totalCredits), change: stats.changes.totalCredits },
-          { label: "Total Debits", value: formatINRShort(stats.totalDebits), change: stats.changes.totalDebits },
-          { label: "Pending Transactions", value: formatINRShort(stats.pendingTransactions), change: stats.changes.pendingTransactions },
-        ].map((c) => (
+        {statCards.map((c) => (
           <div
             key={c.label}
             className={`rounded-lg p-4 shadow-md ${isDark ? "bg-[#151F28]" : "bg-white"}`}
@@ -384,125 +298,202 @@ export default function WalletTransactions({ theme }) {
               <Info className="h-4 w-4 opacity-50" />
             </div>
             <p className="text-2xl font-semibold mt-1">{c.value}</p>
-            <div className="mt-2">
-              <ChangePill value={c.change} />
-            </div>
           </div>
         ))}
       </div>
-
+      
+      {/* Tabs */}
       <div className="w-full flex justify-center">
         <div
           className={`inline-flex rounded-full overflow-hidden border ${isDark ? "border-gray-700" : "border-gray-300"} w-[500px]`}
         >
           <button
             onClick={() => setActiveTab("history")}
-            className={`flex-1 py-2 text-sm font-medium text-center transition-colors duration-200 ${activeTab === "history"
-              ? isDark
-                ? "bg-[#151F28] text-white"
-                : "bg-gray-100 text-black"
-              : isDark
-                ? "bg-gray-800 text-gray-300"
-                : "bg-gray-200 text-gray-600"
-              }`}
+            className={`flex-1 py-2 text-sm font-medium text-center transition-colors duration-200 ${activeTab === "history" ? (isDark ? "bg-gray-800 text-white" : "bg-gray-100 text-black") : (isDark ? "bg-[#151F28] text-gray-300" : "bg-gray-200 text-gray-600")}`}
           >
             Transaction History
           </button>
           <button
             onClick={() => setActiveTab("request")}
-            className={`flex-1 py-2 text-sm font-medium text-center transition-colors duration-200 ${activeTab === "request"
-              ? isDark
-                ? "bg-[#151F28] text-white"
-                : "bg-gray-100 text-black"
-              : isDark
-                ? "bg-gray-800 text-gray-300"
-                : "bg-gray-200 text-gray-600"
-              }`}
+            className={`flex-1 py-2 text-sm font-medium text-center transition-colors duration-200 ${activeTab === "request" ? (isDark ? "bg-gray-800 text-white" : "bg-gray-100 text-black") : (isDark ? "bg-[#151F28] text-gray-300" : "bg-gray-200 text-gray-600")}`}
           >
-            Request
+            Requests
           </button>
         </div>
       </div>
 
-      {/* Table / Request placeholder */}
+      {/* Search and Filters */}
+      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 opacity-70" />
+          <Input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by user, email, or request ID..."
+            className={`pl-9 ${isDark ? "bg-[#151F28] border-gray-700 text-gray-200" : "bg-white"}`}
+          />
+        </div>
+        {activeTab === 'history' && (
+            <div className="flex flex-wrap gap-2">
+            <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className={`px-3 py-2 text-sm rounded-md ${isDark ? "bg-[#151F28] border border-gray-700 text-gray-200" : "bg-white border border-gray-300"}`}
+            >
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="paid">Paid</option>
+                <option value="rejected">Rejected</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+            </div>
+        )}
+      </div>
+
+      {/* Table */}
       <div className={`rounded-lg overflow-x-auto shadow-md ${isDark ? "bg-[#151F28]" : "bg-white"}`}>
-        {activeTab === "history" ? (
+        {loading ? (
+            <div className="flex justify-center items-center py-12">
+                <Loader2 className="animate-spin h-6 w-6 mr-2" />
+                <p>Loading...</p>
+            </div>
+        ) : activeTab === 'history' ? (
           <table className="w-full text-sm min-w-[900px]">
             <thead className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left`}>
               <tr>
-                {["Transaction ID", "User", "Type", "Amount", "Description", "Status", "Date", "Actions"].map((h) => (
+                {["Request ID", "Account ID", "User", "Amount", "Method", "Status", "Date", "Actions"].map((h) => (
                   <th key={h} className="px-5 py-3 font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filteredRows.map((r) => (
-                <tr key={r.id} className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
-                  <td className="px-5 py-3">{r.id}</td>
-                  <td className="px-5 py-3">{r.user}</td>
-                  <td className="px-5 py-3"><TypeDot type={r.type} /></td>
+              {rows.map((r) => (
+                <tr key={r.requestId} className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                  <td className="px-5 py-3 font-mono text-xs">{r.requestId}</td>
+                  <td className="px-5 py-3">{r.accountId}</td>
+                  <td className="px-5 py-3">{r.userId?.firstName} {r.userId?.lastName}</td>
                   <td className="px-5 py-3">{formatINR(r.amount)}</td>
-                  <td className="px-5 py-3">{r.description}</td>
+                  <td className="px-5 py-3 capitalize">{r.payoutMethod.replace("_", " ")}</td>
                   <td className="px-5 py-3"><StatusBadge status={r.status} /></td>
-                  <td className="px-5 py-3">{r.date}</td>
+                  <td className="px-5 py-3">{new Date(r.requestedAt).toLocaleString()}</td>
                   <td className="px-5 py-3">
                     <div className="flex gap-2">
-                      {/* wired View/Edit to open subcomponent */}
                       <Button
                         size="sm"
                         variant={isDark ? "outline" : "secondary"}
                         className="rounded-full px-3"
-                        onClick={() => openUserWallet(r)}
+                        onClick={() => handleViewDetails(r)}
                       >
                         View
                       </Button>
-
-                      <Button
-                        size="sm"
-                        variant={isDark ? "outline" : "secondary"}
-                        className="rounded-full px-3"
-                        onClick={() => openUserWallet(r)}
-                      >
-                        Edit
-                      </Button>
+                      {r.status === 'approved' && (
+                        <Button
+                            size="sm"
+                            className="bg-green-600 text-white"
+                            onClick={() => handleOpenMarkAsPaidModal(r)}
+                        >
+                            Mark as Paid
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
               ))}
+              {rows.length === 0 && (
+                <tr>
+                    <td colSpan={8} className="text-center py-10">No records found.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         ) : (
           <table className="w-full text-sm min-w-[800px]">
-  <thead className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left`}>
-    <tr>
-      {["User", "Withdrawal Amount", "Description", "Date", "Actions"].map((h) => (
-        <th key={h} className="px-5 py-3 font-medium">{h}</th>
-      ))}
-    </tr>
-  </thead>
- <tbody>
-  {filteredRequests.length === 0 ? (
-    <tr>
-      <td colSpan={6} className="text-center py-5 text-gray-500">
-        No withdrawal requests found
-      </td>
-    </tr>
-  ) : (
-    filteredRequests.map((req) => (
-      <WithdrawalRow
-        key={req.id}
-        withdrawal={req}
-        onApprove={handleApprove}
-        onReject={handleReject}
-        theme={theme}
-      />
-    ))
-  )}
-</tbody>
-</table>
-
+            <thead className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left`}>
+              <tr>
+                {["Account ID", "User", "Withdrawal Amount", "Description", "Date", "Status", "Actions"].map((h) => (
+                  <th key={h} className="px-5 py-3 font-medium">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="text-center py-5 text-gray-500">
+                  No withdrawal requests found
+                </td>
+              </tr>
+            ) : (
+              rows.map((req) => (
+                <WithdrawalRow
+                  key={req._id}
+                  withdrawal={{
+                      id: req._id,
+                      accountId: req.accountId,
+                      user: `${req.userId.firstName} ${req.userId.lastName}`,
+                      amount: req.amount,
+                      description: req.payoutMethod,
+                      date: new Date(req.requestedAt).toLocaleDateString(),
+                      status: req.status
+                  }}
+                  onApprove={() => handleApprove(req)}
+                  onReject={() => handleReject(req)}
+                  theme={theme}
+                />
+              ))
+            )}
+          </tbody>
+          </table>
         )}
       </div>
+      <PaginationControls pagination={pagination} onPageChange={setCurrentPage} isDark={isDark} />
+      <TransactionDetailsModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} transaction={selectedTransaction} theme={theme} />
+        <ExportCsvDialog
+            isOpen={isExportModalOpen}
+            onClose={() => setIsExportModalOpen(false)}
+            theme={theme}
+            totalItems={pagination?.totalCount || 0}
+            headers={[
+                { label: "Request ID", key: "requestId" },
+                { label: "Account ID", key: "accountId" },
+                { label: "User", key: "user" },
+                { label: "Amount", key: "amount" },
+                { label: "Method", key: "payoutMethod" },
+                { label: "Status", key: "status" },
+                { label: "Date", key: "requestedAt" },
+            ]}
+            fetchData={async (page, limit) => {
+            const params = { page, limit, status: statusFilter || undefined, search: debouncedSearch || undefined };
+            const res = activeTab === 'history'
+                ? await GlobalApi.getAdminPayoutRequests(params)
+                : await GlobalApi.getAdminPendingPayoutRequests(params);
+            const data = res?.data?.data;
+            const rows = data?.requests || [];
+            return rows.map(row => ({
+                ...row,
+                user: `${row.userId?.firstName || ''} ${row.userId?.lastName || ''}`,
+                requestedAt: new Date(row.requestedAt).toLocaleString(),
+            }));
+            }}
+            filename={activeTab === 'history' ? 'transaction_history' : 'payout_requests'}
+            title={activeTab === 'history' ? 'Export Transaction History' : 'Export Payout Requests'}
+            description={`Select a data range to export as a CSV file.`}
+        />
+        <PayoutActionModal 
+            isOpen={payoutActionModalOpen}
+            onClose={() => setPayoutActionModalOpen(false)}
+            action={payoutAction}
+            onSubmit={handlePayoutActionSubmit}
+            loading={actionLoading}
+            theme={theme}
+        />
+        <MarkAsPaidModal
+            isOpen={isMarkAsPaidModalOpen}
+            onClose={() => setIsMarkAsPaidModalOpen(false)}
+            onSubmit={handleMarkAsPaidSubmit}
+            loading={actionLoading}
+            theme={theme}
+        />
     </div>
   );
 }
