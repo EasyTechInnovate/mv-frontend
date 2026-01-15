@@ -445,8 +445,12 @@ const rejectRelease = (releaseId, payload) =>
 
 // ---------------------- Merch Store Management (Admin) ----------------------
 
-export const getAllMerchStores = (page = 1, limit = 10) =>
-  axiosClient.get(`/v1/merch-store/admin?page=${page}&limit=${limit}`);
+export const getAllMerchStores = (page = 1, limit = 10, search = "", status = "") => {
+  const params = new URLSearchParams({ page, limit });
+  if (search) params.append("search", search);
+  if (status) params.append("status", status);
+  return axiosClient.get(`/v1/merch-store/admin?${params.toString()}`);
+};
 
 export const getMerchStoreStats = () =>
   axiosClient.get(`/v1/merch-store/admin/stats`);
@@ -462,6 +466,21 @@ export const updateMerchStore = (storeId, payload) =>
 
 export const deleteMerchStore = (storeId) =>
   axiosClient.delete(`/v1/merch-store/admin/${storeId}`);
+
+export const getListedProducts = (page = 1, limit = 10, search = "") => {
+  const params = new URLSearchParams({ page, limit });
+  if (search) params.append("search", search);
+  return axiosClient.get(`/v1/merch-store/admin/listed-products?${params.toString()}`);
+};
+
+export const updateDesignStatus = (storeId, designId, payload) =>
+  axiosClient.patch(`/v1/merch-store/admin/${storeId}/designs/${designId}/status`, payload);
+
+export const manageDesignProducts = (storeId, designId, payload) =>
+  axiosClient.patch(`/v1/merch-store/admin/${storeId}/designs/${designId}/products`, payload);
+
+export const updateDesignName = (storeId, designId, payload) =>
+  axiosClient.patch(`/v1/merch-store/admin/${storeId}/designs/${designId}/name`, payload);
 
 
 
@@ -690,6 +709,10 @@ export default {
   updateMerchStoreStatus,
   updateMerchStore,
   deleteMerchStore,
+  getListedProducts,
+  updateDesignStatus,
+  manageDesignProducts,
+  updateDesignName,
   getAllMVProductions,
   getMVProductionStats,
   getMVProductionById,

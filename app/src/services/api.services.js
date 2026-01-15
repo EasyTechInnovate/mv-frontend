@@ -265,9 +265,9 @@ export const getMyMVProductions = async (params) => {
 }
 
 export const deleteMVProduction = async (productionId) => {
-  console.log('API call - Deleting production:', productionId)
-  const response = await servicesAxiosInstance.delete(`/v1/mv-production/${productionId}`)
-  return response.data
+    console.log('API call - Deleting production:', productionId)
+    const response = await servicesAxiosInstance.delete(`/v1/mv-production/${productionId}`)
+    return response.data
 }
 
 // Subscription APIs
@@ -324,6 +324,17 @@ export const getMerchStores = async (params) => {
     })
 
     const response = await servicesAxiosInstance.get(`/v1/merch-store?${queryParams.toString()}`)
+    return response.data
+}
+
+export const getApprovedDesigns = async (params) => {
+    const { page = 1, limit = 10 } = params
+    const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+    })
+
+    const response = await servicesAxiosInstance.get(`/v1/merch-store/approved-designs?${queryParams.toString()}`)
     return response.data
 }
 
