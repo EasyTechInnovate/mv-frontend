@@ -18,8 +18,9 @@ import {
 
 const locationMap = {
   indoor_studio: "Indoor Studio",
-  outdoor_and_natural: "Outdoor / Natural",
+  outdoor_natural: "Outdoor / Natural",
   urban_and_street: "Urban / Street",
+  other: "Other",
 };
 
 export default function ProjectOverview({
@@ -65,7 +66,7 @@ export default function ProjectOverview({
             {editMode ? (
                 <Select value={data.genres} onValueChange={(value) => handleInputChange('genres', value)}>
                     <SelectTrigger><SelectValue placeholder="Select genre" /></SelectTrigger>
-                    <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                    <SelectContent className={`max-h-[300px] overflow-y-auto ${isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}`}>
                         {genreOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                     </SelectContent>
                 </Select>
@@ -76,7 +77,7 @@ export default function ProjectOverview({
             {editMode ? (
                 <Select value={data.mood} onValueChange={(value) => handleInputChange('mood', value)}>
                     <SelectTrigger><SelectValue placeholder="Select mood" /></SelectTrigger>
-                    <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                    <SelectContent className={`max-h-[300px] overflow-y-auto ${isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}`}>
                         {moodOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                     </SelectContent>
                 </Select>
@@ -99,7 +100,7 @@ export default function ProjectOverview({
             {editMode ? (
                 <Select value={data.language} onValueChange={(value) => handleInputChange('language', value)}>
                     <SelectTrigger><SelectValue placeholder="Select language" /></SelectTrigger>
-                    <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                    <SelectContent className={`max-h-[300px] overflow-y-auto ${isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}`}>
                         {languageOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                     </SelectContent>
                 </Select>
@@ -110,7 +111,7 @@ export default function ProjectOverview({
             {editMode ? (
                 <Select value={data.theme} onValueChange={(value) => handleInputChange('theme', value)}>
                     <SelectTrigger><SelectValue placeholder="Select theme" /></SelectTrigger>
-                    <SelectContent className={isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}>
+                    <SelectContent className={`max-h-[300px] overflow-y-auto ${isDark ? "bg-[#111A22] text-gray-200 border-gray-700" : ""}`}>
                         {themeOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                     </SelectContent>
                 </Select>
@@ -132,6 +133,17 @@ export default function ProjectOverview({
               </div>
             ))}
           </div>
+          {data.locationPreference?.other && (
+            <div className="mt-3">
+              <Input
+                id="customLocation"
+                placeholder="Specify custom location..."
+                value={data.customLocation || ""}
+                readOnly={!editMode}
+                onChange={(e) => handleInputChange('customLocation', e.target.value)}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

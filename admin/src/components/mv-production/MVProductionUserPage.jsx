@@ -23,9 +23,11 @@ const initialFormData = {
     theme: "",
     locationPreference: {
       indoor_studio: false,
-      outdoor_and_natural: false,
-      urban_and_street: false
+      outdoor_natural: false,
+      urban_and_street: false,
+      other: false
     },
+    customLocation: "",
     totalBudgetRequested: "",
     proposedOwnershipDilution: "",
     preProduction: "",
@@ -81,9 +83,11 @@ export default function MVProductionUserPage({
         theme: defaultData.projectOverview?.theme || "",
         locationPreference: {
             indoor_studio: defaultData.projectOverview?.locationPreference?.includes('indoor_studio') || false,
-            outdoor_and_natural: defaultData.projectOverview?.locationPreference?.includes('outdoor_and_natural') || false,
+            outdoor_natural: defaultData.projectOverview?.locationPreference?.includes('outdoor_natural') || defaultData.projectOverview?.locationPreference?.includes('outdoor_and_natural') || false,
             urban_and_street: defaultData.projectOverview?.locationPreference?.includes('urban_and_street') || false,
+            other: defaultData.projectOverview?.locationPreference?.includes('other') || false,
         },
+        customLocation: defaultData.projectOverview?.customLocationDescription || "",
         // Budget
         totalBudgetRequested: defaultData.budgetRequestAndOwnershipProposal?.totalBudgetRequested || "",
         proposedOwnershipDilution: defaultData.budgetRequestAndOwnershipProposal?.proposedOwnershipDilution || "",
@@ -147,7 +151,10 @@ export default function MVProductionUserPage({
         isPartOfAlbumOrEP: formData.isPartOfAlbumOrEP === "yes",
         language: formData.language,
         theme: formData.theme,
-        locationPreference: selectedLocationPreferences
+        locationPreference: selectedLocationPreferences,
+        ...(formData.locationPreference.other && formData.customLocation && {
+          customLocationDescription: formData.customLocation
+        })
       },
       budgetRequestAndOwnershipProposal: {
         totalBudgetRequested: parseFloat(formData.totalBudgetRequested) || 0,
@@ -181,6 +188,7 @@ export default function MVProductionUserPage({
       toast.success("MV Production updated successfully!");
       setEditMode(false);
       onRefresh();
+      setTimeout(() => onBack(), 200);
     } catch (err) {
       console.error("❌ Patch failed:", err);
       toast.error("Failed to save changes.");
@@ -208,6 +216,7 @@ export default function MVProductionUserPage({
           : "Production request rejected successfully!"
       );
       onRefresh();
+      setTimeout(() => onBack(), 200);
     } catch (err) {
       console.error("❌ Failed to update status:", err);
       toast.error("Failed to update status. Please try again.");

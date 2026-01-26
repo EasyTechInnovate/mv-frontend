@@ -280,7 +280,7 @@ export default function MCNMonthManagement({ theme = "dark" }) {
                       
                       {month.reportDetails?.isSubmitted && (
                         <>
-                          <Button
+                          {/* <Button
                             onClick={() => {
                               setSelectedReportId(month.reportDetails.reportId);
                               setShowReportPage(true);
@@ -289,14 +289,14 @@ export default function MCNMonthManagement({ theme = "dark" }) {
                             className="px-4 py-1 rounded-2xl text-sm"
                           >
                             Show Data
-                          </Button>
-                          {/* <Button
+                          </Button> */}
+                          <Button
                             onClick={() => handleDownloadReport(month.reportDetails.reportId, month.displayName)}
                             variant="outline"
                             className="px-4 py-1 rounded-2xl text-sm"
                           >
                             <Download className="h-4 w-4 mr-2" /> Download CSV
-                          </Button> */}
+                          </Button> 
                           <Button
                             onClick={() => setDeleteDialog({ open: true, id: month.reportDetails.reportId, busy: false })}
                             variant="outline"
