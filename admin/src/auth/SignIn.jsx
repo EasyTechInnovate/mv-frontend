@@ -22,9 +22,9 @@ export default function AdminLogin() {
     try {
       const res = await GlobalApi.login(credentials);
 
-localStorage.setItem("token", res.data.data.tokens.accessToken);
-localStorage.setItem("refreshToken", res.data.data.tokens.refreshToken);
-localStorage.setItem("user", JSON.stringify(res.data.data.user));
+localStorage.setItem("adminAccessToken", res.data.data.tokens.accessToken);
+localStorage.setItem("adminRefreshToken", res.data.data.tokens.refreshToken);
+localStorage.setItem("adminUser", JSON.stringify(res.data.data.user));
 
       navigate("/admin/dashboard");
     } catch (err) {

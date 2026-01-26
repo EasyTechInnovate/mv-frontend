@@ -15,15 +15,19 @@ export default function Header({ onToggleSidebar, onToggleTheme, theme }) {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem("adminAccessToken");
+    localStorage.removeItem("adminRefreshToken");
+    localStorage.removeItem("adminUser");
     navigate("/admin/login");
   };
 
 useEffect(() => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("adminAccessToken");
 
   if (!token && window.location.pathname !== "/admin/login") {
-    localStorage.clear();
+    localStorage.removeItem("adminAccessToken");
+    localStorage.removeItem("adminRefreshToken");
+    localStorage.removeItem("adminUser");
     navigate("/admin/login");
   }
 }, [navigate]);

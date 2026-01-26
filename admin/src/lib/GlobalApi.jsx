@@ -6,7 +6,7 @@ const axiosClient = axios.create({
 })
 
 axiosClient.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('adminAccessToken')
     if (token) {
         config.headers.Authorization = `Bearer ${token}`
     }
@@ -20,7 +20,7 @@ axiosClient.interceptors.response.use(
 
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true
-            const refreshToken = localStorage.getItem('refreshToken')
+            const refreshToken = localStorage.getItem('adminRefreshToken')
 
             if (refreshToken) {
                 try {
@@ -30,20 +30,20 @@ axiosClient.interceptors.response.use(
                     )
 
                     const { accessToken } = data.data
-                    localStorage.setItem('token', accessToken)
+                    localStorage.setItem('adminAccessToken', accessToken)
                     originalRequest.headers['Authorization'] = `Bearer ${accessToken}`
                     return axiosClient(originalRequest)
                 } catch (refreshError) {
-                    localStorage.removeItem('token')
-                    localStorage.removeItem('refreshToken')
-                    localStorage.removeItem('user')
+                    localStorage.removeItem('adminAccessToken')
+                    localStorage.removeItem('adminRefreshToken')
+                    localStorage.removeItem('adminUser')
                     window.location.href = '/admin/login'
                     return Promise.reject(refreshError)
                 }
             } else {
-                localStorage.removeItem('token')
-                localStorage.removeItem('refreshToken')
-                localStorage.removeItem('user')
+                localStorage.removeItem('adminAccessToken')
+                localStorage.removeItem('adminRefreshToken')
+                localStorage.removeItem('adminUser')
                 window.location.href = '/admin/login'
                 return Promise.reject(error)
             }
