@@ -452,14 +452,11 @@ export default function SyncManagement({ theme }) {
       >
         <tr>
           {[
-            "Track Name",
-            "Artist Name",
             "Account Name",
             "Account ID",
-            "Label Name",
-            "ISRC",
-            "Genre",
+            "Track Name",
             "Language",
+            "Label Name",
             "Status",
             "Submit Date",
             "Actions",
@@ -482,14 +479,11 @@ export default function SyncManagement({ theme }) {
                   : "border-gray-200 hover:bg-gray-100"
               }`}
             >
-              <td className="px-4 py-3">{toTitleCase(row.trackName)}</td>
-              <td className="px-4 py-3">{toTitleCase(row.artistName)}</td>
               <td className="px-4 py-3">{row.userId ? `${row.userId.firstName || ""} ${row.userId.lastName || ""}`.trim() || "—" : "—"}</td>
               <td className="px-4 py-3">{row.userId?.accountId || "—"}</td>
-              <td className="px-4 py-3">{toTitleCase(row.labelName)}</td>
-              <td className="px-4 py-3 font-mono">{row.isrc || "—"}</td>
-              <td className="px-4 py-3">{toReadable(row.genres, "genres")}</td>
+              <td className="px-4 py-3">{toTitleCase(row.trackName)}</td>
               <td className="px-4 py-3">{toReadable(row.language, "language")}</td>
+              <td className="px-4 py-3">{toTitleCase(row.labelName)}</td>
               <td className="px-4 py-3">
                 {row.status ? (
                   <span

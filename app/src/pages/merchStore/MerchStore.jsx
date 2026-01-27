@@ -328,6 +328,13 @@ const MerchStore = () => {
       return;
     }
 
+    // Validate legal terms
+    const { reviewProcess, revisionsRight, emailNewsletter, showcasingConsent } = formData.legalTerms;
+    if (!reviewProcess || !revisionsRight || !emailNewsletter || !showcasingConsent) {
+      showToast.error('Please accept all legal and approval terms to proceed.');
+      return;
+    }
+
     // Create new request - map form data to API format
     setLoading(true);
     try {
@@ -533,9 +540,9 @@ const MerchStore = () => {
                       <tr>
                         <th className="text-left p-4 font-medium">Artist/Label Name</th>
                         <th className="text-left p-4 font-medium">Product Preferences</th>
-                        <th className="text-left p-4 font-medium">Marketing & Launch Plan</th>
+                        {/* <th className="text-left p-4 font-medium">Marketing & Launch Plan</th>
                         <th className="text-left p-4 font-medium">Channel</th>
-                        <th className="text-left p-4 font-medium">MMC Assist</th>
+                        <th className="text-left p-4 font-medium">MMC Assist</th> */}
                         <th className="text-left p-4 font-medium">Status</th>
                         <th className="text-left p-4 font-medium">Submit Date</th>
                         <th className="text-left p-4 font-medium">Actions</th>
@@ -558,10 +565,10 @@ const MerchStore = () => {
                         requests.map((request) => (
                         <tr key={request.id} className="border-b">
                           <td className="p-4">{request.artistName}</td>
-                          <td className="p-4">{request.productPreferences}</td>
-                          <td className="p-4">{request.marketingPlan}</td>
+                          <td className="p-4 truncate max-w-[300px]" title={request.productPreferences}>{request.productPreferences}</td>
+                          {/* <td className="p-4">{request.marketingPlan}</td>
                           <td className="p-4">{request.channel}</td>
-                          <td className="p-4">{request.mmcAssist}</td>
+                          <td className="p-4">{request.mmcAssist}</td> */}
                           <td className="p-4">
                             <StatusBadge status={request.status} />
                           </td>
@@ -907,7 +914,7 @@ const MerchStore = () => {
               {[
                 { key: 'reviewProcess', label: "I agree to MMC's review and approval process before merch goes live." },
                 { key: 'revisionsRight', label: "I understand that MMC reserves the right to reject or request revisions to submitted designs." },
-                { key: 'emailNewsletter', label: "Email Newsletter" },
+                { key: 'emailNewsletter', label: " I consent to obtain for email newsletter" },
                 { key: 'showcasingConsent', label: "I consent to MMC showcasing approved designs on its platform and social media." }
               ].map(term => (
                 <div key={term.key} className="flex items-start space-x-2">

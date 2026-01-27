@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { format } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -109,6 +110,8 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
     { label: "Label Name", key: "name" },
     { label: "Membership", key: "membershipStatus" },
     { label: "Is Default", key: "isDefault" },
+    { label: "Assigned At", key: "assignedAt" },
+    
   ];
 
   const fetchSublabelsForExport = async (page, limit) => {
@@ -120,7 +123,14 @@ export default function AssignedSublabels({ isOpen, onClose, theme, userId }) {
         limit,
         debouncedSearch
       );
-      return res.data.data.sublabels || [];
+      const data = res.data.data.sublabels || [];
+
+      return data.map((item) => ({
+        ...item,
+        assignedAt: item.assignedAt
+          ? format(new Date(item.assignedAt), "dd MMM yyyy")
+          : "-",
+      }));
     } catch (err) {
       console.error("❌ Error fetching assigned sublabels for export:", err);
       toast.error("Failed to load data for export");

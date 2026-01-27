@@ -434,15 +434,47 @@ export default function ReleaseManagement({ theme }) {
           { label: "S.No.", key: "sno" },
           { label: "Release ID", key: "releaseId" },
           { label: "Release Name", key: "releaseName" },
-          { label: "Artist", key: "artistName" },
+          { label: "Release Type", key: "releaseType" },
+          { label: "Track Type", key: "trackType" },
+          { label: "Artist Name", key: "artistName" },
+          { label: "Artist Email", key: "email" },
           { label: "Status", key: "releaseStatus" },
           { label: "Request Status", key: "requestStatus" },
-          { label: "Tracks", key: "trackCount" },
-          { label: "Account Name", key: "accountName" },
+          { label: "Label", key: "labelName" },
+          { label: "Genre", key: "genre" },
+          { label: "UPC", key: "upc" },
+          { label: "Cover Art URL", key: "coverArtUrl" },
+          { label: "Submitted At", key: "submittedAt" },
+          { label: "Published At", key: "publishedAt" },
+          { label: "Live At", key: "liveAt" },
+          { label: "Processed By", key: "adminProcessedBy" },
+          // Track Details
+          { label: "Track No.", key: "trackNumber" },
+          { label: "Track Name", key: "trackName" },
+          { label: "ISRC", key: "isrc" },
+          { label: "Track Genre", key: "trackGenre" },
+          { label: "Composer", key: "trackComposer" },
+          { label: "Lyricist", key: "trackLyricist" },
+          { label: "Singer", key: "trackSinger" },
+          { label: "Producer", key: "trackProducer" },
+          { label: "Audio Format", key: "audioFormat" },
+          { label: "Audio File URL", key: "audioFileUrl" },
+          { label: "Duration", key: "duration" },
+          { label: "Preview Start", key: "previewStart" },
+          { label: "Preview End", key: "previewEnd" },
+          { label: "Caller Tune Start", key: "callerTuneStart" },
+          { label: "Caller Tune End", key: "callerTuneEnd" },
+          // Step 3 Details (Moved to End)
+          { label: "Release Date", key: "releaseDate" },
+          { label: "Has Rights", key: "hasRights" },
+          { label: "Territories", key: "territories" },
+          { label: "Has Partners", key: "hasPartners" },
+          { label: "Partners", key: "partners" },
+          { label: "Owns Copyright", key: "ownsCopyright" },
         ]}
         fetchData={async (exportPage, exportLimit) => {
           try {
-            const params = { page: exportPage, limit: exportLimit };
+            const params = { page: exportPage, limit: exportLimit, isExport: true };
             if (debouncedSearch) {
               params.search = debouncedSearch;
             }
@@ -458,15 +490,85 @@ export default function ReleaseManagement({ theme }) {
             const res = await GlobalApi.getAllReleases(params);
             const releasesToExport = res.data.data.releases || [];
 
-            return releasesToExport.map(rel => ({
-              releaseId: rel.releaseId,
-              releaseName: rel.releaseName,
-              artistName: rel.user.name,
-              releaseStatus: rel.releaseStatus,
-              requestStatus: rel.requestStatus || rel.releaseStatus, // Fallback to releaseStatus
-              trackCount: rel.trackCount || 0,
-              accountName: rel.user.name,
-            }));
+            // Flatten data: One row per track
+            const flattenedData = [];
+
+            releasesToExport.forEach(rel => {
+              // Common Release Level Data
+              const releaseInfo = {
+                releaseId: rel.releaseId,
+                releaseName: rel.step1?.releaseInfo?.releaseName || rel.releaseTitle || '-',
+                upc: rel.step1?.releaseInfo?.upc ? `\t${rel.step1.releaseInfo.upc}` : '-',
+                labelName: rel.step1?.releaseInfo?.labelName || '-',
+                genre: rel.step1?.releaseInfo?.genre || '-',
+                releaseType: rel.releaseType || 'Basic',
+                trackType: rel.trackType,
+                releaseStatus: rel.releaseStatus,
+                requestStatus: rel.requestStatus || rel.releaseStatus,
+                artistName: rel.userId?.firstName ? `${rel.userId.firstName} ${rel.userId.lastName}` : (rel.user?.name || '-'),
+                email: rel.userId?.emailAddress || rel.user?.email || '-',
+                coverArtUrl: rel.step1?.coverArt?.imageUrl || '-',
+                releaseDate: rel.step3?.releaseDate ? new Date(rel.step3.releaseDate).toLocaleDateString() : '-',
+                hasRights: rel.step3?.territorialRights?.hasRights ? "Yes" : "No",
+                territories: rel.step3?.territorialRights?.territories?.join(", ") || '-',
+                hasPartners: rel.step3?.partnerSelection?.hasPartners ? "Yes" : "No",
+                partners: rel.step3?.partnerSelection?.partners?.join(", ") || '-',
+                ownsCopyright: rel.step3?.copyrights?.ownsCopyright ? "Yes" : "No",
+                submittedAt: rel.submittedAt ? new Date(rel.submittedAt).toLocaleDateString() : '-',
+                publishedAt: rel.publishedAt ? new Date(rel.publishedAt).toLocaleDateString() : '-',
+                liveAt: rel.liveAt ? new Date(rel.liveAt).toLocaleDateString() : '-',
+                adminProcessedBy: rel.adminReview?.reviewedBy?.firstName || '-'
+              };
+
+              const tracks = rel.step2?.tracks || [];
+
+              if (tracks.length > 0) {
+                tracks.forEach((track, index) => {
+                  flattenedData.push({
+                    sno: flattenedData.length + 1, // Will be overridden by dialog but good for debugging
+                    ...releaseInfo,
+                    trackNumber: index + 1,
+                    trackName: track.trackName || '-',
+                    isrc: track.isrc ? `\t${track.isrc}` : '-',
+                    trackGenre: track.genre || '-',
+                    trackComposer: track.composerName || '-',
+                    trackLyricist: track.lyricistName || '-',
+                    trackSinger: track.singerName || '-',
+                    trackProducer: track.producerName || '-',
+                    audioFormat: track.audioFiles?.[0]?.format || '-',
+                    audioFileUrl: track.audioFiles?.[0]?.fileUrl || '-',
+                    duration: track.audioFiles?.[0]?.duration ? `${Math.floor(track.audioFiles[0].duration)}s` : '-',
+                    previewStart: track.previewTiming?.startTime ?? '-',
+                    previewEnd: track.previewTiming?.endTime ?? '-',
+                    callerTuneStart: track.callerTuneTiming?.startTime ?? '-',
+                    callerTuneEnd: track.callerTuneTiming?.endTime ?? '-'
+                  });
+                });
+              } else {
+                // If no tracks found (edge case), still export release info
+                flattenedData.push({
+                  sno: flattenedData.length + 1,
+                  ...releaseInfo,
+                  trackNumber: '-',
+                  trackName: '-',
+                  isrc: '-',
+                  trackGenre: '-',
+                  trackComposer: '-',
+                  trackLyricist: '-',
+                  trackSinger: '-',
+                  trackProducer: '-',
+                  audioFormat: '-',
+                  audioFileUrl: '-',
+                  duration: '-',
+                  previewStart: '-',
+                  previewEnd: '-',
+                  callerTuneStart: '-',
+                  callerTuneEnd: '-'
+                });
+              }
+            });
+
+            return flattenedData;
           } catch (err) {
             console.error("❌ Error fetching releases for export:", err);
             toast.error("Failed to load data for export");

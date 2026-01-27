@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { format } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -131,13 +132,26 @@ export default function ManageLabelsModal({
     { label: "Membership Status", key: "membershipStatus" },
     { label: "Assigned Users", key: "assignedUsersCount" },
     { label: "Is Active", key: "isActive" },
+    { label: "Contract Start Date", key: "contractStartDate" },
+    { label: "Contract End Date", key: "contractEndDate" },
+    { label: "About Lable", key: "description" },
   ];
 
   const fetchSublabelsForExport = async (page, limit) => {
     try {
       const extraParams = debouncedSearch ? `&search=${debouncedSearch}` : "";
       const res = await GlobalApi.getAllSubLabels(page, limit, extraParams);
-      return res.data.data.sublabels || [];
+      const data = res.data.data.sublabels || [];
+
+      return data.map((item) => ({
+        ...item,
+        contractStartDate: item.contractStartDate
+          ? format(new Date(item.contractStartDate), "dd MMM yyyy")
+          : "-",
+        contractEndDate: item.contractEndDate
+          ? format(new Date(item.contractEndDate), "dd MMM yyyy")
+          : "-",
+      }));
     } catch (err) {
       console.error("❌ Error fetching sublabels for export:", err);
       toast.error("Failed to load data for export");

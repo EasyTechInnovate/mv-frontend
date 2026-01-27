@@ -229,9 +229,72 @@ export default function MVProduction() {
         resetForm()
     }
 
+    const validateStep = (step) => {
+        const {
+            copyrightOwnerName, mobileNumber, emailOfCopyrightHolder, projectTitle, artistName, labelName,
+            releaseTimeline, genres, mood, isPartOfAlbumOrEP, language, theme, locationPreference, customLocation,
+            totalBudgetRequested, proposedOwnershipDilution, preProduction, shootDay, postProduction,
+            miscellaneousContingency, revenueSharingModelProposed, willContributePersonalFunds, personalFundsAmount,
+            willBeReleasedViaMVDistribution, planToRunAdsOrInfluencerCampaigns, anyBrandOrMerchTieIns,
+            brandOrMerchTieInsDescription, confirmFullCreativeOwnership, agreeToCreditMVProduction,
+            agreeToShareFinalAssets, requireNDAOrCustomAgreement
+        } = formData
+
+        if (step === 1) {
+            if (!copyrightOwnerName || !mobileNumber || !emailOfCopyrightHolder || !projectTitle || !artistName ||
+                !labelName || !releaseTimeline || !genres || !mood || !isPartOfAlbumOrEP || !language || !theme) {
+                toast.error("Please fill in all required fields.")
+                return false
+            }
+            const isLocationSelected = Object.values(locationPreference).some(val => val)
+            if (!isLocationSelected) {
+                toast.error("Please select at least one location preference.")
+                return false
+            }
+            if (locationPreference.other && !customLocation) {
+                toast.error("Please specify the custom location.")
+                return false
+            }
+        }
+
+        if (step === 2) {
+            if (!totalBudgetRequested || !proposedOwnershipDilution || !preProduction || !shootDay || 
+                !postProduction || !miscellaneousContingency || !revenueSharingModelProposed) {
+                toast.error("Please fill in all budget details.")
+                return false
+            }
+            if (willContributePersonalFunds === 'yes' && !personalFundsAmount) {
+                toast.error("Please specify the personal funds amount.")
+                return false
+            }
+        }
+
+        if (step === 3) {
+            if (!willBeReleasedViaMVDistribution || !planToRunAdsOrInfluencerCampaigns || !anyBrandOrMerchTieIns) {
+                toast.error("Please complete the marketing section.")
+                return false
+            }
+            if (anyBrandOrMerchTieIns === 'yes' && !brandOrMerchTieInsDescription) {
+                toast.error("Please describe the brand or merch tie-ins.")
+                return false
+            }
+        }
+
+        if (step === 4) {
+            if (!confirmFullCreativeOwnership || !agreeToCreditMVProduction || !agreeToShareFinalAssets || !requireNDAOrCustomAgreement) {
+                toast.error("Please complete the legal declaration.")
+                return false
+            }
+        }
+
+        return true
+    }
+
     const handleNextStep = () => {
-        if (currentStep < 4) {
-            setCurrentStep(currentStep + 1)
+        if (validateStep(currentStep)) {
+            if (currentStep < 4) {
+                setCurrentStep(currentStep + 1)
+            }
         }
     }
 
@@ -242,6 +305,8 @@ export default function MVProduction() {
     }
 
     const handleFormSubmit = () => {
+        if (!validateStep(4)) return
+
         // Convert form data to API format
         const selectedLocationPreferences = Object.keys(formData.locationPreference).filter((key) => formData.locationPreference[key])
 

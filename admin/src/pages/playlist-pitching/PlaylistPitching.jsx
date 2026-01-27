@@ -249,17 +249,11 @@ export default function PlaylistPitching({ theme }) {
           <table className="w-full text-sm min-w-[1300px]">
             <thead className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left `}>
               <tr>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">Track Name</th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">Artist Name</th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">Username</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Account Name</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">Account ID</th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">Label Name</th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">ISRC</th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">Genre</th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">Mood</th>
-                <th className_name="px-4 py-3 font-medium whitespace-nowrap">Theme</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Track Name</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">Language</th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">Store</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Label Name</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">Status</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">Submit Date</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap text-left">Actions</th>
@@ -268,17 +262,11 @@ export default function PlaylistPitching({ theme }) {
             <tbody>
               {pitches.map((row) => (
                 <tr key={row._id} className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"} hover:bg-gray-800/40`}>
-                  <td className="px-4 py-3 font-medium">{row.trackName || "—"}</td>
-                  <td className="px-4 py-3">{row.artistName || "—"}</td>
                   <td className="px-4 py-3">{row.userId ? `${row.userId.firstName || ""} ${row.userId.lastName || ""}`.trim() || "—" : "—"}</td>
                   <td className="px-4 py-3">{row.userId?.accountId || "—"}</td>
-                  <td className="px-4 py-3">{row.labelName || "—"}</td>
-                  <td className="px-4 py-3">{row.isrc || "—"}</td>
-                  <td className="px-4 py-3">{(row.genres || []).join(", ") || "—"}</td>
-                  <td className="px-4 py-3 capitalize">{row.mood || "—"}</td>
-                  <td className="px-4 py-3 capitalize">{row.theme || "—"}</td>
+                  <td className="px-4 py-3 font-medium">{row.trackName || "—"}</td>
                   <td className="px-4 py-3 capitalize">{row.language || "—"}</td>
-                  <td className="px-4 py-3 capitalize">{row.selectedStore || "—"}</td>
+                  <td className="px-4 py-3">{row.labelName || "—"}</td>
                   <td className="px-4 py-3">
                     {row.status ? (
                       <span

@@ -8,6 +8,26 @@ import { Button } from "@/components/ui/button";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+};
 
 export default function AssignSublabelModal({
   isOpen,
@@ -19,8 +39,12 @@ export default function AssignSublabelModal({
   const isDark = theme === "dark";
 
   const [allSublabels, setAllSublabels] = useState([]);
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedSublabel, setSelectedSublabel] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+
   const normalizeSublabels = (data) => {
     if (!data) return [];
     if (Array.isArray(data)) return data;
@@ -42,9 +66,11 @@ export default function AssignSublabelModal({
     return [];
   };
 
-  const fetchAll = async () => {
+  const fetchSublabels = async (searchTerm = "") => {
     try {
-      const res = await GlobalApi.getAllSubLabels();
+      const extraParams = searchTerm ? `&search=${searchTerm}` : "";
+      // Pass currentPage=1, limit=50 (or reasonable for dropdown)
+      const res = await GlobalApi.getAllSubLabels(1, 50, extraParams);
      
       const payload = res?.data?.data ?? res?.data ?? res;
       const list = normalizeSublabels(payload);
@@ -58,19 +84,26 @@ export default function AssignSublabelModal({
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedId("");
-      fetchAll();
+      setSelectedSublabel(null);
+      setSearch("");
+      fetchSublabels();
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (isOpen) {
+      fetchSublabels(debouncedSearch);
+    }
+  }, [debouncedSearch]);
+
   const handleAssign = async () => {
-    if (!selectedId) {
+    if (!selectedSublabel?._id) {
       return toast.error("Please select a sublabel");
     }
 
     setLoading(true);
     try {
-      await GlobalApi.assignSubLabelToUser(selectedId, {
+      await GlobalApi.assignSubLabelToUser(selectedSublabel._id, {
         userId,
         isDefault: false,
       });
@@ -102,30 +135,75 @@ export default function AssignSublabelModal({
         </DialogHeader>
 
         <div className="mt-4">
-          <label className="text-sm mb-2 block">Select Sublabel</label>
-          <select
-            className={`w-full px-3 py-2 rounded-lg border outline-none ${
-              isDark
-                ? "bg-[#1A242C] border-gray-700 text-gray-200"
-                : "bg-white border-gray-300 text-gray-900"
-            }`}
-            value={selectedId}
-            onChange={(e) => setSelectedId(e.target.value)}
-          >
-            <option value="">Select...</option>
-
-          
-            {Array.isArray(allSublabels) &&
-              allSublabels.map((s) => {  
-                const id = s._id ?? s.id ?? s.value ?? "";
-                const name = s.name ?? s.label ?? s.title ?? String(id);
-                return (
-                  <option key={id || name} value={id}>
-                    {name}
-                  </option>
-                );
-              })}
-          </select>
+          <label className="text-sm mb-2 block font-medium">Select Sublabel</label>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className={`w-full justify-between font-normal ${
+                  !selectedSublabel && "text-muted-foreground"
+                } ${
+                  isDark
+                    ? "bg-[#1A242C] border-gray-700 text-gray-200 hover:bg-[#1A242C]"
+                    : "bg-white border-gray-300 text-gray-900"
+                }`}
+              >
+                {selectedSublabel
+                  ? selectedSublabel.name
+                  : "Select sublabel..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className={`w-[400px] p-0 ${
+                isDark ? "bg-[#111A22] border-gray-700" : "bg-white"
+              }`} 
+              align="start"
+            >
+              <div className="flex items-center border-b px-3" style={{ borderColor: isDark ? "#374151" : "#e5e7eb" }}>
+                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                <input
+                  className={`flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 ${isDark ? "text-white" : "text-black"}`}
+                  placeholder="Search sublabels..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <div className="max-h-[200px] overflow-y-auto p-1">
+                {allSublabels.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-muted-foreground">
+                    No sublabel found.
+                  </p>
+                ) : (
+                  allSublabels.map((sublabel) => (
+                    <div
+                      key={sublabel._id}
+                      onClick={() => {
+                        setSelectedSublabel(sublabel);
+                        setOpen(false);
+                      }}
+                      className={`relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors cursor-pointer ${
+                        selectedSublabel?._id === sublabel._id
+                          ? isDark ? "bg-purple-900/50 text-purple-100" : "bg-purple-100 text-purple-900"
+                          : isDark ? "hover:bg-gray-800 text-gray-200" : "hover:bg-gray-100 text-gray-900"
+                      }`}
+                    >
+                      <Check
+                        className={`mr-2 h-4 w-4 ${
+                          selectedSublabel?._id === sublabel._id
+                            ? "opacity-100"
+                            : "opacity-0"
+                        }`}
+                      />
+                      {sublabel.name}
+                    </div>
+                  ))
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
