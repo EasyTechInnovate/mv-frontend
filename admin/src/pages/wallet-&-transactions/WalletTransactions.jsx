@@ -436,6 +436,7 @@ export default function WalletTransactions({ theme }) {
                       date: new Date(req.requestedAt).toLocaleDateString(),
                       status: req.status
                   }}
+                  onView={() => handleViewDetails(req)}
                   onApprove={() => handleApprove(req)}
                   onReject={() => handleReject(req)}
                   theme={theme}

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 
-export default function WithdrawalRow({ withdrawal, onApprove, onReject, theme }) {
+export default function WithdrawalRow({ withdrawal, onApprove, onReject, onView, theme }) {
   const isDark = theme === "dark";
 
   const StatusBadge = ({ status }) => {
@@ -34,10 +34,18 @@ export default function WithdrawalRow({ withdrawal, onApprove, onReject, theme }
       <td className="px-5 py-3">
         {withdrawal.status === "pending" ? (
           <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant={isDark ? "outline" : "secondary"}
+              className="rounded-full px-3"
+              onClick={() => onView(withdrawal.id)}
+            >
+              View
+            </Button>
             <Button size="sm" className="bg-green-600 text-white" onClick={() => onApprove(withdrawal.id)}>
               Approve
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => onReject(withdrawal.id)}>
+            <Button size="sm" className="bg-red-600 text-white" onClick={() => onReject(withdrawal.id)}>
               Reject
             </Button>
           </div>

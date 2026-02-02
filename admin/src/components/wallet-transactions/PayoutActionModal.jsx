@@ -60,8 +60,8 @@ export default function PayoutActionModal({ isOpen, onClose, action, onSubmit, l
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} disabled={loading}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={loading}>
+          <Button variant="ghost" className={isDark ?  `text-white` : `text-black`} onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button onClick={handleSubmit} className='text-white' disabled={loading}>
             {loading ? 'Submitting...' : `Submit ${isReject ? 'Rejection' : 'Approval'}`}
           </Button>
         </DialogFooter>

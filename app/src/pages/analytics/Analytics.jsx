@@ -161,7 +161,7 @@ export default function Analytics() {
           <p className="text-muted-foreground">Detailed insights into your music performance and audience</p>
         </div>
         <div className="flex items-center gap-4">
-          <Select
+          {/* <Select
             value={timeframeMap[timeframe]}
             onValueChange={handleTimeframeChange}
           >
@@ -175,7 +175,7 @@ export default function Analytics() {
               <SelectItem value="6months">Last 6 months</SelectItem>
               <SelectItem value="1year">Last year</SelectItem>
             </SelectContent>
-          </Select>
+          </Select> */}
           <Button variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
             Export Report
@@ -272,9 +272,9 @@ export default function Analytics() {
 
           {/* Tabs Section */}
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 ">
+            <TabsList className="grid w-full grid-cols-2 ">
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="tracks">Top Tracks</TabsTrigger>
+              {/* <TabsTrigger value="tracks">Top Tracks</TabsTrigger> */}
               {/* <TabsTrigger value="audience">Audience</TabsTrigger> */}
               <TabsTrigger value="platforms">Platforms</TabsTrigger>
             </TabsList>
@@ -478,8 +478,16 @@ export default function Analytics() {
                               dataKey="percentage"
                             >
                               {platformsData.map((entry, index) => {
-                                const colors = ['#1DB954', '#FA233B', '#FF0000', '#00D9FF', '#711CE9'];
-                                return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                                // Platform-specific colors
+                                const getPlatformColor = (platformName) => {
+                                  const name = platformName?.toLowerCase() || '';
+                                  if (name.includes('youtube')) return '#FF0000';
+                                  if (name.includes('spotify')) return '#1DB954';
+                                  // Random colors for other platforms
+                                  const otherColors = ['#FA233B', '#00D9FF', '#711CE9', '#FF6B35', '#F7DC6F', '#BB8FCE'];
+                                  return otherColors[index % otherColors.length];
+                                };
+                                return <Cell key={`cell-${index}`} fill={getPlatformColor(entry.platformName)} />;
                               })}
                             </Pie>
                           </PieChart>
@@ -502,8 +510,16 @@ export default function Analytics() {
                     {platformsData.length > 0 ? (
                       <div className="space-y-4">
                         {platformsData.map((platform, index) => {
-                          const colors = ['#1DB954', '#FA233B', '#FF0000', '#00D9FF', '#711CE9'];
-                          const color = colors[index % colors.length];
+                          // Platform-specific colors
+                          const getPlatformColor = (platformName) => {
+                            const name = platformName?.toLowerCase() || '';
+                            if (name.includes('youtube')) return '#FF0000';
+                            if (name.includes('spotify')) return '#1DB954';
+                            // Random colors for other platforms
+                            const otherColors = ['#FA233B', '#00D9FF', '#711CE9', '#FF6B35', '#F7DC6F', '#BB8FCE'];
+                            return otherColors[index % otherColors.length];
+                          };
+                          const color = getPlatformColor(platform.platformName);
                           return (
                             <div key={platform.platformName || index} className="flex items-center justify-between">
                               <div className="flex items-center space-x-3">

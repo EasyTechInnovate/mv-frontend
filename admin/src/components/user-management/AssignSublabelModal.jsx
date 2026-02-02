@@ -184,7 +184,7 @@ export default function AssignSublabelModal({
                         setSelectedSublabel(sublabel);
                         setOpen(false);
                       }}
-                      className={`relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors cursor-pointer ${
+                      className={`relative flex  select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors cursor-pointer ${
                         selectedSublabel?._id === sublabel._id
                           ? isDark ? "bg-purple-900/50 text-purple-100" : "bg-purple-100 text-purple-900"
                           : isDark ? "hover:bg-gray-800 text-gray-200" : "hover:bg-gray-100 text-gray-900"

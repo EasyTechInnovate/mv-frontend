@@ -8,16 +8,45 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarC
 import { Download, DollarSign, TrendingUp, BarChart3, Calendar, Music, FileDown } from 'lucide-react';
 import { getRoyaltyDashboard } from '@/services/api.services';
 
-// Platform Colors Mapping
+// Platform Colors Mapping - YouTube: Red, Spotify: Green, Meta: Blue, Others: Random
 const PLATFORM_COLORS = {
   'YouTube': '#FF0000',
+  'YouTube Music': '#FF0000',
   'Spotify': '#1DB954',
+  'Meta': '#0668E1',
+  'Facebook': '#0668E1',
+  'Instagram': '#0668E1',
   'Apple Music / iTunes': '#FA2D48',
   'Apple Music': '#FA2D48',
-  'Meta': '#0668E1',
   'JioSaavn': '#02AAB0',
   'Amazon': '#FF9900',
+  'Amazon Music': '#FF9900',
+  'Wynk': '#00D9FF',
+  'Gaana': '#E72C30',
   'Others': '#8B5CF6'
+};
+
+// Random colors for platforms not in the list
+const RANDOM_COLORS = ['#8B5CF6', '#FF6B35', '#F7DC6F', '#BB8FCE', '#58D68D', '#5DADE2', '#F1948A'];
+
+// Get platform color - returns specific color for known platforms, random for others
+const getPlatformColor = (platformName, index = 0) => {
+  if (!platformName) return RANDOM_COLORS[index % RANDOM_COLORS.length];
+  
+  const name = platformName.toLowerCase();
+  
+  // YouTube - Red
+  if (name.includes('youtube')) return '#FF0000';
+  // Spotify - Green
+  if (name.includes('spotify')) return '#1DB954';
+  // Meta/Facebook/Instagram - Blue
+  if (name.includes('meta') || name.includes('facebook') || name.includes('instagram')) return '#0668E1';
+  
+  // Check exact match in PLATFORM_COLORS
+  if (PLATFORM_COLORS[platformName]) return PLATFORM_COLORS[platformName];
+  
+  // Random color for unknown platforms
+  return RANDOM_COLORS[index % RANDOM_COLORS.length];
 };
 
 const quickDownloads = [
@@ -89,10 +118,10 @@ export default function Royalties() {
       const totalRevenue = platformArray.reduce((sum, p) => sum + (p.totalRevenue || 0), 0) || 1;
       
       // 1. Create Full List (Sorted)
-      const sortedList = platformArray.map(platform => ({
+      const sortedList = platformArray.map((platform, index) => ({
         name: platform.platform || platform._id,
         value: (platform.totalRevenue / totalRevenue) * 100,
-        color: PLATFORM_COLORS[platform.platform] || PLATFORM_COLORS[platform._id] || '#8B5CF6',
+        color: getPlatformColor(platform.platform || platform._id, index),
         amount: formatCurrency(platform.totalRevenue),
         share: `${((platform.totalRevenue / totalRevenue) * 100).toFixed(1)}% share`,
         rawRevenue: platform.totalRevenue,
@@ -200,7 +229,7 @@ export default function Royalties() {
           <p className="text-muted-foreground">Track your earnings and royalty payments</p>
         </div>
         <div className="flex items-center gap-4">
-          <Select value={timeframeMap[timeframe]} onValueChange={(val) => setTimeframe(reverseTimeframeMap[val])}>
+          {/* <Select value={timeframeMap[timeframe]} onValueChange={(val) => setTimeframe(reverseTimeframeMap[val])}>
             <SelectTrigger className="w-[140px]">
               <SelectValue />
             </SelectTrigger>
@@ -210,7 +239,7 @@ export default function Royalties() {
               <SelectItem value="90days">Last 90 days</SelectItem>
               <SelectItem value="1year">Last year</SelectItem>
             </SelectContent>
-          </Select>
+          </Select> */}
           <Button variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
             Export Report
@@ -279,10 +308,10 @@ export default function Royalties() {
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="breakdown">Breakdown</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
+          {/* <TabsTrigger value="payments">Payments</TabsTrigger> */}
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
@@ -496,7 +525,7 @@ export default function Royalties() {
                 </CardContent>
               </Card>
             </div>
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>Top Earning Tracks</CardTitle>
                 <CardDescription>Highest regular revenue generating tracks</CardDescription>
@@ -526,7 +555,7 @@ export default function Royalties() {
                   )}
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
           <div className="space-y-6">
             <h3 className="text-xl font-semibold">Bonus Breakdown</h3>
@@ -590,7 +619,7 @@ export default function Royalties() {
                 </CardContent>
               </Card>
             </div>
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>Top Earning Tracks for Bonuses</CardTitle>
                 <CardDescription>Tracks generating the highest bonuses</CardDescription>
@@ -620,7 +649,7 @@ export default function Royalties() {
                   )}
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </TabsContent>
 
