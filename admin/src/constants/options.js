@@ -92,6 +92,7 @@ export const moodOptions = [
 ];
 
 export const languageOptions = [
+  { value: "instrumental", label: "Instrumental" },
   { value: "afrikaans", label: "Afrikaans" },
   { value: "albanian", label: "Albanian" },
   { value: "amharic", label: "Amharic" },
