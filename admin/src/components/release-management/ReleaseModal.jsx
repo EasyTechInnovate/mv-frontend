@@ -69,13 +69,10 @@ function StatusBadge({ status }) {
     )
 }
 
-function ActionButtons({ release, onActionComplete, isDark }) {
+function ActionButtons({ release, onActionComplete, isDark, releaseCategory }) {
     const [loading, setLoading] = useState(false)
     const [showRejectDialog, setShowRejectDialog] = useState(false)
     const [rejectionReason, setRejectionReason] = useState('')
-    const [acrLoading, setAcrLoading] = useState(false)
-    const [acrProgress, setAcrProgress] = useState('')
-
     const handleAction = async (actionFn, successMessage) => {
         try {
             setLoading(true)
@@ -94,107 +91,22 @@ function ActionButtons({ release, onActionComplete, isDark }) {
             toast.error('Please provide a rejection reason')
             return
         }
-        await handleAction(() => GlobalApi.rejectRelease(release.releaseId, { reason: rejectionReason }), 'Release rejected successfully')
+        if (releaseCategory === 'advanced') {
+            await handleAction(() => GlobalApi.rejectAdvancedRelease(release.releaseId, { reason: rejectionReason }), 'Release rejected successfully')
+        } else {
+            await handleAction(() => GlobalApi.rejectRelease(release.releaseId, { reason: rejectionReason }), 'Release rejected successfully')
+        }
         setShowRejectDialog(false)
         setRejectionReason('')
     }
 
-    const handleACRCheck = async () => {
-        try {
-            setAcrLoading(true)
-            const tracks = release.step2?.tracks || []
-
-            if (tracks.length === 0) {
-                toast.error('No tracks found to check')
-                return
-            }
-
-            setAcrProgress(`Checking ${tracks.length} track${tracks.length > 1 ? 's' : ''}...`)
-            const acrResults = []
-
-            // Check each track
-            for (let i = 0; i < tracks.length; i++) {
-                const track = tracks[i]
-                setAcrProgress(`Checking track ${i + 1}/${tracks.length}: ${track.trackName}...`)
-
-                // Get audio URL from track
-                const audioUrl = track.audioFiles?.[0]?.fileUrl || track.trackLink
-
-                if (!audioUrl) {
-                    console.warn(`No audio URL for track: ${track.trackName}`)
-                    continue
-                }
-
-                try {
-                    // Call external ACR service
-                    const acrResponse = await fetch('https://acr-mv.manishdashsharma.com/recognize', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            imagekit_url: audioUrl
-                        })
-                    })
-
-                    const acrData = await acrResponse.json()
-
-                    // Parse ACR response and add to results
-                    // API returns: { success, message, data: { match_percentage, title, artists, ... } }
-                    if (acrData?.success && acrData?.data) {
-                        const match = acrData.data
-                        acrResults.push({
-                            trackId: track._id,
-                            trackName: track.trackName,
-                            matchPercentage: match.match_percentage || 0,
-                            title: match.title,
-                            label: match.label,
-                            artists: match.artists || [],
-                            album: match.album,
-                            releaseDate: match.release_date,
-                            durationMs: match.duration_ms,
-                            matchTime: match.match_time,
-                            externalIds: {
-                                isrc: match.external_ids?.isrc,
-                                upc: match.external_ids?.upc
-                            },
-                            streamingLinks: {
-                                spotify: match.streaming_links?.spotify,
-                                deezer: match.streaming_links?.deezer
-                            },
-                            genres: match.genres || []
-                        })
-                    }
-                } catch (error) {
-                    console.error(`ACR check failed for track ${track.trackName}:`, error)
-                }
-            }
-
-            // Save results to backend
-            if (acrResults.length > 0) {
-                setAcrProgress('Saving results...')
-                await GlobalApi.saveAudioFootprinting(release.releaseId, { footprintingData: acrResults })
-                toast.success(`ACR check complete! Found ${acrResults.length} match${acrResults.length > 1 ? 'es' : ''}`)
-            } else {
-                toast.info('ACR check complete - no matches found')
-            }
-
-            onActionComplete()
-        } catch (error) {
-            console.error('ACR check error:', error)
-            toast.error(error.message || 'ACR check failed')
-        } finally {
-            setAcrLoading(false)
-            setAcrProgress('')
-        }
-    }
 
     return (
         <>
             <div className="flex flex-wrap gap-2">
                 {release.releaseStatus === 'submitted' && (
                     <Button
-                        onClick={() => handleAction(() => GlobalApi.approveRelease(release.releaseId, {}), 'Release approved for review')}
+                        onClick={() => handleAction(() => releaseCategory === 'advanced' ? GlobalApi.approveAdvancedRelease(release.releaseId, {}) : GlobalApi.approveRelease(release.releaseId, {}), 'Release approved for review')}
                         className="bg-green-600 hover:bg-green-700 text-white"
                         disabled={loading}>
                         <CheckCircle className="w-4 h-4 mr-2" />
@@ -205,7 +117,7 @@ function ActionButtons({ release, onActionComplete, isDark }) {
                 {release.releaseStatus === 'under_review' && (
                     <>
                         <Button
-                            onClick={() => handleAction(() => GlobalApi.startProcessingRelease(release.releaseId), 'Processing started')}
+                            onClick={() => handleAction(() => releaseCategory === 'advanced' ? GlobalApi.startProcessingAdvancedRelease(release.releaseId) : GlobalApi.startProcessingRelease(release.releaseId), 'Processing started')}
                             className="bg-blue-600 hover:bg-blue-700 text-white"
                             disabled={loading}>
                             <Clock className="w-4 h-4 mr-2" />
@@ -224,7 +136,7 @@ function ActionButtons({ release, onActionComplete, isDark }) {
                 {release.releaseStatus === 'processing' && (
                     <>
                         <Button
-                            onClick={() => handleAction(() => GlobalApi.publishRelease(release.releaseId), 'Release published successfully')}
+                            onClick={() => handleAction(() => releaseCategory === 'advanced' ? GlobalApi.publishAdvancedRelease(release.releaseId) : GlobalApi.publishRelease(release.releaseId), 'Release published successfully')}
                             className="bg-purple-600 hover:bg-purple-700 text-white"
                             disabled={loading}>
                             <CheckCircle className="w-4 h-4 mr-2" />
@@ -242,7 +154,7 @@ function ActionButtons({ release, onActionComplete, isDark }) {
 
                 {release.releaseStatus === 'published' && (
                     <Button
-                        onClick={() => handleAction(() => GlobalApi.goLiveRelease(release.releaseId), 'Release is now live!')}
+                        onClick={() => handleAction(() => releaseCategory === 'advanced' ? GlobalApi.goLiveAdvancedRelease(release.releaseId) : GlobalApi.goLiveRelease(release.releaseId), 'Release is now live!')}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white"
                         disabled={loading}>
                         <CheckCircle className="w-4 h-4 mr-2" />
@@ -252,24 +164,14 @@ function ActionButtons({ release, onActionComplete, isDark }) {
 
                 {release.releaseStatus === 'take_down' && (
                     <Button
-                        onClick={() => handleAction(() => GlobalApi.processTakedownRequest(release.releaseId), 'Takedown processed')}
+                        onClick={() => handleAction(() => releaseCategory === 'advanced' ? GlobalApi.processTakedownAdvancedRelease(release.releaseId) : GlobalApi.processTakedownRequest(release.releaseId), 'Takedown processed')}
                         className="bg-orange-600 hover:bg-orange-700 text-white"
                         disabled={loading}>
                         Process Takedown
                     </Button>
                 )}
 
-                {/* ACR Check Button - available before live */}
-                {!['live', 'rejected', 'take_down'].includes(release.releaseStatus) && (
-                    <Button
-                        onClick={handleACRCheck}
-                        variant="outline"
-                        disabled={acrLoading || loading}
-                        className="border-purple-500 text-purple-600 hover:bg-purple-50 dark:border-purple-400 dark:text-purple-400">
-                        <AlertCircle className="w-4 h-4 mr-2" />
-                        {acrLoading ? acrProgress : 'Check Audio Footprinting'}
-                    </Button>
-                )}
+
             </div>
 
             {/* Reject Dialog */}
@@ -304,13 +206,14 @@ function ActionButtons({ release, onActionComplete, isDark }) {
     )
 }
 
-export default function ReleaseModal({ theme, defaultData, onBack }) {
+export default function ReleaseModal({ theme, defaultData, onBack, releaseCategory = 'basic' }) {
     const isDark = theme === 'dark'
     const releaseId = defaultData
 
     const [loading, setLoading] = useState(true)
     const [release, setRelease] = useState(null)
-    const [isAdvanced, setIsAdvanced] = useState(false)
+    const [expandedTracks, setExpandedTracks] = useState(new Set())
+    const isAdvanced = releaseCategory === 'advanced'
 
     useEffect(() => {
         fetchReleaseDetails()
@@ -319,25 +222,145 @@ export default function ReleaseModal({ theme, defaultData, onBack }) {
     const fetchReleaseDetails = async () => {
         try {
             setLoading(true)
-            const res = await GlobalApi.getReleaseDetails(releaseId)
-            const data = res.data?.data
-
-            if (!data) {
-                toast.error('Release not found')
-                return
+            let res;
+            if (releaseCategory === 'advanced') {
+                res = await GlobalApi.getAdvancedReleaseById(releaseId)
+                if(res.data?.data?.release) {
+                    setRelease(res.data.data.release)
+                } else if (res.data?.data) {
+                    setRelease(res.data.data) // Fallback if structure is different
+                }
+            } else {
+                res = await GlobalApi.getReleaseDetails(releaseId)
+                setRelease(res.data?.data)
             }
-
-            setRelease(data)
-
-            // Detect if advanced release based on releaseType field
-            const advancedTypes = ['single', 'album', 'ep', 'mini_album', 'ringtone_release']
-            setIsAdvanced(advancedTypes.includes(data.releaseType))
         } catch (error) {
             console.error('Error fetching release details:', error)
             toast.error('Failed to load release details')
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleDownloadCSV = () => {
+        if (!release) return
+
+        const releaseInfo = release.step1?.releaseInfo || {}
+        const tracks = release.step2?.tracks || release.tracks || []
+        const step3 = release.step3 || {}
+        
+        // Prepare CSV rows - one row per track with all release and track details
+        const rows = []
+        
+        tracks.forEach((track, trackIndex) => {
+            const row = {
+                // Release Info
+                'Release ID': release.releaseId || '',
+                'Release Name': releaseInfo.releaseName || '',
+                'Release Type': release.releaseType || releaseInfo.releaseType || '',
+                'Release Status': release.releaseStatus || '',
+                'Primary Artists': Array.isArray(releaseInfo.primaryArtists) ? releaseInfo.primaryArtists.join(', ') : '',
+                'Featuring Artists': Array.isArray(releaseInfo.featuringArtists) ? releaseInfo.featuringArtists.join(', ') : '',
+                'Label Name': releaseInfo.labelName?.name || releaseInfo.labelName || '',
+                'Primary Genre': releaseInfo.primaryGenre || release.genre || '',
+                'Secondary Genre': releaseInfo.secondaryGenre || '',
+                'UPC': releaseInfo.upcCode || releaseInfo.adminProvidedUPC || '',
+                'Cover Art URL': releaseInfo.coverArt?.imageUrl || release.step1?.coverArt?.imageUrl || '',
+                
+                // Advanced Release Specific
+                ...(isAdvanced && {
+                    'Release Version': releaseInfo.releaseVersion || '',
+                    'Catalog': releaseInfo.catalog || '',
+                    'C-Line': releaseInfo.cLine ? `© ${releaseInfo.cLine.year} ${releaseInfo.cLine.text}` : '',
+                    'P-Line': releaseInfo.pLine ? `℗ ${releaseInfo.pLine.year} ${releaseInfo.pLine.text}` : '',
+                    'Pricing Tier': releaseInfo.releasePricingTier || '',
+                }),
+                
+                // User Info
+                'User Name': release.userId ? `${release.userId.firstName || ''} ${release.userId.lastName || ''}`.trim() : '',
+                'User Email': release.userId?.emailAddress || '',
+                'Account ID': release.accountId || '',
+                
+                // Track Info
+                'Track Number': trackIndex + 1,
+                'Track Name': track.trackName || '',
+                'Track Primary Artists': Array.isArray(track.primaryArtists) ? track.primaryArtists.join(', ') : '',
+                'Track Featuring Artists': Array.isArray(track.featuringArtists) ? track.featuringArtists.join(', ') : '',
+                'ISRC': track.isrcCode || track.adminProvidedISRC || track.isrc || '',
+                'Track Genre': track.primaryGenre || track.genre || '',
+                'Track Secondary Genre': track.secondaryGenre || '',
+                
+                // Advanced Track Specific
+                ...(isAdvanced && {
+                    'Mix Version': track.mixVersion || '',
+                    'Has Human Vocals': track.hasHumanVocals ? 'Yes' : 'No',
+                    'Available for Download': track.isAvailableForDownload ? 'Yes' : 'No',
+                    'Caller Tune Start': track.callertuneStartTiming || '',
+                    'Sound Recording Contributors': track.contributorsToSoundRecording?.map(c => `${c.profession}: ${c.contributors}`).join('; ') || '',
+                    'Musical Work Contributors': track.contributorsToMusicalWork?.map(c => `${c.profession}: ${c.contributors}`).join('; ') || '',
+                }),
+                
+                // Basic Track Specific
+                ...(!isAdvanced && {
+                    'Singer': track.singerName || '',
+                    'Composer': track.composerName || '',
+                    'Lyricist': track.lyricistName || '',
+                    'Producer': track.producerName || '',
+                    'Music Language': track.musicLanguage || '',
+                    'Parental Advisory': track.parentalAdvisory || '',
+                }),
+                
+                // Audio Files
+                'Audio File URL': track.trackLink || track.audioFiles?.[0]?.fileUrl || '',
+                'Audio Format': track.audioFiles?.map(f => f.format).join(', ') || '',
+                
+                // Distribution
+                'Release Date': step3.releaseDate || step3.deliveryDetails?.forFutureRelease || '',
+                'Territories': step3.territorialRights?.isWorldwide ? 'Worldwide' : step3.territorialRights?.territories?.join(', ') || '',
+                'Distribution Partners': step3.distributionPartners?.join(', ') || step3.partnerSelection?.partners?.join(', ') || '',
+                'Owns Copyright': step3.copyrightOptions?.ownsCopyrights ? 'Yes' : 'No',
+                
+                // Timestamps
+                'Submitted At': release.submittedAt ? new Date(release.submittedAt).toLocaleString() : '',
+                'Published At': release.publishedAt ? new Date(release.publishedAt).toLocaleString() : '',
+                'Live At': release.liveAt ? new Date(release.liveAt).toLocaleString() : '',
+                
+                // Audio Footprinting
+                'Footprint Match': release.audioFootprinting?.find(fp => fp.trackId?.toString() === track._id?.toString())?.matchPercentage || '',
+                'Footprint Title': release.audioFootprinting?.find(fp => fp.trackId?.toString() === track._id?.toString())?.title || '',
+                'Footprint Artists': release.audioFootprinting?.find(fp => fp.trackId?.toString() === track._id?.toString())?.artists?.join(', ') || '',
+            }
+            rows.push(row)
+        })
+
+        // Convert to CSV
+        if (rows.length === 0) {
+            toast.error('No track data available to export')
+            return
+        }
+
+        const headers = Object.keys(rows[0])
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => 
+                headers.map(header => {
+                    const value = String(row[header] || '')
+                    // Escape quotes and wrap in quotes if contains comma
+                    return value.includes(',') || value.includes('"') 
+                        ? `"${value.replace(/"/g, '""')}"` 
+                        : value
+                }).join(',')
+            )
+        ].join('\n')
+
+        // Download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = `release_${release.releaseId}_${new Date().toISOString().split('T')[0]}.csv`
+        link.click()
+        
+        toast.success('CSV downloaded successfully')
     }
 
     if (loading) {
@@ -382,8 +405,8 @@ export default function ReleaseModal({ theme, defaultData, onBack }) {
                         className={`${isDark ? 'bg-[#151F28] border-gray-700' : 'bg-white border-gray-200'}`}>
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back
-                    </Button>
-
+                    </Button>        
+                    
                     <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                             <h1 className="text-2xl font-semibold">{releaseInfo?.releaseName || 'Untitled Release'}</h1>
@@ -398,6 +421,15 @@ export default function ReleaseModal({ theme, defaultData, onBack }) {
                             Release ID: {release.releaseId} • {tracks.length} track{tracks.length !== 1 ? 's' : ''}
                         </p>
                     </div>
+
+                    <Button
+                        variant="outline"
+                        onClick={handleDownloadCSV}
+                        disabled={loading || !release}
+                        className={`${isDark ? 'bg-[#151F28] border-purple-500 text-purple-400 hover:bg-purple-900/20' : 'bg-white border-purple-500 text-purple-600 hover:bg-purple-50'}`}>
+                        <Download className="w-4 h-4 mr-2" />
+                        Download CSV
+                    </Button>
                 </div>
 
                 {/* Action Buttons */}
@@ -405,6 +437,7 @@ export default function ReleaseModal({ theme, defaultData, onBack }) {
                     release={release}
                     onActionComplete={fetchReleaseDetails}
                     isDark={isDark}
+                    releaseCategory={releaseCategory}
                 />
             </div>
 
@@ -414,16 +447,10 @@ export default function ReleaseModal({ theme, defaultData, onBack }) {
                     release={release}
                     onUpdate={fetchReleaseDetails}
                     isDark={isDark}
+                    releaseCategory={releaseCategory}
                 />
             )}
 
-            {/* ACR Results */}
-            {release.audioFootprinting && release.audioFootprinting.length > 0 && (
-                <ACRResultsSection
-                    results={release.audioFootprinting}
-                    isDark={isDark}
-                />
-            )}
 
             {/* Admin Review Info */}
             {release.adminReview?.rejectionReason && (
@@ -573,6 +600,9 @@ export default function ReleaseModal({ theme, defaultData, onBack }) {
                                 isDark={isDark}
                                 release={release}
                                 onUpdate={fetchReleaseDetails}
+                                releaseCategory={releaseCategory}
+                                expandedTracks={expandedTracks}
+                                setExpandedTracks={setExpandedTracks}
                             />
                         ))}
                     </div>
@@ -645,7 +675,7 @@ export default function ReleaseModal({ theme, defaultData, onBack }) {
     )
 }
 
-function UPCProvisionSection({ release, onUpdate, isDark }) {
+function UPCProvisionSection({ release, onUpdate, isDark, releaseCategory }) {
     const [upcCode, setUpcCode] = useState('')
     const [loading, setLoading] = useState(false)
 
@@ -673,7 +703,11 @@ function UPCProvisionSection({ release, onUpdate, isDark }) {
 
         try {
             setLoading(true)
-            await GlobalApi.provideUPC(release.releaseId, upcCode)
+            if (releaseCategory === 'advanced') {
+                await GlobalApi.provideUPCAdvanced(release.releaseId, { upcCode })
+            } else {
+                 await GlobalApi.provideUPC(release.releaseId, upcCode)
+            }
             toast.success('UPC code provided successfully')
             onUpdate()
         } catch (error) {
@@ -708,72 +742,6 @@ function UPCProvisionSection({ release, onUpdate, isDark }) {
     )
 }
 
-function ACRResultsSection({ results, isDark }) {
-    return (
-        <div className={`rounded-lg p-6 ${isDark ? 'bg-[#151F28] border border-gray-700' : 'bg-white border border-gray-200'}`}>
-            <h3 className="font-medium mb-4 flex items-center gap-2">
-                <AlertCircle className="w-5 h-5" />
-                ACR Copyright Check Results ({results.length})
-            </h3>
-            <div className="space-y-3">
-                {results.map((result, idx) => {
-                    const riskLevel = result.matchPercentage > 80 ? 'high' : result.matchPercentage > 50 ? 'medium' : 'low'
-
-                    const riskConfig = {
-                        high: {
-                            bg: 'bg-red-50 dark:bg-red-900/20',
-                            border: 'border-red-500',
-                            text: 'text-red-700 dark:text-red-300',
-                            label: 'High Risk'
-                        },
-                        medium: {
-                            bg: 'bg-yellow-50 dark:bg-yellow-900/20',
-                            border: 'border-yellow-500',
-                            text: 'text-yellow-700 dark:text-yellow-300',
-                            label: 'Medium Risk'
-                        },
-                        low: {
-                            bg: 'bg-green-50 dark:bg-green-900/20',
-                            border: 'border-green-500',
-                            text: 'text-green-700 dark:text-green-300',
-                            label: 'Low Risk'
-                        }
-                    }
-
-                    const config = riskConfig[riskLevel]
-
-                    return (
-                        <div
-                            key={idx}
-                            className={`${config.bg} border-l-4 ${config.border} p-4 rounded`}>
-                            <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                    <h4 className={`font-semibold ${config.text}`}>{result.title || 'Match Found'}</h4>
-                                    <p className="text-sm mt-1">Artists: {result.artists?.join(', ') || 'Unknown'}</p>
-                                    <p className="text-sm">Label: {result.label || 'Unknown'}</p>
-                                    {result.externalIds?.isrc && <p className="text-xs mt-1 font-mono">ISRC: {result.externalIds.isrc}</p>}
-                                </div>
-                                <div className="text-right">
-                                    <div className={`text-2xl font-bold ${config.text}`}>{result.matchPercentage}%</div>
-                                    <div className="text-xs font-semibold uppercase">{config.label}</div>
-                                </div>
-                            </div>
-                            {result.streamingLinks?.spotify && (
-                                <a
-                                    href={result.streamingLinks.spotify}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 dark:text-blue-400 text-sm mt-2 inline-block hover:underline">
-                                    Listen on Spotify →
-                                </a>
-                            )}
-                        </div>
-                    )
-                })}
-            </div>
-        </div>
-    )
-}
 
 function InfoField({ label, value, capitalize }) {
     return (
@@ -793,10 +761,98 @@ function TimeStamp({ label, date }) {
     )
 }
 
-function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate }) {
-    const [expanded, setExpanded] = useState(false)
+function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releaseCategory, expandedTracks, setExpandedTracks }) {
     const [isrcCode, setIsrcCode] = useState('')
     const [loading, setLoading] = useState(false)
+    const [acrLoading, setAcrLoading] = useState(false)
+
+    // Use expandedTracks Set from parent instead of local state
+    const expanded = expandedTracks.has(track._id)
+    const toggleExpanded = () => {
+        setExpandedTracks(prev => {
+            const newSet = new Set(prev)
+            if (newSet.has(track._id)) {
+                newSet.delete(track._id)
+            } else {
+                newSet.add(track._id)
+            }
+            return newSet
+        })
+    }
+
+    const handleTrackACRCheck = async () => {
+        try {
+            setAcrLoading(true)
+            
+            // Get audio URL from track
+            const audioUrl = track.audioFiles?.[0]?.fileUrl || track.trackLink
+
+            if (!audioUrl) {
+                toast.error('No audio source found for this track')
+                return
+            }
+
+            // Call external ACR service
+            const acrResponse = await fetch('https://acr-mv.manishdashsharma.com/recognize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    imagekit_url: audioUrl
+                })
+            })
+
+            const acrData = await acrResponse.json()
+            const acrResults = []
+
+            // Parse ACR response and add to results
+            if (acrData?.success && acrData?.data) {
+                const match = acrData.data
+                acrResults.push({
+                    trackId: track._id,
+                    trackName: track.trackName,
+                    matchPercentage: match.match_percentage || 0,
+                    title: match.title,
+                    label: match.label,
+                    artists: match.artists || [],
+                    album: match.album,
+                    releaseDate: match.release_date,
+                    durationMs: match.duration_ms,
+                    matchTime: match.match_time,
+                    externalIds: {
+                        isrc: match.external_ids?.isrc,
+                        upc: match.external_ids?.upc
+                    },
+                    streamingLinks: {
+                        spotify: match.streaming_links?.spotify,
+                        deezer: match.streaming_links?.deezer
+                    },
+                    genres: match.genres || []
+                })
+            } else {
+                 toast.info('No footprint match found')
+                 return; // Don't save if no match (or maybe we should save "no match"?)
+            }
+
+            // Save results to backend
+            if (acrResults.length > 0) {
+                if (releaseCategory === 'advanced') {
+                    await GlobalApi.saveAudioFootprintingAdvanced(release.releaseId, { footprintingData: acrResults })
+                } else {
+                    await GlobalApi.saveAudioFootprinting(release.releaseId, { footprintingData: acrResults })
+                }
+                toast.success(`Check complete: Match Found (${acrResults[0].matchPercentage}%)`)
+                onUpdate()
+            } 
+
+        } catch (error) {
+            console.error('ACR check error:', error)
+            toast.error(error.message || 'ACR check failed')
+        } finally {
+            setAcrLoading(false)
+        }
+    }
 
     const handleProvideISRC = async () => {
         if (!isrcCode.trim() || isrcCode.length < 12) {
@@ -806,7 +862,11 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate }) {
 
         try {
             setLoading(true)
-            await GlobalApi.provideISRC(release.releaseId, track._id, isrcCode)
+            if (releaseCategory === 'advanced') {
+                await GlobalApi.provideISRCAdvanced(release.releaseId, { trackId: track._id, isrcCode })
+            } else {
+                await GlobalApi.provideISRC(release.releaseId, track._id, isrcCode)
+            }
             toast.success('ISRC code provided successfully')
             onUpdate()
         } catch (error) {
@@ -820,7 +880,7 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate }) {
         <div className={`border rounded-lg p-4 ${isDark ? 'border-gray-700 bg-[#0f1724]' : 'border-gray-200 bg-gray-50'}`}>
             <div
                 className="flex items-center justify-between cursor-pointer"
-                onClick={() => setExpanded(!expanded)}>
+                onClick={toggleExpanded}>
                 <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded flex items-center justify-center text-sm font-medium ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
                         {index + 1}
@@ -989,6 +1049,60 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate }) {
                                     </a>
                                 ))}
                             </div>
+                        </div>
+                    )}
+
+                    {/* ACR Check Button */}
+                    {!['live', 'rejected', 'take_down'].includes(release.releaseStatus) && (track.audioFiles?.[0]?.fileUrl || track.trackLink) && (
+                        <div className="">
+                            <Button
+                                variant="outline"
+                                onClick={handleTrackACRCheck}
+                                disabled={acrLoading || loading}
+                                className="w-full border-purple-500 text-purple-600 hover:bg-purple-50 dark:border-purple-400 dark:text-purple-400">
+                                {acrLoading ? <Clock className="w-4 h-4 animate-spin mr-2" /> : <AlertCircle className="w-4 h-4 mr-2" />}
+                                {acrLoading ? 'Checking Audio Footprint...' : 'Check Audio Footprint'}
+                            </Button>
+                        </div>
+                    )}
+
+                    {/* ACR Footprinting Results for this track */}
+                    {release.audioFootprinting && release.audioFootprinting.filter(fp => fp.trackId === track._id).length > 0 && (
+                        <div className="col-span-2">
+                            <label className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">Audio Footprint Check Results</label>
+                            {release.audioFootprinting.filter(fp => fp.trackId === track._id).map((result, idx) => {
+                                const riskLevel = result.matchPercentage > 80 ? 'high' : result.matchPercentage > 50 ? 'medium' : 'low'
+                                const riskConfig = {
+                                    high: { bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-500', text: 'text-red-700 dark:text-red-300', label: 'High Risk' },
+                                    medium: { bg: 'bg-yellow-50 dark:bg-yellow-900/20', border: 'border-yellow-500', text: 'text-yellow-700 dark:text-yellow-300', label: 'Medium Risk' },
+                                    low: { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-green-500', text: 'text-green-700 dark:text-green-300', label: 'Low Risk' }
+                                }
+                                const config = riskConfig[riskLevel]
+
+                                return (
+                                    <div key={idx} className={`${config.bg} border-l-4 ${config.border} p-3 rounded mt-2`}>
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex-1">
+                                                <h4 className={`font-semibold text-sm ${config.text}`}>{result.title || 'Match Found'}</h4>
+                                                <p className="text-xs mt-1">Artists: {result.artists?.join(', ') || 'Unknown'}</p>
+                                                <p className="text-xs">Label: {result.label || 'Unknown'}</p>
+                                                {result.externalIds?.isrc && <p className="text-xs mt-1 font-mono">ISRC: {result.externalIds.isrc}</p>}
+                                                {result.externalIds?.upc && <p className="text-xs mt-1 font-mono">UPC: {result.externalIds.upc}</p>}
+                                            </div>
+                                            <div className="text-right">
+                                                <div className={`text-xl font-bold ${config.text}`}>{result.matchPercentage}%</div>
+                                                <div className="text-xs font-semibold uppercase">{config.label}</div>
+                                            </div>
+                                        </div>
+                                        {result.streamingLinks?.spotify && (
+                                            <a href={result.streamingLinks.spotify} target="_blank" rel="noopener noreferrer"
+                                               className="text-blue-600 dark:text-blue-400 text-xs mt-2 inline-block hover:underline">
+                                                Listen on Spotify →
+                                            </a>
+                                        )}
+                                    </div>
+                                )
+                            })}
                         </div>
                     )}
                 </div>

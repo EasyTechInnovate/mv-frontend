@@ -54,6 +54,7 @@ export default function ReleaseManagement({ theme }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [trackType, setTrackType] = useState("all");
+  const [releaseCategory, setReleaseCategory] = useState("basic"); // 'basic' | 'advanced'
   const debouncedSearch = useDebounce(search, 500); // 500ms delay
 
   // API States
@@ -74,6 +75,7 @@ export default function ReleaseManagement({ theme }) {
 
 
   // Fetch API
+  // Fetch API
   const fetchReleases = async () => {
     try {
       const params = { page, limit: 10 };
@@ -90,16 +92,42 @@ export default function ReleaseManagement({ theme }) {
         params.userId = userId;
       }
 
-      const res = await GlobalApi.getAllReleases(params);
-      const data = res.data.data;
+      let res;
+      if (releaseCategory === 'advanced') {
+        res = await GlobalApi.getAdvancedReleases(params);
+        // Normalizing Advanced Release Data structure to match Basic Release somewhat for the table
+        const data = res.data.data;
+        const normalizedReleases = data.releases.map(rel => ({
+            ...rel,
+            releaseName: rel.step1?.releaseInfo?.releaseName || rel.releaseId,
+            user: {
+                name: rel.userId ? `${rel.userId.firstName} ${rel.userId.lastName}` : 'Unknown',
+                email: rel.userId?.emailAddress,
+                userType: rel.userId?.userType
+            },
+            trackCount: rel.step2?.tracks?.length || 0
+        }));
+        
+        setReleases(normalizedReleases);
+        setPagination({
+            currentPage: data.pagination.currentPage,
+            totalPages: data.pagination.totalPages,
+            totalItems: data.pagination.totalItems,
+            itemsPerPage: data.pagination.itemsPerPage,
+        });
 
-      setReleases(data.releases);
-      setPagination({
-        currentPage: data.pagination.currentPage,
-        totalPages: data.pagination.totalPages,
-        totalItems: data.pagination.totalItems || data.pagination.totalCount || 0, // API might return totalItems or totalCount
-        itemsPerPage: data.pagination.itemsPerPage,
-      });
+      } else {
+        res = await GlobalApi.getAllReleases(params);
+        const data = res.data.data;
+
+        setReleases(data.releases);
+        setPagination({
+            currentPage: data.pagination.currentPage,
+            totalPages: data.pagination.totalPages,
+            totalItems: data.pagination.totalItems || data.pagination.totalCount || 0,
+            itemsPerPage: data.pagination.itemsPerPage,
+        });
+      }
     } catch (err) {
       console.log("API ERROR → ", err);
       toast.error("Failed to load releases");
@@ -108,29 +136,44 @@ export default function ReleaseManagement({ theme }) {
 
   const fetchStats = async () => {
     try {
-      const res = await GlobalApi.getReleaseStats();
-      setStatsData(res.data.data); // contains statusCounts, trackTypeCounts, totalReleases
+      let res;
+      if (releaseCategory === 'advanced') {
+          res = await GlobalApi.getAdvancedReleaseStats();
+          // Map advanced stats to common structure if needed or handle separately
+          // Advanced stats: { totalReleases, todaySubmissions, statusBreakdown: {}, typeBreakdown: {} }
+          const data = res.data.data;
+          setStatsData({
+             totalReleases: data.totalReleases,
+             statusCounts: data.statusBreakdown || {},
+             trackTypeCounts: data.typeBreakdown || {} // Assuming release types here
+          });
+      } else {
+          res = await GlobalApi.getReleaseStats();
+          setStatsData(res.data.data); // contains statusCounts, trackTypeCounts, totalReleases
+      }
     } catch (err) {
       console.log("Stats API Error → ", err);
     }
   };
 
   // Only fetch stats if not viewing a specific user
+  // Only fetch stats if not viewing a specific user
   useEffect(() => {
     if (!userId) {
       fetchStats();
     }
-  }, [userId]);
+  }, [userId, releaseCategory]);
 
 
   useEffect(() => {
     fetchReleases();
-  }, [page, debouncedSearch, status, trackType, userId]); // Add userId to dependencies
+  }, [page, debouncedSearch, status, trackType, userId, releaseCategory]); // Add userId to dependencies
 
+  // Reset page to 1 when filters change (including userId)
   // Reset page to 1 when filters change (including userId)
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, status, trackType, userId]);
+  }, [debouncedSearch, status, trackType, userId, releaseCategory]);
 
 
   // Stats
@@ -190,6 +233,7 @@ export default function ReleaseManagement({ theme }) {
         defaultData={selectedRelease}
         userId={selectedUserId}
         onBack={handleBack}
+        releaseCategory={releaseCategory} // Pass the category to handle different actions/views
       />
 
     );
@@ -253,6 +297,30 @@ export default function ReleaseManagement({ theme }) {
           ))}
         </div>
       )}
+
+      {/* Category Toggle */}
+      <div className="flex border-b border-gray-200 dark:border-gray-700">
+        <button
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            releaseCategory === "basic"
+              ? "border-purple-600 text-purple-600 dark:text-purple-400"
+              : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          }`}
+          onClick={() => setReleaseCategory("basic")}
+        >
+          Basic Releases
+        </button>
+        <button
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            releaseCategory === "advanced"
+              ? "border-purple-600 text-purple-600 dark:text-purple-400"
+              : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          }`}
+          onClick={() => setReleaseCategory("advanced")}
+        >
+          Advanced Releases
+        </button>
+      </div>
 
       {/* Search & Filters */}
       <div className="flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center">
@@ -386,13 +454,6 @@ export default function ReleaseManagement({ theme }) {
                       onClick={() => handleViewDetails(rel)}
                     >
                       <Eye className="h-4 w-4" /> View Details
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-4"
-                    >
-                      <Download className="h-4 w-4" /> Download
                     </Button>
                   </td>
                 </tr>

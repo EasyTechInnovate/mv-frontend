@@ -689,10 +689,7 @@ const CatalogPage = () => {
                                                         <Eye className="w-4 h-4 mr-1" />
                                                         View Details
                                                     </Button>
-                                                   <Button size="sm" className='bg-[#711CE9] text-white hover:bg-[#711CE9]/90'>
-                                                        <Download className="w-4 h-4 mr-1" />
-                                                        Download
-                                                    </Button>
+                                                  
                                                     <Button size="sm" variant="ghost">
                                                         <MoreHorizontal className="w-4 h-4" />
                                                     </Button>

@@ -567,5 +567,18 @@ export default {
     getReportData,
     getReportById,
     deleteReport,
-    getReportStats
+    getReportStats,
+    // Advanced Releases
+    getAdvancedReleases: (params) => axiosClient.get(`/v1/admin/advanced-releases`, { params }),
+    getAdvancedReleaseById: (releaseId) => axiosClient.get(`/v1/admin/advanced-releases/${releaseId}`),
+    approveAdvancedRelease: (releaseId, payload) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/approve`, payload),
+    startProcessingAdvancedRelease: (releaseId) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/start-processing`),
+    publishAdvancedRelease: (releaseId) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/publish`),
+    goLiveAdvancedRelease: (releaseId) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/go-live`),
+    processTakedownAdvancedRelease: (releaseId) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/process-takedown`),
+    rejectAdvancedRelease: (releaseId, payload) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/reject`, payload),
+    provideUPCAdvanced: (releaseId, payload) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/provide-upc`, payload),
+    provideISRCAdvanced: (releaseId, payload) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/provide-isrc`, payload),
+    saveAudioFootprintingAdvanced: (releaseId, payload) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/audio-footprinting`, payload),
+    getAdvancedReleaseStats: () => axiosClient.get(`/v1/admin/advanced-releases/stats`)
 }
