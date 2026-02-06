@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Plus, X, Music, Upload, Trash2, Globe } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   createAdvancedRelease,
@@ -42,9 +42,10 @@ const releaseTypes = [
   { value: "ringtonerelease", label: "Ringtone Release" }
 ];
 
-const AdvancedReleaseBuilder = () => {
+const EditAdvancedReleaseBuilder = () => {
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { id: editReleaseId } = useParams();
 
   const [selectedReleaseType, setSelectedReleaseType] = useState('');
   const [releaseId, setReleaseId] = useState('');
@@ -116,6 +117,146 @@ const AdvancedReleaseBuilder = () => {
     copyrightOption: '', // This seems redundant, top-level copyrightOption state is used
     copyrightDocument: ''
   });
+
+  // Fetch release details for editing
+  const { data: releaseDataWrapper, isLoading: isLoadingDetails, isError } = useQuery({
+    queryKey: ['advancedRelease', editReleaseId],
+    queryFn: () => getAdvancedReleaseDetails(editReleaseId),
+    enabled: !!editReleaseId,
+  });
+
+  useEffect(() => {
+    if (releaseDataWrapper?.data) {
+        const data = releaseDataWrapper.data;
+        setReleaseId(data.releaseId);
+        setSelectedReleaseType(data.releaseType);
+        
+        // Helper to map array of strings to form object structure
+        const mapArrayToObjects = (arr) => arr && arr.length > 0 
+            ? arr.map(val => ({ id: generateUniqueId(), value: val })) 
+            : [{ id: generateUniqueId(), value: '' }];
+
+        setFormData(prev => ({
+            ...prev,
+            releaseType: data.releaseType,
+            coverArt: data.step1?.coverArt?.imageUrl || '',
+            coverArtPreview: data.step1?.coverArt?.imageUrl || null,
+            coverArtInfo: {
+                size: data.step1?.coverArt?.imageSize || null,
+                format: data.step1?.coverArt?.imageFormat || null
+            },
+            releaseName: data.step1?.releaseInfo?.releaseName || '',
+            releaseVersion: data.step1?.releaseInfo?.releaseVersion || '',
+            catalogNumber: data.step1?.releaseInfo?.catalogNumber || '',
+            accountId: data.step1?.releaseInfo?.accountId || '',
+            primaryArtists: mapArrayToObjects(data.step1?.releaseInfo?.primaryArtists),
+            featuringArtists: mapArrayToObjects(data.step1?.releaseInfo?.featuringArtists),
+            variousArtist: data.step1?.releaseInfo?.variousArtist || false,
+            variousArtistNames: mapArrayToObjects(data.step1?.releaseInfo?.variousArtistNames),
+            needUPC: data.step1?.releaseInfo?.upc ? 'no' : 'yes',
+            upc: data.step1?.releaseInfo?.upc || '',
+            labelName: typeof data.step1?.releaseInfo?.labelName === 'object' ? data.step1.releaseInfo.labelName.name : (data.step1?.releaseInfo?.labelName || ''),
+            primaryGenre: data.step1?.releaseInfo?.primaryGenre || '',
+            secondaryGenre: data.step1?.releaseInfo?.secondaryGenre || '',
+            cLine: data.step1?.releaseInfo?.cLine?.text || '',
+            cLineYear: data.step1?.releaseInfo?.cLine?.year?.toString() || '',
+            pLine: data.step1?.releaseInfo?.pLine?.text || '',
+            pLineYear: data.step1?.releaseInfo?.pLine?.year?.toString() || '',
+            releasePricingTier: data.step1?.releaseInfo?.releasePricingTier || '',
+
+            tracks: (data.step2?.tracks && data.step2.tracks.length > 0) ? data.step2.tracks.map(track => ({
+                id: generateUniqueId(),
+                trackLink: track.trackLink || track.fileUrl || track.audioFiles?.[0]?.fileUrl || '',
+                audioFileName: (track.trackLink || track.fileUrl || track.audioFiles?.[0]?.fileUrl) ? 'Existing Audio' : '',
+                trackName: track.trackName || '',
+                mixVersion: track.mixVersion || '',
+                primaryArtists: mapArrayToObjects(track.primaryArtists),
+                featuringArtists: mapArrayToObjects(track.featuringArtists),
+                contributorsToSound: (track.contributorsToSoundRecording || track.contributorsToSound)?.map(c => ({
+                    id: generateUniqueId(),
+                    profession: c.profession?.toLowerCase() || '',
+                    contributors: Array.isArray(c.contributors) ? c.contributors.join(', ') : (c.contributors || '')
+                })) || [{ id: generateUniqueId(), profession: '', contributors: '' }],
+                contributorsToMusical: (track.contributorsToMusicalWork || track.contributorsToMusical)?.map(c => ({
+                    id: generateUniqueId(),
+                    profession: c.profession?.toLowerCase() || '',
+                    contributors: Array.isArray(c.contributors) ? c.contributors.join(', ') : (c.contributors || '')
+                })) || [{ id: generateUniqueId(), profession: '', contributors: '' }],
+                needISRC: track.isrc ? 'no' : 'yes',
+                isrc: track.isrc || '',
+                primaryGenre: track.primaryGenre || '',
+                secondaryGenre: track.secondaryGenre || '',
+                explicitStatus: track.explicitStatus || '',
+                hasHumanVocals: track.hasHumanVocals ? 'yes' : 'no',
+                language: track.language || '',
+                isAvailableForDownload: track.isAvailableForDownload ? 'yes' : 'no',
+                previewStartTiming: track.previewTiming?.startTime || ''
+            })) : [{
+                id: generateUniqueId(),
+                trackLink: '',
+                audioFileName: '',
+                trackName: '',
+                mixVersion: '',
+                primaryArtists: [{ id: generateUniqueId(), value: '' }],
+                featuringArtists: [{ id: generateUniqueId(), value: '' }],
+                contributorsToSound: [{ id: generateUniqueId(), profession: '', contributors: '' }],
+                contributorsToMusical: [{ id: generateUniqueId(), profession: '', contributors: '' }],
+                needISRC: 'yes',
+                isrc: '',
+                primaryGenre: '',
+                secondaryGenre: '',
+                explicitStatus: '',
+                hasHumanVocals: 'no',
+                language: '',
+                isAvailableForDownload: 'no',
+                previewStartTiming: ''
+            }],
+
+            forFutureRelease: data.step3?.deliveryDetails?.forFutureRelease ? new Date(data.step3.deliveryDetails.forFutureRelease).toISOString().split('T')[0] : '',
+            forPreorderPreSave: data.step3?.deliveryDetails?.forPastRelease ? new Date(data.step3.deliveryDetails.forPastRelease).toISOString().split('T')[0] : '',
+            worldWideRelease: data.step3?.territorialRights?.isWorldwide ? 'yes' : 'no',
+            territories: data.step3?.territorialRights?.territories || [],
+            partners: data.step3?.distributionPartners || [],
+            copyrightOption: data.step3?.copyrightOptions?.ownsCopyrights ? 'upload' : 'proceed',
+            copyrightDocument: data.step3?.copyrightOptions?.copyrightDocumentLink || ''
+        }));
+
+        const formatForComparison = (val) => val.toLowerCase().replace(/\s+/g, '_').replace(/\(/g, '').replace(/\)/g, '');
+
+        if (data.step3?.territorialRights?.isWorldwide) {
+            setWorldWideRelease('yes');
+        } else {
+            setWorldWideRelease('no');
+            const apiTerritories = data.step3?.territorialRights?.territories || [];
+            const matchedTerritories = territoryOptions.filter(t => apiTerritories.includes(formatForComparison(t)));
+            setSelectedTerritories(matchedTerritories);
+        }
+
+        if (data.step3?.distributionPartners?.length > 0) {
+            const apiPartners = data.step3?.distributionPartners || [];
+            const allPartnerOptions = [
+                ...(partnerOptions.callerTunePartners || []), 
+                ...(partnerOptions.indianStores || []), 
+                ...(partnerOptions.internationalStores || [])
+            ];
+            const matchedPartners = allPartnerOptions.filter(p => apiPartners.includes(formatForComparison(p)));
+            setSelectedPartners(matchedPartners);
+        }
+        
+        if (data.step3?.copyrightOptions?.ownsCopyrights) {
+            setCopyrightOption('upload');
+        } else {
+            setCopyrightOption('proceed');
+        }
+    }
+  }, [releaseDataWrapper]);
+
+  useEffect(() => {
+    if (isError) {
+        showToast.error("Failed to load release details");
+         navigate('/app/catalog');
+    }
+  }, [isError, navigate]);
 
 
 
@@ -570,7 +711,7 @@ const AdvancedReleaseBuilder = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-foreground">Primary Genre</Label>
-                  <Select onValueChange={(value) => setFormData(prev => ({...prev, primaryGenre: value}))}>
+                  <Select value={formData.primaryGenre} onValueChange={(value) => setFormData(prev => ({...prev, primaryGenre: value}))}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Please select" />
                     </SelectTrigger>
@@ -583,7 +724,7 @@ const AdvancedReleaseBuilder = () => {
                 </div>
                 <div>
                   <Label className="text-foreground">Secondary Genre</Label>
-                  <Select onValueChange={(value) => setFormData(prev => ({...prev, secondaryGenre: value}))}>
+                  <Select value={formData.secondaryGenre} onValueChange={(value) => setFormData(prev => ({...prev, secondaryGenre: value}))}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Please select" />
                     </SelectTrigger>
@@ -599,7 +740,7 @@ const AdvancedReleaseBuilder = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-foreground">Label Name</Label>
-                  <Select onValueChange={(value) => setFormData(prev => ({...prev, labelName: value}))}>
+                  <Select value={formData.labelName} onValueChange={(value) => setFormData(prev => ({...prev, labelName: value}))}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Please select" />
                     </SelectTrigger>
@@ -613,7 +754,7 @@ const AdvancedReleaseBuilder = () => {
                 <div>
                   <Label className="text-foreground">CLine</Label>
                   <div className="flex gap-2 mt-1">
-                    <Select onValueChange={(value) => setFormData(prev => ({...prev, cLineYear: value}))} className="w-32">
+                    <Select value={formData.cLineYear} onValueChange={(value) => setFormData(prev => ({...prev, cLineYear: value}))} className="w-32">
                       <SelectTrigger>
                         <SelectValue placeholder="Year" />
                       </SelectTrigger>
@@ -629,7 +770,7 @@ const AdvancedReleaseBuilder = () => {
                 <div>
                   <Label className="text-foreground">PLine</Label>
                   <div className="flex gap-2 mt-1">
-                    <Select onValueChange={(value) => setFormData(prev => ({...prev, pLineYear: value}))} className="w-32">
+                    <Select value={formData.pLineYear} onValueChange={(value) => setFormData(prev => ({...prev, pLineYear: value}))} className="w-32">
                       <SelectTrigger>
                         <SelectValue placeholder="Year" />
                       </SelectTrigger>
@@ -644,7 +785,7 @@ const AdvancedReleaseBuilder = () => {
                 </div>
                 <div>
                   <Label className="text-foreground">Release pricing tier</Label>
-                  <Select onValueChange={(value) => setFormData(prev => ({...prev, releasePricingTier: value}))}>
+                  <Select value={formData.releasePricingTier} onValueChange={(value) => setFormData(prev => ({...prev, releasePricingTier: value}))}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Front" />
                     </SelectTrigger>
@@ -746,7 +887,7 @@ const AdvancedReleaseBuilder = () => {
                             <Plus className="w-5 h-5 text-primary" />
                           </Button>
                         ) : (
-                          <Button variant="ghost" size="sm" className="p-2" onClick={() => removeDynamicField('featuringArtists', artist.id, track.id)}>
+                          <Button variant="ghost" size="sm" className="p-2" onClick={() => removeDynamicField('primaryArtists', artist.id, track.id)}>
                             <Trash2 className="w-5 h-5 text-destructive" />
                           </Button>
                         )}
@@ -775,7 +916,7 @@ const AdvancedReleaseBuilder = () => {
                     <Label className="text-foreground mb-2 block">Contributors to Sound Recording</Label>
                     {track.contributorsToSound.map((contributor, idx) => (
                       <div key={contributor.id} className="flex items-center gap-2 mb-2">
-                        <Select onValueChange={(value) => updateDynamicField('contributorsToSound', contributor.id, value, track.id, 'profession')}>
+                        <Select value={contributor.profession} onValueChange={(value) => updateDynamicField('contributorsToSound', contributor.id, value, track.id, 'profession')}>
                           <SelectTrigger className="w-48">
                             <SelectValue placeholder="Select profession" />
                           </SelectTrigger>
@@ -803,7 +944,7 @@ const AdvancedReleaseBuilder = () => {
                     <Label className="text-foreground mb-2 block">Contributors to Musical Work</Label>
                     {track.contributorsToMusical.map((contributor, idx) => (
                       <div key={contributor.id} className="flex items-center gap-2 mb-2">
-                        <Select onValueChange={(value) => updateDynamicField('contributorsToMusical', contributor.id, value, track.id, 'profession')}>
+                        <Select value={contributor.profession} onValueChange={(value) => updateDynamicField('contributorsToMusical', contributor.id, value, track.id, 'profession')}>
                           <SelectTrigger className="w-48">
                             <SelectValue placeholder="Select profession" />
                           </SelectTrigger>
@@ -851,7 +992,7 @@ const AdvancedReleaseBuilder = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-foreground">Primary Genre</Label>
-                      <Select onValueChange={(value) => handleTrackFieldChange(track.id, 'primaryGenre', value)}>
+                      <Select value={track.primaryGenre} onValueChange={(value) => handleTrackFieldChange(track.id, 'primaryGenre', value)}>
                         <SelectTrigger className="mt-1">
                           <SelectValue placeholder="Please select" />
                         </SelectTrigger>
@@ -864,7 +1005,7 @@ const AdvancedReleaseBuilder = () => {
                     </div>
                     <div>
                       <Label className="text-foreground">Secondary Genre</Label>
-                      <Select onValueChange={(value) => handleTrackFieldChange(track.id, 'secondaryGenre', value)}>
+                      <Select value={track.secondaryGenre} onValueChange={(value) => handleTrackFieldChange(track.id, 'secondaryGenre', value)}>
                         <SelectTrigger className="mt-1">
                           <SelectValue placeholder="Please select" />
                         </SelectTrigger>
@@ -912,7 +1053,7 @@ const AdvancedReleaseBuilder = () => {
                   {track.hasHumanVocals === 'yes' && (
                     <div>
                       <Label className="text-foreground">Language</Label>
-                      <Select onValueChange={(value) => handleTrackFieldChange(track.id, 'language', value)}>
+                      <Select value={track.language} onValueChange={(value) => handleTrackFieldChange(track.id, 'language', value)}>
                         <SelectTrigger className="mt-1">
                           <SelectValue placeholder="Select language" />
                         </SelectTrigger>
@@ -1160,33 +1301,7 @@ const AdvancedReleaseBuilder = () => {
     </div>
   );
 
-  const renderReleaseTypeSelection = () => (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-8 text-center">
-        <h2 className="text-foreground text-2xl font-semibold mb-2">Select Release Type</h2>
-        <p className="text-muted-foreground text-sm">Choose the type of release you want to create</p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {releaseTypes.map((type) => (
-          <div
-            key={type.value}
-            className="relative border-2 border-dashed border-slate-600 rounded-lg p-8 hover:border-slate-500 transition-colors cursor-pointer group"
-            onClick={() => handleReleaseTypeSelection(type.value)}
-          >
-            <div className="flex flex-col items-center justify-center text-center h-32">
-              <div className="mb-4">
-                <Plus className="w-10 h-10 text-slate-400 group-hover:text-slate-300 transition-colors" />
-              </div>
-              <h3 className="text-foreground text-lg font-medium mb-1">{type.label}</h3>
-              <p className="text-muted-foreground text-xs">
-                {(type.value === 'single' || type.value === 'ringtonerelease') ? '1 Track' : 'Multiple Tracks'}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -1314,26 +1429,13 @@ const AdvancedReleaseBuilder = () => {
     console.log('Advanced Release Form Data:', formData);
   };
 
-  // If no release type selected, show selection screen
-  if (!selectedReleaseType) {
+  // If editing and loading or type not yet set, show loader
+  if (editReleaseId && (isLoadingDetails || !selectedReleaseType)) {
     return (
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
-              <Button onClick={()=>navigate('/app/upload-release/')} variant="outline" size="sm" className="p-2">
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div>
-                <h1 className="text-foreground text-3xl font-semibold">Advanced Release Builder</h1>
-                <p className="text-muted-foreground text-sm">Create and distribute your advanced music release</p>
-              </div>
-            </div>
-          </div>
-          {renderReleaseTypeSelection()}
+        <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-      </div>
-    );
+    )
   }
 
   return (
@@ -1341,12 +1443,12 @@ const AdvancedReleaseBuilder = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
-            <Button onClick={()=>navigate('/app/upload-release/')} variant="outline" size="sm" className="p-2">
+            <Button onClick={()=>navigate('/app/catalog')} variant="outline" size="sm" className="p-2">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-foreground text-3xl font-semibold">Upload Release</h1>
-              <p className="text-muted-foreground text-sm">Upload your music and distribute it to all major platforms</p>
+              <h1 className="text-foreground text-3xl font-semibold">Edit Release</h1>
+              <p className="text-muted-foreground text-sm">Update your release details</p>
             </div>
           </div>
           <div className="bg-primary/10 text-primary px-4 py-2 rounded-lg text-sm font-medium">
@@ -1395,7 +1497,7 @@ const AdvancedReleaseBuilder = () => {
           <div className="flex space-x-4">
             <Button 
               variant="outline" 
-              onClick={() => navigate('/app/upload-release')}
+              onClick={() => navigate('/app/catalog')}
             >
               Cancel
             </Button>
@@ -1424,4 +1526,4 @@ const AdvancedReleaseBuilder = () => {
   );
 };
 
-export default AdvancedReleaseBuilder;
+export default EditAdvancedReleaseBuilder;

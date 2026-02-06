@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Plus, X, Music, Upload, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createRelease, updateReleaseStep1, updateReleaseStep2, updateReleaseStep3, submitRelease, getBasicReleaseDetails } from '../../services/api.services';
 import { showToast } from '../../utils/toast';
@@ -22,8 +22,9 @@ const labelNames = [
   "Maheshwari Vishual"
 ];
 
-const BasicReleaseBuilder = () => {
+const EditBasicReleaseBuilder = () => {
   const navigate = useNavigate()
+  const { id: editReleaseId } = useParams();
   const [currentStep, setCurrentStep] = useState(0);
   const [releaseType, setReleaseType] = useState('');
   const [releaseId, setReleaseId] = useState('');
@@ -83,6 +84,111 @@ const BasicReleaseBuilder = () => {
   });
 
   const tracks = formData.tracks;
+
+  // Fetch release details for editing
+  const { data: releaseDataWrapper, isLoading: isLoadingDetails, isError } = useQuery({
+    queryKey: ['basicRelease', editReleaseId],
+    queryFn: () => getBasicReleaseDetails(editReleaseId),
+    enabled: !!editReleaseId,
+  });
+
+  useEffect(() => {
+    if (releaseDataWrapper?.data) {
+        const data = releaseDataWrapper.data;
+        
+        setReleaseId(data.releaseId);
+        setReleaseType(data.trackType);
+        
+        // Map data to state
+        setFormData(prev => ({
+            ...prev,
+            coverArt: data.step1?.coverArt?.imageUrl || '',
+            coverArtPreview: data.step1?.coverArt?.imageUrl || null,
+            coverArtInfo: {
+                size: data.step1?.coverArt?.imageSize || null,
+                format: data.step1?.coverArt?.imageFormat || null
+            },
+            releaseName: data.step1?.releaseInfo?.releaseName || '',
+            genre: data.step1?.releaseInfo?.genre || '',
+            upc: data.step1?.releaseInfo?.upc || '',
+            labelName: typeof data.step1?.releaseInfo?.labelName === 'object' ? data.step1.releaseInfo.labelName.name : (data.step1?.releaseInfo?.labelName || ''),
+    
+            tracks: (data.step2?.tracks && data.step2.tracks.length > 0) ? data.step2.tracks.map(track => ({
+                id: generateUniqueId(),
+                trackLink: track.trackLink || track.fileUrl || track.audioFiles?.[0]?.fileUrl || '',
+                audioFileName: (track.trackLink || track.fileUrl || track.audioFiles?.[0]?.fileUrl) ? 'Existing Audio' : '', 
+                songName: track.trackName || '',
+                genre: track.genre || '',
+                singerName: track.singerName || '',
+                composerName: track.composerName || '',
+                lyricistName: track.lyricistName || '',
+                producerName: track.producerName || '',
+                isrc: track.isrc || '',
+                previewCallTiming: `${track.previewTiming?.startTime || 0}-${track.previewTiming?.endTime || 0}`,
+                language: track.language || ''
+            })) : [{
+                id: generateUniqueId(),
+                trackLink: '',
+                audioFileName: '',
+                songName: '',
+                genre: '',
+                singerName: '',
+                composerName: '',
+                lyricistName: '',
+                producerName: '',
+                isrc: '',
+                previewCallTiming: '',
+                language: ''
+            }],
+
+            forFutureRelease: data.step3?.releaseDate ? new Date(data.step3.releaseDate).toISOString().split('T')[0] : '',
+            worldWideRelease: data.step3?.territorialRights?.hasRights ? 'yes' : 'no',
+            territories: data.step3?.territorialRights?.territories || [],
+            partners: data.step3?.partnerSelection?.partners || [],
+            copyrightOption: data.step3?.copyrights?.ownsCopyright ? 'upload' : 'proceed',
+            copyrightDocument: data.step3?.copyrights?.copyrightDocuments?.[0]?.documentUrl || ''
+        }));
+
+        const formatForComparison = (val) => val.toLowerCase().replace(/\s+/g, '_').replace(/\(/g, '').replace(/\)/g, '');
+
+        if (data.step3?.territorialRights?.hasRights) {
+            setWorldWideRelease('yes');
+            // If worldwide, we usually select all or don't show list.
+            // But if user expects them selected, we can try matching all?
+            // Usually we leave it empty if hidden.
+        } else {
+            setWorldWideRelease('no');
+            // Map territories
+            const apiTerritories = data.step3?.territorialRights?.territories || [];
+            const matchedTerritories = territoryOptions.filter(t => apiTerritories.includes(formatForComparison(t)));
+            setSelectedTerritories(matchedTerritories);
+        }
+
+        if (data.step3?.partnerSelection?.partners?.length > 0) {
+            const apiPartners = data.step3?.partnerSelection?.partners || [];
+            const allPartnerOptions = [
+                ...(partnerOptions.callerTunePartners || []), 
+                ...(partnerOptions.indianStores || []), 
+                ...(partnerOptions.internationalStores || [])
+            ];
+            const matchedPartners = allPartnerOptions.filter(p => apiPartners.includes(formatForComparison(p)));
+            setSelectedPartners(matchedPartners);
+        }
+        
+        if (data.step3?.copyrights?.ownsCopyright) {
+            setCopyrightOption('upload');
+        } else {
+            setCopyrightOption('proceed');
+        }
+    }
+  }, [releaseDataWrapper]);
+
+  useEffect(() => {
+    if (isError) {
+        showToast.error("Failed to load release details");
+         navigate('/app/catalog');
+    }
+  }, [isError, navigate]);
 
   // API Mutations
   const createReleaseMutation = useMutation({
@@ -332,48 +438,7 @@ const BasicReleaseBuilder = () => {
     }
   };
 
-  const handleReleaseTypeSelection = async (type) => {
-    const loadingToast = showToast.loading('Creating release...');
-    try {
-      await createReleaseMutation.mutateAsync(type);
-      setReleaseType(type);
-      showToast.dismiss(loadingToast);
-    } catch (error) {
-      showToast.dismiss(loadingToast);
-    }
-  };
 
-  const renderReleaseTypeSelection = () => (
-    <div className="max-w-6xl mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div
-          className="relative border-2 border-dashed border-slate--600 rounded-lg p-12 hover:border-slate-500 transition-colors cursor-pointer group"
-          onClick={() => handleReleaseTypeSelection('single')}
-        >
-          <div className="flex flex-col items-center justify-center text-center h-48">
-            <div className="mb-6">
-              <Plus className="w-12 h-12 text-muted-foreground group-hover:text-foreground transition-colors" />
-            </div>
-            <h3 className="text-foreground text-xl font-medium mb-2">Select a Single track</h3>
-            <p className="text-muted-foreground text-sm">Add a track from MV Catalog or Spotify</p>
-          </div>
-        </div>
-
-        <div
-          className="relative border-2 border-dashed border-slate--600 rounded-lg p-12 hover:border-slate-500 transition-colors cursor-pointer group"
-          onClick={() => handleReleaseTypeSelection('album')}
-        >
-          <div className="flex flex-col items-center justify-center text-center h-48">
-            <div className="mb-6">
-              <Plus className="w-12 h-12 text-muted-foreground group-hover:text-foreground transition-colors" />
-            </div>
-            <h3 className="text-foreground text-xl font-medium mb-2">Select a Album track</h3>
-            <p className="text-muted-foreground text-sm">Add a track from MV Catalog or Spotify</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   const renderStep1 = () => (
     <div className="max-w-6xl mx-auto">
@@ -440,7 +505,7 @@ const BasicReleaseBuilder = () => {
               </div>
               <div>
                 <Label htmlFor="genre" className="text-foreground">Genre</Label>
-                <Select onValueChange={(value) => setFormData(prev => ({...prev, genre: value}))}>
+                <Select value={formData.genre} onValueChange={(value) => setFormData(prev => ({...prev, genre: value}))}>
                   <SelectTrigger className="mt-1 w-full">
                     <SelectValue placeholder="Select genre" />
                   </SelectTrigger>
@@ -465,7 +530,7 @@ const BasicReleaseBuilder = () => {
               </div>
               <div className="">
                 <Label htmlFor="labelName" className="text-foreground">Label name</Label>
-                <Select onValueChange={(value) => setFormData(prev => ({...prev, labelName: value}))}>
+                <Select value={formData.labelName} onValueChange={(value) => setFormData(prev => ({...prev, labelName: value}))}>
                   <SelectTrigger className="mt-1 w-full">
                     <SelectValue placeholder="Select label" />
                   </SelectTrigger>
@@ -562,7 +627,7 @@ const BasicReleaseBuilder = () => {
                 </div>
                 <div>
                   <Label className="text-foreground">Genre</Label>
-                  <Select onValueChange={(value) => handleTrackFieldChange(track.id, 'genre', value)}>
+                  <Select value={track.genre} onValueChange={(value) => handleTrackFieldChange(track.id, 'genre', value)}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Select genre" />
                     </SelectTrigger>
@@ -631,7 +696,7 @@ const BasicReleaseBuilder = () => {
                 </div>
                 <div>
                   <Label className="text-foreground">Language</Label>
-                  <Select onValueChange={(value) => handleTrackFieldChange(track.id, 'language', value)}>
+                  <Select value={track.language} onValueChange={(value) => handleTrackFieldChange(track.id, 'language', value)}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Select language" />
                     </SelectTrigger>
@@ -857,7 +922,13 @@ const BasicReleaseBuilder = () => {
   );
 
   const renderStepContent = () => {
-    if (!releaseType) return renderReleaseTypeSelection();
+    if (isLoadingDetails) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        )
+    }
     
     switch (currentStep) {
       case 0:
@@ -1029,14 +1100,14 @@ const BasicReleaseBuilder = () => {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => navigate('/app/upload-release')} 
+              onClick={() => navigate('/app/catalog')} 
               className="p-2"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-foreground text-3xl font-semibold">Upload Release</h1>
-              <p className="text-muted-foreground text-sm">Basic Release Builder</p>
+              <h1 className="text-foreground text-3xl font-semibold">Edit Release</h1>
+              <p className="text-muted-foreground text-sm">Edit Basic Release</p>
             </div>
           </div>
         </div>
@@ -1104,4 +1175,4 @@ const BasicReleaseBuilder = () => {
   );
 };
 
-export default BasicReleaseBuilder;
+export default EditBasicReleaseBuilder;

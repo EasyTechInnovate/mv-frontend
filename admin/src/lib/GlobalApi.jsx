@@ -307,6 +307,12 @@ const provideISRC = (releaseId, trackId, isrcCode) =>
 
 const saveAudioFootprinting = (releaseId, payload) => axiosClient.post(`/v1/admin/releases/${releaseId}/audio-footprinting`, payload)
 
+const getEditRequests = () => axiosClient.get('/v1/admin/releases/edit-requests')
+
+const approveEditRequest = (releaseId) => axiosClient.post(`/v1/admin/releases/${releaseId}/approve-edit`)
+
+const rejectEditRequest = (releaseId, payload) => axiosClient.post(`/v1/admin/releases/${releaseId}/reject-edit`, payload)
+
 // ---------------------- Merch Store Management (Admin) ----------------------
 
 export const getAllMerchStores = (page = 1, limit = 10, search = '', status = '') => {
@@ -529,6 +535,9 @@ export default {
     provideUPC,
     provideISRC,
     saveAudioFootprinting,
+    getEditRequests,
+    approveEditRequest,
+    rejectEditRequest,
     getAllMerchStores,
     getMerchStoreStats,
     getMerchStoreById,
@@ -580,5 +589,8 @@ export default {
     provideUPCAdvanced: (releaseId, payload) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/provide-upc`, payload),
     provideISRCAdvanced: (releaseId, payload) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/provide-isrc`, payload),
     saveAudioFootprintingAdvanced: (releaseId, payload) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/audio-footprinting`, payload),
+    getAdvancedEditRequests: () => axiosClient.get('/v1/admin/advanced-releases/edit-requests'),
+    approveAdvancedEditRequest: (releaseId) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/approve-edit`),
+    rejectAdvancedEditRequest: (releaseId, payload) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/reject-edit`, payload),
     getAdvancedReleaseStats: () => axiosClient.get(`/v1/admin/advanced-releases/stats`)
 }

@@ -439,6 +439,80 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                     isDark={isDark}
                     releaseCategory={releaseCategory}
                 />
+
+                {/* Edit Request Section */}
+                {release.updateRequest?.requestedAt && (
+                    <div className={`p-4 rounded-lg border ${isDark ? 'bg-yellow-900/10 border-yellow-700 text-yellow-200' : 'bg-yellow-50 border-yellow-200 text-yellow-800'}`}>
+                        <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+                            <div className="flex-1">
+                                <h3 className="font-semibold flex items-center gap-2 mb-2">
+                                    <AlertCircle className="w-5 h-5" />
+                                    Edit Request Pending
+                                </h3>
+                                <div className="space-y-1 text-sm">
+                                    <p>
+                                        <span className="font-medium opacity-80">Requested:</span> {new Date(release.updateRequest.requestedAt).toLocaleString()}
+                                    </p>
+                                    <p>
+                                        <span className="font-medium opacity-80">Reason:</span> {release.updateRequest.requestReason}
+                                    </p>
+                                    {release.updateRequest.requestedChanges && (
+                                        <div className="mt-2">
+                                            <span className="font-medium opacity-80">Requested Changes:</span>
+                                            <pre className="mt-1 p-2 rounded bg-black/5 dark:bg-white/5 font-mono text-xs overflow-x-auto whitespace-pre-wrap">
+                                                {typeof release.updateRequest.requestedChanges === 'string' 
+                                                    ? release.updateRequest.requestedChanges 
+                                                    : JSON.stringify(release.updateRequest.requestedChanges, null, 2)}
+                                            </pre>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex flex-row md:flex-col gap-2 w-full md:w-auto">
+                                <Button 
+                                    onClick={async () => {
+                                        if (confirm('Are you sure you want to approve this edit request? The release will be moved to DRAFT status.')) {
+                                            try {
+                                                if (isAdvanced) {
+                                                    await GlobalApi.approveAdvancedEditRequest(release.releaseId)
+                                                } else {
+                                                    await GlobalApi.approveEditRequest(release.releaseId)
+                                                }
+                                                toast.success('Edit request approved')
+                                                fetchReleaseDetails()
+                                            } catch (error) {
+                                                toast.error('Failed to approve request')
+                                            }
+                                        }
+                                    }} 
+                                    className="bg-green-600 hover:bg-green-700 text-white w-full md:w-auto">
+                                    Approve Request
+                                </Button>
+                                <Button 
+                                    onClick={async () => {
+                                        const reason = prompt('Please enter rejection reason:')
+                                        if (reason) {
+                                            try {
+                                                if (isAdvanced) {
+                                                    await GlobalApi.rejectAdvancedEditRequest(release.releaseId, { reason })
+                                                } else {
+                                                    await GlobalApi.rejectEditRequest(release.releaseId, { reason })
+                                                }
+                                                toast.success('Edit request rejected')
+                                                fetchReleaseDetails()
+                                            } catch (error) {
+                                                toast.error('Failed to reject request')
+                                            }
+                                        }
+                                    }} 
+                                    variant="destructive"
+                                    className="w-full md:w-auto">
+                                    Reject Request
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* UPC Provision for Advanced Releases */}

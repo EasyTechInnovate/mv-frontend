@@ -83,6 +83,16 @@ export const getBasicReleaseDetails = async (releaseId) => {
     return response.data
 }
 
+export const requestUpdate = async (releaseId, data) => {
+    const response = await servicesAxiosInstance.post(`/v1/releases/${releaseId}/request-update`, data)
+    return response.data
+}
+
+export const requestTakeDown = async (releaseId, data) => {
+    const response = await servicesAxiosInstance.post(`/v1/releases/${releaseId}/request-takedown`, data)
+    return response.data
+}
+
 // Get Advanced Releases
 export const getAdvancedReleases = async (params) => {
     const { page = 1, limit = 10, status, search, sortOrder = 'desc' } = params
@@ -102,6 +112,16 @@ export const getAdvancedReleases = async (params) => {
 // Get Advanced Release Details
 export const getAdvancedReleaseDetails = async (releaseId) => {
     const response = await servicesAxiosInstance.get(`/v1/advance-releases/${releaseId}`)
+    return response.data
+}
+
+export const requestAdvancedUpdate = async (releaseId, data) => {
+    const response = await servicesAxiosInstance.post(`/v1/advance-releases/${releaseId}/request-update`, data)
+    return response.data
+}
+
+export const requestAdvancedTakeDown = async (releaseId, data) => {
+    const response = await servicesAxiosInstance.post(`/v1/advance-releases/${releaseId}/request-takedown`, data)
     return response.data
 }
 

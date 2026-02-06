@@ -2,14 +2,32 @@ import React, { useState, useEffect } from 'react'
 import { Search, Music, Play, BarChart3, Eye, Download, MoreHorizontal, ChevronLeft, ChevronRight, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Label } from '@/components/ui/label'
-import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { getBasicReleases, getAdvancedReleases, getBasicReleaseDetails, getAdvancedReleaseDetails } from '../../services/api.services'
+import { Link, useNavigate } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { 
+    getBasicReleases, 
+    getAdvancedReleases, 
+    getBasicReleaseDetails, 
+    getAdvancedReleaseDetails,
+    requestUpdate,
+    requestTakeDown,
+    requestAdvancedUpdate,
+    requestAdvancedTakeDown
+} from '../../services/api.services'
 import { showToast } from '../../utils/toast'
 import ExportCsvDialog from '../../components/common/ExportCsvDialog'
 
@@ -400,6 +418,7 @@ const ReleaseDetailsModal = ({ release, isOpen, onClose, releaseType }) => {
 }
 
 const CatalogPage = () => {
+    const navigate = useNavigate()
     const [releaseType, setReleaseType] = useState('basic') // 'basic' or 'advanced'
     const [searchTerm, setSearchTerm] = useState('')
     const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -409,7 +428,93 @@ const CatalogPage = () => {
     const [selectedRelease, setSelectedRelease] = useState(null)
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
     const [isExportModalOpen, setIsExportModalOpen] = useState(false)
+    const queryClient = useQueryClient()
     const itemsPerPage = 10
+
+    const [editDialog, setEditDialog] = useState({ 
+        isOpen: false, 
+        release: null, 
+        reason: '', 
+        changes: '' 
+    })
+
+    const [takedownDialog, setTakedownDialog] = useState({ 
+        isOpen: false, 
+        release: null, 
+        reason: '' 
+    })
+
+    const handleOpenEdit = (release) => {
+        setEditDialog({ isOpen: true, release, reason: '', changes: '' })
+    }
+
+    const handleOpenTakedown = (release) => {
+        setTakedownDialog({ isOpen: true, release, reason: '' })
+    }
+
+    const handleEditRelease = (release) => {
+        if (releaseType === 'basic') {
+            navigate(`/app/edit-release/basic/${release.releaseId}`)
+        } else {
+            navigate(`/app/edit-release/advanced/${release.releaseId}`)
+        }
+    }
+
+    const submitEdit = async () => {
+        if (!editDialog.reason || !editDialog.changes) {
+            showToast.error("Please fill in all fields")
+            return
+        }
+        
+        try {
+            if (releaseType === 'basic') {
+                await requestUpdate(editDialog.release.releaseId, {
+                    reason: editDialog.reason,
+                    changes: editDialog.changes
+                })
+            } else {
+                 await requestAdvancedUpdate(editDialog.release.releaseId, {
+                    reason: editDialog.reason,
+                    changes: editDialog.changes
+                })
+            }
+            
+            showToast.success("Edit request submitted")
+            setEditDialog({ ...editDialog, isOpen: false })
+            queryClient.invalidateQueries(['basicReleases'])
+            queryClient.invalidateQueries(['advancedReleases'])
+        } catch (error) {
+            showToast.error(error.response?.data?.message || "Failed to submit request")
+        }
+    }
+
+    const submitTakedown = async () => {
+        if (!takedownDialog.reason) {
+            showToast.error("Please enter a reason")
+            return
+        }
+        
+        try {
+            if (releaseType === 'basic') {
+                await requestTakeDown(takedownDialog.release.releaseId, {
+                    reason: takedownDialog.reason
+                })
+            } else {
+                 await requestAdvancedTakeDown(takedownDialog.release.releaseId, {
+                    reason: takedownDialog.reason
+                })
+            }
+            
+            showToast.success("Takedown request submitted")
+            setTakedownDialog({ ...takedownDialog, isOpen: false })
+            queryClient.invalidateQueries(['basicReleases'])
+            queryClient.invalidateQueries(['advancedReleases'])
+        } catch (error) {
+            showToast.error(error.response?.data?.message || "Failed to submit request")
+        }
+    }
+
+
 
     // Debounce search
     useEffect(() => {
@@ -690,9 +795,44 @@ const CatalogPage = () => {
                                                         View Details
                                                     </Button>
                                                   
-                                                    <Button size="sm" variant="ghost">
-                                                        <MoreHorizontal className="w-4 h-4" />
-                                                    </Button>
+
+
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button size="sm" variant="ghost">
+                                                                <MoreHorizontal className="w-4 h-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                            <DropdownMenuItem onClick={() => handleViewDetails(release)}>
+                                                                View Details
+                                                            </DropdownMenuItem>
+
+                                                            {(release.releaseStatus === EReleaseStatus.DRAFT || release.releaseStatus === EReleaseStatus.REJECTED) && (
+                                                                <>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem onClick={() => handleEditRelease(release)}>
+                                                                        Edit Release
+                                                                    </DropdownMenuItem>
+                                                                </>
+                                                            )}
+                                                            
+
+                                                            
+                                                            {(release.releaseStatus === EReleaseStatus.LIVE || release.releaseStatus === EReleaseStatus.PUBLISHED) && (
+                                                                <>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem onClick={() => handleOpenEdit(release)}>
+                                                                        Request Edit
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => handleOpenTakedown(release)} className="text-red-600 focus:text-red-600">
+                                                                        Request Takedown
+                                                                    </DropdownMenuItem>
+                                                                </>
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </td>
                                             </tr>
                                         ))}
@@ -777,6 +917,68 @@ const CatalogPage = () => {
                 }}
                 releaseType={releaseType}
             />
+            {/* Edit Request Dialog */}
+            <Dialog open={editDialog.isOpen} onOpenChange={(open) => setEditDialog({ ...editDialog, isOpen: open })}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Request Edit For {editDialog.release?.releaseName}</DialogTitle>
+                        <DialogDescription>
+                            Note: Moving a release back to draft for editing will temporarily remove it from review/live status.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Reason for Edit</Label>
+                            <Input 
+                                placeholder="E.g. Typo in title, wrong artwork" 
+                                value={editDialog.reason}
+                                onChange={(e) => setEditDialog({ ...editDialog, reason: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Requested Changes</Label>
+                            <Textarea 
+                                placeholder="Describe exactly what needs to be changed..." 
+                                value={editDialog.changes}
+                                onChange={(e) => setEditDialog({ ...editDialog, changes: e.target.value })}
+                                rows={4}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setEditDialog({ ...editDialog, isOpen: false })}>Cancel</Button>
+                        <Button onClick={submitEdit} disabled={!editDialog.reason || !editDialog.changes}>Submit Request</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Takedown Request Dialog */}
+            <Dialog open={takedownDialog.isOpen} onOpenChange={(open) => setTakedownDialog({ ...takedownDialog, isOpen: open })}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="text-red-600">Request Takedown For {takedownDialog.release?.releaseName}</DialogTitle>
+                        <DialogDescription>
+                            Warning: This will permanently remove your release from all stores. This action cannot be undone immediately.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Reason for Takedown</Label>
+                            <Textarea 
+                                placeholder="Why do you want to take down this release?" 
+                                value={takedownDialog.reason}
+                                onChange={(e) => setTakedownDialog({ ...takedownDialog, reason: e.target.value })}
+                                rows={4}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setTakedownDialog({ ...takedownDialog, isOpen: false })}>Cancel</Button>
+                        <Button variant="destructive" onClick={submitTakedown} disabled={!takedownDialog.reason}>Submit Takedown Request</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
              <ExportCsvDialog
                 isOpen={isExportModalOpen}
                 onClose={() => setIsExportModalOpen(false)}

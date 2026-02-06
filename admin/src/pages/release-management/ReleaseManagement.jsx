@@ -93,33 +93,45 @@ export default function ReleaseManagement({ theme }) {
       }
 
       let res;
-      if (releaseCategory === 'advanced') {
+      if (status === 'update_request') {
+          // Use specific API for edit requests to get correct sorting/data
+          if (releaseCategory === 'advanced') {
+              res = await GlobalApi.getAdvancedEditRequests({ page, limit: 10 });
+          } else {
+              res = await GlobalApi.getEditRequests({ page, limit: 10 });
+          }
+      } else if (releaseCategory === 'advanced') {
         res = await GlobalApi.getAdvancedReleases(params);
-        // Normalizing Advanced Release Data structure to match Basic Release somewhat for the table
-        const data = res.data.data;
-        const normalizedReleases = data.releases.map(rel => ({
+      } else {
+        res = await GlobalApi.getAllReleases(params);
+      }
+
+      const data = res.data.data;
+
+      if (releaseCategory === 'advanced' || status === 'update_request') {
+        // Normalizing Data structure
+        const releasesList = data.releases || []; 
+        const normalizedReleases = releasesList.map(rel => ({
             ...rel,
             releaseName: rel.step1?.releaseInfo?.releaseName || rel.releaseId,
             user: {
                 name: rel.userId ? `${rel.userId.firstName} ${rel.userId.lastName}` : 'Unknown',
                 email: rel.userId?.emailAddress,
-                userType: rel.userId?.userType
+                userType: rel.userId?.userType || 'Unknown' 
             },
             trackCount: rel.step2?.tracks?.length || 0
         }));
         
         setReleases(normalizedReleases);
         setPagination({
-            currentPage: data.pagination.currentPage,
-            totalPages: data.pagination.totalPages,
-            totalItems: data.pagination.totalItems,
-            itemsPerPage: data.pagination.itemsPerPage,
+            currentPage: data.currentPage || data.pagination?.currentPage || 1,
+            totalPages: data.totalPages || data.pagination?.totalPages || 1,
+            totalItems: data.totalItems || data.pagination?.totalItems || 0,
+            itemsPerPage: 10,
         });
 
       } else {
-        res = await GlobalApi.getAllReleases(params);
-        const data = res.data.data;
-
+        // Basic releases (standard flow)
         setReleases(data.releases);
         setPagination({
             currentPage: data.pagination.currentPage,

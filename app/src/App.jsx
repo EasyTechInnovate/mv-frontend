@@ -26,6 +26,8 @@ import HelpSupport from './pages/helpSupport/HelpSupport'
 import SettingsPage from './pages/setting/Setting'
 import BasicReleaseBuilder from './pages/uploadRelease/Basic'
 import AdvancedReleaseBuilder from './pages/uploadRelease/Advance'
+import EditBasicReleaseBuilder from './pages/uploadRelease/EditBasicRelease'
+import EditAdvancedReleaseBuilder from './pages/uploadRelease/EditAdvancedRelease'
 import Profile from './pages/profile/Profile'
 import Plan from './pages/plan/Plan'
 import MahiAI from './pages/mahiAI/MahiAI'
@@ -103,6 +105,8 @@ const ProtectedRoutes = () => {
           <Route path='upload-release' element={<UploadRelease />} />
           <Route path='upload-release/basic-release-builder' element={<BasicReleaseBuilder />} />
           <Route path='upload-release/advanced-release-builder' element={<AdvancedReleaseBuilder />} />
+          <Route path='edit-release/basic/:id' element={<EditBasicReleaseBuilder />} />
+          <Route path='edit-release/advanced/:id' element={<EditAdvancedReleaseBuilder />} />
           <Route path='catalog' element={<CatalogPage />} />
           <Route path='analytics' element={<Analytics />} />
           <Route path='royalties' element={<Royalties />} />
