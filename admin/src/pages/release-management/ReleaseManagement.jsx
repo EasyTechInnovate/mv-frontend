@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Eye, ArrowLeft } from "lucide-react"; // Import ArrowLeft
+import { Download, Eye, ArrowLeft, Pencil } from "lucide-react"; // Import ArrowLeft
 import ReleaseModal from "../../components/release-management/ReleaseModal";
 import GlobalApi from "@/lib/GlobalApi"; // your API wrapper
 import { useParams, useNavigate } from "react-router-dom"; // Import hooks
@@ -466,6 +466,20 @@ export default function ReleaseManagement({ theme }) {
                       onClick={() => handleViewDetails(rel)}
                     >
                       <Eye className="h-4 w-4" /> View Details
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-purple-600 border-purple-600 hover:bg-purple-50 flex items-center gap-1 rounded-full px-4"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const path = releaseCategory === 'advanced' 
+                                ? `/admin/release-management/advanced/edit/${rel.releaseId}`
+                                : `/admin/release-management/basic/edit/${rel.releaseId}`;
+                            navigate(path);
+                        }}
+                    >
+                        <Pencil className="h-4 w-4" /> Edit
                     </Button>
                   </td>
                 </tr>

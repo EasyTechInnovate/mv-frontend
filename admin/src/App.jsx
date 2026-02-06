@@ -7,6 +7,8 @@ import Sidebar from "./components/common/Sidebar";
 import Dashboard from "./pages/dashboard/Dashboard";
 import UserManagement from "./pages/user-management/UserManagement";
 import ReleaseManagement from "./pages/release-management/ReleaseManagement";
+import EditAdvancedRelease from "./pages/release-management/EditAdvancedRelease";
+import EditBasicRelease from "./pages/release-management/EditBasicRelease";
 import BonusManagement from "./pages/bonus-management/BonusManagement";
 import AnalyticsManagement from "./pages/analytics-management/AnalyticsManagement";
 import MonthManagement from "./pages/month-management/MonthManagement";
@@ -95,6 +97,8 @@ function App() {
             <Route path="/admin/user-management" element={<UserManagement theme={theme} />} />
             <Route path="/admin/release-management" element={<ReleaseManagement theme={theme} />} />
             <Route path="/admin/release-management/:userId/:userName" element={<ReleaseManagement theme={theme} />} />
+            <Route path="/admin/release-management/advanced/edit/:id" element={<EditAdvancedRelease theme={theme} />} />
+            <Route path="/admin/release-management/basic/edit/:id" element={<EditBasicRelease theme={theme} />} />
             <Route path="/admin/bonus-management" element={<BonusManagement theme={theme} />} />
             <Route path="/admin/kyc-management" element={<KycManagement theme={theme} />} />
             <Route path="/admin/aggregator-management" element={<AggregatorManagement theme={theme} />} />

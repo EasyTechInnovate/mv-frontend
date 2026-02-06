@@ -592,5 +592,7 @@ export default {
     getAdvancedEditRequests: () => axiosClient.get('/v1/admin/advanced-releases/edit-requests'),
     approveAdvancedEditRequest: (releaseId) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/approve-edit`),
     rejectAdvancedEditRequest: (releaseId, payload) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/reject-edit`, payload),
-    getAdvancedReleaseStats: () => axiosClient.get(`/v1/admin/advanced-releases/stats`)
+    getAdvancedReleaseStats: () => axiosClient.get(`/v1/admin/advanced-releases/stats`),
+    editAdvancedRelease: (releaseId, payload) => axiosClient.patch(`/v1/admin/advanced-releases/${releaseId}/edit`, payload),
+    editRelease: (releaseId, payload) => axiosClient.patch(`/v1/admin/releases/${releaseId}/edit`, payload)
 }
