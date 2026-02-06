@@ -594,493 +594,554 @@ const EditAdvancedRelease = ({ theme }) => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 pb-20">
-        {/* Cover Art Section */}
-        <Card className="lg:col-span-1 p-4 h-fit">
-          <div className="bg-muted/50 rounded-lg">
-            <h3 className="font-medium mb-4">Cover Art</h3>
-            <div className="flex flex-col items-center">
-              <div className="w-full h-[250px] bg-muted border-2 border-dashed border-muted-foreground/30 rounded-lg flex flex-col items-center justify-center mb-4 relative overflow-hidden">
-                {isUploadingCoverArt && (
-                  <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-10">
-                    <Loader2 className="animate-spin text-white h-8 w-8" />
-                  </div>
-                )}
-                {formData.coverArtPreview ? (
-                  <img src={formData.coverArtPreview} alt="Cover preview" className="w-full h-full object-contain rounded-lg" />
-                ) : (
-                  <div className="flex flex-col items-center justify-center text-center p-4">
-                    <Music className="w-8 h-8 text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">3000x3000px, JPG/PNG</p>
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept=".jpg,.jpeg,.png"
-                  onChange={handleCoverArtUpload}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                  disabled={isUploadingCoverArt}
-                />
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Form Sections */}
-        <div className="lg:col-span-3 space-y-8">
-            
-          {/* Release Info */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-6 border-b pb-2">Release Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                   <Label>Release Name</Label>
-                   <Input value={formData.releaseName} onChange={e => setFormData(p => ({...p, releaseName: e.target.value}))} className="mt-2" />
-                </div>
-                <div>
-                    <Label>Release Version</Label>
-                    <Input value={formData.releaseVersion} onChange={e => setFormData(p => ({...p, releaseVersion: e.target.value}))} className="mt-2" />
-                </div>
-                <div>
-                    <Label>Catalog Number</Label>
-                    <Input value={formData.catalogNumber} onChange={e => setFormData(p => ({...p, catalogNumber: e.target.value}))} className="mt-2" />
-                </div>
-                <div>
-                    <Label>Release Type</Label>
-                    <Select value={formData.releaseType} disabled>
-                        <SelectTrigger className="mt-2 text-muted-foreground">
-                            <SelectValue>{releaseTypes.find(t => t.value === formData.releaseType)?.label}</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent className={dropdownClass}>
-                             {releaseTypes.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
+      <div className="space-y-8 pb-20">
+        
+        {/* Step 1: Cover Art & Release Info */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Cover Art Section */}
+            <Card className="lg:col-span-1 p-4 h-fit">
+              <div className="flex flex-col gap-3">
+                <h3 className="text-foreground text-lg font-medium">Cover Art</h3>
+                <div className="w-full aspect-square bg-muted/30 border-2 border-dashed border-muted-foreground/30 rounded-lg flex flex-col items-center justify-center relative overflow-hidden group hover:bg-muted/50 transition-colors">
+                    {isUploadingCoverArt && (
+                        <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-20">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                <span className="text-xs mt-2 font-medium">Uploading...</span>
+                        </div>
+                    )}
+                    {formData.coverArtPreview ? (
+                        <img src={formData.coverArtPreview} alt="Cover preview" className="absolute inset-0 z-10 w-full h-full object-contain bg-background" />
+                    ) : (
+                        <div className="flex flex-col items-center justify-center p-4 text-center z-10">
+                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                                <Music className="h-6 w-6 text-primary" />
+                            </div>
+                            <p className="text-sm font-medium text-foreground">Upload Cover Art</p>
+                            <p className="text-xs text-muted-foreground mt-1">3000x3000px, JPG/PNG</p>
+                        </div>
+                    )}
+                    <input
+                        type="file"
+                        accept=".jpg,.jpeg,.png"
+                        onChange={handleCoverArtUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-30"
+                        disabled={isUploadingCoverArt}
+                    />
                 </div>
                 
-                <div className="col-span-1 md:col-span-2 space-y-4">
-                     <div>
-                        <Label>Primary Artists</Label>
-                        {formData.primaryArtists.map((artist, idx) => (
-                            <div key={artist.id} className="flex gap-2 mt-2">
-                                <Input value={artist.value} onChange={e => updateDynamicField('primaryArtists', artist.id, e.target.value)} />
-                                <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('primaryArtists') : removeDynamicField('primaryArtists', artist.id)}>
-                                    {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                                </Button>
-                            </div>
-                        ))}
-                     </div>
-                     <div>
-                        <Label>Featuring Artists</Label>
-                        {formData.featuringArtists.map((artist, idx) => (
-                            <div key={artist.id} className="flex gap-2 mt-2">
-                                <Input value={artist.value} onChange={e => updateDynamicField('featuringArtists', artist.id, e.target.value)} />
-                                <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('featuringArtists') : removeDynamicField('featuringArtists', artist.id)}>
-                                    {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                                </Button>
-                            </div>
-                        ))}
-                     </div>
-                     <div className="flex items-center space-x-2 mt-2">
-                        <Checkbox id="variousArtist" checked={formData.variousArtist} onCheckedChange={(checked) => setFormData(prev => ({...prev, variousArtist: checked}))} />
-                        <Label htmlFor="variousArtist" className="text-sm">Various Artist</Label>
-                     </div>
-                     {formData.variousArtist && (
-                        <div className="space-y-2">
-                            <Label>Various Artist Names</Label>
-                            {formData.variousArtistNames.map((artist, idx) => (
-                                <div key={artist.id} className="flex gap-2">
-                                    <Input value={artist.value} onChange={e => updateDynamicField('variousArtistNames', artist.id, e.target.value)} />
-                                    <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('variousArtistNames') : removeDynamicField('variousArtistNames', artist.id)}>
-                                        {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                     )}
-                     
-                     <div className="my-4">
-                        <Label>Do you need a UPC for this release?</Label>
-                        <RadioGroup value={formData.needUPC} onValueChange={(val) => setFormData(prev => ({...prev, needUPC: val}))} className="flex space-x-4 mt-2">
-                            <div className="flex items-center space-x-2"><RadioGroupItem value="yes" id="upcYes"/><Label htmlFor="upcYes">Yes</Label></div>
-                            <div className="flex items-center space-x-2"><RadioGroupItem value="no" id="upcNo"/><Label htmlFor="upcNo">No</Label></div>
-                        </RadioGroup>
-                        {formData.needUPC === 'no' && (
-                             <Input className="mt-2" placeholder="Enter UPC" value={formData.upc} onChange={(e) => setFormData(prev => ({...prev, upc: e.target.value}))} />
-                        )}
-                     </div>
-                </div>
-
-                <div>
-                    <Label>Primary Genre</Label>
-                    <Select value={formData.primaryGenre} onValueChange={v => setFormData(p => ({...p, primaryGenre: v}))}>
-                        <SelectTrigger className="mt-2"><SelectValue placeholder="Select Genre" /></SelectTrigger>
-                        <SelectContent className={dropdownClass}>{genreOptions.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
-                    </Select>
-                </div>
-                <div>
-                    <Label>Secondary Genre</Label>
-                    <Select value={formData.secondaryGenre} onValueChange={v => setFormData(p => ({...p, secondaryGenre: v}))}>
-                        <SelectTrigger className="mt-2"><SelectValue placeholder="Select Genre" /></SelectTrigger>
-                        <SelectContent className={dropdownClass}>{genreOptions.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
-                    </Select>
-                </div>
-
-                <div>
-                    <Label>Label Name</Label>
-                    <Input value={formData.labelName} onChange={e => setFormData(p => ({...p, labelName: e.target.value}))} className="mt-2" placeholder="Label Name" />
-                </div>
-                <div>
-                   <Label>Rights</Label>
-                   <div className="grid grid-cols-2 gap-2 mt-2">
-                       <Input placeholder="C Line Year" value={formData.cLineYear} onChange={e => setFormData(p => ({...p, cLineYear: e.target.value}))} />
-                       <Input placeholder="C Line Text" value={formData.cLine} onChange={e => setFormData(p => ({...p, cLine: e.target.value}))} />
-                   </div>
-                   <div className="grid grid-cols-2 gap-2 mt-2">
-                       <Input placeholder="P Line Year" value={formData.pLineYear} onChange={e => setFormData(p => ({...p, pLineYear: e.target.value}))} />
-                       <Input placeholder="P Line Text" value={formData.pLine} onChange={e => setFormData(p => ({...p, pLine: e.target.value}))} />
-                   </div>
-                </div>
-
-            </div>
-          </Card>
-
-          {/* Tracks Section */}
-          <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Tracks</h3>
-                  <Button onClick={addTrack} size="sm" variant="outline"><Plus className="mr-2 h-4 w-4" /> Add Track</Button>
+                <Button variant="outline" className="w-full" onClick={() => document.getElementById('cover-art-upload').click()}>
+                    <Upload className="mr-2 h-4 w-4" /> Upload Cover Art
+                </Button>
+                <input 
+                    id="cover-art-upload"
+                    type="file" 
+                    accept=".jpg,.jpeg,.png" 
+                    onChange={handleCoverArtUpload} 
+                    className="hidden" 
+                />
               </div>
-              
-              {formData.tracks.map((track, trackIndex) => (
-                  <Card key={track.id} className="p-6 relative border-l-4 border-l-purple-500">
-                      {formData.tracks.length > 1 && (
-                          <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="absolute top-2 right-2 text-destructive"
-                              onClick={() => removeTrack(track.id)}
-                          >
-                              <X className="h-4 w-4" />
-                          </Button>
-                      )}
-                      <h4 className="font-medium mb-4">Track {trackIndex + 1}</h4>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                              <Label>Track Name</Label>
-                              <Input 
-                                  value={track.trackName} 
-                                  onChange={e => handleTrackFieldChange(track.id, 'trackName', e.target.value)}
-                                  className="mt-2" 
-                              />
-                          </div>
-                          <div>
-                            <Label>Audio File</Label>
-                            <div className="mt-2 flex items-center gap-2">
-                                <div className="border rounded px-3 py-2 flex-1 text-sm truncate bg-muted">
-                                    {track.audioFileName || (track.trackLink ? "Existing Audio File" : "No file uploaded")}
-                                </div>
-                                <div className="relative">
-                                    <Input type="file" accept="audio/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleAudioUpload(track.id, e)} />
-                                    <Button size="sm" variant="outline" disabled={uploadingTrackId === track.id}>
-                                        {uploadingTrackId === track.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                                    </Button>
-                                </div>
-                            </div>
-                          </div>
-                      </div>
-                      
-                      <div className="mt-4 space-y-4">
-                         <div>
-                            <Label>Primary Artists</Label>
-                            {track.primaryArtists.map((artist, idx) => (
-                                <div key={artist.id} className="flex gap-2 mt-2">
-                                    <Input value={artist.value} onChange={e => updateDynamicField('primaryArtists', artist.id, e.target.value, track.id)} />
-                                    <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('primaryArtists', track.id) : removeDynamicField('primaryArtists', artist.id, track.id)}>
-                                        {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                                    </Button>
-                                </div>
-                            ))}
-                         </div>
-                         <div>
-                            <Label>Featuring Artists</Label>
-                            {track.featuringArtists.map((artist, idx) => (
-                                <div key={artist.id} className="flex gap-2 mt-2">
-                                    <Input value={artist.value} onChange={e => updateDynamicField('featuringArtists', artist.id, e.target.value, track.id)} />
-                                    <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('featuringArtists', track.id) : removeDynamicField('featuringArtists', artist.id, track.id)}>
-                                        {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                                    </Button>
-                                </div>
-                            ))}
-                         </div>
+            </Card>
 
-                         {/* Track Extras */}
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Release Info Form */}
+            <Card className="lg:col-span-3 p-6">
+                <h3 className="text-lg font-semibold mb-6 border-b pb-2">Release Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <Label>Release Name</Label>
+                        <Input value={formData.releaseName} onChange={e => setFormData(p => ({...p, releaseName: e.target.value}))} className="mt-2" />
+                    </div>
+                    <div>
+                        <Label>Release Version</Label>
+                        <Input value={formData.releaseVersion} onChange={e => setFormData(p => ({...p, releaseVersion: e.target.value}))} className="mt-2" />
+                    </div>
+                    <div>
+                        <Label>Catalog Number</Label>
+                        <Input value={formData.catalogNumber} onChange={e => setFormData(p => ({...p, catalogNumber: e.target.value}))} className="mt-2" />
+                    </div>
+                    <div>
+                        <Label>Release Type</Label>
+                        <Select value={formData.releaseType} disabled>
+                            <SelectTrigger className="mt-2 text-muted-foreground">
+                                <SelectValue>{releaseTypes.find(t => t.value === formData.releaseType)?.label}</SelectValue>
+                            </SelectTrigger>
+                            <SelectContent className={dropdownClass}>
+                                    {releaseTypes.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    
+                    <div className="col-span-1 md:col-span-2 space-y-4">
                             <div>
-                                <Label>Primary Genre</Label>
-                                <Select value={track.primaryGenre} onValueChange={v => handleTrackFieldChange(track.id, 'primaryGenre', v)}>
-                                    <SelectTrigger className="mt-2"><SelectValue placeholder="Select Genre" /></SelectTrigger>
-                                    <SelectContent className={dropdownClass}>{genreOptions.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
-                                </Select>
+                            <Label>Primary Artists</Label>
+                            {formData.primaryArtists.map((artist, idx) => (
+                                <div key={artist.id} className="flex gap-2 mt-2">
+                                    <Input value={artist.value} onChange={e => updateDynamicField('primaryArtists', artist.id, e.target.value)} />
+                                    <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('primaryArtists') : removeDynamicField('primaryArtists', artist.id)}>
+                                        {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+                                    </Button>
+                                </div>
+                            ))}
                             </div>
                             <div>
-                                <Label>Secondary Genre</Label>
-                                <Select value={track.secondaryGenre} onValueChange={v => handleTrackFieldChange(track.id, 'secondaryGenre', v)}>
-                                    <SelectTrigger className="mt-2"><SelectValue placeholder="Select Genre" /></SelectTrigger>
-                                    <SelectContent className={dropdownClass}>{genreOptions.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
-                                </Select>
+                            <Label>Featuring Artists</Label>
+                            {formData.featuringArtists.map((artist, idx) => (
+                                <div key={artist.id} className="flex gap-2 mt-2">
+                                    <Input value={artist.value} onChange={e => updateDynamicField('featuringArtists', artist.id, e.target.value)} />
+                                    <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('featuringArtists') : removeDynamicField('featuringArtists', artist.id)}>
+                                        {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+                                    </Button>
+                                </div>
+                            ))}
                             </div>
-                            <div>
-                                <Label>Language</Label>
-                                <Select value={track.language || ''} onValueChange={v => handleTrackFieldChange(track.id, 'language', v)}>
-                                    <SelectTrigger className="mt-2"><SelectValue placeholder="Select Language" /></SelectTrigger>
-                                    <SelectContent className={dropdownClass}>{languageOptions.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
-                                </Select>
+                            <div className="flex items-center space-x-2 mt-2">
+                            <Checkbox id="variousArtist" checked={formData.variousArtist} onCheckedChange={(checked) => setFormData(prev => ({...prev, variousArtist: checked}))} />
+                            <Label htmlFor="variousArtist" className="text-sm">Various Artist</Label>
                             </div>
-                            <div>
-                                <Label>Explicit Status</Label>
-                                <Select value={track.explicitStatus} onValueChange={v => handleTrackFieldChange(track.id, 'explicitStatus', v)}>
-                                    <SelectTrigger className="mt-2"><SelectValue placeholder="Select Status" /></SelectTrigger>
-                                    <SelectContent className={dropdownClass}>
-                                        <SelectItem value="clean">Clean</SelectItem>
-                                        <SelectItem value="explicit">Explicit</SelectItem>
-                                        <SelectItem value="instrumental">Instrumental</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                            {formData.variousArtist && (
+                            <div className="space-y-2">
+                                <Label>Various Artist Names</Label>
+                                {formData.variousArtistNames.map((artist, idx) => (
+                                    <div key={artist.id} className="flex gap-2">
+                                        <Input value={artist.value} onChange={e => updateDynamicField('variousArtistNames', artist.id, e.target.value)} />
+                                        <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('variousArtistNames') : removeDynamicField('variousArtistNames', artist.id)}>
+                                            {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+                                        </Button>
+                                    </div>
+                                ))}
                             </div>
-                         </div>
-                         
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            )}
+                            
+                            <div className="my-4">
+                            <Label>Do you need a UPC for this release?</Label>
+                            <RadioGroup value={formData.needUPC} onValueChange={(val) => setFormData(prev => ({...prev, needUPC: val}))} className="flex space-x-4 mt-2">
+                                <div className="flex items-center space-x-2"><RadioGroupItem value="yes" id="upcYes"/><Label htmlFor="upcYes">Yes</Label></div>
+                                <div className="flex items-center space-x-2"><RadioGroupItem value="no" id="upcNo"/><Label htmlFor="upcNo">No</Label></div>
+                            </RadioGroup>
+                            {formData.needUPC === 'no' && (
+                                    <Input className="mt-2" placeholder="Enter UPC" value={formData.upc} onChange={(e) => setFormData(prev => ({...prev, upc: e.target.value}))} />
+                            )}
+                            </div>
+                    </div>
+
+                    <div>
+                        <Label>Primary Genre</Label>
+                        <Select value={formData.primaryGenre} onValueChange={v => setFormData(p => ({...p, primaryGenre: v}))}>
+                            <SelectTrigger className="mt-2"><SelectValue placeholder="Select Genre" /></SelectTrigger>
+                            <SelectContent className={dropdownClass}>{genreOptions.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <Label>Secondary Genre</Label>
+                        <Select value={formData.secondaryGenre} onValueChange={v => setFormData(p => ({...p, secondaryGenre: v}))}>
+                            <SelectTrigger className="mt-2"><SelectValue placeholder="Select Genre" /></SelectTrigger>
+                            <SelectContent className={dropdownClass}>{genreOptions.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                    </div>
+
+                    <div>
+                        <Label>Label Name</Label>
+                        <Input value={formData.labelName} onChange={e => setFormData(p => ({...p, labelName: e.target.value}))} className="mt-2" placeholder="Label Name" />
+                    </div>
+                    <div>
+                        <Label>Rights</Label>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                            <Input placeholder="C Line Year" value={formData.cLineYear} onChange={e => setFormData(p => ({...p, cLineYear: e.target.value}))} />
+                            <Input placeholder="C Line Text" value={formData.cLine} onChange={e => setFormData(p => ({...p, cLine: e.target.value}))} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                            <Input placeholder="P Line Year" value={formData.pLineYear} onChange={e => setFormData(p => ({...p, pLineYear: e.target.value}))} />
+                            <Input placeholder="P Line Text" value={formData.pLine} onChange={e => setFormData(p => ({...p, pLine: e.target.value}))} />
+                        </div>
+                    </div>
+
+                </div>
+            </Card>
+        </div>
+
+        {/* Step 2: Tracks Section - FULL WIDTH */}
+        <div className="space-y-4">
+            <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Tracks</h3>
+                <Button onClick={addTrack} size="sm" variant="outline"><Plus className="mr-2 h-4 w-4" /> Add Track</Button>
+            </div>
+            
+            {formData.tracks.map((track, trackIndex) => (
+                <Card key={track.id} className="p-6 relative border-l-4 border-l-purple-500">
+                    {formData.tracks.length > 1 && (
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute top-2 right-2 text-destructive"
+                            onClick={() => removeTrack(track.id)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    )}
+                    <h4 className="font-medium mb-4">Track {trackIndex + 1}</h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        {/* Left: Audio Upload */}
+                        <div className="col-span-1 flex flex-col gap-3">
+                            <div className="w-full aspect-square bg-muted/30 border-2 border-dashed border-muted-foreground/30 rounded-lg flex flex-col items-center justify-center relative overflow-hidden group hover:bg-muted/50 transition-colors">
+                                {uploadingTrackId === track.id && (
+                                    <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-20">
+                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                        <span className="text-xs mt-2 font-medium">Uploading...</span>
+                                    </div>
+                                )}
+                                
+                                <div className="flex flex-col items-center justify-center p-4 text-center z-10 w-full">
+                                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                                        <Music className="h-6 w-6 text-primary" />
+                                    </div>
+                                    {track.audioFileName ? (
+                                        <div className="max-w-full px-2">
+                                            <p className="text-sm font-semibold truncate text-foreground">{track.audioFileName}</p>
+                                            <p className="text-xs text-muted-foreground mt-1">Ready to distribute</p>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <p className="text-sm font-medium text-foreground">Upload Track</p>
+                                            <p className="text-xs text-muted-foreground mt-1">WAV or MP3</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <input 
+                                    type="file" 
+                                    accept="audio/*" 
+                                    onChange={(e) => handleAudioUpload(track.id, e)} 
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-30" 
+                                    disabled={uploadingTrackId === track.id}
+                                />
+                            </div>
+                            <Button variant="outline" className="w-full" onClick={() => document.getElementById(`audio-upload-${track.id}`).click()}>
+                                <Upload className="mr-2 h-4 w-4" /> Upload Track
+                            </Button>
+                            <input 
+                                id={`audio-upload-${track.id}`}
+                                type="file" 
+                                accept="audio/*" 
+                                onChange={(e) => handleAudioUpload(track.id, e)} 
+                                className="hidden" 
+                            />
+                        </div>
+
+                        {/* Right: Form Fields */}
+                        <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-6">
                             <div>
-                                <Label>Do you have ISRC?</Label>
-                                <RadioGroup value={track.needISRC} onValueChange={(v) => handleTrackFieldChange(track.id, 'needISRC', v)} className="flex space-x-4 mt-2">
-                                     <div className="flex items-center space-x-2"><RadioGroupItem value="yes" id={`isrcYes-${track.id}`}/><Label htmlFor={`isrcYes-${track.id}`}>No, Generate one</Label></div>
-                                     <div className="flex items-center space-x-2"><RadioGroupItem value="no" id={`isrcNo-${track.id}`}/><Label htmlFor={`isrcNo-${track.id}`}>Yes, I have one</Label></div>
+                                <Label>Track Name</Label>
+                                <Input 
+                                    value={track.trackName} 
+                                    onChange={e => handleTrackFieldChange(track.id, 'trackName', e.target.value)}
+                                    className="mt-2" 
+                                />
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <Label>Primary Artists</Label>
+                                    {track.primaryArtists.map((artist, idx) => (
+                                        <div key={artist.id} className="flex gap-2 mt-2">
+                                            <Input value={artist.value} onChange={e => updateDynamicField('primaryArtists', artist.id, e.target.value, track.id)} />
+                                            <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('primaryArtists', track.id) : removeDynamicField('primaryArtists', artist.id, track.id)}>
+                                                {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div>
+                                    <Label>Featuring Artists</Label>
+                                    {track.featuringArtists.map((artist, idx) => (
+                                        <div key={artist.id} className="flex gap-2 mt-2">
+                                            <Input value={artist.value} onChange={e => updateDynamicField('featuringArtists', artist.id, e.target.value, track.id)} />
+                                            <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('featuringArtists', track.id) : removeDynamicField('featuringArtists', artist.id, track.id)}>
+                                                {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                <Label>Contributors to Sound Recording</Label>
+                                {track.contributorsToSound.map((contributor, idx) => (
+                                    <div key={contributor.id} className="flex gap-2 mt-2 items-start">
+                                        <Select value={contributor.profession} onValueChange={(val) => updateDynamicField('contributorsToSound', contributor.id, val, track.id, 'profession')}>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="Role" />
+                                            </SelectTrigger>
+                                            <SelectContent className={dropdownClass}>
+                                                {soundRecordingProfessions.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <Input 
+                                            placeholder="Name" 
+                                            value={contributor.contributors}
+                                            onChange={(e) => updateDynamicField('contributorsToSound', contributor.id, e.target.value, track.id, 'contributors')}
+                                            className="flex-1"
+                                        />
+                                        <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('contributorsToSound', track.id) : removeDynamicField('contributorsToSound', contributor.id, track.id)}>
+                                            {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+                                        </Button>
+                                    </div>
+                                ))}
+                                </div>
+                                <div>
+                                <Label>Contributors to Musical Work</Label>
+                                {track.contributorsToMusical.map((contributor, idx) => (
+                                    <div key={contributor.id} className="flex gap-2 mt-2 items-start">
+                                        <Select value={contributor.profession} onValueChange={(val) => updateDynamicField('contributorsToMusical', contributor.id, val, track.id, 'profession')}>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="Role" />
+                                            </SelectTrigger>
+                                            <SelectContent className={dropdownClass}>
+                                                {musicalWorkRoles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <Input 
+                                            placeholder="Name" 
+                                            value={contributor.contributors}
+                                            onChange={(e) => updateDynamicField('contributorsToMusical', contributor.id, e.target.value, track.id, 'contributors')}
+                                            className="flex-1"
+                                        />
+                                        <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('contributorsToMusical', track.id) : removeDynamicField('contributorsToMusical', contributor.id, track.id)}>
+                                            {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+                                        </Button>
+                                    </div>
+                                ))}
+                                </div>
+                            </div>
+
+                            <div className="my-4">
+                                <Label>Do you have an ISRC for this track?</Label>
+                                <RadioGroup value={track.needISRC} onValueChange={(val) => handleTrackFieldChange(track.id, 'needISRC', val)} className="flex space-x-4 mt-2">
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="yes" id={`isrcYes-${track.id}`}/><Label htmlFor={`isrcYes-${track.id}`}>No (Generate one)</Label></div>
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="no" id={`isrcNo-${track.id}`}/><Label htmlFor={`isrcNo-${track.id}`}>Yes</Label></div>
                                 </RadioGroup>
                                 {track.needISRC === 'no' && (
-                                    <Input placeholder="Enter ISRC" value={track.isrc} onChange={(e) => handleTrackFieldChange(track.id, 'isrc', e.target.value)} className="mt-2" />
+                                        <Input className="mt-2" placeholder="Enter ISRC" value={track.isrc} onChange={(e) => handleTrackFieldChange(track.id, 'isrc', e.target.value)} />
                                 )}
                             </div>
-                            <div>
-                                <Label>Does this track contain human vocals?</Label>
-                                <RadioGroup value={track.hasHumanVocals} onValueChange={(v) => handleTrackFieldChange(track.id, 'hasHumanVocals', v)} className="flex space-x-4 mt-2">
-                                     <div className="flex items-center space-x-2"><RadioGroupItem value="yes" id={`vocYes-${track.id}`}/><Label htmlFor={`vocYes-${track.id}`}>Yes</Label></div>
-                                     <div className="flex items-center space-x-2"><RadioGroupItem value="no" id={`vocNo-${track.id}`}/><Label htmlFor={`vocNo-${track.id}`}>No</Label></div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <Label>Primary Genre</Label>
+                                    <Select value={track.primaryGenre} onValueChange={v => handleTrackFieldChange(track.id, 'primaryGenre', v)}>
+                                        <SelectTrigger className="mt-2"><SelectValue placeholder="Select Genre" /></SelectTrigger>
+                                        <SelectContent className={dropdownClass}>{genreOptions.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label>Secondary Genre</Label>
+                                    <Select value={track.secondaryGenre} onValueChange={v => handleTrackFieldChange(track.id, 'secondaryGenre', v)}>
+                                        <SelectTrigger className="mt-2"><SelectValue placeholder="Select Genre" /></SelectTrigger>
+                                        <SelectContent className={dropdownClass}>{genreOptions.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                <Label>Does this track contain explicit lyrics?</Label>
+                                <RadioGroup value={track.explicitStatus} onValueChange={v => handleTrackFieldChange(track.id, 'explicitStatus', v)} className="flex gap-4 mt-2">
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="yes" id={`explYes-${track.id}`}/><Label htmlFor={`explYes-${track.id}`}>Yes</Label></div>
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="no" id={`explNo-${track.id}`}/><Label htmlFor={`explNo-${track.id}`}>No</Label></div>
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="clean" id={`explClean-${track.id}`}/><Label htmlFor={`explClean-${track.id}`}>Clean</Label></div>
                                 </RadioGroup>
-                            </div>
-                         </div>
-                         
-                         <div>
-                            <Label>Contributors to Sound Recording</Label>
-                            {track.contributorsToSound.map((contrib, idx) => (
-                                <div key={contrib.id} className="flex gap-2 mt-2 items-end">
-                                    <div className="w-1/3">
-                                        <Label className="text-xs">Profession</Label>
-                                        <Select value={contrib.profession} onValueChange={v => updateDynamicField('contributorsToSound', contrib.id, v, track.id, 'profession')}>
-                                            <SelectTrigger><SelectValue/></SelectTrigger>
-                                            <SelectContent className={dropdownClass}>{soundRecordingProfessions.map(p => <SelectItem key={p} value={p.toLowerCase()}>{p}</SelectItem>)}</SelectContent>
+                                </div>
+                                <div>
+                                <Label>Does this track contain human vocals?</Label>
+                                <RadioGroup value={track.hasHumanVocals} onValueChange={v => handleTrackFieldChange(track.id, 'hasHumanVocals', v)} className="flex gap-4 mt-2">
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="yes" id={`vocYes-${track.id}`}/><Label htmlFor={`vocYes-${track.id}`}>Yes</Label></div>
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="no" id={`vocNo-${track.id}`}/><Label htmlFor={`vocNo-${track.id}`}>No</Label></div>
+                                </RadioGroup>
+                                </div>
+                                {track.hasHumanVocals === 'yes' && (
+                                    <div>
+                                        <Label>Language of Lyrics</Label>
+                                        <Select value={track.language} onValueChange={v => handleTrackFieldChange(track.id, 'language', v)}>
+                                        <SelectTrigger className="mt-2"><SelectValue placeholder="Select Language" /></SelectTrigger>
+                                        <SelectContent className={dropdownClass}>{languageOptions.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
                                         </Select>
                                     </div>
-                                    <div className="flex-1">
-                                        <Label className="text-xs">Name</Label>
-                                        <Input value={contrib.contributors} onChange={(e) => updateDynamicField('contributorsToSound', contrib.id, e.target.value, track.id, 'contributors')}/>
-                                    </div>
-                                    <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('contributorsToSound', track.id) : removeDynamicField('contributorsToSound', contrib.id, track.id)}>
-                                        {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                                    </Button>
+                                )}
+                                <div>
+                                    <Label>Available for Download?</Label>
+                                    <RadioGroup value={track.isAvailableForDownload} onValueChange={v => handleTrackFieldChange(track.id, 'isAvailableForDownload', v)} className="flex gap-4 mt-2">
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="yes" id={`dlYes-${track.id}`}/><Label htmlFor={`dlYes-${track.id}`}>Yes</Label></div>
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="no" id={`dlNo-${track.id}`}/><Label htmlFor={`dlNo-${track.id}`}>No</Label></div>
+                                    </RadioGroup>
                                 </div>
-                            ))}
-                         </div>
-                         <div>
-                            <Label>Contributors to Musical Work</Label>
-                            {track.contributorsToMusical.map((contrib, idx) => (
-                                <div key={contrib.id} className="flex gap-2 mt-2 items-end">
-                                    <div className="w-1/3">
-                                        <Label className="text-xs">Role</Label>
-                                        <Select value={contrib.profession} onValueChange={v => updateDynamicField('contributorsToMusical', contrib.id, v, track.id, 'profession')}>
-                                            <SelectTrigger><SelectValue/></SelectTrigger>
-                                            <SelectContent className={dropdownClass}>{musicalWorkRoles.map(p => <SelectItem key={p} value={p.toLowerCase()}>{p}</SelectItem>)}</SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="flex-1">
-                                        <Label className="text-xs">Name</Label>
-                                        <Input value={contrib.contributors} onChange={(e) => updateDynamicField('contributorsToMusical', contrib.id, e.target.value, track.id, 'contributors')}/>
-                                    </div>
-                                    <Button size="icon" variant="ghost" onClick={() => idx === 0 ? addDynamicField('contributorsToMusical', track.id) : removeDynamicField('contributorsToMusical', contrib.id, track.id)}>
-                                        {idx === 0 ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                                    </Button>
+                                <div>
+                                    <Label>Preview Start Time (mm:ss)</Label>
+                                    <Input placeholder="00:30" className="mt-2" value={track.previewStartTiming} onChange={e => handleTrackFieldChange(track.id, 'previewStartTiming', e.target.value)} />
                                 </div>
-                            ))}
-                         </div>
-                         
-                         <div>
-                            <Label>Preview Start Time</Label>
-                            <Input placeholder="e.g. 0:30" value={track.previewStartTiming} onChange={(e) => handleTrackFieldChange(track.id, 'previewStartTiming', e.target.value)} className="mt-2" />
-                         </div>
-
-                      </div>
-
-                  </Card>
-              ))}
-          </div>
-          
-          {/* Settings Section (Step 3) */}
-          <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-6 border-b pb-2">Distribution Settings</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                      <Label>Release Date (Future)</Label>
-                      <Input type="date" value={formData.forFutureRelease} onChange={e => setFormData(p => ({...p, forFutureRelease: e.target.value}))} 
-                      className="mt-2 [&::-webkit-calendar-picker-indicator]:invert dark:[&::-webkit-calendar-picker-indicator]:invert-0" />
-                  </div>
-                  <div>
-                      <Label>Original Release Date (Past)</Label>
-                      <Input type="date" value={formData.forPreorderPreSave} onChange={e => setFormData(p => ({...p, forPreorderPreSave: e.target.value}))} 
-                      className="mt-2 [&::-webkit-calendar-picker-indicator]:invert dark:[&::-webkit-calendar-picker-indicator]:invert-0" />
-                  </div>
-              </div>
-
-              <div className="mt-6">
-                 <h4 className="text-foreground font-medium mb-4">Territory Rights :</h4>
-                 <div className="space-y-4">
-                    <div>
-                    <Label className="text-foreground font-medium">World Wide Release</Label>
-                    <RadioGroup 
-                        value={worldWideRelease} 
-                        onValueChange={(value) => {
-                        setWorldWideRelease(value);
-                        }}
-                        className="flex space-x-6 mt-2"
-                    >
-                        <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="yes" />
-                        <Label htmlFor="yes">Yes</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="no" />
-                        <Label htmlFor="no">No</Label>
-                        </div>
-                    </RadioGroup>
-                    </div>
-
-                    {worldWideRelease === 'no' && (
-                    <Card className="p-6 border border-muted bg-background rounded-lg">
-                        <Label className="text-foreground">Select The Territories, Where you own the rights</Label>
-                        <div className="grid grid-cols-3 gap-4 mt-4 max-h-60 overflow-y-auto custom-scroll">
-                        {territoryOptions.map((territory) => (
-                            <div key={territory} className="flex items-center space-x-2">
-                            <Checkbox 
-                                id={territory}
-                                checked={selectedTerritories.includes(territory)}
-                                onCheckedChange={(checked) => handleTerritoryChange(territory, checked)}
-                            />
-                            <Label htmlFor={territory} className="text-sm">{territory}</Label>
                             </div>
-                        ))}
                         </div>
-                    </Card>
-                    )}
-                 </div>
-              </div>
-
-              <div className="mt-6">
-                <h4 className="text-foreground font-medium mb-4">Partner Selection :</h4>
-                <div className="flex items-center space-x-2 mb-4">
-                    <Checkbox
-                    id="selectAll"
-                    checked={selectAllPartners}
-                    onCheckedChange={handleSelectAllPartners}
-                    />
-                    <Label htmlFor="selectAll" className="font-medium">Select All Partners</Label>
-                </div>
-
-                {Object.entries(partnerOptions).map(([category, list]) => (
-                    <Card key={category} className="p-6 border border-muted bg-background rounded-lg mb-6">
-                    <Label className="text-primary font-medium">
-                        {category === "callerTunePartners" && "CallerTune Partners"}
-                        {category === "indianStores" && "Indian Stores"}
-                        {category === "internationalStores" && "International Stores"}
-                    </Label>
-
-                    <div className="grid grid-cols-3 max-h-60 overflow-y-auto custom-scroll gap-4 mt-4">
-                        {list.map((partner) => (
-                        <div key={partner} className="flex items-center space-x-2">
-                            <Checkbox
-                            id={partner}
-                            checked={selectedPartners.includes(partner)}
-                            onCheckedChange={(checked) => handlePartnerChange(partner, checked)}
-                            />
-                            <Label htmlFor={partner} className="text-sm">{partner}</Label>
-                        </div>
-                        ))}
                     </div>
-                    </Card>
-                ))}
-              </div>
 
-              <div className="mt-6 space-y-4">
-                <h4 className="text-foreground font-medium mb-4">Copyright Options :</h4>
-                <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                    <Checkbox 
-                        id="proceedWithout"
-                        checked={copyrightOption === 'proceed'}
-                        onCheckedChange={(checked) => {
-                            if (checked) {
-                                setCopyrightOption('proceed');
-                            } else if (copyrightOption === 'proceed') {
-                                setCopyrightOption('');
-                            }
-                        }}
-                    />
-                    <Label htmlFor="proceedWithout">Proceed without Uploading the Copyright Documents</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                    <Checkbox 
-                        id="ownCopyright"
-                        checked={copyrightOption === 'upload'}
-                        onCheckedChange={(checked) => {
-                            if (checked) {
-                                setCopyrightOption('upload');
-                            } else if (copyrightOption === 'upload') {
-                                setCopyrightOption('');
-                            }
-                        }}
-                    />
-                    <Label htmlFor="ownCopyright">I own the Copyrights Will Upload</Label>
-                    </div>
-                </div>
-
-                {copyrightOption === 'upload' && (
-                    <div className="ml-6 mt-4">
-                    <Label className="text-foreground">Upload Copyright Document</Label>
-                    <div className="flex items-center space-x-2 mt-2 relative">
-                        <Input 
-                        type="file" 
-                        accept=".pdf,.doc,.docx" 
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                        onChange={handleCopyrightDocumentUpload}
-                        disabled={isUploadingCopyrightDoc}
-                        id="copyright-doc-input"
-                        />
-                        <div className="flex-1 p-2 border rounded-md bg-background text-sm text-muted-foreground h-10 flex items-center truncate">
-                        {formData.copyrightDocument 
-                            ? new URL(formData.copyrightDocument).pathname.split('/').pop() 
-                            : 'No file selected'
-                        }
-                        </div>
-                        <Button variant="outline" size="sm" onClick={() => document.getElementById('copyright-doc-input').click()} disabled={isUploadingCopyrightDoc}>
-                        {isUploadingCopyrightDoc ? <Loader2 className="animate-spin h-4 w-4" /> : <Upload className="w-4 h-4" />}
-                        <span className="ml-2">{isUploadingCopyrightDoc ? 'Uploading...' : 'Upload'}</span>
-                        </Button>
-                    </div>
-                    </div>
-                )}
-              </div>
-
-          </Card>
-
+                </Card>
+            ))}
         </div>
+
+        {/* Step 3: Distribution Section - FULL WIDTH */}
+        <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-6 border-b pb-2">Distribution Settings</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <Label>Release Date (Future)</Label>
+                    <Input type="date" value={formData.forFutureRelease} onChange={e => setFormData(p => ({...p, forFutureRelease: e.target.value}))} 
+                    className="mt-2 [&::-webkit-calendar-picker-indicator]:invert dark:[&::-webkit-calendar-picker-indicator]:invert-0" />
+                </div>
+                <div>
+                    <Label>Original Release Date (Past)</Label>
+                    <Input type="date" value={formData.forPreorderPreSave} onChange={e => setFormData(p => ({...p, forPreorderPreSave: e.target.value}))} 
+                    className="mt-2 [&::-webkit-calendar-picker-indicator]:invert dark:[&::-webkit-calendar-picker-indicator]:invert-0" />
+                </div>
+            </div>
+
+            <div className="mt-6">
+                <h4 className="text-foreground font-medium mb-4">Territory Rights :</h4>
+                <div className="space-y-4">
+                <div>
+                <Label className="text-foreground font-medium">World Wide Release</Label>
+                <RadioGroup 
+                    value={worldWideRelease} 
+                    onValueChange={(value) => {
+                    setWorldWideRelease(value);
+                    }}
+                    className="flex space-x-6 mt-2"
+                >
+                    <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="yes" />
+                    <Label htmlFor="yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="no" />
+                    <Label htmlFor="no">No</Label>
+                    </div>
+                </RadioGroup>
+                </div>
+
+                {worldWideRelease === 'no' && (
+                <Card className="p-6 border border-muted bg-background rounded-lg">
+                    <Label className="text-foreground">Select The Territories, Where you own the rights</Label>
+                    <div className="grid grid-cols-3 gap-4 mt-4 max-h-60 overflow-y-auto custom-scroll">
+                    {territoryOptions.map((territory) => (
+                        <div key={territory} className="flex items-center space-x-2">
+                        <Checkbox 
+                            id={territory}
+                            checked={selectedTerritories.includes(territory)}
+                            onCheckedChange={(checked) => handleTerritoryChange(territory, checked)}
+                        />
+                        <Label htmlFor={territory} className="text-sm">{territory}</Label>
+                        </div>
+                    ))}
+                    </div>
+                </Card>
+                )}
+                </div>
+            </div>
+
+            <div className="mt-6">
+            <h4 className="text-foreground font-medium mb-4">Partner Selection :</h4>
+            <div className="flex items-center space-x-2 mb-4">
+                <Checkbox
+                id="selectAll"
+                checked={selectAllPartners}
+                onCheckedChange={handleSelectAllPartners}
+                />
+                <Label htmlFor="selectAll" className="font-medium">Select All Partners</Label>
+            </div>
+
+            {Object.entries(partnerOptions).map(([category, list]) => (
+                <Card key={category} className="p-6 border border-muted bg-background rounded-lg mb-6">
+                <Label className="text-primary font-medium">
+                    {category === "callerTunePartners" && "CallerTune Partners"}
+                    {category === "indianStores" && "Indian Stores"}
+                    {category === "internationalStores" && "International Stores"}
+                </Label>
+
+                <div className="grid grid-cols-3 max-h-60 overflow-y-auto custom-scroll gap-4 mt-4">
+                    {list.map((partner) => (
+                    <div key={partner} className="flex items-center space-x-2">
+                        <Checkbox
+                        id={partner}
+                        checked={selectedPartners.includes(partner)}
+                        onCheckedChange={(checked) => handlePartnerChange(partner, checked)}
+                        />
+                        <Label htmlFor={partner} className="text-sm">{partner}</Label>
+                    </div>
+                    ))}
+                </div>
+                </Card>
+            ))}
+            </div>
+
+            <div className="mt-6 space-y-4">
+            <h4 className="text-foreground font-medium mb-4">Copyright Options :</h4>
+            <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                <Checkbox 
+                    id="proceedWithout"
+                    checked={copyrightOption === 'proceed'}
+                    onCheckedChange={(checked) => {
+                        if (checked) {
+                            setCopyrightOption('proceed');
+                        } else if (copyrightOption === 'proceed') {
+                            setCopyrightOption('');
+                        }
+                    }}
+                />
+                <Label htmlFor="proceedWithout">Proceed without Uploading the Copyright Documents</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                <Checkbox 
+                    id="ownCopyright"
+                    checked={copyrightOption === 'upload'}
+                    onCheckedChange={(checked) => {
+                        if (checked) {
+                            setCopyrightOption('upload');
+                        } else if (copyrightOption === 'upload') {
+                            setCopyrightOption('');
+                        }
+                    }}
+                />
+                <Label htmlFor="ownCopyright">I own the Copyrights Will Upload</Label>
+                </div>
+            </div>
+
+            {copyrightOption === 'upload' && (
+                <div className="ml-6 mt-4">
+                <Label className="text-foreground">Upload Copyright Document</Label>
+                <div className="flex items-center space-x-2 mt-2 relative">
+                    <Input 
+                    type="file" 
+                    accept=".pdf,.doc,.docx" 
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                    onChange={handleCopyrightDocumentUpload}
+                    disabled={isUploadingCopyrightDoc}
+                    id="copyright-doc-input"
+                    />
+                    <div className="flex-1 p-2 border rounded-md bg-background text-sm text-muted-foreground h-10 flex items-center truncate">
+                    {formData.copyrightDocument 
+                        ? new URL(formData.copyrightDocument).pathname.split('/').pop() 
+                        : 'No file selected'
+                    }
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => document.getElementById('copyright-doc-input').click()} disabled={isUploadingCopyrightDoc}>
+                    {isUploadingCopyrightDoc ? <Loader2 className="animate-spin h-4 w-4" /> : <Upload className="w-4 h-4" />}
+                    <span className="ml-2">{isUploadingCopyrightDoc ? 'Uploading...' : 'Upload'}</span>
+                    </Button>
+                </div>
+                </div>
+            )}
+            </div>
+
+        </Card>
+
       </div>
     </div>
   );

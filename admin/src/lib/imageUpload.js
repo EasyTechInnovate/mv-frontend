@@ -2,11 +2,11 @@ import ImageKit from 'imagekit-javascript';
 import axios from 'axios';
 import { toast } from "sonner";
 
-const apiBaseUrl = "https://api-mv.manishdashsharma.com";
+const apiBaseUrl = import.meta.env.VITE_API_URL;
 
 const imagekit = new ImageKit({
-  publicKey: "public_IIhuu7gbjT1cTmhikcZ/iDKFSIw=",
-  urlEndpoint: "https://ik.imagekit.io/qwooukwpv/",
+  publicKey: import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY,
+  urlEndpoint: import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT,
 });
 
 export const uploadToImageKit = async (file, folder = 'uploads') => {

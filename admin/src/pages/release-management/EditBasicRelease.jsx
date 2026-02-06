@@ -316,6 +316,7 @@ const EditBasicRelease = ({ theme }) => {
       setIsUploadingCoverArt(true);
       try {
         const response = await uploadToImageKit(file, 'basic_release/cover_art');
+        console.log(response.url)
         const url = response.url || response;
         setFormData(prev => ({ 
           ...prev, 
@@ -450,25 +451,49 @@ const EditBasicRelease = ({ theme }) => {
         <div className="space-y-4">
              <h2 className="text-xl font-semibold">Step 1: Release Info</h2>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <Card className="lg:col-span-1 p-4">
-            <div className="bg-muted/50 rounded-lg">
-                <h3 className="text-foreground text-lg font-medium mb-6">Cover Art</h3>
-                <div className="flex flex-col items-center">
-                <div className="w-full h-[250px] bg-muted border-2 border-dashed border-muted-foreground/30 rounded-lg flex flex-col items-center justify-center mb-4 relative overflow-hidden">
+            <Card className="lg:col-span-1 p-4 h-fit">
+              <div className="flex flex-col gap-3">
+                 <h3 className="text-foreground text-lg font-medium">Cover Art</h3>
+                 <div className="w-full aspect-square bg-muted/30 border-2 border-dashed border-muted-foreground/30 rounded-lg flex flex-col items-center justify-center relative overflow-hidden group hover:bg-muted/50 transition-colors">
                     {isUploadingCoverArt && (
-                    <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-10">
-                        <span className="text-white">Uploading...</span>
-                    </div>
+                        <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-20">
+                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                             <span className="text-xs mt-2 font-medium">Uploading...</span>
+                        </div>
                     )}
+                     
                     {formData.coverArtPreview ? (
-                    <img src={formData.coverArtPreview} alt="Cover preview" className="w-full h-full object-contain rounded-lg" />
+                        <img src={formData.coverArtPreview} alt="Cover preview" className="absolute inset-0 z-10 w-full h-full object-contain bg-background" />
                     ) : (
-                    <div className="text-center p-4"><Music className="w-8 h-8 mx-auto mb-2 opacity-50"/><p>3000x3000px, JPG/PNG</p></div>
+                        <div className="flex flex-col items-center justify-center p-4 text-center z-10">
+                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                                <Music className="h-6 w-6 text-primary" />
+                            </div>
+                            <p className="text-sm font-medium text-foreground">Upload Cover Art</p>
+                            <p className="text-xs text-muted-foreground mt-1">3000x3000px, JPG/PNG</p>
+                        </div>
                     )}
-                    <input type="file" accept=".jpg,.jpeg,.png" onChange={handleCoverArtUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" disabled={isUploadingCoverArt} />
-                </div>
-                </div>
-            </div>
+
+                    <input 
+                        type="file" 
+                        accept=".jpg,.jpeg,.png" 
+                        onChange={handleCoverArtUpload} 
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-30" 
+                        disabled={isUploadingCoverArt}
+                    />
+                 </div>
+                 
+                 <Button variant="outline" className="w-full" onClick={() => document.getElementById('cover-art-upload').click()}>
+                    <Upload className="mr-2 h-4 w-4" /> Upload Cover Art
+                 </Button>
+                 <input 
+                    id="cover-art-upload"
+                    type="file" 
+                    accept=".jpg,.jpeg,.png" 
+                    onChange={handleCoverArtUpload} 
+                    className="hidden" 
+                 />
+              </div>
             </Card>
 
             <Card className="lg:col-span-3 p-4">
@@ -517,16 +542,53 @@ const EditBasicRelease = ({ theme }) => {
                             <Button variant="ghost" size="sm" onClick={() => removeTrack(track.id)}><X className="h-4 w-4"/></Button>
                         )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="col-span-1">
-                             <div className="bg-muted p-4 rounded-lg text-center relative">
-                                <Label>Audio File</Label>
-                                {track.audioFileName ? <p className="text-sm font-medium mt-2 truncate">{track.audioFileName}</p> : <p className="text-xs text-muted-foreground mt-2">No file selected</p>}
-                                <input type="file" accept="audio/*" onChange={(e) => handleAudioUpload(track.id, e)} className="absolute inset-0 opacity-0 cursor-pointer" />
-                                {uploadingTrackId === track.id && <div className="absolute inset-0 bg-background/80 flex items-center justify-center">Uploading...</div>}
-                             </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div className="col-span-1 flex flex-col gap-3">
+                            <div className="w-full aspect-square bg-muted/30 border-2 border-dashed border-muted-foreground/30 rounded-lg flex flex-col items-center justify-center relative overflow-hidden group hover:bg-muted/50 transition-colors">
+                                {uploadingTrackId === track.id && (
+                                    <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-20">
+                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                        <span className="text-xs mt-2 font-medium">Uploading...</span>
+                                    </div>
+                                )}
+                                
+                                <div className="flex flex-col items-center justify-center p-4 text-center z-10 w-full">
+                                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                                        <Music className="h-6 w-6 text-primary" />
+                                    </div>
+                                    {track.audioFileName ? (
+                                        <div className="max-w-full px-2">
+                                            <p className="text-sm font-semibold truncate text-foreground">{track.audioFileName}</p>
+                                            <p className="text-xs text-muted-foreground mt-1">Ready to distribute</p>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <p className="text-sm font-medium text-foreground">Upload Track</p>
+                                            <p className="text-xs text-muted-foreground mt-1">WAV or MP3</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <input 
+                                    type="file" 
+                                    accept="audio/*" 
+                                    onChange={(e) => handleAudioUpload(track.id, e)} 
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-30" 
+                                    disabled={uploadingTrackId === track.id}
+                                />
+                            </div>
+                            <Button variant="outline" className="w-full" onClick={() => document.getElementById(`audio-upload-${track.id}`).click()}>
+                                <Upload className="mr-2 h-4 w-4" /> Upload Track
+                            </Button>
+                            <input 
+                                id={`audio-upload-${track.id}`}
+                                type="file" 
+                                accept="audio/*" 
+                                onChange={(e) => handleAudioUpload(track.id, e)} 
+                                className="hidden" 
+                            />
                         </div>
-                        <div className="col-span-1 md:col-span-2 lg:col-span-2 grid grid-cols-2 gap-4">
+                        <div className="col-span-1 md:col-span-2 lg:col-span-3 grid grid-cols-2 gap-4">
                             <div><Label>Song Name</Label><Input value={track.songName} onChange={(e) => handleTrackFieldChange(track.id, 'songName', e.target.value)} /></div>
                             <div>
                                 <Label>Genre</Label>
