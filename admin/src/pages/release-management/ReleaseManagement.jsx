@@ -199,7 +199,7 @@ export default function ReleaseManagement({ theme }) {
       value: statsData?.statusCounts?.live || 0,
     },
     {
-      label: "Under Review",
+      label: "Pending",
       value: statsData?.statusCounts?.submitted || 0,
     },
     {
@@ -355,7 +355,9 @@ export default function ReleaseManagement({ theme }) {
           >
             <option value="all">All Status</option>
             {Object.values(EReleaseStatus).map((status) => (
-              <option key={status} value={status}>{status.replace('_', ' ')}</option>
+              <option key={status} value={status}>
+                {status === 'submitted' ? 'Pending' : status.replace(/_/g, ' ')}
+              </option>
             ))}
           </select>
 
@@ -441,7 +443,7 @@ export default function ReleaseManagement({ theme }) {
                       className={`inline-flex items-center justify-center min-w-[70px] h-[28px] px-4 rounded-full text-sm font-medium capitalize ${statusColors[rel.releaseStatus]}
                         `}
                     >
-                      {rel.releaseStatus}
+                      {rel.releaseStatus === 'submitted' ? 'Pending' : rel.releaseStatus}
                     </span>
                   </td>
 
@@ -452,7 +454,7 @@ export default function ReleaseManagement({ theme }) {
                         statusColors[rel.releaseStatus]}
                         `}
                     >
-                      {rel.requestStatus || rel.releaseStatus}
+                      {(rel.requestStatus || rel.releaseStatus) === 'submitted' ? 'Pending' : (rel.requestStatus || rel.releaseStatus)}
                     </span>
                   </td>
 
@@ -590,8 +592,8 @@ export default function ReleaseManagement({ theme }) {
                 genre: rel.step1?.releaseInfo?.genre || '-',
                 releaseType: rel.releaseType || 'Basic',
                 trackType: rel.trackType,
-                releaseStatus: rel.releaseStatus,
-                requestStatus: rel.requestStatus || rel.releaseStatus,
+                releaseStatus: rel.releaseStatus === 'submitted' ? 'Pending' : rel.releaseStatus,
+                requestStatus: (rel.requestStatus || rel.releaseStatus) === 'submitted' ? 'Pending' : (rel.requestStatus || rel.releaseStatus),
                 artistName: rel.userId?.firstName ? `${rel.userId.firstName} ${rel.userId.lastName}` : (rel.user?.name || '-'),
                 email: rel.userId?.emailAddress || rel.user?.email || '-',
                 coverArtUrl: rel.step1?.coverArt?.imageUrl || '-',

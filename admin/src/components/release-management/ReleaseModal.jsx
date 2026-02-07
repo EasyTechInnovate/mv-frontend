@@ -14,7 +14,7 @@ const STATUS_CONFIG = {
         icon: <Clock className="w-3 h-3" />
     },
     submitted: {
-        label: 'Submitted',
+        label: 'Pending',
         color: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400',
         icon: <Clock className="w-3 h-3" />
     },
@@ -258,7 +258,7 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                 'Release ID': release.releaseId || '',
                 'Release Name': releaseInfo.releaseName || '',
                 'Release Type': release.releaseType || releaseInfo.releaseType || '',
-                'Release Status': release.releaseStatus || '',
+                'Release Status': release.releaseStatus === 'submitted' ? 'Pending' : (release.releaseStatus || ''),
                 'Primary Artists': Array.isArray(releaseInfo.primaryArtists) ? releaseInfo.primaryArtists.join(', ') : '',
                 'Featuring Artists': Array.isArray(releaseInfo.featuringArtists) ? releaseInfo.featuringArtists.join(', ') : '',
                 'Label Name': releaseInfo.labelName?.name || releaseInfo.labelName || '',
