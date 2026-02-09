@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import jsonToCsv, { exportToCsv } from "@/lib/csv";
 import { DownloadCloud } from "lucide-react";
 
-const EXPORT_LIMIT = 50;
+const EXPORT_LIMIT = 200;
 
 export default function ExportCsvDialog({
   isOpen,
