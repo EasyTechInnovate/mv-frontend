@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Eye, ArrowLeft, Pencil } from "lucide-react"; // Import ArrowLeft
+import { Download, Eye, ArrowLeft, Pencil, ListChecks } from "lucide-react"; // Import ArrowLeft
 import ReleaseModal from "../../components/release-management/ReleaseModal";
+import BulkProcessingModal from "../../components/release-management/BulkProcessingModal";
 import GlobalApi from "@/lib/GlobalApi"; // your API wrapper
 import { useParams, useNavigate } from "react-router-dom"; // Import hooks
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 
@@ -72,6 +74,43 @@ export default function ReleaseManagement({ theme }) {
   const [statsData, setStatsData] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+  // Bulk Actions State
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [selectedReleases, setSelectedReleases] = useState([]);
+  const [bulkAction, setBulkAction] = useState(null);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+
+  const toggleBulkMode = () => {
+    setIsBulkMode(!isBulkMode);
+    setSelectedReleases([]);
+  };
+
+  const handleSelectRelease = (release) => {
+    const isSelected = selectedReleases.some(r => r.releaseId === release.releaseId);
+    
+    if (isSelected) {
+        setSelectedReleases(prev => prev.filter(r => r.releaseId !== release.releaseId));
+        return;
+    }
+
+    if (selectedReleases.length > 0) {
+        const firstStatus = selectedReleases[0].releaseStatus;
+        if (firstStatus !== release.releaseStatus) {
+            toast.error(`You can only select releases with status: ${firstStatus === 'submitted' ? 'Pending' : firstStatus.replace(/_/g, ' ')}`, {
+                description: "Bulk actions can only be performed on releases with the same status."
+            });
+            return;
+        }
+    }
+
+    setSelectedReleases(prev => [...prev, release]);
+  };
+
+  const handleBulkActionClick = (action) => {
+    setBulkAction(action);
+    setIsBulkModalOpen(true);
+  };
 
 
   // Fetch API
@@ -185,6 +224,7 @@ export default function ReleaseManagement({ theme }) {
   // Reset page to 1 when filters change (including userId)
   useEffect(() => {
     setPage(1);
+    setSelectedReleases([]);
   }, [debouncedSearch, status, trackType, userId, releaseCategory]);
 
 
@@ -385,16 +425,102 @@ export default function ReleaseManagement({ theme }) {
             <option>All Artists</option>
           </select>
 
+
           <Button
             variant={isDark ? "outline" : "secondary"}
             className="flex items-center gap-2 px-5"
+            onClick={() => setIsExportModalOpen(true)}
           >
-            <Download className="h-4 w-4" /> Bulk Download
+            <Download className="h-4 w-4" /> Export CSV
           </Button>
 
-          <Button variant="outline" className="px-5 text-red-500">
-            Bulk Delete
+          <Button 
+            variant={isBulkMode ? "secondary" : "outline"}
+            className={`flex items-center gap-2 px-5 ${isBulkMode ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' : ''}`}
+            onClick={toggleBulkMode}
+          >
+            <ListChecks className="h-4 w-4" /> 
+            {isBulkMode ? 'Exit Bulk Mode' : 'Bulk Actions'}
           </Button>
+
+          {isBulkMode && selectedReleases.length > 0 && (
+            <div className="flex gap-2 ml-2 animate-in fade-in slide-in-from-right-4 duration-300 items-center">
+                {/* Contextual Actions based on Status */}
+                {selectedReleases[0].releaseStatus === 'submitted' && (
+                    <Button size="sm" onClick={() => handleBulkActionClick('approve')} className="bg-green-600 hover:bg-green-700 text-white">
+                        Approve ({selectedReleases.length})
+                    </Button>
+                )}
+
+                {selectedReleases[0].releaseStatus === 'under_review' && (
+                    <>
+                        <Button size="sm" onClick={() => handleBulkActionClick('start_processing')} className="bg-blue-600 hover:bg-blue-700 text-white">
+                            Start Processing ({selectedReleases.length})
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleBulkActionClick('reject')}>
+                            Reject ({selectedReleases.length})
+                        </Button>
+                    </>
+                )}
+
+                {selectedReleases[0].releaseStatus === 'processing' && (
+                    <>
+                        <Button size="sm" onClick={() => handleBulkActionClick('publish')} className="bg-purple-600 hover:bg-purple-700 text-white">
+                            Publish ({selectedReleases.length})
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleBulkActionClick('reject')}>
+                            Reject ({selectedReleases.length})
+                        </Button>
+                    </>
+                )}
+
+                {selectedReleases[0].releaseStatus === 'published' && (
+                    <Button size="sm" onClick={() => handleBulkActionClick('go_live')} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                        Go Live ({selectedReleases.length})
+                    </Button>
+                )}
+
+                {selectedReleases[0].releaseStatus === 'take_down' && (
+                     <Button size="sm" onClick={() => handleBulkActionClick('process_takedown')} className="bg-orange-600 hover:bg-orange-700 text-white">
+                        Process Takedown ({selectedReleases.length})
+                    </Button>
+                )}
+
+                {(selectedReleases[0].releaseStatus === 'live' && !selectedReleases[0].requestStatus) && (
+                     <Button size="sm" variant="destructive" onClick={() => handleBulkActionClick('bulk_takedown')}>
+                        Bulk Takedown ({selectedReleases.length})
+                    </Button>
+                )}
+
+                {/* Edit Request Actions */}
+                {(selectedReleases[0].releaseStatus === 'update_request' || selectedReleases[0].requestStatus === 'update_request') && (
+                    <>
+                        <Button size="sm" onClick={() => handleBulkActionClick('approve_edit_request')} className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                            Approve Requests ({selectedReleases.length})
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleBulkActionClick('reject_edit_request')}>
+                            Reject Requests ({selectedReleases.length})
+                        </Button>
+                    </>
+                )}
+                
+                {/* Fallback for statuses with no actions (e.g. valid selection but no bulk action mapped) */}
+                {!(
+                    selectedReleases[0].releaseStatus === 'submitted' ||
+                    selectedReleases[0].releaseStatus === 'under_review' ||
+                    selectedReleases[0].releaseStatus === 'processing' ||
+                    selectedReleases[0].releaseStatus === 'published' ||
+                    selectedReleases[0].releaseStatus === 'take_down' ||
+                    (selectedReleases[0].releaseStatus === 'live' && !selectedReleases[0].requestStatus) ||
+                    selectedReleases[0].releaseStatus === 'update_request' || 
+                    selectedReleases[0].requestStatus === 'update_request'
+                ) && (
+                    <span className="text-sm text-gray-500 italic px-2">
+                        No bulk actions active for {selectedReleases[0].releaseStatus === 'submitted' ? 'Pending' : selectedReleases[0].releaseStatus?.replace(/_/g, ' ')}
+                    </span>
+                )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -409,6 +535,11 @@ export default function ReleaseManagement({ theme }) {
               className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left`}
             >
               <tr>
+                {isBulkMode && (
+                    <th className="px-4 py-3 w-[50px]">
+                        <span className="sr-only">Select</span>
+                    </th>
+                )}
                 {[
                   "Release ID",
                   "Release Name",
@@ -430,9 +561,19 @@ export default function ReleaseManagement({ theme }) {
               {releases.map((rel) => (
                 <tr
                   key={rel.releaseId}
-                  className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"}
+                  className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"} ${selectedReleases.some(r => r.releaseId === rel.releaseId) ? (isDark ? 'bg-purple-900/10' : 'bg-purple-50') : ''}
                     `}
                 >
+                  {isBulkMode && (
+                    <td className="px-4 py-3">
+                        <Checkbox 
+                            checked={selectedReleases.some(r => r.releaseId === rel.releaseId)}
+                            onCheckedChange={() => handleSelectRelease(rel)}
+                            disabled={selectedReleases.length > 0 && selectedReleases[0].releaseStatus !== rel.releaseStatus}
+                            className={isDark ? "border-gray-500 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600" : ""}
+                        />
+                    </td>
+                  )}
                   <td className="px-4 py-3 whitespace-nowrap">{rel.releaseId}</td>
                   <td className="px-4 py-3 whitespace-nowrap">{rel.releaseName}</td>
                   <td className="px-4 py-3 whitespace-nowrap">{rel.user.name}</td>
@@ -667,6 +808,21 @@ export default function ReleaseManagement({ theme }) {
         filename={userName ? `${userName}_releases` : "releases"}
         title={userName ? `Export ${userName}'s Releases` : "Export Releases"}
         description="Select a data range of releases to export as a CSV file."
+      />
+      
+      <BulkProcessingModal 
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        selectedReleases={selectedReleases}
+        actionType={bulkAction}
+        theme={theme}
+        releaseCategory={releaseCategory}
+        onComplete={() => {
+            fetchReleases();
+            fetchStats();
+            setSelectedReleases([]);
+            setIsBulkMode(false);
+        }}
       />
     </div>
   );
