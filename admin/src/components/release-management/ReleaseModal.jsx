@@ -52,6 +52,11 @@ const STATUS_CONFIG = {
         label: 'Update Request',
         color: 'bg-orange-500/20 text-orange-600 dark:text-orange-400',
         icon: <AlertCircle className="w-3 h-3" />
+    },
+    taken_down: {
+        label: 'Taken Down',
+        color: 'bg-red-500/20 text-red-600 dark:text-red-400',
+        icon: <XCircle className="w-3 h-3" />
     }
 }
 
@@ -91,10 +96,19 @@ function ActionButtons({ release, onActionComplete, isDark, releaseCategory }) {
             toast.error('Please provide a rejection reason')
             return
         }
-        if (releaseCategory === 'advanced') {
-            await handleAction(() => GlobalApi.rejectAdvancedRelease(release.releaseId, { reason: rejectionReason }), 'Release rejected successfully')
+
+        if (release.releaseStatus === 'take_down') {
+             if (releaseCategory === 'advanced') {
+                await handleAction(() => GlobalApi.rejectTakedownAdvancedRelease(release.releaseId, { reason: rejectionReason }), 'Takedown rejected successfully')
+            } else {
+                await handleAction(() => GlobalApi.rejectTakedownRequest(release.releaseId, { reason: rejectionReason }), 'Takedown rejected successfully')
+            }
         } else {
-            await handleAction(() => GlobalApi.rejectRelease(release.releaseId, { reason: rejectionReason }), 'Release rejected successfully')
+            if (releaseCategory === 'advanced') {
+                await handleAction(() => GlobalApi.rejectAdvancedRelease(release.releaseId, { reason: rejectionReason }), 'Release rejected successfully')
+            } else {
+                await handleAction(() => GlobalApi.rejectRelease(release.releaseId, { reason: rejectionReason }), 'Release rejected successfully')
+            }
         }
         setShowRejectDialog(false)
         setRejectionReason('')
@@ -163,11 +177,30 @@ function ActionButtons({ release, onActionComplete, isDark, releaseCategory }) {
                 )}
 
                 {release.releaseStatus === 'take_down' && (
+                    <>
+                        <Button
+                            onClick={() => handleAction(() => releaseCategory === 'advanced' ? GlobalApi.processTakedownAdvancedRelease(release.releaseId) : GlobalApi.processTakedownRequest(release.releaseId), 'Takedown processed')}
+                            className="bg-orange-600 hover:bg-orange-700 text-white"
+                            disabled={loading}>
+                            Process Takedown
+                        </Button>
+                        <Button
+                            onClick={() => setShowRejectDialog(true)}
+                            variant="destructive"
+                            disabled={loading}>
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Reject Takedown
+                        </Button>
+                    </>
+                )}
+
+                {release.releaseStatus === 'taken_down' && (
                     <Button
-                        onClick={() => handleAction(() => releaseCategory === 'advanced' ? GlobalApi.processTakedownAdvancedRelease(release.releaseId) : GlobalApi.processTakedownRequest(release.releaseId), 'Takedown processed')}
-                        className="bg-orange-600 hover:bg-orange-700 text-white"
+                        onClick={() => handleAction(() => releaseCategory === 'advanced' ? GlobalApi.revertTakedownAdvancedRelease(release.releaseId) : GlobalApi.revertTakedown(release.releaseId), 'Release restored to Live')}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
                         disabled={loading}>
-                        Process Takedown
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Restore to Live
                     </Button>
                 )}
 

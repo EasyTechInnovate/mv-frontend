@@ -109,6 +109,27 @@ const ACTION_CONFIG = {
         apiAdvanced: GlobalApi.rejectAdvancedEditRequest,
         requiresReason: true,
         variant: "destructive"
+    },
+    reject_takedown: {
+        title: "Reject Takedown Requests",
+        description: "Reject takedown requests for selected releases? This will revert them to Live status.",
+        confirmLabel: "Reject Takedown",
+        processingLabel: "Rejecting...",
+        successMessage: "Takedowns rejected (Releases are Live)",
+        apiBasic: GlobalApi.rejectTakedownRequest,
+        apiAdvanced: GlobalApi.rejectTakedownAdvancedRelease,
+        requiresReason: true,
+        variant: "destructive"
+    },
+    restore_takedown: {
+        title: "Restore to Live",
+        description: "Restore selected releases from 'Taken Down' to 'Live' status?",
+        confirmLabel: "Restore",
+        processingLabel: "Restoring...",
+        successMessage: "Releases restored to Live",
+        apiBasic: GlobalApi.revertTakedown,
+        apiAdvanced: GlobalApi.revertTakedownAdvancedRelease,
+        variant: "default"
     }
 };
 

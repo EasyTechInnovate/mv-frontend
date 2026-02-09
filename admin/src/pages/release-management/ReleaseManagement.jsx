@@ -20,7 +20,8 @@ const EReleaseStatus = {
   LIVE: 'live',
   REJECTED: 'rejected',
   TAKE_DOWN: 'take_down',
-  UPDATE_REQUEST: 'update_request'
+  UPDATE_REQUEST: 'update_request',
+  TAKEN_DOWN: 'taken_down'
 };
 
 const ETrackType = {
@@ -262,6 +263,7 @@ export default function ReleaseManagement({ theme }) {
     published: "bg-green-500/20 text-green-400",
     take_down: "bg-red-500/20 text-red-400",
     update_request: "bg-purple-500/20 text-purple-400",
+    taken_down: "bg-red-500/20 text-red-400",
   };
 
 
@@ -481,8 +483,19 @@ export default function ReleaseManagement({ theme }) {
                 )}
 
                 {selectedReleases[0].releaseStatus === 'take_down' && (
-                     <Button size="sm" onClick={() => handleBulkActionClick('process_takedown')} className="bg-orange-600 hover:bg-orange-700 text-white">
-                        Process Takedown ({selectedReleases.length})
+                     <>
+                        <Button size="sm" onClick={() => handleBulkActionClick('process_takedown')} className="bg-orange-600 hover:bg-orange-700 text-white">
+                            Process Takedown ({selectedReleases.length})
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleBulkActionClick('reject_takedown')}>
+                            Reject Takedown ({selectedReleases.length})
+                        </Button>
+                     </>
+                )}
+
+                {selectedReleases[0].releaseStatus === 'taken_down' && (
+                     <Button size="sm" onClick={() => handleBulkActionClick('restore_takedown')} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                        Restore to Live ({selectedReleases.length})
                     </Button>
                 )}
 
@@ -511,6 +524,7 @@ export default function ReleaseManagement({ theme }) {
                     selectedReleases[0].releaseStatus === 'processing' ||
                     selectedReleases[0].releaseStatus === 'published' ||
                     selectedReleases[0].releaseStatus === 'take_down' ||
+                    selectedReleases[0].releaseStatus === 'taken_down' ||
                     (selectedReleases[0].releaseStatus === 'live' && !selectedReleases[0].requestStatus) ||
                     selectedReleases[0].releaseStatus === 'update_request' || 
                     selectedReleases[0].requestStatus === 'update_request'

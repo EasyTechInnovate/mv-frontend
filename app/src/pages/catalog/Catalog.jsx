@@ -41,7 +41,8 @@ export const EReleaseStatus = Object.freeze({
     LIVE: 'live',
     REJECTED: 'rejected',
     TAKE_DOWN: 'take_down',
-    UPDATE_REQUEST: 'update_request'
+    UPDATE_REQUEST: 'update_request',
+    TAKEN_DOWN: 'taken_down'
 });
 
 const StatusBadge = ({ status }) => {
@@ -60,7 +61,9 @@ const StatusBadge = ({ status }) => {
             case EReleaseStatus.REJECTED:
                 return 'bg-red-500/10 text-red-500 border-red-500/20'
             case EReleaseStatus.TAKE_DOWN:
-                return 'bg-orange-500/10 text-orange-500 border-orange-500/20'
+            case EReleaseStatus.TAKEN_DOWN:
+            case 'down': // Fallback for backend 'down' if logic differs
+                return 'bg-red-500/10 text-red-500 border-red-500/20'
             case EReleaseStatus.UPDATE_REQUEST:
                 return 'bg-purple-500/10 text-purple-500 border-purple-500/20'
             default:
@@ -727,6 +730,7 @@ const CatalogPage = () => {
                         <SelectItem value={EReleaseStatus.LIVE}>Live</SelectItem>
                         <SelectItem value={EReleaseStatus.REJECTED}>Rejected</SelectItem>
                         <SelectItem value={EReleaseStatus.TAKE_DOWN}>Take Down</SelectItem>
+                        <SelectItem value={EReleaseStatus.TAKEN_DOWN}>Taken Down</SelectItem>
                         <SelectItem value={EReleaseStatus.UPDATE_REQUEST}>Update Request</SelectItem>
                     </SelectContent>
                 </Select>
