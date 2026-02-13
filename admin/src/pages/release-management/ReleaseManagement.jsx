@@ -29,6 +29,14 @@ const ETrackType = {
   ALBUM: 'album'
 };
 
+const EAdvancedReleaseType = {
+  SINGLE: 'single',
+  ALBUM: 'album',
+  EP: 'ep',
+  MINI_ALBUM: 'mini_album',
+  RINGTONE_RELEASE: 'ringtone_release'
+};
+
 // Custom hook for debouncing input
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -126,7 +134,11 @@ export default function ReleaseManagement({ theme }) {
         params.status = status;
       }
       if (trackType !== "all") {
-        params.trackType = trackType;
+        if (releaseCategory === 'advanced') {
+            params.releaseType = trackType;
+        } else {
+            params.trackType = trackType;
+        }
       }
       if (userId) { // Add userId to params if present
         params.userId = userId;
@@ -157,7 +169,8 @@ export default function ReleaseManagement({ theme }) {
             user: {
                 name: rel.userId ? `${rel.userId.firstName} ${rel.userId.lastName}` : 'Unknown',
                 email: rel.userId?.emailAddress,
-                userType: rel.userId?.userType || 'Unknown' 
+                userType: rel.userId?.userType || 'Unknown',
+                accountId: rel.userId?.accountId || 'N/A'
             },
             trackCount: rel.step2?.tracks?.length || 0
         }));
@@ -412,29 +425,15 @@ export default function ReleaseManagement({ theme }) {
               `}
           >
             <option value="all">All Types</option>
-            {Object.values(ETrackType).map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
+            {releaseCategory === 'advanced' 
+              ? Object.values(EAdvancedReleaseType).map((type) => (
+                  <option key={type} value={type}>{type.replace(/_/g, ' ')}</option>
+                ))
+              : Object.values(ETrackType).map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))
+            }
           </select>
-
-
-          <select
-            className={`rounded-md px-3 py-2 text-sm ${isDark
-                ? "bg-[#151F28] border border-gray-700 text-gray-200"
-                : "bg-white border border-gray-300"}
-              `}
-          >
-            <option>All Artists</option>
-          </select>
-
-
-          <Button
-            variant={isDark ? "outline" : "secondary"}
-            className="flex items-center gap-2 px-5"
-            onClick={() => setIsExportModalOpen(true)}
-          >
-            <Download className="h-4 w-4" /> Export CSV
-          </Button>
 
           <Button 
             variant={isBulkMode ? "secondary" : "outline"}
@@ -557,7 +556,7 @@ export default function ReleaseManagement({ theme }) {
                 {[
                   "Release ID",
                   "Release Name",
-                  "Artist",
+                  "Account ID",
                   "Status",
                   // "Request Status",
                   "Tracks",
@@ -590,7 +589,7 @@ export default function ReleaseManagement({ theme }) {
                   )}
                   <td className="px-4 py-3 whitespace-nowrap">{rel.releaseId}</td>
                   <td className="px-4 py-3 whitespace-nowrap">{rel.releaseName}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{rel.user.name}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{rel.user.accountId}</td>
 
                   {/* Status Pill */}
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -676,6 +675,7 @@ export default function ReleaseManagement({ theme }) {
         totalItems={pagination.totalItems}
         headers={releaseCategory === 'advanced' ? [
           { label: "S.No.", key: "sno" },
+          { label: "Account ID", key: "accountId" },
           { label: "Release ID", key: "releaseId" },
           { label: "Release Name", key: "releaseName" },
           { label: "Release Version", key: "releaseVersion" },
@@ -729,6 +729,7 @@ export default function ReleaseManagement({ theme }) {
           { label: "Price Tier", key: "priceTier" }
         ] : [
           { label: "S.No.", key: "sno" },
+          { label: "Account ID", key: "accountId" },
           { label: "Release ID", key: "releaseId" },
           { label: "Release Name", key: "releaseName" },
           { label: "Release Type", key: "releaseType" },
@@ -780,7 +781,11 @@ export default function ReleaseManagement({ theme }) {
               params.status = status;
             }
             if (trackType !== "all") {
-              params.trackType = trackType;
+              if (releaseCategory === 'advanced') {
+                  params.releaseType = trackType;
+              } else {
+                  params.trackType = trackType;
+              }
             }
             if (userId) {
               params.userId = userId;
@@ -799,6 +804,7 @@ export default function ReleaseManagement({ theme }) {
                     
                     const releaseInfo = {
                         releaseId: rel.releaseId,
+                        accountId: rel.userId?.accountId || '-',
                         releaseName: step1.releaseName || '-',
                         releaseVersion: step1.releaseVersion || '-',
                         releaseType: step1.releaseType || rel.releaseType || '-',
@@ -880,6 +886,7 @@ export default function ReleaseManagement({ theme }) {
                   // Common Release Level Data
                   const releaseInfo = {
                     releaseId: rel.releaseId,
+                    accountId: rel.userId?.accountId || rel.user?.accountId || '-',
                     releaseName: rel.step1?.releaseInfo?.releaseName || rel.releaseTitle || '-',
                     upc: rel.step1?.releaseInfo?.upc ? `\t${rel.step1.releaseInfo.upc}` : '-',
                     labelName: rel.step1?.releaseInfo?.labelName || '-',
