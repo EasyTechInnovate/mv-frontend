@@ -598,5 +598,8 @@ export default {
     rejectAdvancedEditRequest: (releaseId, payload) => axiosClient.post(`/v1/admin/advanced-releases/${releaseId}/reject-edit`, payload),
     getAdvancedReleaseStats: () => axiosClient.get(`/v1/admin/advanced-releases/stats`),
     editAdvancedRelease: (releaseId, payload) => axiosClient.patch(`/v1/admin/advanced-releases/${releaseId}/edit`, payload),
-    editRelease: (releaseId, payload) => axiosClient.patch(`/v1/admin/releases/${releaseId}/edit`, payload)
+    editRelease: (releaseId, payload) => axiosClient.patch(`/v1/admin/releases/${releaseId}/edit`, payload),
+    // Admin Create Release for User (CSV Upload)
+    createReleaseForUser: (data) => axiosClient.post('/v1/admin/releases/create-for-user', data),
+    createAdvancedReleaseForUser: (data) => axiosClient.post('/v1/admin/advanced-releases/create-for-user', data),
 }

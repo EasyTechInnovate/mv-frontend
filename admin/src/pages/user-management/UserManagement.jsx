@@ -24,6 +24,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import UserDetailsModal from "@/components/user-management/UserDetailsModal.jsx";
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
+import CsvUploadModal from "@/components/csv-upload/CsvUploadModal";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -64,6 +65,10 @@ export default function UserManagement({ theme }) {
   // State for the new details modal
   const [isUserDetailsModalOpen, setIsUserDetailsModalOpen] = useState(false);
   const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
+
+  // CSV Upload State
+  const [isCsvUploadOpen, setIsCsvUploadOpen] = useState(false);
+  const [csvUploadUser, setCsvUploadUser] = useState(null);
 
   const navigate = useNavigate();
 
@@ -334,6 +339,10 @@ setIsResetPasswordOpen(true);
                             <Button
                               size="sm"
                               className="bg-purple-600 hover:bg-purple-700 text-white px-3 rounded-lg flex items-center gap-1"
+                              onClick={() => {
+                                setCsvUploadUser(u);
+                                setIsCsvUploadOpen(true);
+                              }}
                             >
                               <Upload className="h-4 w-4" />
                               Upload Catalog
@@ -500,6 +509,19 @@ setIsResetPasswordOpen(true);
         filename="users"
         title="Export Users"
         description="Select a data range of users to export as a CSV file."
+      />
+      <CsvUploadModal
+        isOpen={isCsvUploadOpen}
+        onClose={() => {
+          setIsCsvUploadOpen(false);
+          setCsvUploadUser(null);
+        }}
+        userId={csvUploadUser?._id}
+        userName={csvUploadUser ? `${csvUploadUser.firstName || ''} ${csvUploadUser.lastName || ''}`.trim() : ''}
+        theme={theme}
+        onSuccess={() => {
+          // Optional: refresh data or show success message if needed
+        }}
       />
     </div>
   );

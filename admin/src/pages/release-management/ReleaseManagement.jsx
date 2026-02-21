@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Download, Eye, ArrowLeft, Pencil, ListChecks } from "lucide-react"; // Import ArrowLeft
 import ReleaseModal from "../../components/release-management/ReleaseModal";
 import BulkProcessingModal from "../../components/release-management/BulkProcessingModal";
+import CsvUploadModal from "@/components/csv-upload/CsvUploadModal";
 import GlobalApi from "@/lib/GlobalApi"; // your API wrapper
 import { useParams, useNavigate } from "react-router-dom"; // Import hooks
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
@@ -89,6 +90,9 @@ export default function ReleaseManagement({ theme }) {
   const [selectedReleases, setSelectedReleases] = useState([]);
   const [bulkAction, setBulkAction] = useState(null);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  
+  // CSV Upload State
+  const [isCsvUploadOpen, setIsCsvUploadOpen] = useState(false);
 
   const toggleBulkMode = () => {
     setIsBulkMode(!isBulkMode);
@@ -338,7 +342,16 @@ export default function ReleaseManagement({ theme }) {
           >
             <Download className="h-4 w-4 mr-2" /> Export as CSV
           </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-5">
+          <Button
+            className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-5"
+            onClick={() => {
+              if (!userId) {
+                toast.error("Please select a user first to add a release");
+                return;
+              }
+              setIsCsvUploadOpen(true);
+            }}
+          >
             + Add New Release
           </Button>
         </div>
@@ -985,6 +998,18 @@ export default function ReleaseManagement({ theme }) {
             fetchStats();
             setSelectedReleases([]);
             setIsBulkMode(false);
+        }}
+      />
+      
+      <CsvUploadModal
+        isOpen={isCsvUploadOpen}
+        onClose={() => setIsCsvUploadOpen(false)}
+        userId={userId}
+        userName={userName}
+        theme={theme}
+        onSuccess={() => {
+          fetchReleases();
+          fetchStats();
         }}
       />
     </div>
