@@ -381,6 +381,28 @@ const EditBasicRelease = ({ theme }) => {
         }
     }
   }
+  const updateDynamicField = (field, id, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field].map(item =>
+        item.id === id ? { ...item, value } : item
+      )
+    }));
+  };
+
+  const addDynamicField = (field) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: [...prev[field], { id: generateUniqueId(), value: '' }]
+    }));
+  };
+
+  const removeDynamicField = (field, id) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field].filter(item => item.id !== id)
+    }));
+  };
 
   const handleTrackFieldChange = (trackId, field, value) => {
     setFormData(prev => ({
