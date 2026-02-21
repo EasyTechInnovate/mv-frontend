@@ -50,8 +50,7 @@ export const ADVANCED_RELEASE_HEADERS = [
   'pLineYear',          // optional: e.g. 2025
   'pLineText',          // optional
   'releasePricingTier', // optional: front | mid | back
-  'forFutureRelease',   // optional: YYYY-MM-DD
-  'forPastRelease',     // optional: YYYY-MM-DD
+  'releaseDate',        // optional: YYYY-MM-DD
   'isWorldwide',        // optional: true/false
   'territories',        // optional: pipe-separated
   'distributionPartners', // optional: pipe-separated
@@ -77,8 +76,7 @@ export const ADVANCED_RELEASE_SAMPLE = [
     pLineYear: '2026',
     pLineText: '2026 My Label',
     releasePricingTier: 'mid',
-    forFutureRelease: '2026-06-01',
-    forPastRelease: '',
+    releaseDate: '2026-06-01',
     isWorldwide: 'true',
     territories: 'india|afghanistan',
     distributionPartners: 'spotify|youtube_music',

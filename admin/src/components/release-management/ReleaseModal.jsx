@@ -730,9 +730,10 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                     <div>
                         <label className="text-sm font-medium mb-2 block">Release Date</label>
                         <p className={isDark ? 'text-gray-300' : 'text-gray-700'}>
-                            {release.step3?.releaseDate || release.step3?.deliveryDetails?.forFutureRelease
-                                ? new Date(release.step3?.releaseDate || release.step3?.deliveryDetails?.forFutureRelease).toLocaleDateString()
-                                : 'Not set'}
+                            {(() => {
+                                const relDate = release.step3?.releaseDate || release.step3?.deliveryDetails?.releaseDate || release.step3?.deliveryDetails?.forFutureRelease;
+                                return relDate ? new Date(relDate).toLocaleDateString() : 'Not set';
+                            })()}
                         </p>
                     </div>
 

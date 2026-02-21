@@ -838,9 +838,7 @@ export default function ReleaseManagement({ theme }) {
                         submittedAt: rel.submittedAt ? new Date(rel.submittedAt).toLocaleDateString() : '-',
                         publishedAt: rel.publishedAt ? new Date(rel.publishedAt).toLocaleDateString() : '-',
                         liveAt: rel.liveAt ? new Date(rel.liveAt).toLocaleDateString() : '-',
-                        originalReleaseDate: step3.deliveryDetails?.forFutureRelease ? new Date(step3.deliveryDetails.forFutureRelease).toLocaleDateString() : (step3.deliveryDetails?.forPastRelease ? new Date(step3.deliveryDetails.forPastRelease).toLocaleDateString() : '-'),
-                        salesStartDate: step3.deliveryDetails?.salesWaitPeriod ? `+${step3.deliveryDetails.salesWaitPeriod} days` : 'Immediate',
-                        preOrderDate: step3.deliveryDetails?.preOrderDate ? new Date(step3.deliveryDetails.preOrderDate).toLocaleDateString() : '-',
+                        releaseDate: (step3.deliveryDetails?.releaseDate || step3.deliveryDetails?.forFutureRelease) ? new Date(step3.deliveryDetails.releaseDate || step3.deliveryDetails.forFutureRelease).toLocaleDateString() : '-',
                         territories: step3.territorialRights?.isWorldwide ? "Worldwide" : (step3.territorialRights?.selectedTerritories?.join(", ") || '-'),
                         isExclusive: step3.territorialRights?.isExclusive ? "Yes" : "No",
                         priceTier: step1.releasePricingTier || '-'

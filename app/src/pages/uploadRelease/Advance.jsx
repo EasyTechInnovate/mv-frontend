@@ -108,8 +108,7 @@ const AdvancedReleaseBuilder = () => {
       previewStartTiming: ''
     }],
     
-    forFutureRelease: '',
-    forPreorderPreSave: '',
+    releaseDate: '',
     worldWideRelease: 'yes',
     territories: [],
     partners: [],
@@ -967,36 +966,14 @@ const AdvancedReleaseBuilder = () => {
         <h3 className="text-foreground text-xl font-semibold">Delivery Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <Label className="text-foreground">For Future release</Label>
+            <Label className="text-foreground">Release Date</Label>
             <div className="mt-2 relative">
               <Input 
                 type="date" 
                 placeholder="mm/dd/yyyy" 
                 className="w-full [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:invert-0 dark:[&::-webkit-calendar-picker-indicator]:invert" 
-                value={formData.forFutureRelease}
-                onChange={(e) => setFormData(prev => ({...prev, forFutureRelease: e.target.value}))}
-                min={(() => {
-                  const today = new Date();
-                  const oneWeekLater = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-                  return oneWeekLater.toISOString().split('T')[0];
-                })()}
-              />
-            </div>
-          </div>
-          <div>
-            <Label className="text-foreground">For Previous/Past release</Label>
-            <div className="mt-2 relative">
-              <Input 
-                type="date" 
-                placeholder="mm/dd/yyyy" 
-                className="w-full [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:invert-0 dark:[&::-webkit-calendar-picker-indicator]:invert" 
-                value={formData.forPreorderPreSave}
-                onChange={(e) => setFormData(prev => ({...prev, forPreorderPreSave: e.target.value}))}
-                max={(() => {
-                  const today = new Date();
-                  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-                  return yesterday.toISOString().split('T')[0];
-                })()}
+                value={formData.releaseDate}
+                onChange={(e) => setFormData(prev => ({...prev, releaseDate: e.target.value}))}
               />
             </div>
           </div>
@@ -1279,8 +1256,7 @@ const AdvancedReleaseBuilder = () => {
       // Step 3: Delivery Details
       const step3Data = {
         deliveryDetails: {
-          forFutureRelease: formData.forFutureRelease ? new Date(formData.forFutureRelease).toISOString() : null,
-          forPastRelease: formData.forPreorderPreSave ? new Date(formData.forPreorderPreSave).toISOString() : null
+          releaseDate: formData.releaseDate ? new Date(formData.releaseDate).toISOString() : null
         },
         territorialRights: {
           territories: worldWideRelease === 'yes'

@@ -325,29 +325,11 @@ const ReleaseDetailsModal = ({ release, isOpen, onClose, releaseType }) => {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-4">
-                                    {releaseDetails.step3?.releaseDate && (
+                                    {(releaseDetails.step3?.releaseDate || releaseDetails.step3?.deliveryDetails?.releaseDate || releaseDetails.step3?.deliveryDetails?.forFutureRelease) && (
                                         <div>
                                             <Label>Release Date</Label>
                                             <Input
-                                                value={new Date(releaseDetails.step3.releaseDate).toLocaleDateString()}
-                                                disabled
-                                            />
-                                        </div>
-                                    )}
-                                    {releaseDetails.step3?.deliveryDetails?.forFutureRelease && (
-                                        <div>
-                                            <Label>Future Release Date</Label>
-                                            <Input
-                                                value={new Date(releaseDetails.step3.deliveryDetails.forFutureRelease).toLocaleDateString()}
-                                                disabled
-                                            />
-                                        </div>
-                                    )}
-                                    {releaseDetails.step3?.deliveryDetails?.forPastRelease && (
-                                        <div>
-                                            <Label>Past Release Date</Label>
-                                            <Input
-                                                value={new Date(releaseDetails.step3.deliveryDetails.forPastRelease).toLocaleDateString()}
+                                                value={new Date(releaseDetails.step3?.releaseDate || releaseDetails.step3?.deliveryDetails?.releaseDate || releaseDetails.step3?.deliveryDetails?.forFutureRelease).toLocaleDateString()}
                                                 disabled
                                             />
                                         </div>
@@ -1128,7 +1110,7 @@ const CatalogPage = () => {
                             submittedAt: rel.submittedAt ? new Date(rel.submittedAt).toLocaleDateString() : '-',
                             publishedAt: rel.publishedAt ? new Date(rel.publishedAt).toLocaleDateString() : '-',
                             liveAt: rel.liveAt ? new Date(rel.liveAt).toLocaleDateString() : '-',
-                            originalReleaseDate: step3.deliveryDetails?.forFutureRelease ? new Date(step3.deliveryDetails.forFutureRelease).toLocaleDateString() : (step3.deliveryDetails?.forPastRelease ? new Date(step3.deliveryDetails.forPastRelease).toLocaleDateString() : '-'),
+                            releaseDate: (step3.deliveryDetails?.releaseDate || step3.deliveryDetails?.forFutureRelease) ? new Date(step3.deliveryDetails.releaseDate || step3.deliveryDetails.forFutureRelease).toLocaleDateString() : '-',
                             salesStartDate: step3.deliveryDetails?.salesWaitPeriod ? `+${step3.deliveryDetails.salesWaitPeriod} days` : 'Immediate',
                             preOrderDate: step3.deliveryDetails?.preOrderDate ? new Date(step3.deliveryDetails.preOrderDate).toLocaleDateString() : '-',
                             territories: step3.territorialRights?.isWorldwide ? "Worldwide" : (step3.territorialRights?.selectedTerritories?.join(", ") || '-'),

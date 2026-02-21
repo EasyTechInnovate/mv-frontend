@@ -69,8 +69,7 @@ const EditBasicRelease = ({ theme }) => {
     }],
     
     // Delivery Details
-    forFutureRelease: '',
-    forPreorderPreSave: '',
+    releaseDate: '',
     worldWideRelease: 'yes',
     territories: [],
     partners: [],
@@ -135,9 +134,7 @@ const EditBasicRelease = ({ theme }) => {
                         language: ''
                     }],
 
-                    forFutureRelease: data.step3?.releaseDate ? new Date(data.step3.releaseDate).toISOString().split('T')[0] : '',
-                    // Mapping forPreorderPreSave if logical reverse is applicable, else typically mapped from releaseDate or API
-                    forPreorderPreSave: data.step3?.releaseDate ? new Date(data.step3.releaseDate).toISOString().split('T')[0] : '', 
+                    releaseDate: data.step3?.releaseDate ? new Date(data.step3.releaseDate).toISOString().split('T')[0] : '',
                     
                     worldWideRelease: data.step3?.territorialRights?.hasRights ? 'yes' : 'no',
                     territories: data.step3?.territorialRights?.territories || [],
@@ -250,7 +247,7 @@ const EditBasicRelease = ({ theme }) => {
                 })
             },
             step3: {
-                releaseDate: formData.forFutureRelease,
+                releaseDate: formData.releaseDate ? new Date(formData.releaseDate).toISOString() : null,
                 territorialRights: {
                     hasRights: worldWideRelease === 'yes',
                     territories: worldWideRelease === 'yes' ? [] : selectedTerritories.map(t => t.toLowerCase().replace(/\s+/g, '_').replace(/\(/g, '').replace(/\)/g, ''))
@@ -678,12 +675,7 @@ const EditBasicRelease = ({ theme }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <Label>Release Date</Label>
-                        <Input type="date" value={formData.forFutureRelease} onChange={(e) => setFormData(prev => ({...prev, forFutureRelease: e.target.value}))} 
-                        className="[&::-webkit-calendar-picker-indicator]:invert dark:[&::-webkit-calendar-picker-indicator]:invert-0"/>
-                    </div>
-                     <div>
-                        <Label>For Preorder/Pre-save release</Label>
-                        <Input type="date" value={formData.forPreorderPreSave} onChange={(e) => setFormData(prev => ({...prev, forPreorderPreSave: e.target.value}))}
+                        <Input type="date" value={formData.releaseDate} onChange={(e) => setFormData(prev => ({...prev, releaseDate: e.target.value}))} 
                         className="[&::-webkit-calendar-picker-indicator]:invert dark:[&::-webkit-calendar-picker-indicator]:invert-0"/>
                     </div>
                 </div>

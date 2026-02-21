@@ -75,8 +75,7 @@ const EditBasicReleaseBuilder = () => {
     }],
     
     // Delivery Details
-    forFutureRelease: '',
-    forPreorderPreSave: '',
+    releaseDate: '',
     worldWideRelease: 'yes',
     territories: [],
     partners: [],
@@ -145,7 +144,7 @@ const EditBasicReleaseBuilder = () => {
                 language: ''
             }],
 
-            forFutureRelease: data.step3?.releaseDate ? new Date(data.step3.releaseDate).toISOString().split('T')[0] : '',
+            releaseDate: data.step3?.releaseDate ? new Date(data.step3.releaseDate).toISOString().split('T')[0] : '',
             worldWideRelease: data.step3?.territorialRights?.hasRights ? 'yes' : 'no',
             territories: data.step3?.territorialRights?.territories || [],
             partners: data.step3?.partnerSelection?.partners || [],
@@ -780,42 +779,14 @@ const EditBasicReleaseBuilder = () => {
       <Card className="space-y-6 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <Label className="text-foreground">For Future Release</Label>
+            <Label className="text-foreground">Release Date</Label>
             <div className=" space-x-2 mt-2 relative">
               <Input 
                 type="date" 
                 placeholder="mm/dd/yyyy" 
                 className=" w-full  [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3  [&::-webkit-calendar-picker-indicator]:invert-0 dark:[&::-webkit-calendar-picker-indicator]:invert" 
-                value={formData.forFutureRelease}
-                onChange={(e) => setFormData(prev => ({...prev, forFutureRelease: e.target.value}))}
-                min={(() => {
-                  const today = new Date();
-                  const oneWeekLater = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-                  const year = oneWeekLater.getFullYear();
-                  const month = String(oneWeekLater.getMonth() + 1).padStart(2, '0');
-                  const day = String(oneWeekLater.getDate()).padStart(2, '0');
-                  return `${year}-${month}-${day}`;
-                })()}
-              />
-            </div>
-          </div>
-          <div>
-            <Label className="text-foreground">For Preorder/Pre-save release</Label>
-            <div className=" space-x-2 mt-2 relative">
-              <Input 
-                type="date" 
-                placeholder="mm/dd/yyyy" 
-                className=" w-full  [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3  [&::-webkit-calendar-picker-indicator]:invert-0 dark:[&::-webkit-calendar-picker-indicator]:invert" 
-                value={formData.forPreorderPreSave}
-                onChange={(e) => setFormData(prev => ({...prev, forPreorderPreSave: e.target.value}))}
-                 max={(() => {
-                  const today = new Date();
-                  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-                  const year = yesterday.getFullYear();
-                  const month = String(yesterday.getMonth() + 1).padStart(2, '0');
-                  const day = String(yesterday.getDate()).padStart(2, '0');
-                  return `${year}-${month}-${day}`;
-              })()}
+                value={formData.releaseDate}
+                onChange={(e) => setFormData(prev => ({...prev, releaseDate: e.target.value}))}
               />
             </div>
           </div>
@@ -1101,7 +1072,7 @@ const EditBasicReleaseBuilder = () => {
         }
 
         const step3Data = {
-          releaseDate: formData.forFutureRelease ? new Date(formData.forFutureRelease).toISOString() : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          releaseDate: formData.releaseDate ? new Date(formData.releaseDate).toISOString() : null,
           territorialRights: territorialRightsData,
           partnerSelection: partnerSelectionData,
           copyrights: {

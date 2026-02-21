@@ -174,11 +174,8 @@ export function validateAdvancedReleaseRow(row, index) {
   if (row.releasePricingTier && !PRICING_TIERS.includes(row.releasePricingTier.toLowerCase().trim())) {
     errors.push(`Row ${rowNum}: releasePricingTier must be front, mid, or back`)
   }
-  if (row.forFutureRelease && !isValidDate(row.forFutureRelease)) {
-    errors.push(`Row ${rowNum}: forFutureRelease must be YYYY-MM-DD`)
-  }
-  if (row.forPastRelease && !isValidDate(row.forPastRelease)) {
-    errors.push(`Row ${rowNum}: forPastRelease must be YYYY-MM-DD`)
+  if (row.releaseDate && !isValidDate(row.releaseDate)) {
+    errors.push(`Row ${rowNum}: releaseDate must be YYYY-MM-DD`)
   }
 
   if (row.distributionPartners) {
@@ -345,10 +342,10 @@ export function advancedReleaseRowToPayload(row, userId) {
   if (row.releasePricingTier?.trim()) info.releasePricingTier = row.releasePricingTier.toLowerCase().trim()
 
   // Step3
-  if (row.forFutureRelease?.trim() || row.forPastRelease?.trim()) {
-    payload.step3.deliveryDetails = {}
-    if (row.forFutureRelease?.trim()) payload.step3.deliveryDetails.forFutureRelease = row.forFutureRelease.trim()
-    if (row.forPastRelease?.trim()) payload.step3.deliveryDetails.forPastRelease = row.forPastRelease.trim()
+  if (row.releaseDate?.trim()) {
+    payload.step3.deliveryDetails = {
+      releaseDate: row.releaseDate.trim()
+    }
   }
 
   const isWorldwide = parseBool(row.isWorldwide)
