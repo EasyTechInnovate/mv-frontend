@@ -437,7 +437,6 @@ export function advancedTrackRowsToPayload(rows) {
 
     if (row.language?.trim()) track.language = row.language.toLowerCase().trim()
     if (row.secondaryGenre?.trim()) track.secondaryGenre = row.secondaryGenre.toLowerCase().trim()
-    if (row.vocalType?.trim()) track.vocalType = row.vocalType.trim()
 
     const availDownload = parseBool(row.isAvailableForDownload)
     if (availDownload !== undefined) track.isAvailableForDownload = availDownload

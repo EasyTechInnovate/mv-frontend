@@ -55,6 +55,7 @@ const BasicReleaseBuilder = () => {
     genre: '',
     upc: '',
     labelName: '',
+    singerName: [{ id: generateUniqueId(), value: '' }],
     
     // Audio & Track Details
     tracks: [{
@@ -225,6 +226,29 @@ const BasicReleaseBuilder = () => {
             ? { ...track, [field]: value }
             : track
         )
+    }));
+  };
+
+  const updateDynamicField = (field, id, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field].map(item =>
+        item.id === id ? { ...item, value } : item
+      )
+    }));
+  };
+
+  const addDynamicField = (field) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: [...prev[field], { id: generateUniqueId(), value: '' }]
+    }));
+  };
+
+  const removeDynamicField = (field, id) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field].filter(item => item.id !== id)
     }));
   };
 
@@ -437,6 +461,28 @@ const BasicReleaseBuilder = () => {
                   onChange={(e) => setFormData(prev => ({...prev, releaseName: e.target.value}))}
                   className="mt-1"
                 />
+              </div>
+              <div className="col-span-1 md:col-span-3 lg:col-span-1">
+                <Label className="text-foreground mb-2 block">Singer Name(s)</Label>
+                {formData.singerName.map((singer, index) => (
+                  <div key={singer.id} className="flex items-center gap-2 mb-2">
+                    <Input 
+                      placeholder="Enter singer name" 
+                      className="flex-1" 
+                      value={singer.value} 
+                      onChange={(e) => updateDynamicField('singerName', singer.id, e.target.value)} 
+                    />
+                    {index === formData.singerName.length - 1 ? (
+                      <Button variant="ghost" size="sm" className="p-2" onClick={() => addDynamicField('singerName')}>
+                        <Plus className="w-5 h-5 text-primary" />
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="sm" className="p-2" onClick={() => removeDynamicField('singerName', singer.id)}>
+                        <X className="w-5 h-5 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
               <div>
                 <Label htmlFor="genre" className="text-foreground">Genre</Label>
@@ -895,6 +941,7 @@ const BasicReleaseBuilder = () => {
             imageUrl: formData.coverArt,
             imageSize: formData.coverArtInfo.size,
             imageFormat: formData.coverArtInfo.format,
+            singerName: formData.singerName.map(s => s.value.trim()).filter(Boolean)
           },
           releaseInfo: {
             releaseName: formData.releaseName,

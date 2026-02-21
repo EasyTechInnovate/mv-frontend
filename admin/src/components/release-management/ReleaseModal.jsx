@@ -297,6 +297,7 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                 'Label Name': releaseInfo.labelName?.name || releaseInfo.labelName || '',
                 'Primary Genre': releaseInfo.primaryGenre || release.genre || '',
                 'Secondary Genre': releaseInfo.secondaryGenre || '',
+                'Singer Name': release.step1?.coverArt?.singerName?.join(', ') || '',
                 'UPC': releaseInfo.upcCode || releaseInfo.adminProvidedUPC || '',
                 'Cover Art URL': releaseInfo.coverArt?.imageUrl || release.step1?.coverArt?.imageUrl || '',
                 
@@ -335,7 +336,7 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                 
                 // Basic Track Specific
                 ...(!isAdvanced && {
-                    'Singer': track.singerName || '',
+                    'Track Singer': track.singerName || '',
                     'Composer': track.composerName || '',
                     'Lyricist': track.lyricistName || '',
                     'Producer': track.producerName || '',
@@ -673,6 +674,12 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                                     value={release.trackType}
                                     capitalize
                                 />
+                                {release.step1?.coverArt?.singerName && release.step1.coverArt.singerName.length > 0 && (
+                                    <InfoField
+                                        label="Singer Name(s)"
+                                        value={release.step1.coverArt.singerName.join(', ')}
+                                    />
+                                )}
                                 <InfoField
                                     label="Label Name"
                                     value={releaseInfo?.labelName}

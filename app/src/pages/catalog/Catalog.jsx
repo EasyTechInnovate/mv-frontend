@@ -163,6 +163,12 @@ const ReleaseDetailsModal = ({ release, isOpen, onClose, releaseType }) => {
                                             <Label>Release Name</Label>
                                             <Input value={releaseDetails.step1?.releaseInfo?.releaseName || ''} disabled />
                                         </div>
+                                        {releaseType === 'basic' && releaseDetails.step1?.coverArt?.singerName && releaseDetails.step1.coverArt.singerName.length > 0 && (
+                                            <div>
+                                                <Label>Singer Name(s)</Label>
+                                                <Input value={releaseDetails.step1.coverArt.singerName.join(', ')} disabled />
+                                            </div>
+                                        )}
                                         {releaseType === 'advanced' && (
                                             <>
                                                 <div>
@@ -1048,6 +1054,7 @@ const CatalogPage = () => {
                   { label: "Status", key: "releaseStatus" },
                   { label: "Request Status", key: "requestStatus" },
                   { label: "Label", key: "labelName" },
+                  { label: "Singer Name", key: "singerName" },
                   { label: "Genre", key: "genre" },
                   { label: "UPC", key: "upc" },
                   { label: "Cover Art URL", key: "coverArtUrl" },
@@ -1061,7 +1068,7 @@ const CatalogPage = () => {
                   { label: "Track Genre", key: "trackGenre" },
                   { label: "Composer", key: "trackComposer" },
                   { label: "Lyricist", key: "trackLyricist" },
-                  { label: "Singer", key: "trackSinger" },
+                  { label: "Track Singer", key: "trackSinger" },
                   { label: "Producer", key: "trackProducer" },
                   { label: "Audio Format", key: "audioFormat" },
                   { label: "Audio File URL", key: "audioFileUrl" },
@@ -1132,6 +1139,7 @@ const CatalogPage = () => {
                             releaseName: rel.releaseName || rel.step1?.releaseInfo?.releaseName || rel.releaseTitle || '-',
                             upc: rel.step1?.releaseInfo?.upc ? `\t${rel.step1.releaseInfo.upc}` : '-',
                             labelName: rel.step1?.releaseInfo?.labelName || '-',
+                            singerName: rel.step1?.coverArt?.singerName?.join(', ') || '-',
                             genre: rel.step1?.releaseInfo?.genre || '-',
                             releaseType: rel.releaseType || 'Basic',
                             trackType: rel.trackType,

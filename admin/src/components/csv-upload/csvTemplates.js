@@ -158,6 +158,8 @@ export const ADVANCED_TRACK_HEADERS = [
   'trackName',            // required
   'primaryArtists',       // required: pipe-separated
   'featuringArtists',     // optional: pipe-separated
+  'contributorsSoundRecording', // optional: profession1:name1|profession2:name2
+  'contributorsMusicalWork',    // optional: profession1:name1|profession2:name2
   'primaryGenre',         // required: EMusicGenre value
   'secondaryGenre',       // optional: EMusicGenre value
   'mixVersion',           // optional
@@ -165,33 +167,29 @@ export const ADVANCED_TRACK_HEADERS = [
   'isrcCode',             // optional
   'hasHumanVocals',       // optional: true/false (default true)
   'language',             // optional: EMusicLanguage value
-  'vocalType',            // optional
   'isAvailableForDownload', // optional: true/false (default true)
   'previewStartTiming',   // optional: seconds
   'callertuneStartTiming', // optional: seconds
-  'contributorsSoundRecording', // optional: profession1:name1|profession2:name2
-  'contributorsMusicalWork',    // optional: profession1:name1|profession2:name2
 ]
 
 export const ADVANCED_TRACK_SAMPLE = [
   {
-    releaseId: 'ADV-SG-0001',
+    releaseId: 'RE-A-S-001',
     trackName: 'Advanced Track One',
     primaryArtists: 'Artist One|Artist Two',
-    featuringArtists: '',
+    featuringArtists: 'Artist One|Artist Two',
+    contributorsSoundRecording: 'Producer:John Doe|Mixer:Jane Doe',
+    contributorsMusicalWork: 'Composer:John Doe|Lyricist:Jane Doe',
     primaryGenre: 'pop',
-    secondaryGenre: '',
+    secondaryGenre: 'pop',
     mixVersion: '',
     needsISRC: 'true',
     isrcCode: '',
     hasHumanVocals: 'true',
     language: 'hindi',
-    vocalType: '',
     isAvailableForDownload: 'true',
     previewStartTiming: '0',
     callertuneStartTiming: '0',
-    contributorsSoundRecording: 'Producer:John Doe|Mixer:Jane Doe',
-    contributorsMusicalWork: 'Composer:John Doe|Lyricist:Jane Doe',
   }
 ]
 

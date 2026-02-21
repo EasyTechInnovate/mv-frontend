@@ -56,6 +56,7 @@ const EditBasicReleaseBuilder = () => {
     genre: '',
     upc: '',
     labelName: '',
+    singerName: [{ id: generateUniqueId(), value: '' }],
     
     // Audio & Track Details
     tracks: [{
@@ -112,6 +113,9 @@ const EditBasicReleaseBuilder = () => {
             genre: data.step1?.releaseInfo?.genre || '',
             upc: data.step1?.releaseInfo?.upc || '',
             labelName: typeof data.step1?.releaseInfo?.labelName === 'object' ? data.step1.releaseInfo.labelName.name : (data.step1?.releaseInfo?.labelName || ''),
+            singerName: (data.step1?.coverArt?.singerName && data.step1.coverArt.singerName.length > 0) 
+              ? data.step1.coverArt.singerName.map(s => ({ id: generateUniqueId(), value: s }))
+              : [{ id: generateUniqueId(), value: '' }],
     
             tracks: (data.step2?.tracks && data.step2.tracks.length > 0) ? data.step2.tracks.map(track => ({
                 id: generateUniqueId(),
@@ -334,6 +338,29 @@ const EditBasicReleaseBuilder = () => {
     }));
   };
 
+  const updateDynamicField = (field, id, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field].map(item =>
+        item.id === id ? { ...item, value } : item
+      )
+    }));
+  };
+
+  const addDynamicField = (field) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: [...prev[field], { id: generateUniqueId(), value: '' }]
+    }));
+  };
+
+  const removeDynamicField = (field, id) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field].filter(item => item.id !== id)
+    }));
+  };
+
   const addTrack = () => {
     // Prevent adding multiple tracks for single release
     if (releaseType === 'single' && formData.tracks.length >= 1) {
@@ -502,6 +529,28 @@ const EditBasicReleaseBuilder = () => {
                   onChange={(e) => setFormData(prev => ({...prev, releaseName: e.target.value}))}
                   className="mt-1"
                 />
+              </div>
+              <div className="col-span-1 md:col-span-3 lg:col-span-1">
+                <Label className="text-foreground mb-2 block">Singer Name(s)</Label>
+                {formData.singerName.map((singer, index) => (
+                  <div key={singer.id} className="flex items-center gap-2 mb-2">
+                    <Input 
+                      placeholder="Enter singer name" 
+                      className="flex-1" 
+                      value={singer.value} 
+                      onChange={(e) => updateDynamicField('singerName', singer.id, e.target.value)} 
+                    />
+                    {index === formData.singerName.length - 1 ? (
+                      <Button variant="ghost" size="sm" className="p-2" onClick={() => addDynamicField('singerName')}>
+                        <Plus className="w-5 h-5 text-primary" />
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="sm" className="p-2" onClick={() => removeDynamicField('singerName', singer.id)}>
+                        <X className="w-5 h-5 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
               <div>
                 <Label htmlFor="genre" className="text-foreground">Genre</Label>
@@ -966,6 +1015,7 @@ const EditBasicReleaseBuilder = () => {
             imageUrl: formData.coverArt,
             imageSize: formData.coverArtInfo.size,
             imageFormat: formData.coverArtInfo.format,
+            singerName: formData.singerName.map(s => s.value.trim()).filter(Boolean)
           },
           releaseInfo: {
             releaseName: formData.releaseName,
