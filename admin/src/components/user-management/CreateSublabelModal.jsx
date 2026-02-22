@@ -48,11 +48,11 @@ export default function CreateSublabelModal({
     if (isEdit) {
       setName(editData.name || "");
       setMembershipStatus(editData.membershipStatus || ESublabelMembershipStatus.ACTIVE);
-      setContractStartDate(editData.contractStartDate || "");
-      setContractEndDate(editData.contractEndDate || "");
+      setContractStartDate(editData.contractStartDate ? new Date(editData.contractStartDate).toISOString().split('T')[0] : "");
+      setContractEndDate(editData.contractEndDate ? new Date(editData.contractEndDate).toISOString().split('T')[0] : "");
       setDescription(editData.description || "");
-      setEmail(editData.email || "");
-      setPhone(editData.phone || "");
+      setEmail(editData.contactInfo?.email || editData.email || "");
+      setPhone(editData.contactInfo?.phone || editData.phone || "");
     } else {
     
       setName("");

@@ -20,8 +20,9 @@ import {
 import { showToast } from '../../utils/toast';
 import { uploadToImageKit } from '../../utils/imagekitUploader.js';
 import { languageOptions, genreOptions, territoryOptions, partnerOptions } from '../../constants/options';
+import { getUserSublabels } from '../../services/api.services';
 
-const labelNames = ["Maheshwari Vishual"];
+
 
 const soundRecordingProfessions = [
   "Actor", "Brand", "Choir", "Conductor", "Ensemble", "Mixer", 
@@ -45,6 +46,17 @@ const releaseTypes = [
 const AdvancedReleaseBuilder = () => {
 
   const navigate = useNavigate()
+
+  // Fetch user's allocated sublabels
+  const { data: sublabelsData } = useQuery({
+    queryKey: ['userSublabels'],
+    queryFn: getUserSublabels,
+  })
+  const sublabelsRaw = sublabelsData?.data?.sublabels || []
+  // Always ensure "Maheshwari Visual" is present as default
+  const sublabels = sublabelsRaw.some(sl => sl.name === 'Maheshwari Visual')
+    ? sublabelsRaw
+    : [{ id: 'default_mv', name: 'Maheshwari Visual', isDefault: true }, ...sublabelsRaw]
 
   const [selectedReleaseType, setSelectedReleaseType] = useState('');
   const [releaseId, setReleaseId] = useState('');
@@ -603,8 +615,8 @@ const AdvancedReleaseBuilder = () => {
                       <SelectValue placeholder="Please select" />
                     </SelectTrigger>
                     <SelectContent>
-                      {labelNames.map((label) => (
-                        <SelectItem key={label} value={label}>{label}</SelectItem>
+                      {sublabels.map((sl) => (
+                        <SelectItem key={sl.id} value={sl.id}>{sl.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

@@ -9,7 +9,7 @@ import { ArrowLeft, Plus, X, Music, Upload, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createRelease, updateReleaseStep1, updateReleaseStep2, updateReleaseStep3, submitRelease, getBasicReleaseDetails } from '../../services/api.services';
+import { createRelease, updateReleaseStep1, updateReleaseStep2, updateReleaseStep3, submitRelease, getBasicReleaseDetails, getUserSublabels } from '../../services/api.services';
 import { showToast } from '../../utils/toast';
 import { uploadToImageKit } from '../../utils/imagekitUploader.js';
 import { languageOptions, genreOptions, territoryOptions, partnerOptions } from '../../constants/options';
@@ -18,12 +18,21 @@ import { languageOptions, genreOptions, territoryOptions, partnerOptions } from 
 
 
 
-const labelNames = [
-  "Maheshwari Vishual"
-];
+
 
 const BasicReleaseBuilder = () => {
   const navigate = useNavigate()
+
+  // Fetch user's allocated sublabels
+  const { data: sublabelsData } = useQuery({
+    queryKey: ['userSublabels'],
+    queryFn: getUserSublabels,
+  })
+  const sublabelsRaw = sublabelsData?.data?.sublabels || []
+  // Always ensure "Maheshwari Visual" is present as default
+  const sublabels = sublabelsRaw.some(sl => sl.name === 'Maheshwari Visual')
+    ? sublabelsRaw
+    : [{ id: 'default_mv', name: 'Maheshwari Visual', isDefault: true }, ...sublabelsRaw]
   const [currentStep, setCurrentStep] = useState(0);
   const [releaseType, setReleaseType] = useState('');
   const [releaseId, setReleaseId] = useState('');
@@ -515,9 +524,9 @@ const BasicReleaseBuilder = () => {
                     <SelectValue placeholder="Select label" />
                   </SelectTrigger>
                   <SelectContent>
-                    {labelNames.map((label) => (
-                      <SelectItem key={label} value={label}>
-                        {label}
+                    {sublabels.map((sl) => (
+                      <SelectItem key={sl.id} value={sl.name}>
+                        {sl.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

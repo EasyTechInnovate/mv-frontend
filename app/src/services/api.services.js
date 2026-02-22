@@ -125,6 +125,12 @@ export const requestAdvancedTakeDown = async (releaseId, data) => {
     return response.data
 }
 
+// Sublabel APIs
+export const getUserSublabels = async () => {
+    const response = await servicesAxiosInstance.get('/v1/advance-releases/sublabels')
+    return response.data
+}
+
 // Support Ticket APIs
 export const createSupportTicket = async (ticketData) => {
     const response = await servicesAxiosInstance.post('/v1/support-tickets', ticketData)

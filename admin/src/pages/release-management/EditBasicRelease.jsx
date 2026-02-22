@@ -13,9 +13,7 @@ import { toast } from 'sonner';
 import { uploadToImageKit } from '@/lib/imageUpload';
 import { languageOptions, genreOptions, territoryOptions, partnerOptions } from '@/constants/options';
 
-const labelNames = [
-  "Maheshwari Vishual"
-];
+
 
 const EditBasicRelease = ({ theme }) => {
   const navigate = useNavigate();
@@ -560,12 +558,7 @@ const EditBasicRelease = ({ theme }) => {
                     </div>
                      <div>
                         <Label>Label Name</Label>
-                        <Select value={formData.labelName} onValueChange={(val) => setFormData(prev => ({...prev, labelName: val}))}>
-                            <SelectTrigger><SelectValue placeholder="Select Label" /></SelectTrigger>
-                             <SelectContent className={dropdownClass}>
-                                {labelNames.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
-                             </SelectContent>
-                        </Select>
+                        <Input value={formData.labelName} onChange={(e) => setFormData(prev => ({...prev, labelName: e.target.value}))} placeholder="Enter label name" />
                     </div>
                 </div>
              </div>

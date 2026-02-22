@@ -15,13 +15,14 @@ import {
   updateAdvancedReleaseStep2,
   updateAdvancedReleaseStep3,
   submitAdvancedRelease,
-  getAdvancedReleaseDetails
+  getAdvancedReleaseDetails,
+  getUserSublabels
 } from '../../services/api.services';
 import { showToast } from '../../utils/toast';
 import { uploadToImageKit } from '../../utils/imagekitUploader.js';
 import { languageOptions, genreOptions, territoryOptions, partnerOptions } from '../../constants/options';
 
-const labelNames = ["Maheshwari Vishual"];
+
 
 const soundRecordingProfessions = [
   "Actor", "Brand", "Choir", "Conductor", "Ensemble", "Mixer", 
@@ -46,6 +47,17 @@ const EditAdvancedReleaseBuilder = () => {
 
   const navigate = useNavigate();
   const { id: editReleaseId } = useParams();
+
+  // Fetch user's allocated sublabels
+  const { data: sublabelsData } = useQuery({
+    queryKey: ['userSublabels'],
+    queryFn: getUserSublabels,
+  })
+  const sublabelsRaw = sublabelsData?.data?.sublabels || []
+  // Always ensure "Maheshwari Visual" is present as default
+  const sublabels = sublabelsRaw.some(sl => sl.name === 'Maheshwari Visual')
+    ? sublabelsRaw
+    : [{ id: 'default_mv', name: 'Maheshwari Visual', isDefault: true }, ...sublabelsRaw]
 
   const [selectedReleaseType, setSelectedReleaseType] = useState('');
   const [releaseId, setReleaseId] = useState('');
@@ -154,7 +166,7 @@ const EditAdvancedReleaseBuilder = () => {
             variousArtistNames: mapArrayToObjects(data.step1?.releaseInfo?.variousArtistNames),
             needUPC: data.step1?.releaseInfo?.upc ? 'no' : 'yes',
             upc: data.step1?.releaseInfo?.upc || '',
-            labelName: typeof data.step1?.releaseInfo?.labelName === 'object' ? data.step1.releaseInfo.labelName.name : (data.step1?.releaseInfo?.labelName || ''),
+            labelName: typeof data.step1?.releaseInfo?.labelName === 'object' ? (data.step1.releaseInfo.labelName._id || data.step1.releaseInfo.labelName.id || '') : (data.step1?.releaseInfo?.labelName || ''),
             primaryGenre: data.step1?.releaseInfo?.primaryGenre || '',
             secondaryGenre: data.step1?.releaseInfo?.secondaryGenre || '',
             cLine: data.step1?.releaseInfo?.cLine?.text || '',
@@ -743,8 +755,8 @@ const EditAdvancedReleaseBuilder = () => {
                       <SelectValue placeholder="Please select" />
                     </SelectTrigger>
                     <SelectContent>
-                      {labelNames.map((label) => (
-                        <SelectItem key={label} value={label}>{label}</SelectItem>
+                      {sublabels.map((sl) => (
+                        <SelectItem key={sl.id} value={sl.id}>{sl.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
