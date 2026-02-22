@@ -424,9 +424,9 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
         )
     }
 
-    const releaseInfo = isAdvanced ? release.step1?.releaseInfo : release.step1?.releaseInfo
-    const coverArt = release.step1?.coverArt?.imageUrl
-    const tracks = release.step2?.tracks || []
+    const releaseInfo = release.step1?.releaseInfo || {}
+    const coverArt = release.step1?.coverArt?.imageUrl || release.coverArt || release.step1?.coverArt
+    const tracks = release.step2?.tracks || release.tracks || []
 
     return (
         <div className={`p-6 space-y-6 ${isDark ? 'bg-[#111A22] text-gray-200' : 'bg-gray-50 text-[#151F28]'}`}>
@@ -596,7 +596,9 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                     {coverArt && (
                         <a
                             href={coverArt}
-                            download
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download={`cover_art_${release.releaseId || 'release'}.jpg`}
                             className="mt-3 block">
                             <Button
                                 variant="outline"
@@ -737,28 +739,63 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                         </p>
                     </div>
 
-                    <div>
+                    <div className="md:col-span-2">
                         <label className="text-sm font-medium mb-2 block">Territories</label>
-                        <p className={isDark ? 'text-gray-300' : 'text-gray-700'}>
-                            {release.step3?.territorialRights?.isWorldwide
-                                ? 'Worldwide'
-                                : release.step3?.territorialRights?.territories?.length
-                                  ? `${release.step3.territorialRights.territories.length} territories`
-                                  : 'Not set'}
-                        </p>
+                        {(release.step3?.territorialRights?.isWorldwide || release.step3?.territorialRights?.hasRights) ? (
+                            <p className={isDark ? 'text-gray-300' : 'text-gray-700'}>Worldwide</p>
+                        ) : (
+                            <div className={`p-4 mt-2 border rounded-md ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'}`}>
+                                <label className="text-sm font-medium">
+                                    Selected Territories ({(release.step3?.territorialRights?.territories?.length || release.step3?.territorialRights?.selectedTerritories?.length || 0)})
+                                </label>
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-3 max-h-40 overflow-y-auto">
+                                    {(release.step3?.territorialRights?.territories || release.step3?.territorialRights?.selectedTerritories)?.map((territory, idx) => (
+                                        <div key={idx} className={`text-sm px-2 py-1 rounded ${isDark ? 'bg-[#151F28]' : 'bg-white'}`}>
+                                            {territory.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="md:col-span-2">
                         <label className="text-sm font-medium mb-2 block">Distribution Partners</label>
-                        <div className="flex flex-wrap gap-2">
-                            {(release.step3?.distributionPartners || release.step3?.partnerSelection?.partners || []).map((partner, i) => (
-                                <Badge
-                                    key={i}
-                                    variant="secondary"
-                                    className="capitalize">
-                                    {partner.replace('_', ' ')}
-                                </Badge>
-                            ))}
+                        <div className={`p-4 mt-2 border rounded-md ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'}`}>
+                            <label className="text-sm font-medium">
+                                Selected Partners ({(release.step3?.distributionPartners?.length || release.step3?.partnerSelection?.partners?.length || 0)})
+                            </label>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-3 max-h-40 overflow-y-auto">
+                                {(release.step3?.distributionPartners || release.step3?.partnerSelection?.partners || []).map((partner, i) => (
+                                    <div key={i} className={`text-sm px-2 py-1 rounded capitalize ${isDark ? 'bg-[#151F28]' : 'bg-white'}`}>
+                                        {partner.replace(/_/g, ' ')}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="md:col-span-2">
+                        <label className="text-sm font-medium mb-2 block">Copyright Information</label>
+                        <div className={`p-4 mt-2 border rounded-md flex flex-col gap-2 ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'}`}>
+                            <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                {release.step3?.copyrights?.ownsCopyright || release.step3?.copyrightOptions?.ownsCopyrights
+                                    ? 'Owns Copyright'
+                                    : 'Proceeding without Copyright Document'}
+                            </p>
+                            
+                            {(release.step3?.copyrights?.copyrightDocuments?.[0]?.documentUrl || release.step3?.copyrightOptions?.copyrightDocumentLink) && (
+                                <a
+                                    href={release.step3?.copyrights?.copyrightDocuments?.[0]?.documentUrl || release.step3?.copyrightOptions?.copyrightDocumentLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <Button variant="outline" size="sm" className="w-fit">
+                                        <Download className="w-4 h-4 mr-2" />
+                                        Download Uploaded Document
+                                    </Button>
+                                </a>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -1145,11 +1182,13 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                         </>
                     )}
 
-                    {track.audioFiles && track.audioFiles.length > 0 && (
+                    {/* Audio Files Section */}
+                    {( (track.audioFiles && track.audioFiles.length > 0) || track.trackLink || track.trackPath ) ? (
                         <div className="col-span-2">
                             <label className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">Audio Files</label>
                             <div className="flex flex-wrap gap-2">
-                                {track.audioFiles.map((file, i) => (
+                                {/* Basic Release Audio Files */}
+                                {track.audioFiles && track.audioFiles.map((file, i) => (
                                     <a
                                         key={i}
                                         href={file.fileUrl}
@@ -1159,11 +1198,31 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                                             variant="outline"
                                             size="sm">
                                             <Download className="w-3 h-3 mr-1" />
-                                            {file.format?.toUpperCase() || 'Audio'}
+                                            Download Audio
                                         </Button>
                                     </a>
                                 ))}
+
+                                {/* Advanced Release Track Link */}
+                                {(track.trackLink || track.trackPath) && (
+                                    <a
+                                        href={track.trackLink || track.trackPath}
+                                        target="_blank"
+                                        rel="noopener noreferrer">
+                                        <Button
+                                            variant="outline"
+                                            size="sm">
+                                            <Download className="w-3 h-3 mr-1" />
+                                            Download Main Track
+                                        </Button>
+                                    </a>
+                                )}
                             </div>
+                        </div>
+                    ) : (
+                        <div className="col-span-2">
+                            <label className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">Audio Files</label>
+                            <p className="text-xs text-red-500 italic">No audio file found </p>
                         </div>
                     )}
 

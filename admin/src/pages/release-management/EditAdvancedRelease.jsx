@@ -342,7 +342,7 @@ const EditAdvancedRelease = ({ theme }) => {
 
         await GlobalApi.editAdvancedRelease(editReleaseId, payload);
         toast.success("Release updated successfully");
-        navigate('/admin/release-management');
+        navigate('/admin/release-management?category=advanced');
     } catch (error) {
         toast.error(error?.response?.data?.message || "Failed to update release");
         console.error(error);
@@ -580,7 +580,7 @@ const EditAdvancedRelease = ({ theme }) => {
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/release-management')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/release-management?category=advanced')}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <h1 className="text-2xl font-bold">Edit Advanced Release</h1>

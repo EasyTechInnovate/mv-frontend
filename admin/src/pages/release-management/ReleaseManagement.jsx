@@ -6,7 +6,7 @@ import ReleaseModal from "../../components/release-management/ReleaseModal";
 import BulkProcessingModal from "../../components/release-management/BulkProcessingModal";
 import CsvUploadModal from "@/components/csv-upload/CsvUploadModal";
 import GlobalApi from "@/lib/GlobalApi"; // your API wrapper
-import { useParams, useNavigate } from "react-router-dom"; // Import hooks
+import { useParams, useNavigate, useSearchParams } from "react-router-dom"; // Import hooks
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -63,11 +63,32 @@ export default function ReleaseManagement({ theme }) {
   
   const userName = encodedUserName ? decodeURIComponent(encodedUserName) : null;
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialCategory = searchParams.get("category") || "basic";
+
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [trackType, setTrackType] = useState("all");
-  const [releaseCategory, setReleaseCategory] = useState("basic"); // 'basic' | 'advanced'
+  const [releaseCategory, setReleaseCategory] = useState(initialCategory); // 'basic' | 'advanced'
   const debouncedSearch = useDebounce(search, 500); // 500ms delay
+
+  // Sync state with search params
+  useEffect(() => {
+    const category = searchParams.get("category");
+    if (category && (category === "basic" || category === "advanced")) {
+      setReleaseCategory(category);
+    }
+  }, [searchParams]);
+
+  // Update search params when category changes
+  const handleCategoryChange = (newCategory) => {
+    setReleaseCategory(newCategory);
+    setSearchParams(prev => {
+        const newParams = new URLSearchParams(prev);
+        newParams.set("category", newCategory);
+        return newParams;
+    });
+  };
 
   // API States
   const [releases, setReleases] = useState([]);
@@ -386,7 +407,7 @@ export default function ReleaseManagement({ theme }) {
               ? "border-purple-600 text-purple-600 dark:text-purple-400"
               : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
           }`}
-          onClick={() => setReleaseCategory("basic")}
+          onClick={() => handleCategoryChange("basic")}
         >
           Basic Releases
         </button>
@@ -396,7 +417,7 @@ export default function ReleaseManagement({ theme }) {
               ? "border-purple-600 text-purple-600 dark:text-purple-400"
               : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
           }`}
-          onClick={() => setReleaseCategory("advanced")}
+          onClick={() => handleCategoryChange("advanced")}
         >
           Advanced Releases
         </button>

@@ -265,7 +265,7 @@ const EditBasicRelease = ({ theme }) => {
 
         await GlobalApi.editRelease(releaseId, payload);
         toast.success("Release updated successfully");
-        navigate('/admin/release-management');
+        navigate('/admin/release-management?category=basic');
     } catch (error) {
         console.error("Failed to update release", error);
         toast.error(error.response?.data?.message || "Failed to update release");
@@ -458,7 +458,7 @@ const EditBasicRelease = ({ theme }) => {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/release-management')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/release-management?category=basic')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-2xl font-bold tracking-tight">Edit Basic Release</h1>
