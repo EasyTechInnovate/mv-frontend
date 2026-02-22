@@ -130,6 +130,16 @@ const ACTION_CONFIG = {
         apiBasic: GlobalApi.revertTakedown,
         apiAdvanced: GlobalApi.revertTakedownAdvancedRelease,
         variant: "default"
+    },
+    permanent_delete: {
+        title: "⚠️ Permanently Delete Releases",
+        description: "This will permanently delete the selected releases from the database. You will lose ALL details. This action CANNOT be undone.",
+        confirmLabel: "Delete Permanently",
+        processingLabel: "Deleting...",
+        successMessage: "Releases permanently deleted",
+        apiBasic: GlobalApi.permanentDeleteRelease,
+        apiAdvanced: GlobalApi.permanentDeleteAdvancedRelease,
+        variant: "destructive"
     }
 };
 

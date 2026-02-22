@@ -1,12 +1,20 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Eye, ArrowLeft, Pencil, ListChecks } from "lucide-react"; // Import ArrowLeft
+import { Download, Eye, ArrowLeft, Pencil, ListChecks, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import ReleaseModal from "../../components/release-management/ReleaseModal";
 import BulkProcessingModal from "../../components/release-management/BulkProcessingModal";
 import CsvUploadModal from "@/components/csv-upload/CsvUploadModal";
-import GlobalApi from "@/lib/GlobalApi"; // your API wrapper
-import { useParams, useNavigate, useSearchParams } from "react-router-dom"; // Import hooks
+import GlobalApi from "@/lib/GlobalApi";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -115,6 +123,11 @@ export default function ReleaseManagement({ theme }) {
   // CSV Upload State
   const [isCsvUploadOpen, setIsCsvUploadOpen] = useState(false);
 
+  // Delete Modal State
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const toggleBulkMode = () => {
     setIsBulkMode(!isBulkMode);
     setSelectedReleases([]);
@@ -144,6 +157,28 @@ export default function ReleaseManagement({ theme }) {
   const handleBulkActionClick = (action) => {
     setBulkAction(action);
     setIsBulkModalOpen(true);
+  };
+
+  const handlePermanentDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      if (releaseCategory === 'advanced') {
+        await GlobalApi.permanentDeleteAdvancedRelease(deleteTarget.releaseId);
+      } else {
+        await GlobalApi.permanentDeleteRelease(deleteTarget.releaseId);
+      }
+      toast.success(`Release "${deleteTarget.releaseName || deleteTarget.releaseId}" permanently deleted`);
+      fetchReleases();
+      fetchStats();
+    } catch (error) {
+      console.error('Permanent delete error:', error);
+      toast.error(error.response?.data?.message || 'Failed to delete release');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+      setDeleteTarget(null);
+    }
   };
 
 
@@ -550,6 +585,11 @@ export default function ReleaseManagement({ theme }) {
                     </>
                 )}
                 
+                {/* Permanent Delete — always available */}
+                <Button size="sm" variant="destructive" onClick={() => handleBulkActionClick('permanent_delete')} className="flex items-center gap-1">
+                    <Trash2 className="h-4 w-4" /> Delete Permanently ({selectedReleases.length})
+                </Button>
+
                 {/* Fallback for statuses with no actions (e.g. valid selection but no bulk action mapped) */}
                 {!(
                     selectedReleases[0].releaseStatus === 'submitted' ||
@@ -670,6 +710,18 @@ export default function ReleaseManagement({ theme }) {
                         }}
                     >
                         <Pencil className="h-4 w-4" /> Edit
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="destructive"
+                        className="flex items-center gap-1 rounded-full px-4"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteTarget(rel);
+                            setIsDeleteModalOpen(true);
+                        }}
+                    >
+                        <Trash2 className="h-4 w-4" /> Delete
                     </Button>
                   </td>
                 </tr>
@@ -1032,6 +1084,32 @@ export default function ReleaseManagement({ theme }) {
           fetchStats();
         }}
       />
+
+      {/* Permanent Delete Confirmation Modal */}
+      <Dialog open={isDeleteModalOpen} onOpenChange={(open) => { if (!isDeleting) { setIsDeleteModalOpen(open); if (!open) setDeleteTarget(null); } }}>
+        <DialogContent className={`max-w-md ${isDark ? 'bg-[#151F28] text-gray-200 border-gray-700' : 'bg-white text-gray-900'}`}>
+          <DialogHeader>
+            <DialogTitle className="text-red-500">⚠️ Permanent Delete</DialogTitle>
+            <DialogDescription className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+              This is a <strong>permanent delete</strong> from the database. You will <strong>lose all details</strong> of this release. This action <strong>cannot be undone</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm">
+              Are you sure you want to permanently delete release{' '}
+              <strong>"{deleteTarget?.releaseName || deleteTarget?.releaseId}"</strong>?
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setIsDeleteModalOpen(false); setDeleteTarget(null); }} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handlePermanentDelete} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete Permanently'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
