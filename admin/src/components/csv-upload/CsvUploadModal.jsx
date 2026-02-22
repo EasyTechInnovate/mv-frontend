@@ -61,8 +61,20 @@ const toSnakeCase = (str) => str?.toLowerCase().trim().replace(/ /g, '_').replac
 // Helper to title case (snake_case -> Title Case)
 const toTitleCase = (str) => str?.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || ''
 
+// Role options for contributor dropdowns (same as Advance.jsx)
+const soundRecordingProfessions = [
+  "Actor", "Brand", "Choir", "Conductor", "Ensemble", "Mixer",
+  "Orchestra", "Musician", "Producer", "Programmer", "Remixer",
+  "Soloist", "Studio Personnel"
+]
+
+const musicalWorkRoles = [
+  "Arranger", "Composer", "Librettist", "Lyricist",
+  "Publisher", "Non-Lyric Author", "Translator"
+]
+
 // Contributor Editor Modal for Arrays like contributorsSoundRecording
-const ContributorEditor = ({ value, onChange, onClose, isDark }) => {
+const ContributorEditor = ({ value, onChange, onClose, isDark, header }) => {
   // value is stringified JSON. Parse it if valid, otherwise empty array.
   let parsed = []
   try {
@@ -72,8 +84,11 @@ const ContributorEditor = ({ value, onChange, onClose, isDark }) => {
   }
   const [contributors, setContributors] = useState(Array.isArray(parsed) ? parsed : [])
 
+  // Determine which role list to show based on header
+  const roleOptions = header === 'contributorsMusicalWork' ? musicalWorkRoles : soundRecordingProfessions
+
   const addContributor = () => {
-    setContributors([...contributors, { name: '', role: '' }])
+    setContributors([...contributors, { profession: '', contributors: '' }])
   }
 
   const removeContributor = (index) => {
@@ -88,7 +103,7 @@ const ContributorEditor = ({ value, onChange, onClose, isDark }) => {
 
   const handleSave = () => {
     // Filter out empties
-    const valid = contributors.filter(c => c.name.trim() && c.role.trim())
+    const valid = contributors.filter(c => c.profession?.trim() && c.contributors?.trim())
     onChange(valid.length > 0 ? JSON.stringify(valid) : '')
     onClose()
   }
@@ -104,25 +119,40 @@ const ContributorEditor = ({ value, onChange, onClose, isDark }) => {
         </div>
 
         <div className="space-y-3 max-h-[60vh] overflow-y-auto p-1">
-          {contributors.map((c, i) => (
+          {contributors.map((c, i) => {
+            const roleValid = !c.profession || roleOptions.some(r => r.toLowerCase() === c.profession?.toLowerCase())
+            return (
             <div key={i} className="flex gap-2 items-center">
+              <Select value={c.profession || ''} onValueChange={(val) => updateContributor(i, 'profession', val)}>
+                <SelectTrigger className={`w-[180px] h-9 text-sm ${!roleValid ? 'border-red-500 text-red-500' : ''} ${isDark ? 'bg-[#111a22] border-gray-700' : ''}`}>
+                  {!roleValid ? (
+                    <span className="truncate text-red-500 line-through opacity-80" title={`Invalid: ${c.profession}`}>{c.profession}</span>
+                  ) : (
+                    <SelectValue placeholder="Select Role" />
+                  )}
+                </SelectTrigger>
+                <SelectContent className={isDark ? 'bg-[#1a2530] border-gray-700 text-gray-200' : 'bg-white'}>
+                  <div className="max-h-[200px] overflow-y-auto">
+                    {roleOptions.map(role => (
+                      <SelectItem key={role} value={role.toLowerCase()} className="text-sm cursor-pointer">
+                        {role}
+                      </SelectItem>
+                    ))}
+                  </div>
+                </SelectContent>
+              </Select>
               <Input
-                placeholder="Name"
-                value={c.name}
-                onChange={(e) => updateContributor(i, 'name', e.target.value)}
-                className={`flex-1 ${isDark ? 'bg-[#111a22] border-gray-700' : ''}`}
-              />
-              <Input
-                placeholder="Role (e.g., Producer)"
-                value={c.role}
-                onChange={(e) => updateContributor(i, 'role', e.target.value)}
+                placeholder="Contributor Name"
+                value={c.contributors || ''}
+                onChange={(e) => updateContributor(i, 'contributors', e.target.value)}
                 className={`flex-1 ${isDark ? 'bg-[#111a22] border-gray-700' : ''}`}
               />
               <Button variant="ghost" size="icon" onClick={() => removeContributor(i)} className="text-red-400 hover:text-red-300">
                 <X className="w-4 h-4" />
               </Button>
             </div>
-          ))}
+            )
+          })}
           {contributors.length === 0 && (
             <p className="text-sm text-center py-4 opacity-50">No contributors added.</p>
           )}
@@ -166,7 +196,7 @@ const CellEditor = ({ value, onChange, header, isDark, sublabels }) => {
   } else if (['territories'].includes(header)) {
     type = 'multi-select'
     isMulti = true
-    options = territoryOptions.map(t => ({ value: toSnakeCase(t), label: t }))
+    options = territoryOptions
   } else if (['distributionPartners', 'partners'].includes(header)) {
     type = 'multi-select'
     isMulti = true
@@ -216,6 +246,7 @@ const CellEditor = ({ value, onChange, header, isDark, sublabels }) => {
             onChange={onChange} 
             onClose={() => setIsContributorModalOpen(false)}
             isDark={isDark}
+            header={header}
           />
         )}
       </>
@@ -560,6 +591,24 @@ export default function CsvUploadModal({ isOpen, onClose, userId, userName, them
 
         const config = getConfigForAction(selectedAction)
         const rows = result.data
+
+        // Convert contributor columns from CSV format (Producer:Name|Mixer:Name) to JSON
+        const contributorHeaders = ['contributorsSoundRecording', 'contributorsMusicalWork']
+        rows.forEach(row => {
+          contributorHeaders.forEach(header => {
+            if (row[header] && typeof row[header] === 'string' && !row[header].startsWith('[')) {
+              // Parse "Producer:John Doe|Mixer:Jane Doe" format to JSON array
+              const parsed = row[header].split('|').map(item => {
+                const [profession, ...rest] = item.split(':')
+                return {
+                  profession: (profession || '').trim().toLowerCase(),
+                  contributors: rest.join(':').trim()
+                }
+              }).filter(c => c.profession && c.contributors)
+              row[header] = parsed.length > 0 ? JSON.stringify(parsed) : ''
+            }
+          })
+        })
 
         // Validate all rows
         const allErrors = []

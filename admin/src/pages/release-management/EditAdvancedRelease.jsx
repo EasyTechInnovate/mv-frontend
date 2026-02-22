@@ -221,11 +221,9 @@ const EditAdvancedRelease = ({ theme }) => {
             setWorldWideRelease('no');
             const apiTerritories = data.step3?.territorialRights?.territories || [];
             
-            const normalizedApiTerritories = apiTerritories.map(t => normalize(t));
-            const matchedTerritories = territoryOptions.filter(option => {
-                const normOption = normalize(option);
-                return normalizedApiTerritories.includes(normOption) || apiTerritories.includes(option);
-            });
+            const matchedTerritories = apiTerritories.filter(t => 
+              territoryOptions.some(opt => opt.value === t)
+            );
             
             setSelectedTerritories(matchedTerritories);
         }
@@ -329,7 +327,7 @@ const EditAdvancedRelease = ({ theme }) => {
                 },
                 territorialRights: {
                     isWorldwide: worldWideRelease === 'yes',
-                    territories: worldWideRelease === 'yes' ? [] : selectedTerritories.map(t => t.toLowerCase().replace(/\s+/g, '_').replace(/\(/g, '').replace(/\)/g, ''))
+                    territories: worldWideRelease === 'yes' ? [] : selectedTerritories
                 },
                 distributionPartners: selectedPartners.map(p => p.toLowerCase().replace(/\s+/g, '_')), 
                 copyrightOptions: {
@@ -1022,13 +1020,13 @@ const EditAdvancedRelease = ({ theme }) => {
                     <Label className="text-foreground">Select The Territories, Where you own the rights</Label>
                     <div className="grid grid-cols-3 gap-4 mt-4 max-h-60 overflow-y-auto custom-scroll">
                     {territoryOptions.map((territory) => (
-                        <div key={territory} className="flex items-center space-x-2">
+                        <div key={territory.value} className="flex items-center space-x-2">
                         <Checkbox 
-                            id={territory}
-                            checked={selectedTerritories.includes(territory)}
-                            onCheckedChange={(checked) => handleTerritoryChange(territory, checked)}
+                            id={territory.value}
+                            checked={selectedTerritories.includes(territory.value)}
+                            onCheckedChange={(checked) => handleTerritoryChange(territory.value, checked)}
                         />
-                        <Label htmlFor={territory} className="text-sm">{territory}</Label>
+                        <Label htmlFor={territory.value} className="text-sm">{territory.label}</Label>
                         </div>
                     ))}
                     </div>

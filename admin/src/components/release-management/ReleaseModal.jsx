@@ -3,9 +3,31 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Download, ArrowLeft, Music, AlertCircle, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { Download, ArrowLeft, Music, AlertCircle, CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react'
 import GlobalApi from '@/lib/GlobalApi'
 import { toast } from 'sonner'
+
+const handleDownload = async (url, filename, setDownloadingUrl) => {
+    try {
+        setDownloadingUrl?.(url)
+        const response = await fetch(url)
+        const blob = await response.blob()
+        const blobUrl = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = blobUrl
+        a.download = filename || url.split('/').pop() || 'download'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        window.URL.revokeObjectURL(blobUrl)
+    } catch (error) {
+        console.error('Download failed:', error)
+        toast.error('Download failed, opening in new tab')
+        window.open(url, '_blank')
+    } finally {
+        setDownloadingUrl?.(null)
+    }
+}
 
 const STATUS_CONFIG = {
     draft: {
@@ -246,6 +268,7 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
     const [loading, setLoading] = useState(true)
     const [release, setRelease] = useState(null)
     const [expandedTracks, setExpandedTracks] = useState(new Set())
+    const [downloadingUrl, setDownloadingUrl] = useState(null)
     const isAdvanced = releaseCategory === 'advanced'
 
     useEffect(() => {
@@ -594,20 +617,17 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                         )}
                     </div>
                     {coverArt && (
-                        <a
-                            href={coverArt}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download={`cover_art_${release.releaseId || 'release'}.jpg`}
-                            className="mt-3 block">
+                        <div className="mt-3 block">
                             <Button
                                 variant="outline"
                                 className="w-full"
-                                size="sm">
-                                <Download className="w-4 h-4 mr-2" />
-                                Download
+                                size="sm"
+                                disabled={downloadingUrl === coverArt}
+                                onClick={() => handleDownload(coverArt, `cover_art_${release.releaseId || 'release'}.jpg`, setDownloadingUrl)}>
+                                {downloadingUrl === coverArt ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+                                {downloadingUrl === coverArt ? 'Downloading...' : 'Download'}
                             </Button>
-                        </a>
+                        </div>
                     )}
                 </div>
 
@@ -638,6 +658,10 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                                 <InfoField
                                     label="Catalog"
                                     value={releaseInfo?.catalog}
+                                />
+                                <InfoField
+                                    label="Label Name"
+                                    value={releaseInfo.labelName?.name || releaseInfo.labelName}
                                 />
                                 <InfoField
                                     label="Secondary Genre"
@@ -684,7 +708,7 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                                 )}
                                 <InfoField
                                     label="Label Name"
-                                    value={releaseInfo?.labelName}
+                                    value={releaseInfo.labelName?.name || releaseInfo.labelName}
                                 />
                                 <InfoField
                                     label="UPC"
@@ -785,16 +809,19 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                             </p>
                             
                             {(release.step3?.copyrights?.copyrightDocuments?.[0]?.documentUrl || release.step3?.copyrightOptions?.copyrightDocumentLink) && (
-                                <a
-                                    href={release.step3?.copyrights?.copyrightDocuments?.[0]?.documentUrl || release.step3?.copyrightOptions?.copyrightDocumentLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <Button variant="outline" size="sm" className="w-fit">
-                                        <Download className="w-4 h-4 mr-2" />
-                                        Download Uploaded Document
-                                    </Button>
-                                </a>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-fit"
+                                    disabled={downloadingUrl === (release.step3?.copyrights?.copyrightDocuments?.[0]?.documentUrl || release.step3?.copyrightOptions?.copyrightDocumentLink)}
+                                    onClick={() => handleDownload(
+                                        release.step3?.copyrights?.copyrightDocuments?.[0]?.documentUrl || release.step3?.copyrightOptions?.copyrightDocumentLink,
+                                        `copyright_doc_${release.releaseId || 'release'}`,
+                                        setDownloadingUrl
+                                    )}>
+                                    {downloadingUrl === (release.step3?.copyrights?.copyrightDocuments?.[0]?.documentUrl || release.step3?.copyrightOptions?.copyrightDocumentLink) ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+                                    {downloadingUrl === (release.step3?.copyrights?.copyrightDocuments?.[0]?.documentUrl || release.step3?.copyrightOptions?.copyrightDocumentLink) ? 'Downloading...' : 'Download Uploaded Document'}
+                                </Button>
                             )}
                         </div>
                     </div>
@@ -917,6 +944,7 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
     const [isrcCode, setIsrcCode] = useState('')
     const [loading, setLoading] = useState(false)
     const [acrLoading, setAcrLoading] = useState(false)
+    const [downloadingUrl, setDownloadingUrl] = useState(null)
 
     // Use expandedTracks Set from parent instead of local state
     const expanded = expandedTracks.has(track._id)
@@ -1066,17 +1094,18 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                                 label="Mix Version"
                                 value={track.mixVersion}
                             />
-                            <InfoField
-                                label="Language"
-                                value={track.language}
-                            />
-                            <InfoField
+                           
+                            {/* <InfoField
                                 label="Vocal Type"
                                 value={track.vocalType}
-                            />
+                            /> */}
                             <InfoField
                                 label="Has Human Vocals"
                                 value={track.hasHumanVocals ? 'Yes' : 'No'}
+                            />
+                            <InfoField
+                                label="Language"
+                                value={track.language}
                             />
                             <InfoField
                                 label="Available for Download"
@@ -1189,33 +1218,27 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                             <div className="flex flex-wrap gap-2">
                                 {/* Basic Release Audio Files */}
                                 {track.audioFiles && track.audioFiles.map((file, i) => (
-                                    <a
+                                    <Button
                                         key={i}
-                                        href={file.fileUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer">
-                                        <Button
-                                            variant="outline"
-                                            size="sm">
-                                            <Download className="w-3 h-3 mr-1" />
-                                            Download Audio
-                                        </Button>
-                                    </a>
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={downloadingUrl === file.fileUrl}
+                                        onClick={() => handleDownload(file.fileUrl, file.fileName || `audio_${i + 1}`, setDownloadingUrl)}>
+                                        {downloadingUrl === file.fileUrl ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Download className="w-3 h-3 mr-1" />}
+                                        {downloadingUrl === file.fileUrl ? 'Downloading...' : 'Download Audio'}
+                                    </Button>
                                 ))}
 
                                 {/* Advanced Release Track Link */}
                                 {(track.trackLink || track.trackPath) && (
-                                    <a
-                                        href={track.trackLink || track.trackPath}
-                                        target="_blank"
-                                        rel="noopener noreferrer">
-                                        <Button
-                                            variant="outline"
-                                            size="sm">
-                                            <Download className="w-3 h-3 mr-1" />
-                                            Download Main Track
-                                        </Button>
-                                    </a>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={downloadingUrl === (track.trackLink || track.trackPath)}
+                                        onClick={() => handleDownload(track.trackLink || track.trackPath, `${track.trackName || 'main_track'}`, setDownloadingUrl)}>
+                                        {downloadingUrl === (track.trackLink || track.trackPath) ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Download className="w-3 h-3 mr-1" />}
+                                        {downloadingUrl === (track.trackLink || track.trackPath) ? 'Downloading...' : 'Download Main Track'}
+                                    </Button>
                                 )}
                             </div>
                         </div>

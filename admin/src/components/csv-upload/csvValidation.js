@@ -9,6 +9,17 @@ export const TRACK_TYPES = ['single', 'album']
 export const ADVANCED_RELEASE_TYPES = ['single', 'album', 'ep', 'mini_album', 'ringtone_release']
 export const PRICING_TIERS = ['front', 'mid', 'back']
 
+export const VALID_SOUND_RECORDING_ROLES = [
+  'actor', 'brand', 'choir', 'conductor', 'ensemble', 'mixer',
+  'orchestra', 'musician', 'producer', 'programmer', 'remixer',
+  'soloist', 'studio personnel'
+]
+
+export const VALID_MUSICAL_WORK_ROLES = [
+  'arranger', 'composer', 'librettist', 'lyricist',
+  'publisher', 'non-lyric author', 'translator'
+]
+
 const MUSIC_GENRES = [
   'alternative', 'alternative_rock', 'alternative_and_rock_latino', 'anime',
   'baladas_y_boleros', 'big_band', 'blues', 'brazilian', 'c_pop',
@@ -100,6 +111,21 @@ function parseContributors(val) {
       contributors: rest.join(':').trim()
     }
   }).filter(c => c.profession && c.contributors)
+}
+
+// Handles both JSON stringified (from preview editor) and pipe-separated (raw CSV) formats
+function parseContributorsFlexible(val) {
+  if (!val || val === '') return []
+  // Try JSON parse first (from preview editor)
+  try {
+    const parsed = JSON.parse(val)
+    if (Array.isArray(parsed)) {
+      return parsed.filter(c => c.profession && c.contributors)
+    }
+  } catch (e) {
+    // Not JSON, fall back to pipe-separated format
+  }
+  return parseContributors(val)
 }
 
 function isValidDate(str) {
@@ -238,6 +264,26 @@ export function validateAdvancedTrackRow(row, index) {
     errors.push(`Row ${rowNum}: language must be a valid language`)
   }
 
+  // Validate contributor roles
+  if (row.contributorsSoundRecording) {
+    const contribs = parseContributorsFlexible(row.contributorsSoundRecording)
+    const invalidRoles = contribs
+      .map(c => c.profession?.toLowerCase().trim())
+      .filter(r => r && !VALID_SOUND_RECORDING_ROLES.includes(r))
+    if (invalidRoles.length > 0) {
+      errors.push(`Row ${rowNum}: Invalid Sound Recording roles: ${invalidRoles.join(', ')}`)
+    }
+  }
+  if (row.contributorsMusicalWork) {
+    const contribs = parseContributorsFlexible(row.contributorsMusicalWork)
+    const invalidRoles = contribs
+      .map(c => c.profession?.toLowerCase().trim())
+      .filter(r => r && !VALID_MUSICAL_WORK_ROLES.includes(r))
+    if (invalidRoles.length > 0) {
+      errors.push(`Row ${rowNum}: Invalid Musical Work roles: ${invalidRoles.join(', ')}`)
+    }
+  }
+
   return errors
 }
 
@@ -310,6 +356,7 @@ export function advancedReleaseRowToPayload(row, userId) {
   }
 
   const info = payload.step1.releaseInfo
+  if (row.labelName?.trim()) info.labelName = row.labelName.trim()
   if (row.releaseVersion?.trim()) info.releaseVersion = row.releaseVersion.trim()
   if (row.catalog?.trim()) info.catalog = row.catalog.trim()
 
@@ -444,10 +491,10 @@ export function advancedTrackRowsToPayload(rows) {
     const callerStart = parseFloat(row.callertuneStartTiming)
     if (!isNaN(callerStart)) track.callertuneStartTiming = callerStart
 
-    const soundRecContrib = parseContributors(row.contributorsSoundRecording)
+    const soundRecContrib = parseContributorsFlexible(row.contributorsSoundRecording)
     if (soundRecContrib.length) track.contributorsToSoundRecording = soundRecContrib
 
-    const musicalContrib = parseContributors(row.contributorsMusicalWork)
+    const musicalContrib = parseContributorsFlexible(row.contributorsMusicalWork)
     if (musicalContrib.length) track.contributorsToMusicalWork = musicalContrib
 
     return track

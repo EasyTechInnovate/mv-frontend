@@ -45,6 +45,7 @@ export const ADVANCED_RELEASE_HEADERS = [
   'upcCode',            // optional
   'primaryGenre',       // optional: EMusicGenre value
   'secondaryGenre',     // optional: EMusicGenre value
+  'labelName',          // optional
   'cLineYear',          // optional: e.g. 2025
   'cLineText',          // optional
   'pLineYear',          // optional: e.g. 2025
@@ -71,6 +72,7 @@ export const ADVANCED_RELEASE_SAMPLE = [
     upcCode: '',
     primaryGenre: 'pop',
     secondaryGenre: 'rock',
+    labelName: 'Maheshwari Visuals',
     cLineYear: '2026',
     cLineText: '2026 My Label',
     pLineYear: '2026',
