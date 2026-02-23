@@ -44,8 +44,13 @@ export default function Dashboard({ theme }) {
 useEffect(() => {
   const loadData = async () => {
     try {
-      const dashboardRes = await fetchDashboardData();
-      const healthRes = await GlobalApi.getHealth();
+      const mockDashboardRes = await fetchDashboardData();
+      const [healthRes, realDashboardRes] = await Promise.all([
+        GlobalApi.getHealth(),
+        GlobalApi.getDashboardData()
+      ]);
+
+      const realData = realDashboardRes.data.data;
 
       // Transform the health API data
       const transformHealthData = (apiData) => {
@@ -87,9 +92,52 @@ useEffect(() => {
 
       const systemHealthTransformed = transformHealthData(healthRes.data.data);
 
-      // Combine both responses
+      const userTypeChartData = Object.keys(realData.users.byType).map(type => {
+        const value = realData.users.byType[type];
+        const percentage = ((value / realData.users.total) * 100).toFixed(1) + "%";
+        return { name: type.charAt(0).toUpperCase() + type.slice(1), value, percentage };
+      });
+
+      // Combine real and mock responses
       setData({
-        ...dashboardRes,
+        ...mockDashboardRes,
+        totalUsers: {
+          ...mockDashboardRes.totalUsers,
+          count: realData.users.total,
+          breakdown: realData.users.byType
+        },
+        activeReleases: {
+          ...mockDashboardRes.activeReleases,
+          count: realData.totalReleases,
+        },
+        monthlyRoyalty: {
+          ...mockDashboardRes.monthlyRoyalty,
+          amount: `₹${(realData.revenue?.totalEarnings || 0).toLocaleString('en-IN')}`,
+          breakdown: {
+            paid: `₹${(realData.revenue?.totalPaidOut || 0).toLocaleString('en-IN')}`,
+            pending: `₹${(realData.revenue?.totalPending || 0).toLocaleString('en-IN')}`,
+          }
+        },
+        pendingKYC: {
+          ...mockDashboardRes.pendingKYC,
+          count: realData.pendingKYC?.total || 0,
+          breakdown: {
+            urgent: realData.pendingKYC?.urgent || 0,
+            standard: realData.pendingKYC?.standard || 0,
+          }
+        },
+        totalCatalog: {
+            ...mockDashboardRes.totalCatalog,
+            count: 0,
+        },
+        platformUsage: {
+            ...mockDashboardRes.platformUsage,
+            percentage: "0%",
+        },
+        platformUsage24h: realData.charts?.platformUsage24h || mockDashboardRes.platformUsage24h,
+        revenueGrowth: realData.charts?.revenueGrowth || mockDashboardRes.revenueGrowth,
+        userTypeDistribution: userTypeChartData,
+        recentActivities: realData.recentSystemActivities?.length > 0 ? realData.recentSystemActivities : mockDashboardRes.recentActivities,
         systemHealth: systemHealthTransformed,
       });
     } catch (err) {
@@ -135,11 +183,6 @@ useEffect(() => {
         {title}
       </h3>
       <p className="text-2xl font-bold mt-1">{formatNumber(value)}</p>
-      <p
-        className={`text-sm mt-1 ${change.startsWith("-") ? "text-red-400" : "text-green-400"}`}
-      >
-        {change} vs last period
-      </p>
 
       {breakdown && (
         <div
@@ -177,11 +220,17 @@ useEffect(() => {
         ))}
 
 
-{/* Charts */}
+
+
+
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-6 w-full">
+
+        {/* Charts */}
 <div
   className={
     getThemeClasses(theme, "bg-[#151F28]", "bg-white") +
-    " p-4 sm:p-5 rounded-2xl shadow-lg col-span-1 sm:col-span-2"
+    " p-4 sm:p-5 rounded-2xl shadow-lg col-span-1"
   }
 >
   <h3
@@ -249,8 +298,6 @@ useEffect(() => {
     </div>
   </div>
 </div>
-
-
       </div>
 
       

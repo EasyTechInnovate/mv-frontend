@@ -5,6 +5,11 @@ export const getServerHealth = async () => {
     return response.data
 }
 
+export const getUserDashboard = async () => {
+    const response = await servicesAxiosInstance.get('/v1/dashboard/user')
+    return response.data
+}
+
 // Release APIs
 export const createRelease = async (trackType) => {
     const response = await servicesAxiosInstance.post('/v1/releases/create', {

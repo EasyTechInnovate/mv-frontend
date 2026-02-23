@@ -1,13 +1,45 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight, BarChart3, DollarSign, IndianRupee, Megaphone, Music, Play, Upload, Video } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
 import {earningsData ,streamsData ,videoTutorials ,recentReleases ,quickActions ,performanceMetrics} from './Dashboard.config'
-import React, { useEffect } from 'react';
-import { getServerHealth } from '@/services/api.services';
+import React, { useEffect, useState } from 'react';
+import { getUserDashboard } from '@/services/api.services';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
-  
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const res = await getUserDashboard();
+        setDashboardData(res.data);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, []);
+
+  if (loading || !dashboardData) {
+    return <div className="flex h-screen items-center justify-center">Loading Dashboard...</div>;
+  }
+
+  const {
+    totalReleases = 0,
+    totalStreams = 0,
+    wallet = { totalEarnings: 0 },
+    charts = { monthlyEarnings: [], monthlyStreams: [] },
+    recentReleases = { basic: [], advanced: [] }
+  } = dashboardData;
+
+  const mergedRecentReleases = [...recentReleases.basic, ...recentReleases.advanced]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5);
+
   return (
     <div className=''>
       <main className="p-2 md:p-2 space-y-8">
@@ -30,12 +62,11 @@ const Dashboard = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { label: "Total Releases", value: "24", subtext: "2 this month", icon: Music , color:'text-blue-500'},
-            { label: "Total Streams", value: "2.4M", subtext: "↑ this month", icon: Play  , color:'text-green-500'},
-            { label: "Total Earnings", value: "₹2,43,750", subtext: "↑ this month", icon: IndianRupee , color:'text-purple-500'},
-            { label: "Active Campaigns", value: "5", subtext: "2 campaigns", icon: Megaphone  ,color:'text-orange-500'}
+            { label: "Total Releases", value: totalReleases.toLocaleString('en-IN'), icon: Music, color:'text-blue-500'},
+            { label: "Total Streams", value: totalStreams.toLocaleString('en-IN'), icon: Play, color:'text-green-500'},
+            { label: "Total Earnings", value: `₹${(wallet.totalEarnings || 0).toLocaleString('en-IN')}`, icon: IndianRupee, color:'text-purple-500'}
           ].map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -48,7 +79,6 @@ const Dashboard = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.subtext}</p>
                 </div>
               </div>
             );
@@ -65,7 +95,7 @@ const Dashboard = () => {
             </div>
             <div className="h-64 ">
               <ResponsiveContainer width="100%" height="100%" >
-                <LineChart data={earningsData}>
+                <LineChart data={charts.monthlyEarnings}>
                   <XAxis 
                     dataKey="month" 
                     axisLine={false}
@@ -77,6 +107,10 @@ const Dashboard = () => {
                     tickLine={false}
                     tick={{ fill: '#9CA3AF', fontSize: 12 }}
                     tickFormatter={(value) => `${value/1000}k`}
+                  />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    formatter={(value) => [`₹${(value || 0).toLocaleString('en-IN')}`, 'Earnings']}
                   />
                   <Line 
                     type="monotone" 
@@ -99,7 +133,7 @@ const Dashboard = () => {
             </div>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={streamsData}>
+                <BarChart data={charts.monthlyStreams}>
                   <XAxis 
                     dataKey="month" 
                     axisLine={false}
@@ -111,6 +145,11 @@ const Dashboard = () => {
                     tickLine={false}
                     tick={{ fill: '#9CA3AF', fontSize: 12 }}
                     tickFormatter={(value) => `${value/1000}k`}
+                  />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    cursor={{fill: 'transparent'}}
+                    formatter={(value) => [(value || 0).toLocaleString('en-IN'), 'Streams']}
                   />
                   <Bar 
                     dataKey="streams" 
@@ -153,25 +192,29 @@ const Dashboard = () => {
               <p className="text-sm text-muted-foreground">Your latest releases and their performance</p>
             </div>
             <div className="space-y-4">
-              {recentReleases.map((release, index) => (
-                <div key={index} className="flex items-center space-x-3 bg-muted/50 rounded-lg p-4">
-                  <div className="w-12 h-12 rounded-lg bg-[#2A2051] flex items-center justify-center">
-                    <Music className="w-6 h-6 text-[#711CE9] " />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium  truncate">{release.title}</h4>
-                <p className="text-sm text-muted-foreground ">{release.streams}</p>
+              {mergedRecentReleases.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No recent releases found.</p>
+              ) : (
+                mergedRecentReleases.map((release, index) => (
+                  <div key={index} className="flex items-center space-x-3 bg-muted/50 rounded-lg p-4">
+                    <div className="w-12 h-12 rounded-lg bg-[#2A2051] flex items-center justify-center">
+                      <Music className="w-6 h-6 text-[#711CE9] " />
                     </div>
-                    <div className='flex items-center justify-between'>
-                      <p className="text-sm text-muted-foreground">{release.artist}</p>
-                      <span className={`px-3 py-1 font-semibold rounded-full text-xs text-white ${release.status === 'Live' ? 'bg-[#711CE9] ' : 'bg-gray-700 '}`}>
-                        {release.status}
-                      </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium  truncate">{release.releaseName}</h4>
+                        <p className="text-sm text-muted-foreground ">{release.streamsCount?.toLocaleString('en-IN')} streams</p>
+                      </div>
+                      <div className='flex items-center justify-between'>
+                        <p className="text-sm text-muted-foreground">{release.artistName || 'Unknown Artist'}</p>
+                        <span className={`px-3 py-1 font-semibold rounded-full text-xs text-white ${release.releaseStatus === 'Live' ? 'bg-[#711CE9] ' : 'bg-gray-700 '}`}>
+                          {release.releaseStatus} ({release.releaseType})
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
@@ -202,7 +245,7 @@ const Dashboard = () => {
 
           {/* This Month's Performance */}
         </div>
-          <div className="rounded-lg border bg-card p-6 shadow-sm">
+          {/* <div className="rounded-lg border bg-card p-6 shadow-sm">
             <div className="mb-4">
               <h3 className="text-lg font-semibold ">This Month's Performance</h3>
               <p className="text-sm text-muted-foreground">Track your growth and engagement metrics</p>
@@ -223,13 +266,10 @@ const Dashboard = () => {
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
                     <span>{metric.current}{metric.target && ` / ${metric.target}`}</span>
                   </div>
-                  {/* {metric.title === "Fan Engagement" && (
-                    <p className="text-xs text-muted-foreground">Excellent performance</p>
-                  )} */}
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
       </main>
     </div>
   );
