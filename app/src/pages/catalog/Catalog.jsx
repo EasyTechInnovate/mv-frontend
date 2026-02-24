@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Label } from '@/components/ui/label'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { 
     getBasicReleases, 
@@ -411,7 +411,9 @@ const ReleaseDetailsModal = ({ release, isOpen, onClose, releaseType }) => {
 
 const CatalogPage = () => {
     const navigate = useNavigate()
-    const [releaseType, setReleaseType] = useState('basic') // 'basic' or 'advanced'
+    const [searchParams] = useSearchParams()
+    const categoryParam = searchParams.get('category')
+    const [releaseType, setReleaseType] = useState(categoryParam === 'advanced' ? 'advanced' : 'basic') // 'basic' or 'advanced'
     const [searchTerm, setSearchTerm] = useState('')
     const [debouncedSearch, setDebouncedSearch] = useState('')
     const [selectedStatus, setSelectedStatus] = useState('all')

@@ -1253,7 +1253,8 @@ const AdvancedReleaseBuilder = () => {
               contributors: c.contributors
             })),
           needsISRC: track.needISRC === 'yes',
-          callertuneStartTiming: track.previewStartTiming ? parseInt(track.previewStartTiming) : null,
+          callertuneStartTiming: track.previewStartTiming ? parseInt(track.previewStartTiming) : undefined,
+          previewStartTiming: track.previewStartTiming ? parseInt(track.previewStartTiming) : undefined,
           primaryGenre: track.primaryGenre,
           secondaryGenre: track.secondaryGenre,
           hasHumanVocals: track.hasHumanVocals === 'yes',
@@ -1288,6 +1289,7 @@ const AdvancedReleaseBuilder = () => {
           proceedWithoutCopyright: copyrightOption === 'proceed',
           copyrightDocumentLink: copyrightOption === 'upload' ? formData.copyrightDocument : null,
           ownsCopyrights: copyrightOption === 'upload',
+          ownedCopyrightDocumentLink: copyrightOption === 'upload' ? formData.copyrightDocument : null,
         }
       };
 

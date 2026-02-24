@@ -201,7 +201,7 @@ const EditAdvancedReleaseBuilder = () => {
                 hasHumanVocals: track.hasHumanVocals ? 'yes' : 'no',
                 language: track.language || '',
                 isAvailableForDownload: track.isAvailableForDownload ? 'yes' : 'no',
-                previewStartTiming: track.previewTiming?.startTime || ''
+                previewStartTiming: track.previewStartTiming || track.callertuneStartTiming || ''
             })) : [{
                 id: generateUniqueId(),
                 trackLink: '',
@@ -264,7 +264,7 @@ const EditAdvancedReleaseBuilder = () => {
   useEffect(() => {
     if (isError) {
         showToast.error("Failed to load release details");
-         navigate('/app/catalog');
+         navigate('/app/catalog?category=advanced');
     }
   }, [isError, navigate]);
 
@@ -321,7 +321,7 @@ const EditAdvancedReleaseBuilder = () => {
     mutationFn: () => submitAdvancedRelease(releaseId),
     onSuccess: () => {
       showToast.success('Release submitted successfully for review!');
-      navigate('/app/catalog');
+      navigate('/app/catalog?category=advanced');
     },
     onError: (error) => {
       showToast.error(error?.response?.data?.message || 'Failed to submit release');
@@ -1367,7 +1367,8 @@ const EditAdvancedReleaseBuilder = () => {
               contributors: c.contributors
             })),
           needsISRC: track.needISRC === 'yes',
-          callertuneStartTiming: track.previewStartTiming ? parseInt(track.previewStartTiming) : null,
+          callertuneStartTiming: track.previewStartTiming ? parseInt(track.previewStartTiming) : undefined,
+          previewStartTiming: track.previewStartTiming ? parseInt(track.previewStartTiming) : undefined,
           primaryGenre: track.primaryGenre,
           secondaryGenre: track.secondaryGenre,
           hasHumanVocals: track.hasHumanVocals === 'yes',
@@ -1402,6 +1403,7 @@ const EditAdvancedReleaseBuilder = () => {
           proceedWithoutCopyright: copyrightOption === 'proceed',
           copyrightDocumentLink: copyrightOption === 'upload' ? formData.copyrightDocument : null,
           ownsCopyrights: copyrightOption === 'upload',
+          ownedCopyrightDocumentLink: copyrightOption === 'upload' ? formData.copyrightDocument : null,
         }
       };
 
@@ -1430,7 +1432,7 @@ const EditAdvancedReleaseBuilder = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
-            <Button onClick={()=>navigate('/app/catalog')} variant="outline" size="sm" className="p-2">
+            <Button onClick={()=>navigate('/app/catalog?category=advanced')} variant="outline" size="sm" className="p-2">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
@@ -1484,7 +1486,7 @@ const EditAdvancedReleaseBuilder = () => {
           <div className="flex space-x-4">
             <Button 
               variant="outline" 
-              onClick={() => navigate('/app/catalog')}
+              onClick={() => navigate('/app/catalog?category=advanced')}
             >
               Cancel
             </Button>

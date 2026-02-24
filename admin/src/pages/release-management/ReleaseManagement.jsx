@@ -398,18 +398,7 @@ export default function ReleaseManagement({ theme }) {
           >
             <Download className="h-4 w-4 mr-2" /> Export as CSV
           </Button>
-          <Button
-            className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-5"
-            onClick={() => {
-              if (!userId) {
-                toast.error("Please select a user first to add a release");
-                return;
-              }
-              setIsCsvUploadOpen(true);
-            }}
-          >
-            + Add New Release
-          </Button>
+          
         </div>
       </div>
 

@@ -181,7 +181,7 @@ const EditAdvancedRelease = ({ theme }) => {
                 hasHumanVocals: track.hasHumanVocals ? 'yes' : 'no',
                 language: track.language || '',
                 isAvailableForDownload: track.isAvailableForDownload ? 'yes' : 'no',
-                previewStartTiming: track.previewTiming?.startTime || ''
+                previewStartTiming: track.previewStartTiming || track.callertuneStartTiming || track.previewTiming?.startTime || ''
             })) : [{
                 id: generateUniqueId(),
                 trackLink: '',
@@ -318,7 +318,8 @@ const EditAdvancedRelease = ({ theme }) => {
                     hasHumanVocals: track.hasHumanVocals === 'yes',
                     language: track.language || undefined,
                     isAvailableForDownload: track.isAvailableForDownload === 'yes',
-                    previewTiming: { startTime: track.previewStartTiming }
+                    previewStartTiming: track.previewStartTiming ? parseInt(track.previewStartTiming) : undefined,
+                    callertuneStartTiming: track.previewStartTiming ? parseInt(track.previewStartTiming) : undefined
                 }))
             },
             step3: {
@@ -333,7 +334,8 @@ const EditAdvancedRelease = ({ theme }) => {
                 copyrightOptions: {
                     proceedWithoutCopyright: copyrightOption === 'proceed',
                     copyrightDocumentLink: formData.copyrightDocument,
-                    ownsCopyrights: copyrightOption === 'upload'
+                    ownsCopyrights: copyrightOption === 'upload',
+                    ownedCopyrightDocumentLink: copyrightOption === 'upload' ? formData.copyrightDocument : null
                 }
             }
         };
