@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import UserDetailsModal from "@/components/user-management/UserDetailsModal.jsx";
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 import CsvUploadModal from "@/components/csv-upload/CsvUploadModal";
+import ManageWalletModal from "@/components/user-management/ManageWalletModal";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -69,6 +70,10 @@ export default function UserManagement({ theme }) {
   // CSV Upload State
   const [isCsvUploadOpen, setIsCsvUploadOpen] = useState(false);
   const [csvUploadUser, setCsvUploadUser] = useState(null);
+
+  // Wallet Management State
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [selectedWalletUser, setSelectedWalletUser] = useState(null);
 
   const navigate = useNavigate();
 
@@ -366,6 +371,12 @@ setIsResetPasswordOpen(true);
                                   }`}
                               >
                                 <DropdownMenuItem onSelect={() => {
+                                  setSelectedWalletUser(u);
+                                  setIsWalletModalOpen(true);
+                                }}>
+                                  Manage Wallet
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => {
                                   setSelectedUserForDetails(u);
                                   setIsUserDetailsModalOpen(true);
                                 }}>
@@ -522,6 +533,15 @@ setIsResetPasswordOpen(true);
         onSuccess={() => {
           // Optional: refresh data or show success message if needed
         }}
+      />
+      <ManageWalletModal
+        isOpen={isWalletModalOpen}
+        onClose={() => {
+          setIsWalletModalOpen(false);
+          setSelectedWalletUser(null);
+        }}
+        user={selectedWalletUser}
+        theme={theme}
       />
     </div>
   );

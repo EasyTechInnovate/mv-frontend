@@ -385,6 +385,11 @@ export const getMyWallet = async () => {
     return response.data;
 };
 
+export const getMyWalletDetails = async () => {
+    const response = await servicesAxiosInstance.get('/v1/wallet/my-wallet/details');
+    return response.data;
+};
+
 
 // Payout APIs
 export const createPayoutRequest = async (data) => {

@@ -44,7 +44,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { getMyWallet, getMyPayoutRequests, cancelPayoutRequest } from "@/services/api.services";
+import { getMyWallet, getMyWalletDetails, getMyPayoutRequests, cancelPayoutRequest } from "@/services/api.services";
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 import jsonToCsv, { exportToCsv } from "@/lib/csv";
 
@@ -147,6 +147,9 @@ export default function FinanceWallet() {
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  
+  const [adjustments, setAdjustments] = useState([]);
+  const [loadingAdjustments, setLoadingAdjustments] = useState(true);
 
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -163,14 +166,31 @@ export default function FinanceWallet() {
         showToast.error(response.message || "Failed to fetch transactions.");
       }
     } catch (error) {
-              showToast.error("An error occurred while fetching transactions.");      console.error(error);
+      showToast.error("An error occurred while fetching transactions.");
+      console.error(error);
     } finally {
       setLoadingTransactions(false);
     }
   };
 
+  const fetchAdjustments = async () => {
+    try {
+      setLoadingAdjustments(true);
+      const response = await getMyWalletDetails();
+      if (response.success && response.data.wallet && response.data.wallet.adminAdjustments) {
+        const sorted = response.data.wallet.adminAdjustments.sort((a, b) => new Date(b.adjustedAt).getTime() - new Date(a.adjustedAt).getTime());
+        setAdjustments(sorted);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingAdjustments(false);
+    }
+  };
+
   useEffect(() => {
     fetchTransactions();
+    fetchAdjustments();
   }, [currentPage]);
 
   const handlePageChange = (newPage) => {
@@ -355,11 +375,12 @@ export default function FinanceWallet() {
           </div>
         </TabsContent>
 
-        {/* Transactions */}
-        <TabsContent value="transactions">
+        {/* Transactions & Adjustments */}
+        <TabsContent value="transactions" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Payout History</CardTitle>
+              <CardTitle>Payout Request History</CardTitle>
+              <CardDescription>Your withdrawal requests</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -427,6 +448,53 @@ export default function FinanceWallet() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Admin Adjustments Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Adjustments (Platform Credits & Deductions)</CardTitle>
+              <CardDescription>Records of bonuses, corrections, and miscellaneous adjustments</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Type</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Amount</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loadingAdjustments ? (
+                      <tr><td colSpan="4" className="p-6 text-center">Loading...</td></tr>
+                    ) : adjustments.length > 0 ? (
+                      adjustments.map((a, index) => (
+                        <tr key={`adj-${index}`} className="border-b">
+                          <td className="px-4 py-3">{new Date(a.adjustedAt).toLocaleString()}</td>
+                          <td className="px-4 py-3">
+                            <Badge variant="outline" className={a.type === 'credit' ? 'border-green-500 text-green-500 bg-green-500/10' : 'border-red-500 text-red-500 bg-red-500/10'}>
+                              {a.type === 'credit' ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
+                              {a.type === 'credit' ? 'Credit' : 'Debit'}
+                            </Badge>
+                          </td>
+                          <td className={`px-4 py-3 font-medium ${a.type === 'credit' ? 'text-green-500' : 'text-red-500'}`}>
+                            {a.type === 'debit' ? '-' : ''}₹{INR.format(a.amount)}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground" title={a.reason}>
+                            {a.reason}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan="4" className="p-6 text-center text-muted-foreground">No manual adjustments found.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
