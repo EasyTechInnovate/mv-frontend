@@ -332,12 +332,33 @@ export const getAnalyticsDashboard = async (params) => {
     return response.data
 }
 
+export const exportUserAnalyticsData = async (monthId) => {
+    const queryParams = new URLSearchParams({ monthId })
+    const response = await servicesAxiosInstance.get(`/v1/reports/analytics/export?${queryParams.toString()}`, {
+        responseType: 'blob'
+    })
+    return response.data
+}
+
 // Royalty APIs
 export const getRoyaltyDashboard = async (params) => {
     const { timeframe = 'last_year' } = params
     const queryParams = new URLSearchParams({ timeframe })
 
     const response = await servicesAxiosInstance.get(`/v1/reports/royalty/dashboard?${queryParams.toString()}`)
+    return response.data
+}
+
+export const getActiveMonthsByType = async (type) => {
+    const response = await servicesAxiosInstance.get(`/v1/months/type/${type}/active`)
+    return response.data
+}
+
+export const exportUserRoyaltyData = async (monthId, exportType) => {
+    const queryParams = new URLSearchParams({ monthId, exportType })
+    const response = await servicesAxiosInstance.get(`/v1/reports/export?${queryParams.toString()}`, {
+        responseType: 'blob'
+    })
     return response.data
 }
 

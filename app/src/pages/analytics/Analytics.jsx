@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Download, Play, Users, Globe, IndianRupee } from 'lucide-react';
-import { getAnalyticsDashboard } from '@/services/api.services';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { showToast } from '@/utils/toast';
+import { getAnalyticsDashboard, getActiveMonthsByType, exportUserAnalyticsData } from '@/services/api.services';
+import { useEffect } from 'react';
 
 // Country code to name mapping
 const COUNTRY_NAMES = {
@@ -26,6 +30,63 @@ const getCountryName = (code) => COUNTRY_NAMES[code] || code;
 export default function Analytics() {
   const [timeframe, setTimeframe] = useState('last_30_days');
   const [groupBy] = useState('day');
+
+  // Export Modal State
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportMonth, setExportMonth] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const [availableMonths, setAvailableMonths] = useState([]);
+
+  // Fetch available analytics months when modal opens
+  useEffect(() => {
+    if (isExportModalOpen && availableMonths.length === 0) {
+      const fetchMonths = async () => {
+        try {
+          const res = await getActiveMonthsByType('analytics');
+          if (res?.data) {
+            setAvailableMonths(res.data);
+          }
+        } catch (error) {
+          console.error("Failed to fetch months:", error);
+          showToast.error("Failed to load available months");
+        }
+      };
+      
+      fetchMonths();
+    }
+  }, [isExportModalOpen, availableMonths.length]);
+
+  const handleExport = async () => {
+    if (!exportMonth) {
+      showToast.error('Please select a month.');
+      return;
+    }
+    
+    try {
+      setExporting(true);
+      showToast.info('Preparing export...');
+      const blob = await exportUserAnalyticsData(exportMonth);
+      
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      // Fetch the display name to use in filename if possible
+      const selectedMonthObj = availableMonths.find(m => m._id === exportMonth);
+      const monthName = selectedMonthObj ? selectedMonthObj.displayName.replace(/\s+/g, '_') : exportMonth;
+      link.setAttribute('download', `analytics_${monthName}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      
+      showToast.success('Export downloaded successfully!');
+      setIsExportModalOpen(false);
+    } catch (error) {
+      console.error('Export failed:', error);
+      showToast.error('Failed to export analytics data. Current selected data might be empty.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Fetch analytics data
   const { data: analyticsData, isLoading, error } = useQuery({
@@ -176,7 +237,7 @@ export default function Analytics() {
               <SelectItem value="1year">Last year</SelectItem>
             </SelectContent>
           </Select> */}
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setIsExportModalOpen(true)}>
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </Button>
@@ -562,6 +623,50 @@ export default function Analytics() {
           </Tabs>
         </>
       )}
+
+      {/* Export Modal */}
+      <Dialog open={isExportModalOpen} onOpenChange={setIsExportModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Export Analytics Data</DialogTitle>
+            <DialogDescription>
+              Select a month to download a comprehensive CSV report of your analytics data.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="month" className="text-right">
+                Month
+              </Label>
+              <Select value={exportMonth} onValueChange={setExportMonth}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select a month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableMonths.map((month) => (
+                    <SelectItem key={month._id} value={month._id}>
+                      {month.displayName}
+                    </SelectItem>
+                  ))}
+                  {availableMonths.length === 0 && (
+                    <div className="p-2 text-sm text-muted-foreground text-center">Loading or no months available</div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsExportModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleExport} disabled={exporting}>
+              {exporting ? (
+                <>
+                   Loading...
+                </>
+              ) : 'Download CSV'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

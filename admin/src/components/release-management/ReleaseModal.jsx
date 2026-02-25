@@ -598,6 +598,15 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                 </div>
             )}
 
+            {/* Takedown Reason Info */}
+            {release.takeDown?.reason && (release.releaseStatus === 'take_down' || release.releaseStatus === 'taken_down') && (
+                <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+                    <h3 className="font-semibold text-orange-800 dark:text-orange-400 mb-2">Takedown Request</h3>
+                    <p className="text-sm mb-1"><span className="font-medium opacity-80 text-orange-800 dark:text-orange-400">Requested At:</span> <span className="text-orange-700 dark:text-orange-300">{release.takeDown.requestedAt ? new Date(release.takeDown.requestedAt).toLocaleString() : 'N/A'}</span></p>
+                    <p className="text-sm"><span className="font-medium opacity-80 text-orange-800 dark:text-orange-400">Reason:</span> <span className="text-orange-700 dark:text-orange-300">{release.takeDown.reason}</span></p>
+                </div>
+            )}
+
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Cover Art */}
@@ -1004,10 +1013,7 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                         isrc: match.external_ids?.isrc,
                         upc: match.external_ids?.upc
                     },
-                    streamingLinks: {
-                        spotify: match.streaming_links?.spotify,
-                        deezer: match.streaming_links?.deezer
-                    },
+                    streamingLinks: match.streaming_links || {},
                     genres: match.genres || []
                 })
             } else {
@@ -1055,6 +1061,57 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
             setLoading(false)
         }
     }
+
+    const exportACRToCSV = (result) => {
+        const csvData = [
+            ['Field', 'Value'],
+            ['User Account ID', release.userId?.accountId || release.accountId || 'N/A'],
+            ['Release ID', release.releaseId || 'N/A'],
+            ['Uploaded Track Name', track.trackName || 'N/A'],
+            ['ACR Match Percentage', `${result.matchPercentage}%`],
+            ['ACR Match Title', result.title || 'N/A'],
+            ['ACR Artists', result.artists?.join(', ') || 'N/A'],
+            ['ACR Label', result.label || 'N/A'],
+            ['ACR Album', result.album || 'N/A'],
+            ['ISRC', result.externalIds?.isrc || 'N/A'],
+            ['UPC', result.externalIds?.upc || 'N/A'],
+            ['Release Date', result.releaseDate || 'N/A'],
+            ['Duration (ms)', result.durationMs || 'N/A'],
+            ['Genres', result.genres?.join(', ') || 'N/A']
+        ];
+
+        if (result.streamingLinks && Object.keys(result.streamingLinks).length > 0) {
+            Object.entries(result.streamingLinks)
+                .filter(([_, url]) => url)
+                .forEach(([platform, url]) => {
+                    const platformName = platform.charAt(0).toUpperCase() + platform.slice(1).replace('_', ' ');
+                    csvData.push([`Streaming Link: ${platformName}`, url]);
+                });
+        } else {
+            csvData.push(['Streaming Links', 'N/A']);
+        }
+
+        const csvString = csvData.map(row => 
+            row.map(cell => {
+                const strCell = String(cell).replace(/"/g, '""');
+                // Force Excel to treat purely numeric ID strings as text if they are long
+                if (/^\d{10,}$/.test(strCell) || strCell.startsWith('INUM')) {
+                    return `="${strCell}"`;
+                }
+                return `"${strCell}"`;
+            }).join(',')
+        ).join('\n');
+
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `ACR_Details_${track.trackName?.replace(/\s+/g, '_')}_${release.releaseId}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     return (
         <div className={`border rounded-lg p-4 ${isDark ? 'border-gray-700 bg-[#0f1724]' : 'border-gray-200 bg-gray-50'}`}>
@@ -1286,16 +1343,43 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                                                 {result.externalIds?.isrc && <p className="text-xs mt-1 font-mono">ISRC: {result.externalIds.isrc}</p>}
                                                 {result.externalIds?.upc && <p className="text-xs mt-1 font-mono">UPC: {result.externalIds.upc}</p>}
                                             </div>
-                                            <div className="text-right">
-                                                <div className={`text-xl font-bold ${config.text}`}>{result.matchPercentage}%</div>
-                                                <div className="text-xs font-semibold uppercase">{config.label}</div>
+                                            <div className="text-right flex flex-col items-end gap-2">
+                                                <div>
+                                                    <div className={`text-xl font-bold ${config.text}`}>{result.matchPercentage}%</div>
+                                                    <div className="text-xs font-semibold uppercase">{config.label}</div>
+                                                </div>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className={`h-7 text-xs px-2 ${isDark ? 'border-gray-600 hover:bg-gray-700 bg-gray-800' : 'bg-white hover:bg-gray-100'}`}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        exportACRToCSV(result);
+                                                    }}
+                                                >
+                                                    <Download className="w-3 h-3 mr-1" />
+                                                    Export CSV
+                                                </Button>
                                             </div>
                                         </div>
-                                        {result.streamingLinks?.spotify && (
-                                            <a href={result.streamingLinks.spotify} target="_blank" rel="noopener noreferrer"
-                                               className="text-blue-600 dark:text-blue-400 text-xs mt-2 inline-block hover:underline">
-                                                Listen on Spotify →
-                                            </a>
+                                        {result.streamingLinks && Object.entries(result.streamingLinks).length > 0 && (
+                                            <div className="flex flex-wrap gap-3 mt-3">
+                                                {Object.entries(result.streamingLinks).map(([platform, url]) => {
+                                                    if (!url) return null;
+                                                    const platformName = platform.charAt(0).toUpperCase() + platform.slice(1).replace('_', ' ');
+                                                    return (
+                                                        <a 
+                                                            key={platform}
+                                                            href={url} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="text-blue-600 dark:text-blue-400 text-xs inline-block hover:underline font-medium"
+                                                        >
+                                                            Listen on {platformName} →
+                                                        </a>
+                                                    );
+                                                })}
+                                            </div>
                                         )}
                                     </div>
                                 )

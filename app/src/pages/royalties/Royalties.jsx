@@ -1,12 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
-import { Download, DollarSign, TrendingUp, BarChart3, Calendar, Music, FileDown } from 'lucide-react';
-import { getRoyaltyDashboard } from '@/services/api.services';
+import { Download, DollarSign, TrendingUp, BarChart3, Calendar, Music, FileDown, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { showToast } from '@/utils/toast';
+import { getRoyaltyDashboard, getActiveMonthsByType, exportUserRoyaltyData } from '@/services/api.services';
 
 // Platform Colors Mapping - YouTube: Red, Spotify: Green, Meta: Blue, Others: Random
 const PLATFORM_COLORS = {
@@ -69,6 +72,76 @@ export default function Royalties() {
   const [timeframe, setTimeframe] = useState('last_year');
   const [paymentFilter, setPaymentFilter] = useState('all');
 
+  // Export Modal State
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportMonth, setExportMonth] = useState('');
+  const [exportType, setExportType] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const [availableMonths, setAvailableMonths] = useState([]);
+  const [isFetchingMonths, setIsFetchingMonths] = useState(false);
+
+  // Fetch available months when exportType changes
+  useEffect(() => {
+    if (isExportModalOpen && exportType) {
+      const fetchMonths = async () => {
+        setIsFetchingMonths(true);
+        try {
+          // Map the UI export type to the backend month type
+          let monthType = 'royalty'; 
+          if (exportType === 'bonus') monthType = 'bonus';
+          if (exportType === 'mcn') monthType = 'mcn';
+          
+          const res = await getActiveMonthsByType(monthType);
+          if (res?.data) {
+            setAvailableMonths(res.data);
+          }
+        } catch (error) {
+          console.error("Failed to fetch months:", error);
+          showToast.error("Failed to load available months");
+        } finally {
+          setIsFetchingMonths(false);
+        }
+      };
+      
+      fetchMonths();
+    } else {
+        setAvailableMonths([]);
+        setExportMonth('');
+    }
+  }, [isExportModalOpen, exportType]);
+
+  const handleExport = async () => {
+    if (!exportMonth || !exportType) {
+      showToast.error('Please select both a month and an export type.');
+      return;
+    }
+    
+    try {
+      setExporting(true);
+      showToast.info('Preparing export...');
+      const blob = await exportUserRoyaltyData(exportMonth, exportType);
+      
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      // Fetch the display name to use in filename if possible
+      const selectedMonthObj = availableMonths.find(m => m._id === exportMonth);
+      const monthName = selectedMonthObj ? selectedMonthObj.displayName.replace(/\s+/g, '_') : exportMonth;
+      link.setAttribute('download', `${exportType}_royalty_${monthName}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      
+      showToast.success('Export downloaded successfully!');
+      setIsExportModalOpen(false);
+    } catch (error) {
+      console.error('Export failed:', error);
+      showToast.error('Failed to export royalty data. Current selected data might be empty.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // Fetch royalty data
   const { data: royaltyData, isLoading, error } = useQuery({
     queryKey: ['royalty', timeframe],
@@ -110,6 +183,7 @@ export default function Royalties() {
   const processedData = useMemo(() => {
     if (!royaltyData?.data) return null;
     const { data } = royaltyData;
+    console.log("ROYALTY DATA TRENDS:", data.trends);
 
     // Helper: Process Platforms
     const processPlatformData = (platformArray) => {
@@ -154,9 +228,26 @@ export default function Royalties() {
       return { list: sortedList, chart: chartData };
     };
 
+    // Helper: Format Chart Period
+    const formatPeriod = (period, fallbackIndex) => {
+      if (!period) return `Month ${fallbackIndex + 1}`;
+      if (period.month) {
+        let m = String(period.month);
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const mNum = parseInt(m, 10);
+        if (!isNaN(mNum) && mNum >= 1 && mNum <= 12) {
+            m = monthNames[mNum - 1];
+        } else {
+            m = m.substring(0, 3);
+        }
+        return period.year ? `${m} ${period.year}` : m;
+      }
+      return `Month ${fallbackIndex + 1}`;
+    };
+
     // 1. Overview & Trends
     const regularTrends = data.trends?.monthlyRoyaltyTrends?.map((item, index) => ({
-      month: item.date || `Month ${index + 1}`, 
+      month: formatPeriod(item.period, index), 
       regular: item.regularRoyalty || 0,
       total: item.totalEarnings || 0,
       streaming: item.regularRoyalty || 0, // Fallback for composition
@@ -165,7 +256,7 @@ export default function Royalties() {
     })) || [];
 
     const bonusTrends = data.trends?.monthlyBonusRoyaltyTrends?.map((item, index) => ({
-      month: item.date || `Month ${index + 1}`,
+      month: formatPeriod(item.period, index),
       bonus: item.bonusRoyalty || 0,
       streaming: item.bonusRoyalty || 0, 
       mechanical: 0,
@@ -240,7 +331,7 @@ export default function Royalties() {
               <SelectItem value="1year">Last year</SelectItem>
             </SelectContent>
           </Select> */}
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setIsExportModalOpen(true)}>
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </Button>
@@ -308,11 +399,11 @@ export default function Royalties() {
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="breakdown">Breakdown</TabsTrigger>
           {/* <TabsTrigger value="payments">Payments</TabsTrigger> */}
-          <TabsTrigger value="reports">Reports</TabsTrigger>
+          {/* <TabsTrigger value="reports">Reports</TabsTrigger> */}
         </TabsList>
 
         {/* 1. OVERVIEW TAB */}
@@ -844,6 +935,71 @@ export default function Royalties() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Export Modal */}
+      <Dialog open={isExportModalOpen} onOpenChange={setIsExportModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Export Royalty Report</DialogTitle>
+            <DialogDescription>
+              Select the month and the type of royalty data you wish to export as a CSV.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="type" className="text-right">
+                Type
+              </Label>
+              <Select value={exportType} onValueChange={setExportType}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select export type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="regular">Regular Royalty</SelectItem>
+                  <SelectItem value="bonus">Bonus Royalty</SelectItem>
+                  <SelectItem value="mcn">MCN Royalty</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="month" className="text-right">
+                Month
+              </Label>
+              <Select value={exportMonth} onValueChange={setExportMonth} disabled={!exportType || isFetchingMonths}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder={!exportType ? "Select a type first" : (isFetchingMonths ? "Loading..." : "Select a month")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableMonths.map((month) => (
+                    <SelectItem key={month._id} value={month._id}>
+                      {month.displayName}
+                    </SelectItem>
+                  ))}
+                  {availableMonths.length === 0 && !isFetchingMonths && exportType && (
+                    <div className="p-2 text-sm text-muted-foreground text-center">No months available</div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsExportModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleExport} disabled={exporting || !exportMonth || !exportType} className="bg-purple-600 hover:bg-purple-700 text-white">
+              {exporting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Download CSV
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
