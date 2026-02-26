@@ -13,7 +13,9 @@ import {
   FileDown,
   IndianRupee,
   ArrowDownLeft,
+  Info
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 import { showToast } from '../../utils/toast';
 
@@ -42,9 +44,9 @@ import {
   XAxis,
   YAxis,
   ResponsiveContainer,
-  Tooltip,
+  Tooltip as RechartsTooltip,
 } from "recharts";
-import { getMyWallet, getMyWalletDetails, getMyPayoutRequests, cancelPayoutRequest } from "@/services/api.services";
+import { getMyWallet, getMyWalletDetails, getMyPayoutRequests, cancelPayoutRequest, getMyWalletTransactions } from "@/services/api.services";
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 import jsonToCsv, { exportToCsv } from "@/lib/csv";
 
@@ -158,9 +160,9 @@ export default function FinanceWallet() {
   const fetchTransactions = async () => {
     try {
       setLoadingTransactions(true);
-      const response = await getMyPayoutRequests({ page: currentPage, limit: itemsPerPage });
+      const response = await getMyWalletTransactions({ page: currentPage, limit: itemsPerPage });
       if (response.success) {
-        setTransactions(response.data.requests);
+        setTransactions(response.data.transactions);
         setPagination(response.data.pagination);
       } else {
         showToast.error(response.message || "Failed to fetch transactions.");
@@ -173,24 +175,8 @@ export default function FinanceWallet() {
     }
   };
 
-  const fetchAdjustments = async () => {
-    try {
-      setLoadingAdjustments(true);
-      const response = await getMyWalletDetails();
-      if (response.success && response.data.wallet && response.data.wallet.adminAdjustments) {
-        const sorted = response.data.wallet.adminAdjustments.sort((a, b) => new Date(b.adjustedAt).getTime() - new Date(a.adjustedAt).getTime());
-        setAdjustments(sorted);
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoadingAdjustments(false);
-    }
-  };
-
   useEffect(() => {
     fetchTransactions();
-    fetchAdjustments();
   }, [currentPage]);
 
   const handlePageChange = (newPage) => {
@@ -319,7 +305,7 @@ export default function FinanceWallet() {
                     <LineChart data={earningsData}>
                       <XAxis dataKey="month" />
                       <YAxis />
-                      <Tooltip
+                      <RechartsTooltip
                         contentStyle={{
                           backgroundColor: "var(--popover)",
                           color: "var(--popover-foreground)",
@@ -379,52 +365,106 @@ export default function FinanceWallet() {
         <TabsContent value="transactions" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Payout Request History</CardTitle>
-              <CardDescription>Your withdrawal requests</CardDescription>
+              <CardTitle>Transaction History</CardTitle>
+              <CardDescription>Your unified history for earnings, adjustments, and payouts.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Request ID</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Amount</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Method</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground w-1/4">Date</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Description</th>
+                      <th className="px-4 py-3 text-right font-medium text-muted-foreground w-32">Amount</th>
+                      <th className="px-4 py-3 text-center font-medium text-muted-foreground">Status / Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loadingTransactions ? (
-                      <tr><td colSpan="6" className="p-6 text-center">Loading...</td></tr>
+                      <tr><td colSpan="4" className="p-6 text-center">Loading...</td></tr>
                     ) : transactions.length > 0 ? (
                       transactions.map((t) => (
-                        <tr key={t.requestId} className="border-b">
-                          <td className="px-4 py-3 font-mono text-xs">{t.requestId}</td>
-                          <td className="px-4 py-3">₹{INR.format(t.amount)}</td>
-                          <td className="px-4 py-3 capitalize">{t.payoutMethod.replace("_", " ")}</td>
-                          <td className="px-4 py-3">
-                            <StatusBadge status={t.status} />
+                        <tr key={t.id} className="border-b">
+                          <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                            {new Date(t.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
                           </td>
-                          <td className="px-4 py-3">{new Date(t.requestedAt).toLocaleString()}</td>
                           <td className="px-4 py-3">
-                            {t.status === 'pending' && (
-                              <Button variant="destructive" size="sm" onClick={() => openCancelDialog(t)}>
-                                Cancel
-                              </Button>
+                            <div className="flex flex-col">
+                              <span className="font-medium text-foreground flex items-center gap-1">
+                                {t.type === 'admin_adjustment' ? 'Manual Adjustment' : t.description}
+                                {t.type === 'admin_adjustment' && t.description && t.description.length > 30 && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-[300px] whitespace-normal">
+                                        <p>{t.description}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </span>
+                              {t.type === 'admin_adjustment' && t.description && t.description.length <= 30 && (
+                                <span className="text-xs text-muted-foreground">{t.description}</span>
+                              )}
+                              {(t.type === 'regular_royalty' || t.type === 'bonus_royalty') && t.streams && (
+                                <span className="text-xs text-muted-foreground mt-0.5">{t.streams.toLocaleString()} streams</span>
+                              )}
+                              {t.type === 'admin_adjustment' && t.adjustedBy && (
+                                <span className="text-xs text-muted-foreground mt-0.5">By: {t.adjustedBy}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right font-medium">
+                            {t.direction === 'credit' ? (
+                              <span className="text-green-600">+₹{INR.format(t.amount)}</span>
+                            ) : (
+                              <span className="text-red-500">-₹{INR.format(t.amount)}</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {t.type === 'withdrawal' ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <span className="flex items-center gap-1">
+                                  <StatusBadge status={t.status} />
+                                  {t.status === 'rejected' && t.description && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Info className="w-4 h-4 text-destructive cursor-pointer" />
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-[300px] whitespace-normal">
+                                            <p>{t.description.split(' — ')[1] || t.description}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                </span>
+                                {t.status === 'pending' && (
+                                  <Button variant="ghost" size="sm" onClick={() => openCancelDialog(t)} className="h-6 text-xs text-red-500 hover:text-red-600 hover:bg-red-500/10 px-2 mt-1">
+                                    Cancel
+                                  </Button>
+                                )}
+                              </div>
+                            ) : (
+                              <Badge variant="outline" className={t.direction === 'credit' ? 'border-green-500 text-green-500 bg-green-500/10' : 'border-red-500 text-red-500 bg-red-500/10'}>
+                                {t.direction === 'credit' ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
+                                {t.direction === 'credit' ? 'Credit' : 'Debit'}
+                              </Badge>
                             )}
                           </td>
                         </tr>
                       ))
                     ) : (
-                      <tr><td colSpan="6" className="p-6 text-center text-muted-foreground">No transactions found.</td></tr>
+                      <tr><td colSpan="4" className="p-6 text-center text-muted-foreground">No transactions found.</td></tr>
                     )}
                   </tbody>
                 </table>
               </div>
+
               {pagination && pagination.totalPages > 1 && (
-                <div className="mt-6 flex items-center justify-between">
+                <div className="mt-6 flex items-center justify-between border-t pt-4">
                   <div className="text-sm text-muted-foreground">
                     Page {pagination.currentPage} of {pagination.totalPages}
                   </div>
@@ -433,7 +473,7 @@ export default function FinanceWallet() {
                       variant="outline"
                       size="sm"
                       onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={!pagination.hasPrev}
+                      disabled={currentPage === 1}
                     >
                       Previous
                     </Button>
@@ -441,60 +481,13 @@ export default function FinanceWallet() {
                       variant="outline"
                       size="sm"
                       onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={!pagination.hasNext}
+                      disabled={currentPage === pagination.totalPages}
                     >
                       Next
                     </Button>
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Admin Adjustments Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Adjustments (Platform Credits & Deductions)</CardTitle>
-              <CardDescription>Records of bonuses, corrections, and miscellaneous adjustments</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Type</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Amount</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Reason</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loadingAdjustments ? (
-                      <tr><td colSpan="4" className="p-6 text-center">Loading...</td></tr>
-                    ) : adjustments.length > 0 ? (
-                      adjustments.map((a, index) => (
-                        <tr key={`adj-${index}`} className="border-b">
-                          <td className="px-4 py-3">{new Date(a.adjustedAt).toLocaleString()}</td>
-                          <td className="px-4 py-3">
-                            <Badge variant="outline" className={a.type === 'credit' ? 'border-green-500 text-green-500 bg-green-500/10' : 'border-red-500 text-red-500 bg-red-500/10'}>
-                              {a.type === 'credit' ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
-                              {a.type === 'credit' ? 'Credit' : 'Debit'}
-                            </Badge>
-                          </td>
-                          <td className={`px-4 py-3 font-medium ${a.type === 'credit' ? 'text-green-500' : 'text-red-500'}`}>
-                            {a.type === 'debit' ? '-' : ''}₹{INR.format(a.amount)}
-                          </td>
-                          <td className="px-4 py-3 text-muted-foreground" title={a.reason}>
-                            {a.reason}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr><td colSpan="4" className="p-6 text-center text-muted-foreground">No manual adjustments found.</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>

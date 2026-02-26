@@ -10,13 +10,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
-import { ArrowDownRight, ArrowUpRight, Wallet } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Wallet, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 
 export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
   const isDark = theme === "dark";
   const [loading, setLoading] = useState(false);
   const [walletData, setWalletData] = useState(null);
   const [history, setHistory] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [pagination, setPagination] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   
   // Form State
   const [adjustmentType, setAdjustmentType] = useState("credit");
@@ -27,9 +33,10 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
   useEffect(() => {
     if (isOpen && user?._id) {
       fetchWallet();
+      fetchTransactions();
       resetForm();
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, currentPage]);
 
   const fetchWallet = async () => {
     setLoading(true);
@@ -45,6 +52,18 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
       onClose();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTransactions = async () => {
+    try {
+      const res = await GlobalApi.getUserWalletTransactions(user._id, { page: currentPage, limit: itemsPerPage });
+      if (res.data?.success) {
+        setTransactions(res.data.data.transactions);
+        setPagination(res.data.data.pagination);
+      }
+    } catch (error) {
+      console.error("Failed to fetch transactions:", error);
     }
   };
 
@@ -82,11 +101,18 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
       toast.success(`Successfully ${adjustmentType}ed ₹${amount}`);
       resetForm();
       fetchWallet(); // Refresh data to show new balance and history
+      fetchTransactions(); // Refresh the unified list as well
     } catch (error) {
       console.error("Failed to adjust wallet:", error);
       toast.error(error.response?.data?.message || "Failed to adjust wallet");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= (pagination?.totalPages || 1)) {
+      setCurrentPage(newPage);
     }
   };
 
@@ -194,52 +220,104 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
               </div>
             </div>
 
-            {/* History Table */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3">Adjustment History</h3>
+            {/* Unified History Table */}
+            <div className="mt-6">
+              <h3 className="text-sm font-semibold mb-3">Unified Transaction History</h3>
               <div className={`rounded-lg border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className={`text-left ${isDark ? "bg-[#111A22] text-gray-400" : "bg-gray-50 text-gray-600"}`}>
                       <tr>
-                        <th className="px-4 py-3 font-medium">Date & Time</th>
-                        <th className="px-4 py-3 font-medium">Type</th>
-                        <th className="px-4 py-3 font-medium">Amount</th>
-                        <th className="px-4 py-3 font-medium">Before → After</th>
-                        <th className="px-4 py-3 font-medium">Reason</th>
-                        <th className="px-4 py-3 font-medium">Done By</th>
+                        <th className="px-4 py-3 font-medium w-1/4">Date & Time</th>
+                        <th className="px-4 py-3 font-medium">Description</th>
+                        <th className="px-4 py-3 font-medium text-right w-32">Amount</th>
+                        <th className="px-4 py-3 font-medium text-center">Status / Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-800/50">
-                      {history.length === 0 ? (
+                      {transactions.length === 0 ? (
                         <tr>
-                          <td colSpan="6" className="p-4 text-center text-muted-foreground">No manual adjustments found.</td>
+                          <td colSpan="4" className="p-4 text-center text-muted-foreground">No transactions found.</td>
                         </tr>
                       ) : (
-                        history.map((record, idx) => (
+                        transactions.map((t, idx) => (
                           <tr key={idx} className={isDark ? "hover:bg-[#111A22]/50" : "hover:bg-gray-50/50"}>
                             <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                              {new Date(record.adjustedAt).toLocaleString('en-IN', {
+                              {new Date(t.date).toLocaleString('en-IN', {
                                 day: '2-digit', month: 'short', year: 'numeric',
                                 hour: '2-digit', minute: '2-digit'
                               })}
                             </td>
                             <td className="px-4 py-3">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                record.type === 'credit' ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"
-                              }`}>
-                                {record.type === 'credit' ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
-                                {record.type.charAt(0).toUpperCase() + record.type.slice(1)}
-                              </span>
+                              <div className="flex flex-col">
+                                <span className={`font-medium flex items-center gap-1 ${isDark ? "text-gray-200" : "text-gray-900"}`}>
+                                  {t.type === 'admin_adjustment' ? 'Manual Adjustment' : t.description}
+                                  {t.type === 'admin_adjustment' && t.description && t.description.length > 30 && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-[300px] whitespace-normal">
+                                          <p>{t.description}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                </span>
+                                {t.type === 'admin_adjustment' && t.description && t.description.length <= 30 && (
+                                  <span className="text-xs text-muted-foreground">{t.description}</span>
+                                )}
+                                {(t.type === 'regular_royalty' || t.type === 'bonus_royalty') && t.streams && (
+                                  <span className="text-xs text-muted-foreground mt-0.5">{t.streams.toLocaleString()} streams</span>
+                                )}
+                                {t.type === 'admin_adjustment' && t.adjustedBy && (
+                                  <span className="text-xs text-muted-foreground mt-0.5">By: {t.adjustedBy}</span>
+                                )}
+                              </div>
                             </td>
-                            <td className="px-4 py-3 font-medium">₹{formatNumber(record.amount)}</td>
-                            <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                              ₹{formatNumber(record.balanceBefore)} <span className="mx-1">→</span> ₹{formatNumber(record.balanceAfter)}
+                            <td className="px-4 py-3 text-right font-medium">
+                              {t.direction === 'credit' ? (
+                                <span className="text-green-500">+₹{formatNumber(t.amount)}</span>
+                              ) : (
+                                <span className="text-red-500">-₹{formatNumber(t.amount)}</span>
+                              )}
                             </td>
-                            <td className="px-4 py-3 max-w-[200px] truncate" title={record.reason}>{record.reason}</td>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              {record.adjustedBy?.firstName} {record.adjustedBy?.lastName}
-                              <div className="text-[10px] text-muted-foreground">{record.adjustedBy?.emailAddress}</div>
+                            <td className="px-4 py-3 text-center">
+                              {t.type === 'withdrawal' ? (
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                  <span className="flex items-center gap-1">
+                                    <Badge variant="outline" className={`
+                                      ${t.status === 'pending' && 'border-yellow-500/50 text-yellow-500 bg-yellow-500/10'}
+                                      ${t.status === 'approved' && 'border-blue-500/50 text-blue-500 bg-blue-500/10'}
+                                      ${t.status === 'paid' && 'border-green-500/50 text-green-500 bg-green-500/10'}
+                                      ${t.status === 'rejected' && 'border-red-500/50 text-red-500 bg-red-500/10'}
+                                      ${t.status === 'cancelled' && 'border-gray-500/50 text-gray-500 bg-gray-500/10'}
+                                    `}>
+                                      {t.status.charAt(0).toUpperCase() + t.status.slice(1)}
+                                    </Badge>
+                                    {t.status === 'rejected' && t.description && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                              <Info className="w-4 h-4 text-red-500 cursor-pointer" />
+                                          </TooltipTrigger>
+                                          <TooltipContent className="max-w-[300px] whitespace-normal">
+                                              <p>{t.description.split(' — ')[1] || t.description}</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium justify-center ${
+                                  t.direction === 'credit' ? "bg-green-500/20 text-green-500 border border-green-500/30" : "bg-red-500/20 text-red-500 border border-red-500/30"
+                                }`}>
+                                  {t.direction === 'credit' ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
+                                  {t.direction === 'credit' ? 'Credit' : 'Debit'}
+                                </span>
+                              )}
                             </td>
                           </tr>
                         ))
@@ -247,6 +325,33 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
                     </tbody>
                   </table>
                 </div>
+                {pagination && pagination.totalPages > 1 && (
+                  <div className={`p-4 flex items-center justify-between border-t ${isDark ? "border-gray-800 bg-[#111A22]/30" : "border-gray-200 bg-gray-50/50"}`}>
+                    <div className="text-sm text-muted-foreground">
+                      Page {pagination.currentPage} of {pagination.totalPages}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={isDark ? "border-gray-700 hover:bg-gray-800" : ""}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === pagination.totalPages}
+                        className={isDark ? "border-gray-700 hover:bg-gray-800" : ""}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -60,8 +60,9 @@ const getHealth = () => axiosClient.get('/v1/health')
 const getDashboardData = () => axiosClient.get('/v1/dashboard/admin')
 
 // ---------------------- Wallet Adjustment ----------------------
-const getUserWallet = (userId) => axiosClient.get(`/v1/admin/wallets/${userId}`)
-const adjustUserWallet = (userId, data) => axiosClient.post(`/v1/admin/wallets/${userId}/adjust`, data)
+export const getUserWallet = (userId) => axiosClient.get(`/v1/admin/wallets/${userId}`)
+export const adjustUserWallet = (userId, data) => axiosClient.post(`/v1/admin/wallets/${userId}/adjust`, data)
+export const getUserWalletTransactions = (userId, params) => axiosClient.get(`/v1/admin/wallets/${userId}/transactions`, { params })
 
 // ---------------------- Auth ----------------------
 const login = (data) => axiosClient.post('/v1/auth/login', data)
@@ -441,6 +442,7 @@ export default {
     getDashboardData,
     getUserWallet,
     adjustUserWallet,
+    getUserWalletTransactions,
     getSubscriptionPlans,
     createSubscriptionPlan,
     getPlanDetails,
