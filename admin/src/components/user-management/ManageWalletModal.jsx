@@ -132,7 +132,7 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
     <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className={`max-w-4xl max-h-[90vh] flex flex-col overflow-hidden ${
+        className={`max-w-6xl max-h-[90vh] flex flex-col overflow-hidden ${
           isDark ? "bg-[#151F28] text-white border-gray-800" : "bg-white text-gray-900"
         }`}
       >
@@ -151,18 +151,22 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
           <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar p-1">
             
             {/* Wallet Overview Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <div className={`p-4 rounded-xl border ${isDark ? "bg-[#111A22] border-gray-800" : "bg-gray-50 border-gray-200"}`}>
-                <p className="text-xs text-muted-foreground mb-1">Total Earnings</p>
+                <p className="text-xs text-muted-foreground mb-1">Total Earnings (Gross)</p>
                 <p className="text-xl font-bold">₹{formatNumber(walletData.totalEarnings)}</p>
               </div>
               <div className={`p-4 rounded-xl border ${isDark ? "bg-[#111A22] border-gray-800" : "bg-gray-50 border-gray-200"}`}>
-                <p className="text-xs text-muted-foreground mb-1">Available Gross</p>
+                <p className="text-xs text-muted-foreground mb-1">Net Earnings</p>
                 <p className="text-xl font-bold">₹{formatNumber(walletData.availableBalance)}</p>
               </div>
               <div className={`p-4 rounded-xl border ${isDark ? "bg-[#111A22] border-gray-800" : "bg-gray-50 border-gray-200"}`}>
+                <p className="text-xs text-muted-foreground mb-1">Total Withdrawn</p>
+                <p className="text-xl font-bold text-red-500">₹{formatNumber(walletData.totalPaidOut)}</p>
+              </div>
+              <div className={`p-4 rounded-xl border ${isDark ? "bg-[#111A22] border-gray-800" : "bg-gray-50 border-gray-200"}`}>
                 <p className="text-xs text-muted-foreground mb-1">Pending Payouts</p>
-                <p className="text-xl font-bold">₹{formatNumber(walletData.pendingPayout)}</p>
+                <p className="text-xl font-bold text-yellow-500">₹{formatNumber(walletData.pendingPayout)}</p>
               </div>
               <div className={`p-4 rounded-xl border ${isDark ? "bg-purple-900/20 border-purple-500/30" : "bg-purple-50 border-purple-200"}`}>
                 <p className="text-xs text-purple-500 mb-1 font-semibold">Withdrawable</p>

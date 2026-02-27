@@ -134,10 +134,11 @@ export default function FinanceWallet() {
   }, []);
 
   const statCards = useMemo(() => [
-    { title: "Available Balance", value: wallet?.availableBalance || 0, icon: Wallet, color: "text-green-500" },
+    { title: "Total Earnings (Gross)", value: wallet?.totalEarnings || 0, icon: TrendingUp, color: "text-emerald-400" },
+    { title: "Net Earnings", value: wallet?.availableBalance || 0, icon: TrendingUp, color: "text-emerald-500" },
+    { title: "Total Withdrawn", value: wallet?.totalPaidOut || 0, icon: ArrowDownLeft, color: "text-red-400" },
     { title: "Pending Payout", value: wallet?.pendingPayout || 0, icon: Clock, color: "text-yellow-500" },
-    { title: "Total Earnings", value: wallet?.totalEarnings || 0, icon: TrendingUp, color: "text-emerald-400" },
-    { title: "Total Withdrawn", value: wallet?.totalPaidOut || 0, icon: ArrowDownLeft, color: "text-purple-400" },
+    { title: "Withdrawable Balance", value: wallet?.withdrawableBalance || 0, icon: Wallet, color: "text-purple-500", highlight: true },
   ], [wallet]);
 
   const earningsData = [
@@ -236,7 +237,7 @@ export default function FinanceWallet() {
   return (
     <div className="min-h-screen bg-background p-6 text-foreground">
       {/* Header */}
-      <div className="mb-8 flex items-start justify-between">
+      <div className="mb-8 flex flex-col gap-4 md:flex-row items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold">Finance & Wallet</h1>
           <p className="text-muted-foreground">
@@ -259,7 +260,7 @@ export default function FinanceWallet() {
       </div>
 
       {/* Stat cards */}
-      <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
         {loadingWallet ? (
           Array.from({ length: 4 }).map((_, index) => (
             <Card key={index} className='animate-pulse bg-muted/50'>
@@ -273,14 +274,14 @@ export default function FinanceWallet() {
             </Card>
           ))
         ) : (
-          statCards.map(({ title, value, icon: Icon, color }) => (
-            <Card key={title} className='gap-2'>
+          statCards.map(({ title, value, icon: Icon, color, highlight }) => (
+            <Card key={title} className={`gap-2 ${highlight ? 'bg-purple-900/10 border-purple-500/30' : ''}`}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 ">
-                <CardTitle className="text-sm font-medium">{title}</CardTitle>
+                <CardTitle className={`text-sm font-medium ${highlight ? 'text-purple-500 font-semibold' : 'text-muted-foreground'}`}>{title}</CardTitle>
                 <Icon className={`h-4 w-4 ${color}`} />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">₹{INR.format(value)}</div>
+                <div className={`text-2xl font-bold ${highlight ? 'text-purple-500' : ''}`}>₹{INR.format(value)}</div>
               </CardContent>
             </Card>
           ))
