@@ -15,7 +15,13 @@ import {
   ArrowDownLeft,
   Info
 } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 import { showToast } from '../../utils/toast';
 
@@ -79,7 +85,6 @@ export default function FinanceWallet() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [isDownloadingStatement, setIsDownloadingStatement] = useState(false);
-
   const handleDownloadStatement = async () => {
     setIsDownloadingStatement(true);
     try {
@@ -241,7 +246,7 @@ export default function FinanceWallet() {
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={() => setIsExportModalOpen(true)}>
             <Download className="mr-2 h-4 w-4" />
-            Export Payout History
+            Export History
           </Button>
           <Button
             className="gap-2 bg-[#711CE9] text-white hover:bg-[#6f14ef]"
@@ -393,16 +398,19 @@ export default function FinanceWallet() {
                               <span className="font-medium text-foreground flex items-center gap-1">
                                 {t.type === 'admin_adjustment' ? 'Manual Adjustment' : t.description}
                                 {t.type === 'admin_adjustment' && t.description && t.description.length > 30 && (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
-                                      </TooltipTrigger>
-                                      <TooltipContent className="max-w-[300px] whitespace-normal">
-                                        <p>{t.description}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-md">
+                                      <DialogHeader>
+                                        <DialogTitle>Adjustment Reason</DialogTitle>
+                                        <DialogDescription className="whitespace-pre-wrap mt-2">
+                                          {t.description}
+                                        </DialogDescription>
+                                      </DialogHeader>
+                                    </DialogContent>
+                                  </Dialog>
                                 )}
                               </span>
                               {t.type === 'admin_adjustment' && t.description && t.description.length <= 30 && (
@@ -413,6 +421,21 @@ export default function FinanceWallet() {
                               )}
                               {t.type === 'admin_adjustment' && t.adjustedBy && (
                                 <span className="text-xs text-muted-foreground mt-0.5">By: {t.adjustedBy}</span>
+                              )}
+                              {t.type === 'withdrawal' && t.requestId && (
+                                <span className="text-xs font-mono text-muted-foreground mt-0.5">Req ID: {t.requestId}</span>
+                              )}
+                              {t.type === 'withdrawal' && t.status?.toLowerCase() === 'paid' && t.transactionReference && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="text-xs font-mono text-green-600 mt-0.5 truncate max-w-[150px] inline-block cursor-help">Ref: {t.transactionReference}</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="dark:bg-[#111A22] dark:text-white dark:border-gray-800">
+                                      <p className="font-mono text-xs">{t.transactionReference}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               )}
                             </div>
                           </td>
@@ -429,16 +452,19 @@ export default function FinanceWallet() {
                                 <span className="flex items-center gap-1">
                                   <StatusBadge status={t.status} />
                                   {t.status === 'rejected' && t.description && (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Info className="w-4 h-4 text-destructive cursor-pointer" />
-                                        </TooltipTrigger>
-                                        <TooltipContent className="max-w-[300px] whitespace-normal">
-                                            <p>{t.description.split(' — ')[1] || t.description}</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                          <Info className="w-4 h-4 text-destructive cursor-pointer" />
+                                      </DialogTrigger>
+                                      <DialogContent className="sm:max-w-md">
+                                        <DialogHeader>
+                                          <DialogTitle>Reason for Rejection</DialogTitle>
+                                          <DialogDescription className="whitespace-pre-wrap mt-2">
+                                            {t.rejectionReason || t.description.split(' - ')[1] || t.description}
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                      </DialogContent>
+                                    </Dialog>
                                   )}
                                 </span>
                                 {t.status === 'pending' && (
@@ -523,12 +549,12 @@ export default function FinanceWallet() {
           </Card>
         </TabsContent>
 
-        {/* Statements */}
-        <TabsContent value="statements">
+        <TabsContent value="statements" className="space-y-6">
+            <h2 className="text-xl font-bold mb-4">Download Reports</h2>
             <Card>
                 <CardHeader>
-                    <CardTitle>Download Monthly Statements</CardTitle>
-                    <CardDescription>Select a month and year to download your payout statement.</CardDescription>
+                    <CardTitle>Download Monthly Payout Statements</CardTitle>
+                    <CardDescription>Select a year and month to download your payout history CSV statement.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex gap-4">
@@ -587,20 +613,36 @@ export default function FinanceWallet() {
       <ExportCsvDialog
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
-        totalItems={pagination?.totalCount || 0}
+        totalItems={pagination?.totalItems || 0}
         headers={[
-            { key: 'requestId', label: 'Request ID' },
+            { key: 'formattedDate', label: 'Date' },
+            { key: 'type', label: 'Transaction Type' },
+            { key: 'description', label: 'Details' },
+            { key: 'direction', label: 'Direction' },
             { key: 'amount', label: 'Amount' },
-            { key: 'payoutMethod', label: 'Method' },
+            { key: 'streams', label: 'Streams' },
             { key: 'status', label: 'Status' },
-            { key: 'requestedAt', label: 'Date' },
+            { key: 'requestId', label: 'Request ID' },
+            { key: 'transactionReference', label: 'Payment Ref' },
+            { key: 'rejectionReason', label: 'Reason' }
         ]}
         fetchData={async (page, limit) => {
-            const response = await getMyPayoutRequests({ page, limit });
-            return response.data.requests;
+            const response = await getMyWalletTransactions({ page, limit });
+            const dataToFormat = response.data.transactions || [];
+            return dataToFormat.map(t => ({
+              ...t,
+              formattedDate: new Date(t.date).toLocaleString(),
+              type: t.type?.replace(/_/g, " "),
+              direction: t.direction?.toUpperCase(),
+              streams: t.streams || 0,
+              status: t.status || 'Completed',
+              requestId: t.requestId || '-',
+              transactionReference: t.transactionReference || '-',
+              rejectionReason: t.rejectionReason || '-'
+            }));
         }}
-        filename="payout_history.csv"
-        title="Export Payout History"
+        filename="transaction_history.csv"
+        title="Export Transaction History"
         description="Select a data range to export as a CSV file."
       />
     </div>

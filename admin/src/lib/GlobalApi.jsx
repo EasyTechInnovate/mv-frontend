@@ -63,6 +63,7 @@ const getDashboardData = () => axiosClient.get('/v1/dashboard/admin')
 export const getUserWallet = (userId) => axiosClient.get(`/v1/admin/wallets/${userId}`)
 export const adjustUserWallet = (userId, data) => axiosClient.post(`/v1/admin/wallets/${userId}/adjust`, data)
 export const getUserWalletTransactions = (userId, params) => axiosClient.get(`/v1/admin/wallets/${userId}/transactions`, { params })
+export const getAllTransactions = (params) => axiosClient.get(`/v1/admin/transactions`, { params })
 
 // ---------------------- Auth ----------------------
 const login = (data) => axiosClient.post('/v1/auth/login', data)
@@ -443,6 +444,7 @@ export default {
     getUserWallet,
     adjustUserWallet,
     getUserWalletTransactions,
+    getAllTransactions,
     getSubscriptionPlans,
     createSubscriptionPlan,
     getPlanDetails,

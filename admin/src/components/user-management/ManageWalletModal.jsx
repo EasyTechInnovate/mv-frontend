@@ -4,15 +4,24 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
-import { ArrowDownRight, ArrowUpRight, Wallet, Info } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ArrowDownRight, ArrowUpRight, Wallet, Info, Download } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
+import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 
 export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
   const isDark = theme === "dark";
@@ -22,6 +31,7 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
   const [transactions, setTransactions] = useState([]);
   const [pagination, setPagination] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const itemsPerPage = 10;
   
   // Form State
@@ -119,6 +129,7 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
   const formatNumber = (num) => (typeof num === "number" ? num.toLocaleString("en-IN") : num);
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className={`max-w-4xl max-h-[90vh] flex flex-col overflow-hidden ${
@@ -222,7 +233,18 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
 
             {/* Unified History Table */}
             <div className="mt-6">
-              <h3 className="text-sm font-semibold mb-3">Unified Transaction History</h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-sm font-semibold">Unified Transaction History</h3>
+                <Button 
+                  onClick={() => setIsExportModalOpen(true)}
+                  variant="outline" 
+                  size="sm" 
+                  className={isDark ? "border-gray-700 bg-[#151F28]" : ""}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export as CSV
+                </Button>
+              </div>
               <div className={`rounded-lg border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -253,16 +275,19 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
                                 <span className={`font-medium flex items-center gap-1 ${isDark ? "text-gray-200" : "text-gray-900"}`}>
                                   {t.type === 'admin_adjustment' ? 'Manual Adjustment' : t.description}
                                   {t.type === 'admin_adjustment' && t.description && t.description.length > 30 && (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
-                                        </TooltipTrigger>
-                                        <TooltipContent className="max-w-[300px] whitespace-normal">
-                                          <p>{t.description}</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
+                                      </DialogTrigger>
+                                      <DialogContent className={`sm:max-w-md ${isDark ? "bg-[#111A22] text-white border-gray-800" : "bg-white text-gray-900 border-gray-200"}`}>
+                                        <DialogHeader>
+                                          <DialogTitle>Adjustment Reason</DialogTitle>
+                                          <DialogDescription className={`whitespace-pre-wrap mt-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                                            {t.description}
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                      </DialogContent>
+                                    </Dialog>
                                   )}
                                 </span>
                                 {t.type === 'admin_adjustment' && t.description && t.description.length <= 30 && (
@@ -273,6 +298,21 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
                                 )}
                                 {t.type === 'admin_adjustment' && t.adjustedBy && (
                                   <span className="text-xs text-muted-foreground mt-0.5">By: {t.adjustedBy}</span>
+                                )}
+                                {t.type === 'withdrawal' && t.requestId && (
+                                  <span className="text-xs font-mono text-muted-foreground mt-0.5">Req ID: {t.requestId}</span>
+                                )}
+                                {t.type === 'withdrawal' && t.status?.toLowerCase() === 'paid' && t.transactionReference && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="text-xs font-mono text-green-500 mt-0.5 truncate max-w-[150px] inline-block cursor-help">Ref: {t.transactionReference}</span>
+                                      </TooltipTrigger>
+                                      <TooltipContent className={isDark ? "bg-[#111A22] text-white border-gray-800" : ""}>
+                                        <p className="font-mono text-xs">{t.transactionReference}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 )}
                               </div>
                             </td>
@@ -296,17 +336,36 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
                                     `}>
                                       {t.status.charAt(0).toUpperCase() + t.status.slice(1)}
                                     </Badge>
-                                    {t.status === 'rejected' && t.description && (
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                              <Info className="w-4 h-4 text-red-500 cursor-pointer" />
-                                          </TooltipTrigger>
-                                          <TooltipContent className="max-w-[300px] whitespace-normal">
-                                              <p>{t.description.split(' — ')[1] || t.description}</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
+                                    {(t.status === 'rejected' || t.adminNotes) && t.description && (
+                                      <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Info className={`w-4 h-4 cursor-pointer ${t.status === 'rejected' ? 'text-red-500' : 'text-blue-500'}`} />
+                                        </DialogTrigger>
+                                        <DialogContent className={`sm:max-w-md ${isDark ? "bg-[#111A22] text-white border-gray-800" : "bg-white text-gray-900 border-gray-200"}`}>
+                                          <DialogHeader>
+                                            <DialogTitle>Details / Notes</DialogTitle>
+                                            <DialogDescription className={`whitespace-pre-wrap mt-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                                              <div className="flex flex-col gap-3 text-left w-full mt-2">
+                                                {t.rejectionReason && (
+                                                  <div>
+                                                    <span className={`block font-semibold mb-1 ${isDark ? "text-gray-200" : "text-gray-900"}`}>Rejection Reason:</span>
+                                                    <p>{t.rejectionReason}</p>
+                                                  </div>
+                                                )}
+                                                {t.adminNotes && (
+                                                  <div className="w-full">
+                                                    <span className={`block font-semibold mb-1 ${isDark ? "text-gray-200" : "text-gray-900"}`}>Admin Notes:</span>
+                                                    <p>{t.adminNotes}</p>
+                                                  </div>
+                                                )}
+                                                {!(t.rejectionReason || t.adminNotes) && (
+                                                  <p>{t.description.split(' - ')[1] || t.description}</p>
+                                                )}
+                                              </div>
+                                            </DialogDescription>
+                                          </DialogHeader>
+                                        </DialogContent>
+                                      </Dialog>
                                     )}
                                   </span>
                                 </div>
@@ -359,5 +418,45 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
         )}
       </DialogContent>
     </Dialog>
+    <ExportCsvDialog
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        theme={theme}
+        totalItems={pagination?.totalItems || pagination?.totalCount || 0}
+        headers={[
+            { label: "Date", key: "formattedDate" },
+            { label: "Type", key: "type" },
+            { label: "Direction", key: "direction" },
+            { label: "Amount", key: "amount" },
+            { label: "Details", key: "description" },
+            { label: "Streams", key: "streams" },
+            { label: "Status", key: "status" },
+            { label: "Request ID", key: "requestId" },
+            { label: "Payment Ref", key: "transactionReference" },
+            { label: "Admin Notes", key: "adminNotes" },
+            { label: "Rejection Reason", key: "rejectionReason" },
+        ]}
+        fetchData={async (page, limit) => {
+            const res = await GlobalApi.getUserWalletTransactions(user?._id, { page, limit });
+            const data = res?.data?.data;
+            const rows = data?.transactions || [];
+            return rows.map(row => ({
+                ...row,
+                formattedDate: new Date(row.date).toLocaleString(),
+                type: row.type?.replace(/_/g, " "),
+                direction: row.direction?.toUpperCase(),
+                streams: row.streams || 0,
+                status: row.status || 'Completed',
+                requestId: row.requestId || '-',
+                transactionReference: row.transactionReference || '-',
+                adminNotes: row.adminNotes || '',
+                rejectionReason: row.rejectionReason || ''
+            }));
+        }}
+        filename={`user_${user?.accountId}_transactions.csv`}
+        title={`Export User Transactions - ${user?.firstName}`}
+        description={`Export the transaction history for this user.`}
+      />
+    </>
   );
 }

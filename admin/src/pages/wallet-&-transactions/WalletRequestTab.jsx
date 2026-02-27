@@ -14,7 +14,7 @@ export default function WithdrawalRow({ withdrawal, onApprove, onReject, onView,
           ? "bg-gray-700 text-gray-200"
           : "bg-gray-200 text-gray-800"
         : "bg-gray-500 text-white";
-    return <span className={`text-xs px-2 py-1 rounded-full ${cls}`}>{status.charAt(0).toUpperCase() + status.slice(1)}</span>;
+    return <span className={`text-xs px-2 py-1 rounded-full ${cls}`}>{status ? status.charAt(0).toUpperCase() + status.slice(1) : ''}</span>;
   };
 
   return (
