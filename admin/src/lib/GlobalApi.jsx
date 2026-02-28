@@ -619,4 +619,5 @@ export default {
     // Permanent Delete (Hard Delete)
     permanentDeleteRelease: (releaseId) => axiosClient.delete(`/v1/admin/releases/${releaseId}/permanent`),
     permanentDeleteAdvancedRelease: (releaseId) => axiosClient.delete(`/v1/admin/advanced-releases/${releaseId}/permanent`),
+    updateAggregatorBanner: (userId, data) => axiosClient.patch(`/v1/admin/users/${userId}/aggregator-banner`, data),
 }

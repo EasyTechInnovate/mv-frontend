@@ -5,8 +5,10 @@ import {earningsData ,streamsData ,videoTutorials ,recentReleases ,quickActions 
 import React, { useEffect, useState } from 'react';
 import { getUserDashboard } from '@/services/api.services';
 import { Link } from 'react-router-dom';
+import { useAuthStore } from '@/store/authStore';
 
 const Dashboard = () => {
+  const { user } = useAuthStore();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +45,27 @@ const Dashboard = () => {
   return (
     <div className=''>
       <main className="p-2 md:p-2 space-y-8">
+        {user?.userType === 'aggregator' && (user?.aggregatorBanner?.heading || user?.aggregatorBanner?.description) && (
+          <div className="bg-gradient-to-r from-purple-900 to-purple-600 rounded-xl p-6 shadow-lg text-white mb-6 border border-purple-400/30 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+              <Megaphone size={120} />
+            </div>
+            <div className="relative z-10">
+              {user.aggregatorBanner.heading && (
+                <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                  <Megaphone className="w-6 h-6" />
+                  {user.aggregatorBanner.heading}
+                </h2>
+              )}
+              {user.aggregatorBanner.description && (
+                <p className="text-purple-100 text-lg max-w-3xl">
+                  {user.aggregatorBanner.description}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className='flex flex-wrap space-y-6 justify-between items-center'>
 
         <div>
@@ -66,7 +89,7 @@ const Dashboard = () => {
           {[
             { label: "Total Releases", value: totalReleases.toLocaleString('en-IN'), icon: Music, color:'text-blue-500'},
             { label: "Total Streams", value: totalStreams.toLocaleString('en-IN'), icon: Play, color:'text-green-500'},
-            { label: "Total Earnings", value: `₹${(wallet.totalEarnings || 0).toLocaleString('en-IN')}`, icon: IndianRupee, color:'text-purple-500'}
+            { label: "Total Earnings", value: `₹${(wallet?.totalEarnings || 0).toLocaleString('en-IN')}`, icon: IndianRupee, color:'text-purple-500'}
           ].map((stat, index) => {
             const Icon = stat.icon;
             return (

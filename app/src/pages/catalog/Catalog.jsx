@@ -26,7 +26,8 @@ import {
     requestUpdate,
     requestTakeDown,
     requestAdvancedUpdate,
-    requestAdvancedTakeDown
+    requestAdvancedTakeDown,
+    getDashboardData
 } from '../../services/api.services'
 import { showToast } from '../../utils/toast'
 import ExportCsvDialog from '../../components/common/ExportCsvDialog'
@@ -134,7 +135,7 @@ const ReleaseDetailsModal = ({ release, isOpen, onClose, releaseType }) => {
                         {/* Track Information Section */}
                         <div className="space-y-6">
                             <div className="md:flex gap-4 max-md:space-y-6">
-                                <Card className="p-6">
+                                <Card className="p-6 basis-1/4">
                                     <CardHeader className="p-0 mb-4">
                                         <CardTitle>Cover Art</CardTitle>
                                     </CardHeader>
@@ -186,6 +187,10 @@ const ReleaseDetailsModal = ({ release, isOpen, onClose, releaseType }) => {
                                                 {releaseDetails.step1?.releaseInfo?.featuringArtists?.length > 0 && <div>
                                                     <Label>Featuring Artists</Label>
                                                     <Input value={releaseDetails.step1.releaseInfo.featuringArtists.join(', ')} disabled />
+                                                </div>}
+                                                {releaseDetails.step1?.releaseInfo?.variousArtists?.length > 0 && <div>
+                                                    <Label>Various Artists</Label>
+                                                    <Input value={releaseDetails.step1.releaseInfo.variousArtists.join(', ')} disabled />
                                                 </div>}
                                             </>
                                         )}
@@ -294,7 +299,13 @@ const ReleaseDetailsModal = ({ release, isOpen, onClose, releaseType }) => {
                                                         <Input value={track.featuringArtists.join(', ')} disabled />
                                                     </div>
                                                 )}
-                                                 {releaseType === 'advanced' && track.contributorsToSoundRecording?.length > 0 && renderContributors('Sound Recording Contributors', track.contributorsToSoundRecording)}
+                                                {releaseType === 'advanced' && track.variousArtists?.length > 0 && (
+                                                    <div>
+                                                        <Label>Various Artists</Label>
+                                                        <Input value={track.variousArtists.join(', ')} disabled />
+                                                    </div>
+                                                )}
+                                                 {releaseType === 'advanced' && (track.contributorsToSoundRecording || track.contributorsToSound)?.length > 0 && renderContributors('Sound Recording Contributors', track.contributorsToSoundRecording || track.contributorsToSound)}
                                                  {releaseType === 'advanced' && track.contributorsToMusicalWork?.length > 0 && renderContributors('Musical Work Contributors', track.contributorsToMusicalWork)}
                                                 <div>
                                                     <Label>ISRC</Label>
@@ -548,15 +559,10 @@ const CatalogPage = () => {
         keepPreviousData: true
     })
 
-    // Fetch stats from both APIs
-    const { data: basicStatsData } = useQuery({
-        queryKey: ['basicStatsData'],
-        queryFn: () => getBasicReleases({ page: 1, limit: 1 })
-    })
-
-    const { data: advancedStatsData } = useQuery({
-        queryKey: ['advancedStatsData'],
-        queryFn: () => getAdvancedReleases({ page: 1, limit: 1 })
+    // Fetch dashboard stats for accurate counts
+    const { data: dashboardDataRaw } = useQuery({
+        queryKey: ['dashboardStatsData'],
+        queryFn: getDashboardData
     })
 
     const currentData = releaseType === 'basic' ? basicReleasesData : advancedReleasesData
@@ -564,13 +570,15 @@ const CatalogPage = () => {
     const releases = currentData?.data?.releases || []
     const pagination = currentData?.data?.pagination
 
-    // Calculate combined stats
-    const totalReleases = (basicStatsData?.data?.pagination?.totalItems || 0) + (advancedStatsData?.data?.pagination?.totalItems || 0)
+    // Calculate combined stats securely from backend dashboard aggregation
+    const dashboardData = dashboardDataRaw?.data || {}
+    const basicStats = dashboardData.basicReleases || {}
+    const advancedStats = dashboardData.advancedReleases || {}
 
-    // Count live releases from both
-    const basicLiveCount = 0 // We'll need to fetch this separately or calculate from all releases
-    const advancedLiveCount = 0 // Same here
-    const liveReleases = basicLiveCount + advancedLiveCount
+    const totalReleases = (basicStats.total || 0) + (advancedStats.total || 0)
+    const liveReleases = (basicStats.live || 0) + (advancedStats.live || 0)
+    const pendingReleases = (basicStats.submitted || 0) + (advancedStats.submitted || 0)
+    const rejectedReleases = (basicStats.rejected || 0) + (advancedStats.rejected || 0)
 
     const handleViewDetails = (release) => {
         setSelectedRelease(release)
@@ -641,10 +649,12 @@ const CatalogPage = () => {
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-muted-foreground text-sm">Total Streams</p>
-                                <p className="text-2xl font-bold">-</p>
+                                <p className="text-muted-foreground text-sm">Pending Releases</p>
+                                <p className="text-2xl font-bold">{pendingReleases}</p>
                             </div>
-                            <Play className="w-8 h-8 text-muted-foreground" />
+                            <div className="flex items-center bg-blue-200/10 p-2 rounded-full">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
@@ -653,10 +663,12 @@ const CatalogPage = () => {
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-muted-foreground text-sm">Total Revenue</p>
-                                <p className="text-2xl font-bold">-</p>
+                                <p className="text-muted-foreground text-sm">Rejected Releases</p>
+                                <p className="text-2xl font-bold">{rejectedReleases}</p>
                             </div>
-                            <BarChart3 className="w-8 h-8 text-muted-foreground" />
+                            <div className="flex items-center bg-red-200/10 p-2 rounded-full">
+                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
@@ -1017,11 +1029,9 @@ const CatalogPage = () => {
                   // Contributors
                   { label: "Primary Artists", key: "primaryArtists" },
                   { label: "Featuring Artists", key: "featuringArtists" },
-                  { label: "Remixers", key: "remixers" },
-                  { label: "Authors", key: "authors" },
-                  { label: "Composers", key: "composers" },
-                  { label: "Arrangers", key: "arrangers" },
-                  { label: "Producers", key: "producers" },
+                  { label: "Various Artists", key: "variousArtists" },
+                  { label: "Sound Recording Contributors", key: "soundRecordingContributors" },
+                  { label: "Musical Work Contributors", key: "musicalWorkContributors" },
                   // Delivery & Rights
                   { label: "Original Release Date", key: "originalReleaseDate" },
                   { label: "Sales Start Date", key: "salesStartDate" },
@@ -1163,11 +1173,9 @@ const CatalogPage = () => {
                                 lyrics: track.lyrics ? "Yes" : "No",
                                 primaryArtists: track.primaryArtists?.join(", ") || step1.primaryArtists?.join(", ") || '-',
                                 featuringArtists: track.featuringArtists?.join(", ") || '-',
-                                remixers: track.remixers?.join(", ") || '-',
-                                authors: track.authors?.join(", ") || '-',
-                                composers: track.composers?.join(", ") || '-',
-                                arrangers: track.arrangers?.join(", ") || '-',
-                                producers: track.producers?.join(", ") || '-'
+                                variousArtists: track.variousArtists?.join(", ") || step1.variousArtists?.join(", ") || '-',
+                                soundRecordingContributors: track.contributorsToSoundRecording?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '-',
+                                musicalWorkContributors: track.contributorsToMusicalWork?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '-'
                           } : {
                                 trackName: track.trackName || '-',
                                 isrc: track.isrc ? `\t${track.isrc}` : '-',

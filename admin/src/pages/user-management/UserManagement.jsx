@@ -26,6 +26,7 @@ import UserDetailsModal from "@/components/user-management/UserDetailsModal.jsx"
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 import CsvUploadModal from "@/components/csv-upload/CsvUploadModal";
 import ManageWalletModal from "@/components/user-management/ManageWalletModal";
+import SetAggregatorBannerModal from "@/components/user-management/SetAggregatorBannerModal";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -74,6 +75,10 @@ export default function UserManagement({ theme }) {
   // Wallet Management State
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [selectedWalletUser, setSelectedWalletUser] = useState(null);
+
+  // Aggregator Banner State
+  const [isAggregatorBannerModalOpen, setIsAggregatorBannerModalOpen] = useState(false);
+  const [selectedAggregatorUser, setSelectedAggregatorUser] = useState(null);
 
   const navigate = useNavigate();
 
@@ -382,6 +387,14 @@ setIsResetPasswordOpen(true);
                                 }}>
                                   View Details
                                 </DropdownMenuItem>
+                                {u.userType === "aggregator" && (
+                                  <DropdownMenuItem onSelect={() => {
+                                    setSelectedAggregatorUser(u);
+                                    setIsAggregatorBannerModalOpen(true);
+                                  }}>
+                                    Set Aggregator Banner
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem className="text-red-500">
                                   Delete
                                 </DropdownMenuItem>
@@ -541,6 +554,16 @@ setIsResetPasswordOpen(true);
           setSelectedWalletUser(null);
         }}
         user={selectedWalletUser}
+        theme={theme}
+      />
+      <SetAggregatorBannerModal
+        isOpen={isAggregatorBannerModalOpen}
+        onClose={() => {
+          setIsAggregatorBannerModalOpen(false);
+          setSelectedAggregatorUser(null);
+          fetchUsers(); // Refresh to get the latest banner data
+        }}
+        user={selectedAggregatorUser}
         theme={theme}
       />
     </div>

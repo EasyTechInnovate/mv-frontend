@@ -790,11 +790,8 @@ export default function ReleaseManagement({ theme }) {
           // Contributors
           { label: "Primary Artists", key: "primaryArtists" },
           { label: "Featuring Artists", key: "featuringArtists" },
-          { label: "Remixers", key: "remixers" },
-          { label: "Authors", key: "authors" },
-          { label: "Composers", key: "composers" },
-          { label: "Arrangers", key: "arrangers" },
-          { label: "Producers", key: "producers" },
+          { label: "Sound Recording Contributors", key: "soundRecordingContributors" },
+          { label: "Musical Work Contributors", key: "musicalWorkContributors" },
           // Delivery & Rights
           { label: "Original Release Date", key: "originalReleaseDate" },
           { label: "Sales Start Date", key: "salesStartDate" },
@@ -929,11 +926,8 @@ export default function ReleaseManagement({ theme }) {
                                 lyrics: track.lyrics ? "Yes" : "No",
                                 primaryArtists: track.primaryArtists?.join(", ") || step1.primaryArtists?.join(", ") || '-',
                                 featuringArtists: track.featuringArtists?.join(", ") || '-',
-                                remixers: track.remixers?.join(", ") || '-',
-                                authors: track.authors?.join(", ") || '-',
-                                composers: track.composers?.join(", ") || '-',
-                                arrangers: track.arrangers?.join(", ") || '-',
-                                producers: track.producers?.join(", ") || '-'
+                                soundRecordingContributors: track.contributorsToSoundRecording?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '-',
+                                musicalWorkContributors: track.contributorsToMusicalWork?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '-'
                             });
                         });
                     } else {

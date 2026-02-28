@@ -126,13 +126,31 @@ const Profile = () => {
         bio: user.bio || '',
         primaryGenre: user.primaryGenre || '',
         location: user.location || '',
-        socialMedia: user.socialMedia || prev.socialMedia,
+        socialMedia: {
+          instagram: user.socialMedia?.instagram || '',
+          youtube: user.socialMedia?.youtube || '',
+          spotify: user.socialMedia?.spotify || '',
+          website: user.socialMedia?.website || '',
+          tiktok: user.socialMedia?.tiktok || '',
+          linkedin: user.socialMedia?.linkedin || '',
+          facebook: user.socialMedia?.facebook || '',
+          twitter: user.socialMedia?.twitter || ''
+        },
         kyc: {
           ...prev.kyc,
-          ...user.kyc,
-          documents: user.kyc?.documents || prev.kyc.documents,
-          bankDetails: user.kyc?.bankDetails || prev.kyc.bankDetails,
-          upiDetails: user.kyc?.upiDetails || prev.kyc.upiDetails,
+          documents: {
+            aadhaar: { number: user.kyc?.documents?.aadhaar?.number || '' },
+            pan: { number: user.kyc?.documents?.pan?.number || '' }
+          },
+          bankDetails: {
+            accountNumber: user.kyc?.bankDetails?.accountNumber || '',
+            ifscCode: user.kyc?.bankDetails?.ifscCode || '',
+            accountHolderName: user.kyc?.bankDetails?.accountHolderName || '',
+            bankName: user.kyc?.bankDetails?.bankName || '',
+          },
+          upiDetails: {
+            upiId: user.kyc?.upiDetails?.upiId || '',
+          },
           status: user.kyc?.status || 'unverified'
         },
       }));
@@ -142,8 +160,8 @@ const Profile = () => {
   // Update subscription data when API response is received
   useEffect(() => {
     if (currentSubData?.data && allPlansData?.data) {
-      const currentPlan = currentSubData.data.plan;
-      const subscription = currentSubData.data.subscription;
+      const currentPlan = currentSubData.data.plan || {};
+      const subscription = currentSubData.data.subscription || {};
 
       setFormData(prev => ({
         ...prev,

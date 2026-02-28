@@ -317,6 +317,7 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                 'Release Status': release.releaseStatus === 'submitted' ? 'Pending' : (release.releaseStatus || ''),
                 'Primary Artists': Array.isArray(releaseInfo.primaryArtists) ? releaseInfo.primaryArtists.join(', ') : '',
                 'Featuring Artists': Array.isArray(releaseInfo.featuringArtists) ? releaseInfo.featuringArtists.join(', ') : '',
+                'Various Artists': Array.isArray(releaseInfo.variousArtists) ? releaseInfo.variousArtists.join(', ') : '',
                 'Label Name': releaseInfo.labelName?.name || releaseInfo.labelName || '',
                 'Primary Genre': releaseInfo.primaryGenre || release.genre || '',
                 'Secondary Genre': releaseInfo.secondaryGenre || '',
@@ -353,8 +354,8 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                     'Has Human Vocals': track.hasHumanVocals ? 'Yes' : 'No',
                     'Available for Download': track.isAvailableForDownload ? 'Yes' : 'No',
                     'Caller Tune Start': track.callertuneStartTiming || '',
-                    'Sound Recording Contributors': track.contributorsToSoundRecording?.map(c => `${c.profession}: ${c.contributors}`).join('; ') || '',
-                    'Musical Work Contributors': track.contributorsToMusicalWork?.map(c => `${c.profession}: ${c.contributors}`).join('; ') || '',
+                    'Sound Recording Contributors': (track.contributorsToSoundRecording || track.contributorsToSound)?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '',
+                    'Musical Work Contributors': track.contributorsToMusicalWork?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '',
                 }),
                 
                 // Basic Track Specific
@@ -684,6 +685,12 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                                     label="Featuring Artists"
                                     value={releaseInfo?.featuringArtists?.join(', ')}
                                 />
+                                {releaseInfo?.variousArtists && releaseInfo.variousArtists.length > 0 && (
+                                    <InfoField
+                                        label="Various Artists"
+                                        value={releaseInfo.variousArtists.join(', ')}
+                                    />
+                                )}
                                 <InfoField
                                     label="UPC"
                                     value={releaseInfo?.upcCode || releaseInfo?.adminProvidedUPC}
@@ -1124,7 +1131,9 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                     </div>
                     <div>
                         <h4 className="font-medium">{track.trackName}</h4>
-                        {isAdvanced && track.primaryArtists && <p className="text-sm text-gray-500">{track.primaryArtists.join(', ')}</p>}
+                        {isAdvanced && track.primaryArtists && <p className="text-sm text-gray-500">Primary: {track.primaryArtists.join(', ')}</p>}
+                        {isAdvanced && track.featuringArtists && track.featuringArtists.length > 0 && <p className="text-sm text-gray-500">Featuring: {track.featuringArtists.join(', ')}</p>}
+                        {isAdvanced && track.variousArtists && track.variousArtists.length > 0 && <p className="text-sm text-gray-500">Various: {track.variousArtists.join(', ')}</p>}
                         {!isAdvanced && track.singerName && <p className="text-sm text-gray-500">{track.singerName}</p>}
                     </div>
                 </div>
@@ -1210,15 +1219,16 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                                     />
                                 </div>
                             )}
-                            {track.contributorsToSoundRecording && track.contributorsToSoundRecording.length > 0 && (
+                            {(track.contributorsToSoundRecording || track.contributorsToSound) && (track.contributorsToSoundRecording || track.contributorsToSound).length > 0 && (
                                 <div className="col-span-2">
                                     <label className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">Sound Recording Contributors</label>
                                     <div className="flex flex-wrap gap-2">
-                                        {track.contributorsToSoundRecording.map((contrib, i) => (
+                                        {(track.contributorsToSoundRecording || track.contributorsToSound).map((contrib, i) => (
                                             <Badge
                                                 key={i}
-                                                variant="outline">
-                                                {contrib.profession}: {contrib.contributors}
+                                                variant="outline"
+                                                className="capitalize">
+                                                {contrib.profession?.replace(/_/g, ' ')}: {contrib.contributors}
                                             </Badge>
                                         ))}
                                     </div>
@@ -1231,8 +1241,9 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                                         {track.contributorsToMusicalWork.map((contrib, i) => (
                                             <Badge
                                                 key={i}
-                                                variant="outline">
-                                                {contrib.profession}: {contrib.contributors}
+                                                variant="outline"
+                                                className="capitalize">
+                                                {contrib.profession?.replace(/_/g, ' ')}: {contrib.contributors}
                                             </Badge>
                                         ))}
                                     </div>

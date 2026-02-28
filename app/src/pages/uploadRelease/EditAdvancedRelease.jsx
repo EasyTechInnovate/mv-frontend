@@ -86,7 +86,6 @@ const EditAdvancedReleaseBuilder = () => {
     releaseVersion: '',
     catalogNumber: '',
     releaseType: '',
-    accountId: '',
     primaryArtists: [{ id: generateUniqueId(), value: '' }],
     featuringArtists: [{ id: generateUniqueId(), value: '' }],
     variousArtist: false,
@@ -159,11 +158,10 @@ const EditAdvancedReleaseBuilder = () => {
             releaseName: data.step1?.releaseInfo?.releaseName || '',
             releaseVersion: data.step1?.releaseInfo?.releaseVersion || '',
             catalogNumber: data.step1?.releaseInfo?.catalogNumber || '',
-            accountId: data.step1?.releaseInfo?.accountId || '',
             primaryArtists: mapArrayToObjects(data.step1?.releaseInfo?.primaryArtists),
             featuringArtists: mapArrayToObjects(data.step1?.releaseInfo?.featuringArtists),
-            variousArtist: data.step1?.releaseInfo?.variousArtist || false,
-            variousArtistNames: mapArrayToObjects(data.step1?.releaseInfo?.variousArtistNames),
+            variousArtist: (data.step1?.releaseInfo?.variousArtists && data.step1.releaseInfo.variousArtists.length > 0) ? true : false,
+            variousArtistNames: mapArrayToObjects(data.step1?.releaseInfo?.variousArtists),
             needUPC: data.step1?.releaseInfo?.upc ? 'no' : 'yes',
             upc: data.step1?.releaseInfo?.upc || '',
             labelName: typeof data.step1?.releaseInfo?.labelName === 'object' ? (data.step1.releaseInfo.labelName._id || data.step1.releaseInfo.labelName.id || '') : (data.step1?.releaseInfo?.labelName || ''),
@@ -629,10 +627,6 @@ const EditAdvancedReleaseBuilder = () => {
                     className="mt-1 opacity-60 cursor-not-allowed bg-muted"
                   />
                   <p className="text-[10px] text-muted-foreground mt-1">Release type cannot be changed after creation</p>
-                </div>
-                <div>
-                  <Label className="text-foreground">Account ID</Label>
-                  <Input placeholder="Enter account ID" className="mt-1" value={formData.accountId} onChange={(e) => setFormData(prev => ({...prev, accountId: e.target.value}))} />
                 </div>
               </div>
 

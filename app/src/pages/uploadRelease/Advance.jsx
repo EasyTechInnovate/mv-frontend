@@ -85,7 +85,6 @@ const AdvancedReleaseBuilder = () => {
     releaseVersion: '',
     catalogNumber: '',
     releaseType: '',
-    accountId: '',
     primaryArtists: [{ id: generateUniqueId(), value: '' }],
     featuringArtists: [{ id: generateUniqueId(), value: '' }],
     variousArtist: false,
@@ -489,10 +488,6 @@ const AdvancedReleaseBuilder = () => {
                     className="mt-1 opacity-60 cursor-not-allowed bg-muted"
                   />
                   <p className="text-[10px] text-muted-foreground mt-1">Release type cannot be changed after creation</p>
-                </div>
-                <div>
-                  <Label className="text-foreground">Account ID</Label>
-                  <Input placeholder="Enter account ID" className="mt-1" value={formData.accountId} onChange={(e) => setFormData(prev => ({...prev, accountId: e.target.value}))} />
                 </div>
               </div>
 
