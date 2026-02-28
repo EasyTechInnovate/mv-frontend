@@ -35,7 +35,7 @@ const AppSidebar = () => {
       title: "MARKETING",
       items: [
         { icon: Megaphone, label: "MV Marketing", url: "/app/mv-marketing" },
-        { icon: Megaphone, label: "Advertisement", url: "/app/advertisement" },
+        // { icon: Megaphone, label: "Advertisement", url: "/app/advertisement" },
         { icon: Video, label: "MV Production", url: "/app/mv-production" },
         { icon: Wrench, label: "Fan Links Builder", url: "/app/fan-link" },
         { icon: Store, label: "Merch Store", url: "/app/merch" }
@@ -44,7 +44,7 @@ const AppSidebar = () => {
     {
       title: "TOOLS",
       items: [
-        { icon: Bot, label: "AI Mastering", url: "/app/ai-mastering" },
+        // { icon: Bot, label: "AI Mastering", url: "/app/ai-mastering" },
         { icon: BotMessageSquare, label: "Mahi AI", url: "/app/mahi-ai" },
         { icon: HelpCircle, label: "Help & Support", url: "/app/help" },
         { icon: Settings, label: "Settings", url: "/app/settings" }

@@ -111,18 +111,18 @@ function App() {
             <Route path="/admin/team-management" element={<TeamManagement theme={theme} />} />
             <Route path="/admin/subscription-plans" element={<SubscriptionPlans theme={theme} />} />
             <Route path="/admin/playlist-pitching" element={<PlaylistPitching theme={theme} />} />
-            <Route path="/admin/advertisement-plans" element={<AdvertisementRequests theme={theme} />} />
+            {/* <Route path="/admin/advertisement-plans" element={<AdvertisementRequests theme={theme} />} /> */}
             <Route path="/admin/synchronization-(sync)" element={<SyncManagement theme={theme} />} />
             <Route path="/admin/merch-store-management" element={<MerchStoreManagement theme={theme} />} />
             <Route path="/admin/notifications" element={<NotificationPage theme={theme} />} />
-            <Route path="/admin/newsletter" element={<Newsletter theme={theme} />} />
+            {/* <Route path="/admin/newsletter" element={<Newsletter theme={theme} />} /> */}
             <Route path="/admin/help-&-support" element={<HelpSupport theme={theme} />} />
             <Route path="/admin/testimonials" element={<TestimonialManager theme={theme} />} />
             <Route path="/admin/trending-artists" element={<TrendingArtistsManager theme={theme} />} />
             <Route path="/admin/trending-labels" element={<TrendingLabelsManager theme={theme} />} />
             <Route path="/admin/faq-management" element={<FaqManager theme={theme} />} />
-            <Route path="/admin/blog-management" element={<BlogManagement theme={theme} />} />
-            <Route path="/admin/news-management" element={<NewsManagement theme={theme} />} />
+            {/* <Route path="/admin/blog-management" element={<BlogManagement theme={theme} />} /> */}
+            {/* <Route path="/admin/news-management" element={<NewsManagement theme={theme} />} /> */}
             <Route path="/admin/company-settings" element={<UnifiedSettingsPage theme={theme} />} />
             <Route path="/admin/mv-production" element={<MVProductionManagement theme={theme} />} />
           </Routes>

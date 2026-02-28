@@ -116,7 +116,7 @@ const ProtectedRoutes = () => {
           <Route path='youtube-mcn/new-request' element={<YouTubeMCNRequest />} />
           <Route path='mv-production' element={<MVProduction />} />
           <Route path='mv-marketing' element={<MVMarketing />} />
-          <Route path='advertisement' element={<Advertisement />} />
+          {/* <Route path='advertisement' element={<Advertisement />} /> */}
           <Route path='merch' element={<MerchStore />} />
           <Route path='mahi-ai' element={<MahiAI />} />
           <Route path='help' element={<HelpSupport />} />

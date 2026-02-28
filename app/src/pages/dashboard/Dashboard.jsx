@@ -1,22 +1,39 @@
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { ArrowRight, BarChart3, DollarSign, IndianRupee, Megaphone, Music, Play, Upload, Video } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
 import {earningsData ,streamsData ,videoTutorials ,recentReleases ,quickActions ,performanceMetrics} from './Dashboard.config'
 import React, { useEffect, useState } from 'react';
-import { getUserDashboard } from '@/services/api.services';
+import { getUserDashboard, getYoutubeLinks } from '@/services/api.services';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 
 const Dashboard = () => {
   const { user } = useAuthStore();
   const [dashboardData, setDashboardData] = useState(null);
+  const [dashboardVideos, setDashboardVideos] = useState([]);
+  const [showAllVideos, setShowAllVideos] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const getYouTubeVideoId = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const res = await getUserDashboard();
+        const [res, videosRes] = await Promise.all([
+          getUserDashboard(),
+          getYoutubeLinks()
+        ]);
         setDashboardData(res.data);
+        if (videosRes?.data && Array.isArray(videosRes.data)) {
+          setDashboardVideos(videosRes.data);
+        }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -114,11 +131,11 @@ const Dashboard = () => {
           <div className="rounded-lg border bg-card p-6 shadow-sm">
             <div className="mb-4">
               <h3 className="text-lg font-semibold  flex flex-nowrap items-center gap-1"><span>{<IndianRupee className='text-purple-400' size='20'/>}</span> Monthly Earnings</h3>
-              <p className="text-sm text-muted-foreground">Your earnings over the last 6 months</p>
+              <p className="text-sm text-muted-foreground">Your earnings over the last 5 months</p>
             </div>
             <div className="h-64 ">
               <ResponsiveContainer width="100%" height="100%" >
-                <LineChart data={charts.monthlyEarnings}>
+                <LineChart data={charts.monthlyEarnings?.slice(-5)}>
                   <XAxis 
                     dataKey="month" 
                     axisLine={false}
@@ -152,11 +169,11 @@ const Dashboard = () => {
           <div className="rounded-lg border bg-card p-6 shadow-sm">
             <div className="mb-4">
               <h3 className="text-lg font-semibold  flex flex-nowrap items-center gap-1"><span><Play className='text-green-500' size='20'/></span> Monthly Streams</h3>
-              <p className="text-sm text-muted-foreground">Your streaming performance over the last 6 months</p>
+              <p className="text-sm text-muted-foreground">Your streaming performance over the last 5 months</p>
             </div>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={charts.monthlyStreams}>
+                <BarChart data={charts.monthlyStreams?.slice(-5)}>
                   <XAxis 
                     dataKey="month" 
                     axisLine={false}
@@ -185,26 +202,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Video Tutorials Section */}
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Video Tutorials</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {videoTutorials.map((tutorial, index) => (
-              <div key={index} className="space-y-3 border rounded-lg p-4">
-                <div className="aspect-21/6 rounded-lg bg-muted flex items-center justify-center">
-                  <Video className="h-12 w-12 text-muted-foreground" />
-                </div>
-                <div>
-                  <h4 className="font-medium">{tutorial.title}</h4>
-                  <div className='flex justify-between items-center'>
-                    <p className="text-sm text-muted-foreground">{tutorial.duration}</p>
-                    <p className="text-sm text-muted-foreground">{tutorial.views}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        
 
         {/* Bottom Section with Recent Releases, Quick Actions, and Performance */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -293,6 +291,78 @@ const Dashboard = () => {
               ))}
             </div>
           </div> */}
+
+          {/* Video Tutorials Section */}
+        <div className="rounded-lg border bg-card p-6 shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Video Tutorials</h3>
+            {dashboardVideos.length > 4 && (
+              <Button variant="ghost" size="sm" onClick={() => setShowAllVideos(!showAllVideos)}>
+                {showAllVideos ? 'Show Less' : 'View More'}
+              </Button>
+            )}
+          </div>
+          {dashboardVideos.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No video tutorials available yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {(showAllVideos ? dashboardVideos : dashboardVideos.slice(0, 4)).map((video, index) => {
+                const videoId = getYouTubeVideoId(video.url);
+                return (
+                  <div key={index} className="space-y-3 border rounded-lg p-4 flex flex-col cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setSelectedVideo(video)}>
+                    <div className="aspect-video w-full rounded-lg bg-muted flex items-center justify-center relative overflow-hidden group">
+                      {videoId ? (
+                        <img 
+                          src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`} 
+                          alt={video.title || 'Video thumbnail'} 
+                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
+                        />
+                      ) : (
+                        <Video className="h-12 w-12 text-muted-foreground opacity-50" />
+                      )}
+                      <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
+                           <Play className="h-5 w-5 text-white ml-1" />
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-medium line-clamp-2" title={video.title}>{video.title || 'Untitled Video'}</h4>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <Dialog open={!!selectedVideo} onOpenChange={(open) => !open && setSelectedVideo(null)}>
+            <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-black border-none" showCloseButton={true}>
+              {/* Added accessible hidden title to fix Dialog missing Title warnings */}
+              <DialogTitle className="sr-only">{selectedVideo?.title || "Video Player"}</DialogTitle>
+              <DialogDescription className="sr-only">Video player displaying selected tutorial content</DialogDescription>
+              <div className="aspect-video w-full flex items-center justify-center relative">
+                {selectedVideo && getYouTubeVideoId(selectedVideo.url) ? (
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedVideo.url)}?autoplay=1`}
+                    title={selectedVideo.title || "Video Tutorial"}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                ) : selectedVideo ? (
+                  <video 
+                    controls 
+                    autoPlay 
+                    src={selectedVideo.url} 
+                    className="w-full h-full object-contain"
+                  />
+                ) : null}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </main>
     </div>
   );

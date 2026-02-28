@@ -261,7 +261,7 @@ export default function Analytics() {
       {/* Key Metrics */}
       {!isLoading && !error && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 ">
                 <CardTitle className="text-sm font-medium">Total Streams</CardTitle>
@@ -271,13 +271,7 @@ export default function Analytics() {
                 <div className="text-2xl font-bold">
                   {formatNumber(overview?.totalStreams?.totalStreams || 0)}
                 </div>
-                <div className="flex items-center text-xs text-muted-foreground ">
-                  <h1>
-                    <span className={overview?.streamsGrowth >= 0 ? 'text-green-500' : 'text-red-500'}>
-                      {overview?.streamsGrowth >= 0 ? '+' : ''}{overview?.streamsGrowth?.toFixed(1) || 0}%
-                    </span> vs last period
-                  </h1>
-                </div>
+                
               </CardContent>
             </Card>
 
@@ -290,17 +284,11 @@ export default function Analytics() {
                 <div className="text-2xl font-bold">
                   {formatCurrency(overview?.totalRevenue || 0)}
                 </div>
-                <div className="flex items-center text-xs text-muted-foreground ">
-                  <h1>
-                    <span className={overview?.revenueGrowth >= 0 ? 'text-green-500' : 'text-red-500'}>
-                      {overview?.revenueGrowth >= 0 ? '+' : ''}{overview?.revenueGrowth?.toFixed(1) || 0}%
-                    </span> vs last period
-                  </h1>
-                </div>
+                
               </CardContent>
             </Card>
 
-            <Card>
+            {/* <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 ">
                 <CardTitle className="text-sm font-medium">Active Listeners</CardTitle>
                 <Users className="h-4 w-4 text-[#711CE9]" />
@@ -313,7 +301,7 @@ export default function Analytics() {
                   <span>Unique listeners this period</span>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 ">

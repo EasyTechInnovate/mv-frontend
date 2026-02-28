@@ -147,7 +147,7 @@ export default function Sidebar({ isCollapsed = false, theme }) {
               links: [
                 { label: "Playlist Pitching", icon: <BookOpen className="w-4 h-4" /> },
                 { label: "MV Production", icon: <Activity className="w-4 h-4" /> },
-                { label: "Advertisement Plans", icon: <Globe className="w-4 h-4" /> },
+                // { label: "Advertisement Plans", icon: <Globe className="w-4 h-4" /> },
                 { label: "Synchronization (SYNC)", icon: <Database className="w-4 h-4" /> },
                 { label: "Merch Store Management", icon: <ShoppingBag className="w-4 h-4" /> },
               ],
@@ -161,7 +161,7 @@ export default function Sidebar({ isCollapsed = false, theme }) {
               ),
               links: [
                 { label: "Notifications", icon: <Bell className="w-4 h-4" /> },
-                { label: "Newsletter", icon: <Bell className="w-4 h-4" /> },
+                // { label: "Newsletter", icon: <Bell className="w-4 h-4" /> },
                 { label: "Help & Support", icon: <Headset className="w-4 h-4" /> },
                 ],
             },
@@ -177,8 +177,8 @@ export default function Sidebar({ isCollapsed = false, theme }) {
                 { label: "Trending Artists", icon: <Users className="w-4 h-4" /> },
                 { label: "Trending Labels", icon: <Package className="w-4 h-4" /> },
                 { label: "FAQ Management", icon: <FileText className="w-4 h-4" /> },
-                { label: "Blog Management", icon: <BookOpen className="w-4 h-4" /> },
-                { label: "News Management", icon: <Newspaper  className="w-4 h-4" /> },
+                // { label: "Blog Management", icon: <BookOpen className="w-4 h-4" /> },
+                // { label: "News Management", icon: <Newspaper  className="w-4 h-4" /> },
               ],
             },
             {

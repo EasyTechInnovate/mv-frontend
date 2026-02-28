@@ -614,7 +614,7 @@ export default function Royalties() {
                   <CardDescription>Detailed revenue breakdown</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scroll">
                     {platforms.regular.list.map((platform) => (
                       <div key={platform.name} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center space-x-3">
@@ -704,7 +704,7 @@ export default function Royalties() {
                   <CardDescription>Detailed bonus breakdown</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scroll">
                     {platforms.bonus.list.length === 0 ? (
                         <div className="text-center text-muted-foreground py-4">No bonus platform data</div>
                     ) : (
