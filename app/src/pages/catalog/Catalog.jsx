@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { AlertCircle } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import {
   DropdownMenu,
@@ -132,6 +133,17 @@ const ReleaseDetailsModal = ({ release, isOpen, onClose, releaseType }) => {
                     </div>
                 ) : releaseDetails ? (
                     <div className="space-y-6">
+                        {/* Rejection Alert */}
+                        {releaseDetails.releaseStatus === 'rejected' && releaseDetails.adminReview?.rejectionReason && (
+                            <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-4 text-red-600 flex items-start gap-3">
+                                <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
+                                <div>
+                                    <h4 className="font-semibold text-sm">Release Rejected</h4>
+                                    <p className="text-sm mt-1">{releaseDetails.adminReview.rejectionReason}</p>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Track Information Section */}
                         <div className="space-y-6">
                             <div className="md:flex gap-4 max-md:space-y-6">
