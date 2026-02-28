@@ -335,10 +335,10 @@ export default function Royalties() {
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </Button>
-          <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+          {/* <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
             <Calendar className="w-4 h-4 mr-2" />
             Schedule Payout
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -410,7 +410,7 @@ export default function Royalties() {
         <TabsContent value="overview" className="space-y-8">
           <div className="space-y-6">
             <h3 className="text-xl font-semibold">Regular Royalties</h3>
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>Monthly Royalty Trends</CardTitle>
                 <CardDescription>Regular earnings over selected timeframe</CardDescription>
@@ -426,8 +426,25 @@ export default function Royalties() {
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
-            </Card>
+            </Card> */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+              <CardHeader>
+                <CardTitle>Monthly Royalty Trends</CardTitle>
+                <CardDescription>Regular earnings over selected timeframe</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={trends.regular}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="month" className="text-muted-foreground" />
+                    <YAxis className="text-muted-foreground" />
+                    <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151' }} itemStyle={{ color: '#fff' }} />
+                    <Line type="monotone" dataKey="regular" stroke="#F59E0B" strokeWidth={3} dot={{ fill: '#F59E0B', strokeWidth: 2, r: 4 }} name="Regular Royalty" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
               <Card>
                 <CardHeader>
                   <CardTitle>Royalty Composition</CardTitle>
@@ -447,7 +464,7 @@ export default function Royalties() {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle>Performance Metrics</CardTitle>
                   <CardDescription>Key regular performance indicators</CardDescription>
@@ -478,18 +495,20 @@ export default function Royalties() {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
           </div>
           <div className="space-y-6">
             <h3 className="text-xl font-semibold">Bonus Royalties</h3>
-            <Card>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
               <CardHeader>
                 <CardTitle>Monthly Bonus Royalty Trends</CardTitle>
                 <CardDescription>Track your bonus earnings over time</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
+                <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={trends.bonus}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="month" className="text-muted-foreground" />
@@ -500,7 +519,6 @@ export default function Royalties() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                <Card>
                 <CardHeader>
                   <CardTitle>Bonus Composition</CardTitle>
@@ -520,7 +538,7 @@ export default function Royalties() {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle>Bonus Performance Metrics</CardTitle>
                   <CardDescription>Key performance indicators for bonuses</CardDescription>
@@ -551,7 +569,7 @@ export default function Royalties() {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
           </div>
         </TabsContent>

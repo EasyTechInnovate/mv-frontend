@@ -28,7 +28,7 @@ const COUNTRY_NAMES = {
 const getCountryName = (code) => COUNTRY_NAMES[code] || code;
 
 export default function Analytics() {
-  const [timeframe, setTimeframe] = useState('last_30_days');
+  const [timeframe, setTimeframe] = useState('last_year');
   const [groupBy] = useState('day');
 
   // Export Modal State
