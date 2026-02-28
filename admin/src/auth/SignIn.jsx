@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GlobalApi from "@/lib/GlobalApi";
+import { useAuth } from "@/context/AuthContext";
 import { Lock, User, Eye, EyeOff } from "lucide-react";
 
 export default function AdminLogin() {
@@ -9,6 +10,7 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -21,11 +23,8 @@ export default function AdminLogin() {
 
     try {
       const res = await GlobalApi.login(credentials);
-
-localStorage.setItem("adminAccessToken", res.data.data.tokens.accessToken);
-localStorage.setItem("adminRefreshToken", res.data.data.tokens.refreshToken);
-localStorage.setItem("adminUser", JSON.stringify(res.data.data.user));
-
+      const { user, tokens } = res.data.data;
+      login(user, tokens);
       navigate("/admin/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Invalid credentials");
@@ -33,6 +32,7 @@ localStorage.setItem("adminUser", JSON.stringify(res.data.data.user));
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-gray-900 to-black">

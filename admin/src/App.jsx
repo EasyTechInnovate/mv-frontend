@@ -4,6 +4,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Header from "./components/common/Header";
 import Sidebar from "./components/common/Sidebar";
+import ProtectedRoute from "./components/common/ProtectedRoute";
+import { AuthProvider } from "./context/AuthContext";
 import Dashboard from "./pages/dashboard/Dashboard";
 import UserManagement from "./pages/user-management/UserManagement";
 import ReleaseManagement from "./pages/release-management/ReleaseManagement";
@@ -33,19 +35,34 @@ import BlogManagement from "./pages/blog-management/BlogManagement";
 import NewsManagement from "./pages/news-management/NewsManagement";
 import AdminLogin from "./auth/SignIn";
 import KycManagement from "./pages/kyc-management/KYCManagement";
-import UnifiedSettingsPage from "./pages/company-settings/CompanySettings"
+import UnifiedSettingsPage from "./pages/company-settings/CompanySettings";
 import MVProductionManagement from "./pages/mv-production/MvProductionManagement";
 import AggregatorManagement from "./pages/aggregator-management/AggregatorManagement";
-function App() {
+
+// Module name constants — must match EModuleAccess in backend
+const M = {
+  USER_MGMT: "User Management",
+  RELEASE_MGMT: "Release Management",
+  ANALYTICS: "Analytics",
+  ROYALTY: "Royalty Management",
+  FINANCIAL: "Financial Reports",
+  MCN: "MCN Management",
+  TEAM: "Team Management",
+  CONTENT: "Content Management",
+  SUPPORT: "Support Tickets",
+  SYSTEM: "System Settings",
+  MERCH: "Merch Management",
+  AGGREGATOR: "Aggregator Management",
+};
+
+function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [theme, setTheme] = useState("dark");
   const location = useLocation();
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
-
   const isLoginPage = location.pathname === "/admin/login";
-
 
   if (isLoginPage) {
     return (
@@ -55,6 +72,11 @@ function App() {
     );
   }
 
+  const P = ({ module, children }) => (
+    <ProtectedRoute requiredModule={module} theme={theme}>
+      {children}
+    </ProtectedRoute>
+  );
 
   return (
     <div className={`flex h-screen overflow-hidden ${theme === "dark" ? "bg-[#111A22] text-white" : "bg-gray-100 text-black"}`}>
@@ -65,7 +87,6 @@ function App() {
           aria-label="Close sidebar"
         />
       )}
-
 
       <aside
         className={[
@@ -81,7 +102,6 @@ function App() {
         <Sidebar isCollapsed={!sidebarOpen} theme={theme} />
       </aside>
 
-
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         <Header
           onToggleSidebar={() => setSidebarOpen((s) => !s)}
@@ -89,47 +109,67 @@ function App() {
           theme={theme}
         />
 
-        <main className={`flex-1 p-4  overflow-y-auto min-w-0 ${theme === "dark" ? "bg-[#111A22]" : "bg-white"}`}>
+        <main className={`flex-1 p-4 overflow-y-auto min-w-0 ${theme === "dark" ? "bg-[#111A22]" : "bg-white"}`}>
           <Routes>
             <Route path="/" element={<Navigate to="/admin/login" replace />} />
             <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+
+            {/* Dashboard — always accessible to logged-in admins/team members */}
             <Route path="/admin/dashboard" element={<Dashboard theme={theme} />} />
-            <Route path="/admin/user-management" element={<UserManagement theme={theme} />} />
-            <Route path="/admin/release-management" element={<ReleaseManagement theme={theme} />} />
-            <Route path="/admin/release-management/:userId/:userName" element={<ReleaseManagement theme={theme} />} />
-            <Route path="/admin/release-management/advanced/edit/:id" element={<EditAdvancedRelease theme={theme} />} />
-            <Route path="/admin/release-management/basic/edit/:id" element={<EditBasicRelease theme={theme} />} />
-            <Route path="/admin/bonus-management" element={<BonusManagement theme={theme} />} />
-            <Route path="/admin/kyc-management" element={<KycManagement theme={theme} />} />
-            <Route path="/admin/aggregator-management" element={<AggregatorManagement theme={theme} />} />
-            <Route path="/admin/analytics-management" element={<AnalyticsManagement theme={theme} />} />
-            <Route path="/admin/month-management" element={<MonthManagement theme={theme} />} />
-            <Route path="/admin/royalty-management" element={<RoyaltyManagement theme={theme} />} />
-            <Route path="/admin/wallet-&-transactions" element={<WalletTransactions theme={theme} />} />
-            <Route path="/admin/mcn-management" element={<MCNManagement theme={theme} />} />
-            <Route path="/admin/mcn-royality" element={<MCNMonthManagement theme={theme} />} />
-            <Route path="/admin/team-management" element={<TeamManagement theme={theme} />} />
-            <Route path="/admin/subscription-plans" element={<SubscriptionPlans theme={theme} />} />
-            <Route path="/admin/playlist-pitching" element={<PlaylistPitching theme={theme} />} />
-            {/* <Route path="/admin/advertisement-plans" element={<AdvertisementRequests theme={theme} />} /> */}
-            <Route path="/admin/synchronization-(sync)" element={<SyncManagement theme={theme} />} />
-            <Route path="/admin/merch-store-management" element={<MerchStoreManagement theme={theme} />} />
+
+            {/* User & Release Management */}
+            <Route path="/admin/user-management" element={<P module={M.USER_MGMT}><UserManagement theme={theme} /></P>} />
+            <Route path="/admin/release-management" element={<P module={M.RELEASE_MGMT}><ReleaseManagement theme={theme} /></P>} />
+            <Route path="/admin/release-management/:userId/:userName" element={<P module={M.RELEASE_MGMT}><ReleaseManagement theme={theme} /></P>} />
+            <Route path="/admin/release-management/advanced/edit/:id" element={<P module={M.RELEASE_MGMT}><EditAdvancedRelease theme={theme} /></P>} />
+            <Route path="/admin/release-management/basic/edit/:id" element={<P module={M.RELEASE_MGMT}><EditBasicRelease theme={theme} /></P>} />
+            <Route path="/admin/kyc-management" element={<P module={M.USER_MGMT}><KycManagement theme={theme} /></P>} />
+            <Route path="/admin/aggregator-management" element={<P module={M.AGGREGATOR}><AggregatorManagement theme={theme} /></P>} />
+
+            {/* Data & Analytics */}
+            <Route path="/admin/analytics-management" element={<P module={M.ANALYTICS}><AnalyticsManagement theme={theme} /></P>} />
+            <Route path="/admin/month-management" element={<P module={M.ANALYTICS}><MonthManagement theme={theme} /></P>} />
+            <Route path="/admin/bonus-management" element={<P module={M.ROYALTY}><BonusManagement theme={theme} /></P>} />
+            <Route path="/admin/royalty-management" element={<P module={M.ROYALTY}><RoyaltyManagement theme={theme} /></P>} />
+            <Route path="/admin/mcn-royality" element={<P module={M.MCN}><MCNMonthManagement theme={theme} /></P>} />
+            <Route path="/admin/wallet-&-transactions" element={<P module={M.FINANCIAL}><WalletTransactions theme={theme} /></P>} />
+
+            {/* MCN & Business */}
+            <Route path="/admin/mcn-management" element={<P module={M.MCN}><MCNManagement theme={theme} /></P>} />
+            <Route path="/admin/team-management" element={<P module={M.TEAM}><TeamManagement theme={theme} /></P>} />
+            <Route path="/admin/subscription-plans" element={<P module={M.SYSTEM}><SubscriptionPlans theme={theme} /></P>} />
+
+            {/* Marketing */}
+            <Route path="/admin/playlist-pitching" element={<P module={M.CONTENT}><PlaylistPitching theme={theme} /></P>} />
+            <Route path="/admin/synchronization-(sync)" element={<P module={M.CONTENT}><SyncManagement theme={theme} /></P>} />
+            <Route path="/admin/merch-store-management" element={<P module={M.MERCH}><MerchStoreManagement theme={theme} /></P>} />
+            <Route path="/admin/mv-production" element={<P module={M.CONTENT}><MVProductionManagement theme={theme} /></P>} />
+
+            {/* Communications */}
             <Route path="/admin/notifications" element={<NotificationPage theme={theme} />} />
-            {/* <Route path="/admin/newsletter" element={<Newsletter theme={theme} />} /> */}
-            <Route path="/admin/help-&-support" element={<HelpSupport theme={theme} />} />
-            <Route path="/admin/testimonials" element={<TestimonialManager theme={theme} />} />
-            <Route path="/admin/trending-artists" element={<TrendingArtistsManager theme={theme} />} />
-            <Route path="/admin/trending-labels" element={<TrendingLabelsManager theme={theme} />} />
-            <Route path="/admin/faq-management" element={<FaqManager theme={theme} />} />
-            {/* <Route path="/admin/blog-management" element={<BlogManagement theme={theme} />} /> */}
-            {/* <Route path="/admin/news-management" element={<NewsManagement theme={theme} />} /> */}
-            <Route path="/admin/company-settings" element={<UnifiedSettingsPage theme={theme} />} />
-            <Route path="/admin/mv-production" element={<MVProductionManagement theme={theme} />} />
+            <Route path="/admin/help-&-support" element={<P module={M.SUPPORT}><HelpSupport theme={theme} /></P>} />
+
+            {/* Content Management */}
+            <Route path="/admin/testimonials" element={<P module={M.CONTENT}><TestimonialManager theme={theme} /></P>} />
+            <Route path="/admin/trending-artists" element={<P module={M.CONTENT}><TrendingArtistsManager theme={theme} /></P>} />
+            <Route path="/admin/trending-labels" element={<P module={M.CONTENT}><TrendingLabelsManager theme={theme} /></P>} />
+            <Route path="/admin/faq-management" element={<P module={M.CONTENT}><FaqManager theme={theme} /></P>} />
+
+            {/* Configuration */}
+            <Route path="/admin/company-settings" element={<P module={M.SYSTEM}><UnifiedSettingsPage theme={theme} /></P>} />
           </Routes>
         </main>
       </div>
       <Toaster position="top-right" richColors theme={theme === "dark" ? "dark" : "light"} />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
