@@ -410,8 +410,12 @@ export default function PlaylistPitching({ theme }) {
           { label: "Mood", key: "mood" },
           { label: "Theme", key: "theme" },
           { label: "Language", key: "language" },
+          { label: "Vocals Present", key: "isVocalsPresent" },
           { label: "Store", key: "selectedStore" },
+          { label: "Track Links", key: "trackLinksFormatted" },
           { label: "Status", key: "status" },
+          { label: "Rejection Reason", key: "rejectionReason" },
+          { label: "Admin Notes", key: "adminNotes" },
           { label: "Submit Date", key: "createdAt" },
         ]}
         fetchData={async (page, limit) => {
@@ -429,6 +433,13 @@ export default function PlaylistPitching({ theme }) {
               username: row.userId ? `${row.userId.firstName || ""} ${row.userId.lastName || ""}`.trim() : "—",
               accountId: row.userId?.accountId || "—",
               genres: (row.genres || []).join(", "),
+              isVocalsPresent: row.isVocalsPresent ? "Yes" : "No",
+              // If multiple links, join as "Platform: URL | Platform: URL"
+              trackLinksFormatted: Array.isArray(row.trackLinks) && row.trackLinks.length > 0
+                ? row.trackLinks.map(l => `${l.platform}: ${l.url}`).join(" | ")
+                : "—",
+              rejectionReason: row.rejectionReason || "—",
+              adminNotes: row.adminNotes || "—",
               createdAt: row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "—",
             }));
           } catch (err) {

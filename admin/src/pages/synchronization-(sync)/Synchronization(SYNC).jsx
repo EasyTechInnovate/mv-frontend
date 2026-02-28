@@ -639,8 +639,19 @@ export default function SyncManagement({ theme }) {
           { label: "Label Name", key: "labelName" },
           { label: "ISRC", key: "isrc" },
           { label: "Genre", key: "genres" },
+          { label: "Mood", key: "mood" },
+          { label: "Theme", key: "theme" },
           { label: "Language", key: "language" },
+          { label: "Vocals Present", key: "isVocalsPresent" },
+          { label: "Fully Cleared for Sync", key: "isFullyClearedForSync" },
+          { label: "Master Rights Owner", key: "masterRightsOwner" },
+          { label: "Publishing Rights Owner", key: "publishingRightsOwner" },
+          { label: "PRO Affiliation", key: "proAffiliation" },
+          { label: "Project Suitability", key: "projectSuitability" },
+          { label: "Track Links", key: "trackLinksFormatted" },
           { label: "Status", key: "status" },
+          { label: "Rejection Reason", key: "rejectionReason" },
+          { label: "Admin Notes", key: "adminNotes" },
           { label: "Submit Date", key: "createdAt" }
         ]}
         fetchData={async (page, limit) => {
@@ -663,7 +674,20 @@ export default function SyncManagement({ theme }) {
               accountId: row.userId?.accountId || "—",
               labelName: toTitleCase(row.labelName),
               genres: toReadable(row.genres, "genres"),
+              mood: toReadable(row.mood, "mood"),
+              theme: toReadable(row.theme, "theme"),
               language: toReadable(row.language, "language"),
+              isVocalsPresent: row.isVocalsPresent ? "Yes" : "No",
+              isFullyClearedForSync: row.isFullyClearedForSync === true ? "Yes" : row.isFullyClearedForSync === "unsure" ? "Unsure" : "No",
+              masterRightsOwner: row.masterRightsOwner || "—",
+              publishingRightsOwner: row.publishingRightsOwner || "—",
+              proAffiliation: toReadable(row.proAffiliation, "proAffiliation"),
+              projectSuitability: toReadable(row.projectSuitability, "projectSuitability"),
+              trackLinksFormatted: Array.isArray(row.trackLinks) && row.trackLinks.length > 0
+                ? row.trackLinks.map(l => `${l.platform}: ${l.url}`).join(" | ")
+                : "—",
+              rejectionReason: row.rejectionReason || "—",
+              adminNotes: row.adminNotes || "—",
               createdAt: new Date(row.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
             }));
           } catch (err) {

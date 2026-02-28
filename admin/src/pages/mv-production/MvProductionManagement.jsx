@@ -200,9 +200,9 @@ const handleDeleteConfirm = async () => {
             <option value="reject">Rejected</option>
           </select>
 
-          <Button variant={isDark ? "outline" : "secondary"} className="flex items-center gap-2 px-5">
+          {/* <Button variant={isDark ? "outline" : "secondary"} className="flex items-center gap-2 px-5">
             <Upload className="h-4 w-4" /> Bulk Action
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -405,12 +405,49 @@ const handleDeleteConfirm = async () => {
         totalItems={pagination.totalCount || 0}
         headers={[
           { label: "S.No.", key: "sno" },
+          // Identity
           { label: "Account ID", key: "accountId" },
           { label: "Account Name", key: "accountName" },
-          { label: "Project Title", key: "projectTitle" },
-          { label: "Budget", key: "budget" },
           { label: "Email", key: "email" },
+          // Owner Info
+          { label: "Copyright Owner", key: "copyrightOwnerName" },
+          { label: "Mobile Number", key: "mobileNumber" },
+          { label: "Copyright Email", key: "emailOfCopyrightHolder" },
+          // Project Overview
+          { label: "Project Title", key: "projectTitle" },
+          { label: "Artist Name", key: "artistName" },
+          { label: "Label Name", key: "labelName" },
+          { label: "Genre", key: "genres" },
+          { label: "Mood", key: "mood" },
+          { label: "Theme", key: "theme" },
+          { label: "Language", key: "language" },
+          { label: "Release Timeline", key: "releaseTimeline" },
+          { label: "Part of Album/EP", key: "isPartOfAlbumOrEP" },
+          { label: "Location Preference", key: "locationPreference" },
+          // Budget
+          { label: "Total Budget (₹)", key: "totalBudgetRequested" },
+          { label: "Ownership Dilution (%)", key: "proposedOwnershipDilution" },
+          { label: "Pre-Production (₹)", key: "preProduction" },
+          { label: "Shoot Day (₹)", key: "shootDay" },
+          { label: "Post-Production (₹)", key: "postProduction" },
+          { label: "Misc/Contingency (₹)", key: "miscellaneousContingency" },
+          { label: "Personal Funds", key: "willContributePersonalFunds" },
+          { label: "Personal Funds Amount (₹)", key: "personalFundsAmount" },
+          { label: "Revenue Sharing Model", key: "revenueSharingModelProposed" },
+          // Marketing
+          { label: "MV Distribution", key: "willBeReleasedViaMVDistribution" },
+          { label: "Brand/Merch Tie-Ins", key: "anyBrandOrMerchTieIns" },
+          { label: "Brand Description", key: "brandOrMerchTieInsDescription" },
+          { label: "Ads/Influencer Campaigns", key: "planToRunAdsOrInfluencerCampaigns" },
+          // Legal
+          { label: "Full Creative Ownership", key: "confirmFullCreativeOwnership" },
+          { label: "Credit MV Production", key: "agreeToCreditMVProduction" },
+          { label: "Share Final Assets", key: "agreeToShareFinalAssets" },
+          { label: "NDA Required", key: "requireNDAOrCustomAgreement" },
+          // Status
           { label: "Status", key: "status" },
+          { label: "Rejection Reason", key: "rejectionReason" },
+          { label: "Admin Notes", key: "adminNotes" },
           { label: "Submitted", key: "submittedDate" },
         ]}
         fetchData={async (page, limit) => {
@@ -425,13 +462,57 @@ const handleDeleteConfirm = async () => {
             const data = res?.data?.data || {};
             const productionsToExport = data.productions || [];
 
-            return productionsToExport.map(p => ({
-              accountId: p.accountId || "-",
-              accountName: `${p.userId?.firstName || ""} ${p.userId?.lastName || ""}`.trim() || "-",
-              projectTitle: p.projectOverview?.projectTitle || "-",
-              budget: p.budgetRequestAndOwnershipProposal?.totalBudgetRequested ?? "-",
-              email: p.userId?.emailAddress || "-",
+            const yn = (val) => (val ? "Yes" : "No");
+            const toTitleCase = (str) =>
+              str ? String(str).toLowerCase().split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") : "—";
+
+            return productionsToExport.map((p) => ({
+              accountId: p.accountId || "—",
+              accountName: `${p.userId?.firstName || ""} ${p.userId?.lastName || ""}`.trim() || "—",
+              email: p.userId?.emailAddress || "—",
+              // Owner Info
+              copyrightOwnerName: p.ownerInfo?.copyrightOwnerName || "—",
+              mobileNumber: p.ownerInfo?.mobileNumber || "—",
+              emailOfCopyrightHolder: p.ownerInfo?.emailOfCopyrightHolder || "—",
+              // Project Overview
+              projectTitle: p.projectOverview?.projectTitle || "—",
+              artistName: p.projectOverview?.artistName || "—",
+              labelName: p.projectOverview?.labelName || "—",
+              genres: Array.isArray(p.projectOverview?.genres)
+                ? p.projectOverview.genres.map(toTitleCase).join(", ")
+                : toTitleCase(p.projectOverview?.genres) || "—",
+              mood: toTitleCase(p.projectOverview?.mood) || "—",
+              theme: toTitleCase(p.projectOverview?.theme) || "—",
+              language: toTitleCase(p.projectOverview?.language) || "—",
+              releaseTimeline: p.projectOverview?.releaseTimeline || "—",
+              isPartOfAlbumOrEP: yn(p.projectOverview?.isPartOfAlbumOrEP),
+              locationPreference: Array.isArray(p.projectOverview?.locationPreference)
+                ? p.projectOverview.locationPreference.map(toTitleCase).join(", ")
+                : "—",
+              // Budget
+              totalBudgetRequested: p.budgetRequestAndOwnershipProposal?.totalBudgetRequested ?? "—",
+              proposedOwnershipDilution: p.budgetRequestAndOwnershipProposal?.proposedOwnershipDilution ?? "—",
+              preProduction: p.budgetRequestAndOwnershipProposal?.breakdown?.preProduction ?? "—",
+              shootDay: p.budgetRequestAndOwnershipProposal?.breakdown?.shootDay ?? "—",
+              postProduction: p.budgetRequestAndOwnershipProposal?.breakdown?.postProduction ?? "—",
+              miscellaneousContingency: p.budgetRequestAndOwnershipProposal?.breakdown?.miscellaneousContingency ?? "—",
+              willContributePersonalFunds: yn(p.budgetRequestAndOwnershipProposal?.willContributePersonalFunds),
+              personalFundsAmount: p.budgetRequestAndOwnershipProposal?.personalFundsAmount || "—",
+              revenueSharingModelProposed: p.budgetRequestAndOwnershipProposal?.revenueSharingModelProposed || "—",
+              // Marketing
+              willBeReleasedViaMVDistribution: yn(p.marketingAndDistributionPlan?.willBeReleasedViaMVDistribution),
+              anyBrandOrMerchTieIns: yn(p.marketingAndDistributionPlan?.anyBrandOrMerchTieIns),
+              brandOrMerchTieInsDescription: p.marketingAndDistributionPlan?.brandOrMerchTieInsDescription || "—",
+              planToRunAdsOrInfluencerCampaigns: yn(p.marketingAndDistributionPlan?.planToRunAdsOrInfluencerCampaigns),
+              // Legal
+              confirmFullCreativeOwnership: yn(p.legalAndOwnershipDeclaration?.confirmFullCreativeOwnership),
+              agreeToCreditMVProduction: yn(p.legalAndOwnershipDeclaration?.agreeToCreditMVProduction),
+              agreeToShareFinalAssets: yn(p.legalAndOwnershipDeclaration?.agreeToShareFinalAssets),
+              requireNDAOrCustomAgreement: yn(p.legalAndOwnershipDeclaration?.requireNDAOrCustomAgreement),
+              // Status
               status: p.status || "pending",
+              rejectionReason: p.rejectionReason || "—",
+              adminNotes: p.adminNotes || "—",
               submittedDate: new Date(p.createdAt).toLocaleDateString(),
             }));
           } catch (err) {

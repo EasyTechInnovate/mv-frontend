@@ -623,8 +623,8 @@ const CatalogPage = () => {
                 </div>
                 <Link to="/app/upload-release">
                     <Button className="bg-[#711CE9] text-white hover:bg-[#711CE9]/90">
-                        <Music className="w-4 h-4 mr-2" />
-                        New Release
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Release
                     </Button>
                 </Link>
             </div>
