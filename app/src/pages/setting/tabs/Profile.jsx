@@ -9,7 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Camera, Link, Shield, CreditCard, Loader } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { getMySubscription, getAllSubscriptionPlans } from '@/services/api.services';
+import { getMySubscription, getAllSubscriptionPlans, updateProfile, updateSocialMedia } from '@/services/api.services';
+import { showToast } from '@/utils/toast';
+import { uploadToImageKit } from '@/utils/imagekitUploader';
 
 const Profile = () => {
   const [saving, setSaving] = useState(false);
@@ -121,11 +123,15 @@ const Profile = () => {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         emailAddress: user.emailAddress || '',
-        artistName: user.artistName || '',
+        // artistName is nested under artistData
+        artistName: user.artistData?.artistName || user.artistName || '',
         phoneNumber: user.phoneNumber?.internationalNumber || '',
-        bio: user.bio || '',
-        primaryGenre: user.primaryGenre || '',
-        location: user.location || '',
+        // bio, primaryGenre, location are nested under profile
+        bio: user.profile?.bio || '',
+        primaryGenre: user.profile?.primaryGenre || '',
+        location: user.profile?.location?.address || '',
+        // Show existing photo from backend
+        profileImage: user.profile?.photo || null,
         socialMedia: {
           instagram: user.socialMedia?.instagram || '',
           youtube: user.socialMedia?.youtube || '',
@@ -211,34 +217,73 @@ const Profile = () => {
     }));
   };
 
-  const handleImageUpload = (event) => {
+  const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     const maxSizeBytes = 5 * 1024 * 1024;
 
-    if (file) {
-      if (file.size > maxSizeBytes) {
-        alert('The selected image is too large. Please select an image less than 5 MB.');
-        return;
-      }
+    if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileImage(e.target.result);
-        handleInputChange('profileImage', e.target.result);
-      };
-      reader.readAsDataURL(file);
+    if (file.size > maxSizeBytes) {
+      showToast.error('The selected image is too large. Please select an image less than 5 MB.');
+      return;
+    }
+
+    // Show a local preview immediately
+    const reader = new FileReader();
+    reader.onload = (e) => setProfileImage(e.target.result);
+    reader.readAsDataURL(file);
+
+    try {
+      // Upload to ImageKit and get CDN URL
+      const uploadResponse = await uploadToImageKit(file, 'profile-photos');
+      const imageUrl = uploadResponse.url;
+      
+      // Save the CDN URL in formData so Save Changes can send it to backend
+      setProfileImage(imageUrl);
+      handleInputChange('profileImage', imageUrl);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      // Reset preview if upload failed
+      setProfileImage(null);
+      handleInputChange('profileImage', '');
     }
   };
 
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Saving profile data:', formData);
-      alert('Profile saved successfully!');
+      const profilePayload = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phoneNumber: formData.phoneNumber,
+        profile: {
+          bio: formData.bio,
+          primaryGenre: formData.primaryGenre,
+          location: {
+            address: formData.location
+          },
+          // Only include photo if it's an actual URL (not a local base64 blob)
+          ...(formData.profileImage && !formData.profileImage.startsWith('data:') && {
+            photo: formData.profileImage
+          })
+        },
+        ...(formData.artistName && {
+          artistData: {
+            artistName: formData.artistName
+          }
+        })
+      };
+      
+      const response = await updateProfile(profilePayload);
+      
+      if (response && response.data && response.data.user) {
+         useAuthStore.getState().setUser(response.data.user);
+      }
+      
+      showToast.success('Profile saved successfully!');
     } catch (error) {
       console.error('Error saving profile:', error);
-      alert('Error saving profile. Please try again.');
+      showToast.error(error?.response?.data?.message || 'Error saving profile. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -247,12 +292,11 @@ const Profile = () => {
   const handleSaveSocialMedia = async () => {
     setSaving(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Saving social media data:', formData.socialMedia);
-      alert('Social media links saved successfully!');
+      const response = await updateSocialMedia(formData.socialMedia);
+      showToast.success('Social media links saved successfully!');
     } catch (error) {
       console.error('Error saving social media:', error);
-      alert('Error saving social media links. Please try again.');
+      showToast.error(error?.response?.data?.message || 'Error saving social media links. Please try again.');
     } finally {
       setSaving(false);
     }

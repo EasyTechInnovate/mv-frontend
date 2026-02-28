@@ -2,13 +2,15 @@ import React from 'react'
 import {  
   Music, Home, User, Calendar, Upload, Grid3x3, Users, BarChart3, DollarSign, 
   Wallet, Megaphone, Video, Wrench, Store, Bot, HelpCircle, Settings,
-  BotMessageSquare
+  BotMessageSquare, LogOut
 } from 'lucide-react';
 import { 
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, 
-  SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem
+  SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter
 } from '@/components/ui/sidebar';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/authStore';
+import { logoutUser } from '@/services/auth.services';
 
 const AppSidebar = () => {
   const sidebarSections = [
@@ -53,6 +55,21 @@ const AppSidebar = () => {
   ];
 
   const location = useLocation();
+  const navigate = useNavigate();
+  const { clearAuth } = useAuthStore();
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (e) {
+      // Still clear auth even if API fails
+    } finally {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      clearAuth();
+      navigate('/signin');
+    }
+  };
 
   return (
     <Sidebar className="border-r">
@@ -68,7 +85,7 @@ const AppSidebar = () => {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 pb-24">
+      <SidebarContent className="px-2">
         {sidebarSections.map((section) => (
           <SidebarGroup key={section.title}>
             <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2">
@@ -98,6 +115,17 @@ const AppSidebar = () => {
           </SidebarGroup>
         ))}
       </SidebarContent>
+
+      {/* Logout button pinned at the bottom */}
+      <SidebarFooter className="px-2 pb-4">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
+        </button>
+      </SidebarFooter>
     </Sidebar>
   )
 }

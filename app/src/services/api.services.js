@@ -442,3 +442,35 @@ export const cancelPayoutRequest = async (requestId, data) => {
     const response = await servicesAxiosInstance.patch(`/v1/payout-requests/${requestId}/cancel`, data);
     return response.data;
 };
+
+// Auth Profile & Settings APIs
+export const updateProfile = async (data) => {
+    const response = await servicesAxiosInstance.patch('/v1/auth/profile', data);
+    return response.data;
+};
+
+export const updateSocialMedia = async (data) => {
+    const response = await servicesAxiosInstance.patch('/v1/auth/social-media', data);
+    return response.data;
+};
+
+export const getSessions = async () => {
+    const response = await servicesAxiosInstance.get('/v1/auth/sessions');
+    return response.data;
+};
+
+export const revokeSession = async (sessionId) => {
+    const response = await servicesAxiosInstance.delete(`/v1/auth/sessions/${sessionId}`);
+    return response.data;
+};
+
+export const revokeAllSessions = async () => {
+    const response = await servicesAxiosInstance.post('/v1/auth/sessions/revoke-all');
+    return response.data;
+};
+
+// Change Password API
+export const changePassword = async (data) => {
+    const response = await servicesAxiosInstance.patch('/v1/auth/change-password', data);
+    return response.data;
+};

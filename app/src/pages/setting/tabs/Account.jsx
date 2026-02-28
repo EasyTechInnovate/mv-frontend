@@ -17,6 +17,8 @@ import {
   Phone
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { getSessions, revokeSession, revokeAllSessions, changePassword } from '@/services/api.services';
+import { showToast } from '@/utils/toast';
 
 const Account = () => {
   const [loading, setLoading] = useState(false);
@@ -60,50 +62,28 @@ const Account = () => {
     fetchSessionData();
   }, [user]);
 
-  // Renamed from fetchAccountData to be more specific
   const fetchSessionData = async () => {
     setLoading(true);
     try {
-      // Simulate API call - replace with actual API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await getSessions();
       
-      // Fake data from API
-      const accountData = {
-        activeSessions: [
-          {
-            id: 1,
-            device: 'MacBook Pro',
-            location: 'Mumbai, India',
-            status: 'Current',
-            lastActive: 'Active now',
-            icon: 'laptop'
-          },
-          {
-            id: 2,
-            device: 'iPhone 14',
-            location: 'Mumbai, India',
-            status: 'Active',
-            lastActive: '2 hours ago',
-            icon: 'phone'
-          },
-          {
-            id: 3,
-            device: 'Chrome Browser',
-            location: 'Delhi, India',
-            status: 'Active',
-            lastActive: '1 day ago',
-            icon: 'browser'
-          }
-        ]
-      };
+      const sessionList = response.data?.sessions?.map(session => ({
+        id: session.sessionId,  // backend returns sessionId (numeric index), not _id
+        device: session.deviceInfo?.browser ? `${session.deviceInfo.browser} on ${session.deviceInfo.os}` : 'Unknown Device',
+        location: session.ipAddress || 'Unknown Location',
+        status: session.isCurrentSession ? 'Current' : 'Active',
+        lastActive: session.lastActivity ? new Date(session.lastActivity).toLocaleString() : 'Active now',
+        icon: session.deviceInfo?.isMobile ? 'phone' : 'laptop',
+        isCurrentSession: session.isCurrentSession
+      })) || [];
 
       setFormData(prev => ({
         ...prev,
-        activeSessions: accountData.activeSessions
+        activeSessions: sessionList
       }));
     } catch (error) {
-      console.error('Error fetching account data:', error);
-      alert('Error loading account data');
+      console.error('Error fetching session data:', error);
+      showToast.error('Error loading session data');
     } finally {
       setLoading(false);
     }
@@ -145,19 +125,22 @@ const Account = () => {
 
   const handleUpdatePassword = async () => {
     if (formData.password.newPassword !== formData.password.confirmPassword) {
-      alert('New password and confirm password do not match!');
+      showToast.error('New password and confirm password do not match!');
       return;
     }
 
-    if (formData.password.newPassword.length < 8) {
-      alert('Password must be at least 8 characters long!');
+    if (formData.password.newPassword.length < 6) {
+      showToast.error('Password must be at least 6 characters long!');
       return;
     }
 
     setSaving(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Updating password');
+      await changePassword({
+        currentPassword: formData.password.currentPassword,
+        newPassword: formData.password.newPassword,
+        confirmPassword: formData.password.confirmPassword
+      });
       
       // Clear password fields after successful update
       setFormData(prev => ({
@@ -169,10 +152,10 @@ const Account = () => {
         }
       }));
       
-      alert('Password updated successfully!');
+      showToast.success('Password updated successfully!');
     } catch (error) {
       console.error('Error updating password:', error);
-      alert('Error updating password. Please try again.');
+      showToast.error(error?.response?.data?.message || 'Error updating password. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -202,25 +185,46 @@ const Account = () => {
   };
 
   const handleRevokeSession = async (sessionId) => {
-    if (formData.activeSessions.find(s => s.id === sessionId)?.status === 'Current') {
-      alert('Cannot revoke current session!');
+    const sessionToRevoke = formData.activeSessions.find(s => s.id === sessionId);
+    if (sessionToRevoke?.isCurrentSession) {
+      showToast.error('Cannot revoke current session!');
       return;
     }
 
     setSaving(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await revokeSession(sessionId);
       
       setFormData(prev => ({
         ...prev,
         activeSessions: prev.activeSessions.filter(session => session.id !== sessionId)
       }));
       
-      console.log('Session revoked:', sessionId);
-      alert('Session revoked successfully!');
+      showToast.success('Session revoked successfully!');
     } catch (error) {
       console.error('Error revoking session:', error);
-      alert('Error revoking session. Please try again.');
+      showToast.error(error?.response?.data?.message || 'Error revoking session. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRevokeAllSessions = async () => {
+    if (!window.confirm('Are you sure you want to revoke all other sessions? You will remain logged in on this device only.')) {
+      return;
+    }
+    setSaving(true);
+    try {
+      await revokeAllSessions();
+      // Remove all non-current sessions from local state
+      setFormData(prev => ({
+        ...prev,
+        activeSessions: prev.activeSessions.filter(session => session.isCurrentSession)
+      }));
+      showToast.success('All other sessions have been revoked!');
+    } catch (error) {
+      console.error('Error revoking all sessions:', error);
+      showToast.error(error?.response?.data?.message || 'Error revoking sessions. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -259,13 +263,13 @@ const Account = () => {
             <User className="w-5 h-5" />
             <CardTitle>Account Details</CardTitle>
           </div>
-          <Button 
+          {/* <Button 
             onClick={handleSaveAccountDetails}
             disabled={saving}
             className="bg-purple-600 text-white hover:bg-purple-700"
           >
             {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
+          </Button> */}
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -279,7 +283,7 @@ const Account = () => {
               type="email"
             />
           </div>
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <label className="text-sm font-medium">Username</label>
             <Input
               value={formData.accountDetails.username}
@@ -287,7 +291,7 @@ const Account = () => {
               placeholder="artistname"
               className="border-slate-700"
             />
-          </div>
+          </div> */}
         </CardContent>
       </Card>
 
@@ -391,7 +395,7 @@ const Account = () => {
       </Card>
 
       {/* Two-Factor Authentication Section */}
-      <Card className="border-slate-700">
+      {/* <Card className="border-slate-700">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5" />
@@ -417,7 +421,7 @@ const Account = () => {
               disabled={saving}
             />
           </div>
-          {/* {formData.twoFactorAuth.enabled && (
+          {formData.twoFactorAuth.enabled && (
             <div className="mt-4 p-4 bg-muted/20 rounded-lg">
               <div className="flex items-center gap-2 text-sm">
                 <Smartphone className="w-4 h-4" />
@@ -430,16 +434,27 @@ const Account = () => {
                 Use your authenticator app to generate verification codes
               </p>
             </div>
-          )} */}
+          )}
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Active Sessions Section */}
       <Card className="border-slate-700">
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Monitor className="w-5 h-5" />
-            <CardTitle>Active Sessions</CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Monitor className="w-5 h-5" />
+              <CardTitle>Active Sessions</CardTitle>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRevokeAllSessions}
+              disabled={saving || formData.activeSessions.filter(s => !s.isCurrentSession).length === 0}
+              className="border-red-600 text-red-500 hover:bg-red-500 hover:text-white"
+            >
+              Revoke All Other Sessions
+            </Button>
           </div>
           <p className="text-sm text-muted-foreground">
             Manage devices that are currently signed in to your account
@@ -454,7 +469,7 @@ const Account = () => {
               <div className="flex items-center gap-4">
                 {/* <Checkbox 
                   id={`session-${session.id}`}
-                  disabled={session.status === 'Current'}
+                  disabled={session.isCurrentSession}
                 /> */}
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-muted/20 rounded-lg">
@@ -463,7 +478,7 @@ const Account = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{session.device}</span>
-                      {session.status === 'Current' && (
+                      {session.isCurrentSession && (
                         <Badge className="bg-green-600 text-white text-xs">
                           Current
                         </Badge>
@@ -481,10 +496,10 @@ const Account = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => handleRevokeSession(session.id)}
-                disabled={session.status === 'Current' || saving}
+                disabled={session.isCurrentSession || saving}
                 className="border-slate-600 text-red-400 hover:text-red-300 hover:border-red-400"
               >
-                {session.status === 'Current' ? 'Current' : 'Revoke'}
+                {session.isCurrentSession ? 'Current' : 'Revoke'}
               </Button>
             </div>
           ))}
