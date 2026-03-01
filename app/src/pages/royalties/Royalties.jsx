@@ -704,7 +704,7 @@ export default function Royalties() {
                   <CardDescription>Detailed bonus breakdown</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scroll">
+                  <div className="space-y-4 max-h-[400px]  overflow-y-auto pr-2 custom-scroll">
                     {platforms.bonus.list.length === 0 ? (
                         <div className="text-center text-muted-foreground py-4">No bonus platform data</div>
                     ) : (
