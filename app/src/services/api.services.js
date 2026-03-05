@@ -135,6 +135,16 @@ export const requestAdvancedTakeDown = async (releaseId, data) => {
     return response.data
 }
 
+export const deleteBasicRelease = async (releaseId) => {
+    const response = await servicesAxiosInstance.delete(`/v1/releases/${releaseId}`)
+    return response.data
+}
+
+export const deleteAdvancedRelease = async (releaseId) => {
+    const response = await servicesAxiosInstance.delete(`/v1/advance-releases/${releaseId}`)
+    return response.data
+}
+
 // Sublabel APIs
 export const getUserSublabels = async () => {
     const response = await servicesAxiosInstance.get('/v1/advance-releases/sublabels')

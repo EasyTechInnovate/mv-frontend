@@ -140,7 +140,12 @@ const AdvancedReleaseBuilder = () => {
       showToast.success('Advanced release created successfully!');
     },
     onError: (error) => {
-      showToast.error(error?.response?.data?.message || 'Failed to create advanced release');
+      const responseData = error?.response?.data;
+      if (responseData?.errors?.length > 0) {
+        showToast.error(responseData.errors[0].message);
+      } else {
+        showToast.error(responseData?.message || 'Failed to create advanced release');
+      }
     }
   });
 
@@ -151,7 +156,12 @@ const AdvancedReleaseBuilder = () => {
       setCurrentStep(1);
     },
     onError: (error) => {
-      showToast.error(error?.response?.data?.message || 'Failed to save step 1');
+      const responseData = error?.response?.data;
+      if (responseData?.errors?.length > 0) {
+        showToast.error(responseData.errors[0].message);
+      } else {
+        showToast.error(responseData?.message || 'Failed to save step 1');
+      }
     }
   });
 
@@ -162,7 +172,12 @@ const AdvancedReleaseBuilder = () => {
       setCurrentStep(2);
     },
     onError: (error) => {
-      showToast.error(error?.response?.data?.message || 'Failed to save step 2');
+      const responseData = error?.response?.data;
+      if (responseData?.errors?.length > 0) {
+        showToast.error(responseData.errors[0].message);
+      } else {
+        showToast.error(responseData?.message || 'Failed to save step 2');
+      }
     }
   });
 
@@ -172,7 +187,12 @@ const AdvancedReleaseBuilder = () => {
       showToast.success('Step 3 saved successfully!');
     },
     onError: (error) => {
-      showToast.error(error?.response?.data?.message || 'Failed to save step 3');
+      const responseData = error?.response?.data;
+      if (responseData?.errors?.length > 0) {
+        showToast.error(responseData.errors[0].message);
+      } else {
+        showToast.error(responseData?.message || 'Failed to save step 3');
+      }
     }
   });
 
@@ -183,7 +203,12 @@ const AdvancedReleaseBuilder = () => {
       navigate('/app/catalog');
     },
     onError: (error) => {
-      showToast.error(error?.response?.data?.message || 'Failed to submit release');
+      const responseData = error?.response?.data;
+      if (responseData?.errors?.length > 0) {
+        showToast.error(responseData.errors[0].message);
+      } else {
+        showToast.error(responseData?.message || 'Failed to submit release');
+      }
     }
   });
 

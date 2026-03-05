@@ -53,6 +53,7 @@ const M = {
   SYSTEM: "System Settings",
   MERCH: "Merch Management",
   AGGREGATOR: "Aggregator Management",
+  NEWS: "News Management",
 };
 
 function AppContent() {
@@ -154,6 +155,7 @@ function AppContent() {
             <Route path="/admin/trending-artists" element={<P module={M.CONTENT}><TrendingArtistsManager theme={theme} /></P>} />
             <Route path="/admin/trending-labels" element={<P module={M.CONTENT}><TrendingLabelsManager theme={theme} /></P>} />
             <Route path="/admin/faq-management" element={<P module={M.CONTENT}><FaqManager theme={theme} /></P>} />
+            <Route path="/admin/press-management" element={<P module={M.NEWS}><NewsManagement theme={theme} /></P>} />
 
             {/* Configuration */}
             <Route path="/admin/company-settings" element={<P module={M.SYSTEM}><UnifiedSettingsPage theme={theme} /></P>} />

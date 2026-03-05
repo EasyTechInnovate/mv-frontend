@@ -23,6 +23,7 @@ const M = {
   SYSTEM: "System Settings",
   MERCH: "Merch Management",
   AGGREGATOR: "Aggregator Management",
+  NEWS: "News Management",
 };
 
 export default function Sidebar({ isCollapsed = false, theme }) {
@@ -111,6 +112,7 @@ export default function Sidebar({ isCollapsed = false, theme }) {
         { label: "Trending Artists", icon: <Users className="w-4 h-4" />, module: M.CONTENT },
         { label: "Trending Labels", icon: <Package className="w-4 h-4" />, module: M.CONTENT },
         { label: "FAQ Management", icon: <FileText className="w-4 h-4" />, module: M.CONTENT },
+        { label: "Press Management", icon: <Globe className="w-4 h-4" />, module: M.NEWS },
       ],
     },
     {

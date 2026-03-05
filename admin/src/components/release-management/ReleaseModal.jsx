@@ -1276,6 +1276,14 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                                 label="ISRC"
                                 value={track.isrc}
                             />
+                            <InfoField
+                                label="Language"
+                                value={track.language}
+                            />
+                            <InfoField
+                                label="Preview Start Time"
+                                value={track.previewTiming?.startTime != null ? `${track.previewTiming.startTime}` : null}
+                            />
                         </>
                     )}
 

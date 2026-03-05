@@ -101,7 +101,12 @@ const BasicReleaseBuilder = () => {
       showToast.success('Release created successfully!');
     },
     onError: (error) => {
-      showToast.error(error?.response?.data?.message || 'Failed to create release');
+      const responseData = error?.response?.data;
+      if (responseData?.errors?.length > 0) {
+        showToast.error(responseData.errors[0].message);
+      } else {
+        showToast.error(responseData?.message || 'Failed to create release');
+      }
     }
   });
 
@@ -112,7 +117,12 @@ const BasicReleaseBuilder = () => {
       setCurrentStep(1);
     },
     onError: (error) => {
-      showToast.error(error?.response?.data?.message || 'Failed to update step 1');
+      const responseData = error?.response?.data;
+      if (responseData?.errors?.length > 0) {
+        showToast.error(responseData.errors[0].message);
+      } else {
+        showToast.error(responseData?.message || 'Failed to update step 1');
+      }
     }
   });
 
@@ -123,7 +133,12 @@ const BasicReleaseBuilder = () => {
       setCurrentStep(2);
     },
     onError: (error) => {
-      showToast.error(error?.response?.data?.message || 'Failed to update step 2');
+      const responseData = error?.response?.data;
+      if (responseData?.errors?.length > 0) {
+        showToast.error(responseData.errors[0].message);
+      } else {
+        showToast.error(responseData?.message || 'Failed to update step 2');
+      }
     }
   });
 
@@ -133,7 +148,12 @@ const BasicReleaseBuilder = () => {
       showToast.success('Step 3 completed successfully!');
     },
     onError: (error) => {
-      showToast.error(error?.response?.data?.message || 'Failed to update step 3');
+      const responseData = error?.response?.data;
+      if (responseData?.errors?.length > 0) {
+        showToast.error(responseData.errors[0].message);
+      } else {
+        showToast.error(responseData?.message || 'Failed to update step 3');
+      }
     }
   });
 
@@ -146,7 +166,12 @@ const BasicReleaseBuilder = () => {
       }, 2000);
     },
     onError: (error) => {
-      showToast.error(error?.response?.data?.message || 'Failed to submit release');
+      const responseData = error?.response?.data;
+      if (responseData?.errors?.length > 0) {
+        showToast.error(responseData.errors[0].message);
+      } else {
+        showToast.error(responseData?.message || 'Failed to submit release');
+      }
     }
   });
 

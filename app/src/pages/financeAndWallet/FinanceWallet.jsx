@@ -78,7 +78,7 @@ const StatusBadge = ({ status }) => {
 
 export default function FinanceWallet() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState("transactions");
   const [wallet, setWallet] = useState(null);
   const [loadingWallet, setLoadingWallet] = useState(true);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -247,7 +247,7 @@ export default function FinanceWallet() {
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={() => setIsExportModalOpen(true)}>
             <Download className="mr-2 h-4 w-4" />
-            Export History
+            Export Statement
           </Button>
           <Button
             className="gap-2 bg-[#711CE9] text-white hover:bg-[#6f14ef]"
@@ -290,15 +290,15 @@ export default function FinanceWallet() {
 
       {/* Tabs */}
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="mb-6 grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsList className="mb-6 grid w-full grid-cols-3">
+          {/* <TabsTrigger value="overview">Overview</TabsTrigger> */}
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
           <TabsTrigger value="payouts">Payout Methods</TabsTrigger>
           <TabsTrigger value="statements">Statements</TabsTrigger>
         </TabsList>
 
         {/* Overview */}
-        <TabsContent value="overview">
+        {/* <TabsContent value="overview">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
@@ -365,7 +365,7 @@ export default function FinanceWallet() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
+        </TabsContent> */}
 
         {/* Transactions & Adjustments */}
         <TabsContent value="transactions" className="space-y-6">

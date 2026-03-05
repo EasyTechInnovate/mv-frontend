@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Music, Play, BarChart3, Eye, Download, MoreHorizontal, ChevronLeft, ChevronRight, Upload } from 'lucide-react'
+import { Search, Music, Play, BarChart3, Eye, Download, MoreHorizontal, ChevronLeft, ChevronRight, Upload, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -28,6 +28,8 @@ import {
     requestTakeDown,
     requestAdvancedUpdate,
     requestAdvancedTakeDown,
+    deleteBasicRelease,
+    deleteAdvancedRelease,
     getDashboardData
 } from '../../services/api.services'
 import { showToast } from '../../utils/toast'
@@ -461,6 +463,12 @@ const CatalogPage = () => {
         reason: '' 
     })
 
+    const [deleteDialog, setDeleteDialog] = useState({
+        isOpen: false,
+        release: null,
+        isDeleting: false
+    })
+
     const handleOpenEdit = (release) => {
         setEditDialog({ isOpen: true, release, reason: '', changes: '' })
     }
@@ -528,6 +536,25 @@ const CatalogPage = () => {
             queryClient.invalidateQueries(['advancedReleases'])
         } catch (error) {
             showToast.error(error.response?.data?.message || "Failed to submit request")
+        }
+    }
+
+    const handleDeleteRelease = async () => {
+        if (!deleteDialog.release) return
+        setDeleteDialog(prev => ({ ...prev, isDeleting: true }))
+        try {
+            if (releaseType === 'basic') {
+                await deleteBasicRelease(deleteDialog.release.releaseId)
+            } else {
+                await deleteAdvancedRelease(deleteDialog.release.releaseId)
+            }
+            showToast.success('Draft release deleted successfully')
+            setDeleteDialog({ isOpen: false, release: null, isDeleting: false })
+            queryClient.invalidateQueries(['basicReleases'])
+            queryClient.invalidateQueries(['advancedReleases'])
+        } catch (error) {
+            showToast.error(error.response?.data?.message || 'Failed to delete release')
+            setDeleteDialog(prev => ({ ...prev, isDeleting: false }))
         }
     }
 
@@ -836,9 +863,20 @@ const CatalogPage = () => {
                                                                     </DropdownMenuItem>
                                                                 </>
                                                             )}
-                                                            
 
-                                                            
+                                                            {release.releaseStatus === EReleaseStatus.DRAFT && (
+                                                                <>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => setDeleteDialog({ isOpen: true, release, isDeleting: false })}
+                                                                        className="text-red-600 focus:text-red-600"
+                                                                    >
+                                                                        {/* <Trash2 className="w-4 h-4 mr-2" /> */}
+                                                                        Delete Draft
+                                                                    </DropdownMenuItem>
+                                                                </>
+                                                            )}
+
                                                             {(release.releaseStatus === EReleaseStatus.LIVE || release.releaseStatus === EReleaseStatus.PUBLISHED) && (
                                                                 <>
                                                                     <DropdownMenuSeparator />
@@ -994,6 +1032,37 @@ const CatalogPage = () => {
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setTakedownDialog({ ...takedownDialog, isOpen: false })}>Cancel</Button>
                         <Button variant="destructive" onClick={submitTakedown} disabled={!takedownDialog.reason}>Submit Takedown Request</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Draft Confirmation Dialog */}
+            <Dialog open={deleteDialog.isOpen} onOpenChange={(open) => !deleteDialog.isDeleting && setDeleteDialog({ ...deleteDialog, isOpen: open })}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="text-red-600 flex items-center gap-2">
+                            <Trash2 className="w-5 h-5" />
+                            Delete Draft Release
+                        </DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to permanently delete <strong>&quot;{deleteDialog.release?.releaseName || deleteDialog.release?.step1?.releaseInfo?.releaseName || 'this release'}&quot;</strong>? This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleteDialog({ isOpen: false, release: null, isDeleting: false })}
+                            disabled={deleteDialog.isDeleting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDeleteRelease}
+                            disabled={deleteDialog.isDeleting}
+                        >
+                            {deleteDialog.isDeleting ? 'Deleting...' : 'Yes, Delete'}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
