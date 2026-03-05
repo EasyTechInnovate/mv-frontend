@@ -143,3 +143,15 @@ export const getPublicTestimonials = async () => {
     const response = await servicesAxiosInstance.get('/v1/testimonials');
     return response.data;
 };
+
+// ============= News / Press APIs =============
+
+/**
+ * Get all published press/news items (display: true)
+ * @returns {Promise} Response with list of news items
+ */
+export const getNewsItems = async () => {
+    const response = await servicesAxiosInstance.get('/v1/news');
+    return response.data;
+};
+

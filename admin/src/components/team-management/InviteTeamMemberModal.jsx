@@ -49,6 +49,7 @@ export default function InviteTeamMemberModal({
     SYSTEM_SETTINGS: "System Settings",
     MERCH_MANAGEMENT: "Merch Management",
     AGGREGATOR_MANAGEMENT: "Aggregator Management",
+    NEWS_MANAGEMENT: "News Management",
   };
 
   const [form, setForm] = useState({

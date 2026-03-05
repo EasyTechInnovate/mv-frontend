@@ -438,7 +438,20 @@ const deleteReport = (reportId) => axiosClient.delete(`/v1/admin/reports/${repor
 
 const getReportStats = (reportType = '') => axiosClient.get(`/v1/admin/reports/stats`, { params: { reportType } })
 
+// ---------------------- News/Press Management (Admin) ----------------------
+
+const getAllNews = (params) => axiosClient.get(`/v1/admin/news`, { params })
+
+const createNews = (payload) => axiosClient.post(`/v1/admin/news`, payload)
+
+const getNewsById = (newsId) => axiosClient.get(`/v1/admin/news/${newsId}`)
+
+const updateNews = (newsId, payload) => axiosClient.put(`/v1/admin/news/${newsId}`, payload)
+
+const deleteNews = (newsId) => axiosClient.delete(`/v1/admin/news/${newsId}`)
+
 export default {
+
     getHealth,
     getDashboardData,
     getUserWallet,
@@ -593,6 +606,7 @@ export default {
     getReportById,
     deleteReport,
     getReportStats,
+
     // Advanced Releases
     getAdvancedReleases: (params) => axiosClient.get(`/v1/admin/advanced-releases`, { params }),
     getAdvancedReleaseById: (releaseId) => axiosClient.get(`/v1/admin/advanced-releases/${releaseId}`),
@@ -620,4 +634,10 @@ export default {
     permanentDeleteRelease: (releaseId) => axiosClient.delete(`/v1/admin/releases/${releaseId}/permanent`),
     permanentDeleteAdvancedRelease: (releaseId) => axiosClient.delete(`/v1/admin/advanced-releases/${releaseId}/permanent`),
     updateAggregatorBanner: (userId, data) => axiosClient.patch(`/v1/admin/users/${userId}/aggregator-banner`, data),
+    // News / Press Management
+    getAllNews,
+    createNews,
+    getNewsById,
+    updateNews,
+    deleteNews,
 }
