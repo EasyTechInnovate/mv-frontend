@@ -103,7 +103,7 @@ const NotificationsPage = () => {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Bell className="w-6 h-6 text-purple-500" />
-            Notifications
+            Notifications 
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up!'}
