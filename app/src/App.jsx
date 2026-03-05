@@ -33,6 +33,7 @@ import Plan from './pages/plan/Plan'
 import MahiAI from './pages/mahiAI/MahiAI'
 import FanLinksBuilder from './pages/fanLink/FanLink'
 import Royalties from './pages/royalties/Royalties'
+import NotificationsPage from './pages/notifications/NotificationsPage'
 
 const AuthProvider = ({ children }) => {
   const { setUser, setAuthenticated, setLoading, clearAuth } = useAuthStore();
@@ -121,6 +122,7 @@ const ProtectedRoutes = () => {
           <Route path='mahi-ai' element={<MahiAI />} />
           <Route path='help' element={<HelpSupport />} />
           <Route path='fan-link' element={<FanLinksBuilder />} />
+          <Route path='notifications' element={<NotificationsPage />} />
           <Route path='settings' element={<SettingsPage />} />
         </Route>
     </Routes>

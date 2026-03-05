@@ -21,19 +21,26 @@ export default function Header({ onToggleSidebar, onToggleTheme, theme }) {
     navigate("/admin/login");
   };
 
-useEffect(() => {
-  const token = localStorage.getItem("adminAccessToken");
+  useEffect(() => {
+    const token = localStorage.getItem("adminAccessToken");
+    if (!token && window.location.pathname !== "/admin/login") {
+      localStorage.removeItem("adminAccessToken");
+      localStorage.removeItem("adminRefreshToken");
+      localStorage.removeItem("adminUser");
+      navigate("/admin/login");
+    }
+  }, [navigate]);
 
-  if (!token && window.location.pathname !== "/admin/login") {
-    localStorage.removeItem("adminAccessToken");
-    localStorage.removeItem("adminRefreshToken");
-    localStorage.removeItem("adminUser");
-    navigate("/admin/login");
-  }
-}, [navigate]);
-
-
-
+  // Close settings dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <header
@@ -57,18 +64,10 @@ useEffect(() => {
             M
           </div>
           <div>
-            <p
-              className={`text-sm font-medium ${
-                isDark ? "text-white" : "text-[#111A22]"
-              }`}
-            >
+            <p className={`text-sm font-medium ${isDark ? "text-white" : "text-[#111A22]"}`}>
               Maheshwari Visuals
             </p>
-            <span
-              className={`text-xs ${
-                isDark ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
+            <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
               Admin
             </span>
           </div>
@@ -122,9 +121,7 @@ useEffect(() => {
                   navigate("/admin/profile");
                 }}
                 className={`flex items-center gap-2 w-full px-4 py-2 text-sm transition ${
-                  isDark
-                    ? "hover:bg-gray-800 hover:text-white"
-                    : "hover:bg-gray-100"
+                  isDark ? "hover:bg-gray-800 hover:text-white" : "hover:bg-gray-100"
                 }`}
               >
                 <User size={16} />

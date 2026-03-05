@@ -484,3 +484,30 @@ export const changePassword = async (data) => {
     const response = await servicesAxiosInstance.patch('/v1/auth/change-password', data);
     return response.data;
 };
+
+// ---------------------- Notification APIs ----------------------
+
+export const getNotifications = async (params = {}) => {
+    const { page = 1, limit = 10 } = params;
+    const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+    });
+    const response = await servicesAxiosInstance.get(`/v1/notifications?${queryParams.toString()}`);
+    return response.data;
+};
+
+export const getNotificationCount = async () => {
+    const response = await servicesAxiosInstance.get('/v1/notifications/count');
+    return response.data;
+};
+
+export const markNotificationRead = async (notificationId) => {
+    const response = await servicesAxiosInstance.patch(`/v1/notifications/${notificationId}/read`);
+    return response.data;
+};
+
+export const markAllNotificationsRead = async () => {
+    const response = await servicesAxiosInstance.patch('/v1/notifications/read-all');
+    return response.data;
+};

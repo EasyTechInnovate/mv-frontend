@@ -2,7 +2,7 @@ import React from 'react'
 import {  
   Music, Home, User, Calendar, Upload, Grid3x3, Users, BarChart3, DollarSign, 
   Wallet, Megaphone, Video, Wrench, Store, Bot, HelpCircle, Settings,
-  BotMessageSquare, LogOut
+  BotMessageSquare, LogOut, Bell
 } from 'lucide-react';
 import { 
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, 
@@ -18,6 +18,7 @@ const AppSidebar = () => {
       title: "MAIN",
       items: [
         { icon: Home, label: "Dashboard", url: "/app" },
+        { icon: Bell, label: "Notifications", url: "/app/notifications" },
         { icon: User, label: "Profile", url: "/app/profile" },
         { icon: Calendar, label: "My Plan", url: "/app/plan" },
         { icon: Upload, label: "Upload Release", url: "/app/upload-release" },

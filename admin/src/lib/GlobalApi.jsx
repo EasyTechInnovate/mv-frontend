@@ -219,6 +219,9 @@ const toggleUserSubLabels = (userId, payload) => axiosClient.post(`/v1/admin/use
 
 const getUsers = (page = 1, limit = 10, extraParams = '') => axiosClient.get(`/v1/admin/users?page=${page}&limit=${limit}${extraParams}`)
 
+const searchUsersForNotification = (page = 1, limit = 100, search = '') =>
+    axiosClient.get(`/v1/admin/notifications/users/search?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`)
+
 // ---------------------- Support Tickets (Admin) ----------------------
 
 const getAllSupportTickets = (params) => axiosClient.get(`/v1/admin/support-tickets`, { params })
@@ -450,6 +453,27 @@ const updateNews = (newsId, payload) => axiosClient.put(`/v1/admin/news/${newsId
 
 const deleteNews = (newsId) => axiosClient.delete(`/v1/admin/news/${newsId}`)
 
+// ---------------------- Notifications (Admin) ----------------------
+
+const getAdminNotifications = (params) => axiosClient.get('/v1/admin/notifications', { params })
+
+const getAdminNotificationById = (notificationId) => axiosClient.get(`/v1/admin/notifications/${notificationId}`)
+
+const createAdminNotification = (payload) => axiosClient.post('/v1/admin/notifications', payload)
+
+const toggleAdminNotificationStatus = (notificationId, payload) =>
+    axiosClient.patch(`/v1/admin/notifications/${notificationId}/status`, payload)
+
+// ---------------------- Notifications (Bell / User APIs) ----------------------
+
+const getNotifications = (params) => axiosClient.get('/v1/notifications', { params })
+
+const getNotificationCount = () => axiosClient.get('/v1/notifications/count')
+
+const markNotificationRead = (notificationId) => axiosClient.patch(`/v1/notifications/${notificationId}/read`)
+
+const markAllNotificationsRead = () => axiosClient.patch('/v1/notifications/read-all')
+
 export default {
 
     getHealth,
@@ -640,4 +664,15 @@ export default {
     getNewsById,
     updateNews,
     deleteNews,
+    // Notifications (Admin)
+    getAdminNotifications,
+    getAdminNotificationById,
+    createAdminNotification,
+    toggleAdminNotificationStatus,
+    // Notifications (Bell)
+    getNotifications,
+    getNotificationCount,
+    markNotificationRead,
+    markAllNotificationsRead,
+    searchUsersForNotification,
 }
