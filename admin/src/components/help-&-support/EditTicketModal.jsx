@@ -21,12 +21,15 @@ export const ETicketStatus = {
   CLOSED: "closed",
 };
 
-export const EDepartment = Object.freeze({
-    MANAGEMENT: "Management",
+export const ETeamRole = Object.freeze({
+    GENERAL: "General",
     CONTENT: "Content",
-    TECHNOLOGY: "Technology",
     MARKETING: "Marketing",
-    SUPPORT: "Support",
+    USER_ACCOUNTS: "User Accounts & Membership",
+    FINANCE_ROYALTY: "Finance - Royalty",
+    FINANCE_MEMBERSHIP: "Finance - Membership",
+    COPYRIGHTS: "Copyrights",
+    OTHER: "Other"
 });
 
 const normalizeAssignedTo = (raw) => {
@@ -62,7 +65,7 @@ export default function EditTicketModal({
     status: ticket.status?.toLowerCase() || ETicketStatus.OPEN,
     priority: ticket.priority?.toLowerCase() || ETicketPriority.MEDIUM,
     assignedTo: normalizeAssignedTo(ticket.assignedTo),
-    assignedDepartment: ticket.assignedDepartment || "",
+    assignedTeamRole: ticket.assignedTeamRole || "",
   });
 
   const [details, setDetails] = useState(ticket.details || {});
@@ -74,7 +77,7 @@ export default function EditTicketModal({
       status: ticket.status?.toLowerCase() || ETicketStatus.OPEN,
       priority: ticket.priority?.toLowerCase() || ETicketPriority.MEDIUM,
       assignedTo: normalizeAssignedTo(ticket.assignedTo),
-      assignedDepartment: ticket.assignedDepartment || "",
+      assignedTeamRole: ticket.assignedTeamRole || "",
     });
     setDetails(ticket.details || {});
   }, [ticket]);
@@ -93,7 +96,7 @@ export default function EditTicketModal({
       setMembersLoading(true);
       setMembersError(null);
       try {
-        const res = await GlobalApi.getAllTeamMembers(1, 100);
+        const res = await GlobalApi.getAllTeamMembers({ page: 1, limit: 100 });
         const members = res?.data?.data?.teamMembers || [];
         const filtered = members.filter(
           (m) => m.isInvitationAccepted && m.isActive
@@ -121,7 +124,7 @@ export default function EditTicketModal({
       }
 
       payload.assignedTo = form.assignedTo || null;
-      payload.assignedDepartment = form.assignedDepartment || null;
+      payload.assignedTeamRole = form.assignedTeamRole || null;
       
       const res = await GlobalApi.updateSupportTicket(ticket.ticketId, payload);
 
@@ -290,12 +293,12 @@ export default function EditTicketModal({
            
             <div>
               <label className="text-xs" style={{ color: "var(--muted)" }}>
-                Assigned Department
+                Assigned Team Role
               </label>
               <select
-                value={form.assignedDepartment}
+                value={form.assignedTeamRole}
                 onChange={(e) =>
-                  updateField("assignedDepartment", e.target.value)
+                  updateField("assignedTeamRole", e.target.value)
                 }
                 className="w-full mt-1 rounded-lg px-3 py-2 text-sm"
                 style={{
@@ -305,7 +308,7 @@ export default function EditTicketModal({
                 }}
               >
                 <option value="">Unassigned</option>
-                {Object.values(EDepartment).map((d) => (
+                {Object.values(ETeamRole).map((d) => (
                   <option key={d} value={d}>
                     {d}
                   </option>
@@ -332,7 +335,9 @@ export default function EditTicketModal({
                 {membersLoading && <option>Loading...</option>}
                 {membersError && <option>Error loading members</option>}
 
-                {teamMembers.map((m) => (
+                {teamMembers
+                  .filter((m) => !form.assignedTeamRole || m.teamRole === form.assignedTeamRole)
+                  .map((m) => (
                   <option key={m._id} value={m._id}>
                     {m.firstName} {m.lastName} — {m.teamRole || "Member"}
                   </option>

@@ -5,7 +5,7 @@ import InviteTeamMemberModal from "@/components/team-management/InviteTeamMember
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
-import { ETeamRole, EDepartment, ETeamMemberStatus } from "./teamEnums";
+import { ETeamRole, ETeamMemberStatus } from "./teamEnums";
 
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -35,7 +35,6 @@ export default function TeamManagement({ theme }) {
   const [pagination, setPagination] = useState({ totalPages: 1 });
   
   const [roleFilter, setRoleFilter] = useState("all");
-  const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
   const [confirmDialog, setConfirmDialog] = useState({
@@ -54,7 +53,6 @@ export default function TeamManagement({ theme }) {
       };
       if (debouncedSearch) params.search = debouncedSearch;
       if (roleFilter !== "all") params.teamRole = roleFilter;
-      if (departmentFilter !== "all") params.department = departmentFilter;
       if (statusFilter !== "all") params.status = statusFilter;
 
       const [membersRes, statsRes] = await Promise.all([
@@ -67,14 +65,14 @@ export default function TeamManagement({ theme }) {
         const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || "-";
         const email = m.emailAddress ?? "-";
         const role = m.teamRole ?? m.role ?? "-";
-        const department = m.department ?? "-";
+        const mobileNumber = m.mobileNumber ?? "-";
 
         let status = "Inactive";
         if (m.isActive) status = "Active";
         else if (!m.isInvitationAccepted) status = "Pending";
 
         return {
-          _id: m._id, name, email, role, department, status,
+          _id: m._id, name, email, role, mobileNumber, status,
           isInvitationAccepted: m.isInvitationAccepted ?? false,
           joinDate: m.createdAt ? new Date(m.createdAt).toLocaleDateString() : "-",
           lastActive: m.loginInfo?.lastLogin ? new Date(m.loginInfo.lastLogin).toLocaleDateString() : "-",
@@ -104,11 +102,11 @@ export default function TeamManagement({ theme }) {
 
   useEffect(() => {
     fetchTeamData();
-  }, [page, debouncedSearch, roleFilter, departmentFilter, statusFilter]);
+  }, [page, debouncedSearch, roleFilter, statusFilter]);
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, roleFilter, departmentFilter, statusFilter]);
+  }, [debouncedSearch, roleFilter, statusFilter]);
 
 
   const handleEditClick = async (id) => {
@@ -173,7 +171,7 @@ export default function TeamManagement({ theme }) {
         <div>
           <h1 className="text-2xl font-semibold">Team Management</h1>
           <p className={`${isDark ? "text-gray-400" : "text-gray-600"} text-sm`}>
-            Manage team members, roles, permissions, and departments
+            Manage team members, roles, and permissions
           </p>
         </div>
         <Button
@@ -243,20 +241,6 @@ export default function TeamManagement({ theme }) {
             <option key={role} value={role}>{role}</option>
           ))}
         </select>
-        <select
-          value={departmentFilter}
-          onChange={(e) => setDepartmentFilter(e.target.value)}
-          className={`rounded-md px-3 py-2 text-sm ${
-            isDark
-              ? "bg-[#151F28] border border-gray-700 text-gray-200"
-              : "bg-white border border-gray-300"
-          }`}
-        >
-          <option value="all">All Departments</option>
-          {Object.values(EDepartment).map(dept => (
-            <option key={dept} value={dept}>{dept}</option>
-          ))}
-        </select>
       </div>
 
       <div
@@ -276,7 +260,7 @@ export default function TeamManagement({ theme }) {
               <tr>
                 <th className="px-4 py-3 font-medium">Member</th>
                 <th className="px-4 py-3 font-medium">Role</th>
-                <th className="px-4 py-3 font-medium">Department</th>
+                <th className="px-4 py-3 font-medium">Mobile Number</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Invitation</th>
                 <th className="px-4 py-3 font-medium">Join Date</th>
@@ -307,7 +291,7 @@ export default function TeamManagement({ theme }) {
                       {m.role}
                     </span>
                   </td>
-                  <td className="px-4 py-3">{m.department}</td>
+                  <td className="px-4 py-3">{m.mobileNumber}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`px-2 py-1 rounded-full text-xs ${m.status === "Active"

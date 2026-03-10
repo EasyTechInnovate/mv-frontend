@@ -8,11 +8,11 @@ const normalizeAssignedTo = (raw) => {
   return "";
 };
 
-const normalizeDepartment = (raw) => {
+const normalizeTeamRole = (raw) => {
   if (!raw) return "";
   if (typeof raw === "string") return raw;
   if (typeof raw === "object") {
-    if (raw.department) return raw.department;
+    if (raw.teamRole) return raw.teamRole;
     if (raw.name) return raw.name;
   }
   return "";
@@ -40,13 +40,13 @@ export default function AssignTicketModal({
 
  
   const [assignedTo, setAssignedTo] = useState("");
-  const [assignedDepartment, setAssignedDepartment] = useState("");
+  const [assignedTeamRole, setAssignedTeamRole] = useState("");
 
   useEffect(() => {
     if (!ticket) return;
 
     setAssignedTo(normalizeAssignedTo(ticket.assignedTo));
-    setAssignedDepartment(normalizeDepartment(ticket.assignedDepartment));
+    setAssignedTeamRole(normalizeTeamRole(ticket.assignedTeamRole));
   }, [ticket]);
 
 
@@ -59,7 +59,7 @@ export default function AssignTicketModal({
     const load = async () => {
       setLoadingMembers(true);
       try {
-        const res = await GlobalApi.getAllTeamMembers(1, 100);
+        const res = await GlobalApi.getAllTeamMembers({ page: 1, limit: 100 });
         const list = res?.data?.data?.teamMembers || [];
 
         const filtered = list.filter(
@@ -81,7 +81,7 @@ export default function AssignTicketModal({
     try {
       const payload = {
         assignedTo: assignedTo || null, 
-        assignedDepartment: assignedDepartment || null,
+        assignedTeamRole: assignedTeamRole || null,
       };
 
       const res = await GlobalApi.assignSupportTicket(
@@ -133,7 +133,9 @@ export default function AssignTicketModal({
 
             {loadingMembers && <option>Loading...</option>}
 
-            {teamMembers.map((m) => (
+            {teamMembers
+              .filter((m) => !assignedTeamRole || m.teamRole === assignedTeamRole)
+              .map((m) => (
               <option key={m._id} value={m._id}>
                 {m.firstName} {m.lastName} — {m.teamRole || "Member"}
               </option>
@@ -143,12 +145,12 @@ export default function AssignTicketModal({
 
         <div className="mb-6">
           <label className="text-xs mb-1 block" style={{ color: "var(--muted)" }}>
-            Assigned Department
+            Assigned Team Role
           </label>
 
           <select
-            value={assignedDepartment}
-            onChange={(e) => setAssignedDepartment(e.target.value)}
+            value={assignedTeamRole}
+            onChange={(e) => setAssignedTeamRole(e.target.value)}
             className="w-full rounded-lg px-3 py-2 text-sm"
             style={{
               background: "var(--surface)",
@@ -157,10 +159,10 @@ export default function AssignTicketModal({
             }}
           >
             <option value="">Unassigned</option>
-            {["Management", "Content", "Technology", "Marketing", "Support"].map(
-              (dep) => (
-                <option key={dep} value={dep}>
-                  {dep}
+            {["General", "Content", "Marketing", "User Accounts & Membership", "Finance - Royalty", "Finance - Membership", "Copyrights", "Other"].map(
+              (role) => (
+                <option key={role} value={role}>
+                  {role}
                 </option>
               )
             )}

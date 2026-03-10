@@ -512,15 +512,15 @@ const handleSendReply = async () => {
                       color: "var(--text)",
                       border: "1px solid rgba(255,255,255,0.08)",
                     }}
-                    value={currentTicket.assignedDepartment || ""} 
+                    value={currentTicket.assignedTeamRole || ""} 
                     onChange={(e) =>
                       setCurrentTicket((prev) => ({
                         ...prev,
-                        assignedDepartment: e.target.value,
+                        assignedTeamRole: e.target.value,
                       }))
                     }
                   >
-                    {["Management", "Content", "Technology", "Marketing", "Support"].map((d) => (
+                    {["General", "Content", "Marketing", "User Accounts & Membership", "Finance - Royalty", "Finance - Membership", "Copyrights", "Other"].map((d) => (
                       <option key={d} value={d}>
                         {d}
                       </option>

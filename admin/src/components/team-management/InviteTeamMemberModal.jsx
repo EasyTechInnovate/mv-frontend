@@ -20,19 +20,14 @@ export default function InviteTeamMemberModal({
   const isDark = theme === "dark";
 
   const ETeamRole = {
-    ADMIN: "Admin",
-    CONTENT_MANAGER: "Content Manager",
-    DEVELOPER: "Developer",
-    MARKETING_HEAD: "Marketing Head",
-    SUPPORT_SPECIALIST: "Support Specialist",
-  };
-
-  const EDepartment = {
-    MANAGEMENT: "Management",
-    CONTENT: "Content",
-    TECHNOLOGY: "Technology",
-    MARKETING: "Marketing",
-    SUPPORT: "Support",
+    GENERAL: 'General',
+    CONTENT: 'Content',
+    MARKETING: 'Marketing',
+    USER_ACCOUNTS: 'User Accounts & Membership',
+    FINANCE_ROYALTY: 'Finance - Royalty',
+    FINANCE_MEMBERSHIP: 'Finance - Membership',
+    COPYRIGHTS: 'Copyrights',
+    OTHER: 'Other'
   };
 
   const EModuleAccess = {
@@ -57,7 +52,7 @@ export default function InviteTeamMemberModal({
     lastName: "",
     emailAddress: "",
     teamRole: "",
-    department: "",
+    mobileNumber: "",
     moduleAccess: [],
     isActive: true,
   });
@@ -76,7 +71,7 @@ export default function InviteTeamMemberModal({
             lastName: data.lastName || "",
             emailAddress: data.emailAddress || "",
             teamRole: data.teamRole || "",
-            department: data.department || "",
+            mobileNumber: data.mobileNumber || "",
             moduleAccess: Array.isArray(data.moduleAccess)
               ? data.moduleAccess
               : [],
@@ -88,7 +83,7 @@ export default function InviteTeamMemberModal({
             lastName: memberData.lastName || "",
             emailAddress: memberData.emailAddress || "",
             teamRole: memberData.teamRole || "",
-            department: memberData.department || "",
+            mobileNumber: memberData.mobileNumber || "",
             moduleAccess: Array.isArray(memberData.moduleAccess)
               ? memberData.moduleAccess
               : [],
@@ -103,7 +98,7 @@ export default function InviteTeamMemberModal({
             lastName: "",
             emailAddress: "",
             teamRole: "",
-            department: "",
+            mobileNumber: "",
             moduleAccess: [],
             isActive: true,
           });
@@ -141,13 +136,13 @@ export default function InviteTeamMemberModal({
     try {
       if (memberId) {
 
-        const { firstName, lastName, teamRole, department, moduleAccess, isActive } = form;
+        const { firstName, lastName, teamRole, mobileNumber, moduleAccess, isActive } = form;
 
         const updatePayload = {
           firstName,
           lastName,
           teamRole,
-          department,
+          mobileNumber,
           moduleAccess,
         };
 
@@ -162,14 +157,14 @@ export default function InviteTeamMemberModal({
         toast.success("Team member updated successfully");
       } else {
 
-        const { firstName, lastName, emailAddress, teamRole, department, moduleAccess } = form;
+        const { firstName, lastName, emailAddress, teamRole, mobileNumber, moduleAccess } = form;
 
         const createPayload = {
           firstName,
           lastName,
           emailAddress,
           teamRole,
-          department,
+          mobileNumber,
           moduleAccess,
         };
 
@@ -275,22 +270,16 @@ export default function InviteTeamMemberModal({
                 ))}
               </select>
 
-              <select
-                name="department"
-                value={form.department}
+              <Input
+                name="mobileNumber"
+                placeholder="Enter mobile number"
+                value={form.mobileNumber}
                 onChange={handleChange}
-                className={`rounded-md px-3 py-2 text-sm col-span-1 ${isDark
-                  ? "bg-[#151F28] border border-gray-700 text-gray-200"
-                  : "bg-white border border-gray-300"
+                className={`col-span-1 ${isDark
+                  ? "bg-[#151F28] border-gray-700 text-gray-200"
+                  : "bg-white"
                   }`}
-              >
-                <option value="">Select department</option>
-                {Object.values(EDepartment).map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           </div>
 
