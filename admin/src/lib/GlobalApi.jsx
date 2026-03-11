@@ -237,6 +237,10 @@ const updateSupportTicket = (ticketId, payload) => axiosClient.put(`/v1/admin/su
 
 const deleteSupportTicket = (ticketId) => axiosClient.delete(`/v1/admin/support-tickets/${ticketId}`)
 
+const permanentDeleteSupportTicket = (ticketId) => axiosClient.delete(`/v1/admin/support-tickets/${ticketId}/permanent`)
+
+const bulkPermanentDeleteSupportTickets = (payload) => axiosClient.post(`/v1/admin/support-tickets/bulk/permanent`, payload)
+
 const addAdminResponse = (ticketId, payload) => axiosClient.post(`/v1/admin/support-tickets/${ticketId}/response`, payload)
 
 const addInternalNote = (ticketId, payload) => axiosClient.post(`/v1/admin/support-tickets/${ticketId}/internal-note`, payload)
@@ -552,6 +556,8 @@ export default {
     getSupportTicketById,
     updateSupportTicket,
     deleteSupportTicket,
+    permanentDeleteSupportTicket,
+    bulkPermanentDeleteSupportTickets,
     addAdminResponse,
     addInternalNote,
     assignSupportTicket,

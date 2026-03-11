@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import toast from 'react-hot-toast';
+import { uploadToImageKit } from '../../../utils/imagekitUploader.js';
 
 // This is a stand-in. In a real app, you'd import this from your constants file.
 const ENormalTicketCategory = {
@@ -43,7 +44,8 @@ const NormalTicketForm = ({ onSubmit, isLoading, user }) => {
     const [category, setCategory] = useState('');
     const [priority, setPriority] = useState(ETicketPriority.MEDIUM);
     const [description, setDescription] = useState('');
-    const [documentLink, setDocumentLink] = useState('');
+    const [uploadedFile, setUploadedFile] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -57,7 +59,7 @@ const NormalTicketForm = ({ onSubmit, isLoading, user }) => {
             description,
             category,
             contactEmail: user?.emailAddress,
-            attachments: documentLink ? [{ fileName: 'Uploaded Document', fileUrl: documentLink, fileSize: 0 }] : [],
+            attachments: uploadedFile ? [{ fileName: uploadedFile.name, fileUrl: uploadedFile.url, fileSize: uploadedFile.size }] : [],
         };
 
         const ticketData = {
@@ -67,6 +69,33 @@ const NormalTicketForm = ({ onSubmit, isLoading, user }) => {
         };
         
         onSubmit(ticketData);
+    };
+
+    const handleFileUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Size limit 15MB
+        if (file.size > 15 * 1024 * 1024) {
+            toast.error("File size must be less than 15MB");
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const response = await uploadToImageKit(file, 'support_tickets/documents');
+            setUploadedFile({
+                url: response.url,
+                name: file.name,
+                size: file.size
+            });
+            toast.success("Document uploaded successfully");
+        } catch (error) {
+            console.error("Document upload failed", error);
+            toast.error("Failed to upload document");
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     return (
@@ -105,8 +134,16 @@ const NormalTicketForm = ({ onSubmit, isLoading, user }) => {
                         </SelectContent>
                     </Select>
                 </FormField>
-                <FormField label="Uploaded Document Link (Optional)">
-                    <Input name="documentLink" placeholder="https://..." className="border-slate-700" value={documentLink} onChange={(e) => setDocumentLink(e.target.value)} />
+                <FormField label="Upload Document (Optional)">
+                    <Input 
+                        type="file" 
+                        className="border-slate-700" 
+                        onChange={handleFileUpload}
+                        disabled={isUploading || isLoading}
+                        accept="image/*,.pdf,.doc,.docx"
+                    />
+                    {isUploading && <p className="text-xs text-blue-500 mt-1 animate-pulse">Uploading document...</p>}
+                    {uploadedFile && !isUploading && <p className="text-xs text-green-500 mt-1">Attached: {uploadedFile.name}</p>}
                 </FormField>
             </div>
             <FormField label="Description" required>

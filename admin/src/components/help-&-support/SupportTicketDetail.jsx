@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Calendar, Paperclip, Send, Download, User, SquarePen, Tag } from "lucide-react";
+import { Calendar, Paperclip, Send, Download, User, SquarePen, Tag, Trash2 } from "lucide-react";
 import EditTicketModal from "./EditTicketModal";
 import AssignTicketModal from "./AssignTicketModal";
 import GlobalApi from "@/lib/GlobalApi";
@@ -169,6 +169,24 @@ const handleSendReply = async () => {
     }
   };
 
+  const handleDeleteTicket = async () => {
+    if (!window.confirm("Are you sure you want to permanently delete this ticket? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await GlobalApi.permanentDeleteSupportTicket(ticket.ticketId);
+      toast.success("Ticket permanently deleted");
+      onBack(); // Go back to the list
+    } catch (err) {
+      console.error("Failed to delete ticket:", err);
+      toast.error(err.response?.data?.message || "Failed to delete ticket");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderTicketDetails = () => {
     if (!currentTicket || !currentTicket.details) {
       return <p>No ticket details available.</p>;
@@ -263,18 +281,32 @@ const handleSendReply = async () => {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold">Ticket Information</h3>
 
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="px-3 py-1.5 text-xs rounded-md flex items-center gap-2"
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  color: "var(--muted)"
-                }}
-              >
-                <SquarePen size={14} />
-                Edit
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="px-3 py-1.5 text-xs rounded-md flex items-center gap-2"
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    color: "var(--muted)"
+                  }}
+                >
+                  <SquarePen size={14} />
+                  Edit
+                </button>
+  
+                <button
+                  onClick={handleDeleteTicket}
+                  disabled={loading}
+                  className="px-3 py-1.5 text-xs rounded-md flex items-center gap-2 hover:bg-red-500/10 text-red-500 transition-colors"
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <Trash2 size={14} />
+                  {loading ? "Deleting..." : "Delete"}
+                </button>
+              </div>
             </div>
 
             {renderTicketDetails()}

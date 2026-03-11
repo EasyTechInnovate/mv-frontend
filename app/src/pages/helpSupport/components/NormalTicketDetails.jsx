@@ -19,14 +19,14 @@ const NormalTicketDetails = ({ details }) => {
             </div>
             {details.attachments && details.attachments.length > 0 && (
                 <div>
-                    <p className="text-muted-foreground mb-1">Uploaded Document Link</p>
+                    <p className="text-muted-foreground mb-1">Attached Document</p>
                     <a 
                         href={details.attachments[0].fileUrl} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="font-semibold text-purple-400 hover:underline"
                     >
-                        {details.attachments[0].fileUrl}
+                        {details.attachments[0].fileName || "View Document"}
                     </a>
                 </div>
             )}

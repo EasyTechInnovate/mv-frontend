@@ -1,14 +1,18 @@
 import { useState, useEffect } from "react";
-import { Search, Download, MessageSquare, Loader2 } from "lucide-react";
+import { Search, Download, MessageSquare, Loader2, Trash2, ListChecks } from "lucide-react";
 import GlobalApi from "@/lib/GlobalApi";
 import SupportTicketDetail from "@/components/help-&-support/SupportTicketDetail";
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function HelpSupport({ theme = "dark" }) {
   const [tickets, setTickets] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [selectedTickets, setSelectedTickets] = useState([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [pagination, setPagination] = useState({
@@ -128,6 +132,73 @@ export default function HelpSupport({ theme = "dark" }) {
     };
     fetchTickets();
   }, [page, limit, debouncedSearchQuery, statusFilter, priorityFilter]);
+
+  const toggleBulkMode = () => {
+    setIsBulkMode(!isBulkMode);
+    setSelectedTickets([]);
+  };
+
+  const handleSelectTicket = (ticket) => {
+    const isSelected = selectedTickets.some(t => t.ticketId === ticket.ticketId);
+    
+    if (isSelected) {
+      setSelectedTickets(prev => prev.filter(t => t.ticketId !== ticket.ticketId));
+    } else {
+      setSelectedTickets(prev => [...prev, ticket]);
+    }
+  };
+
+  const handleBulkPermanentDelete = async () => {
+    if (!selectedTickets.length) return;
+    if (!window.confirm(`Are you sure you want to permanently delete ${selectedTickets.length} tickets? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const ticketIds = selectedTickets.map(t => t.ticketId);
+      await GlobalApi.bulkPermanentDeleteSupportTickets({ ticketIds });
+      toast.success(`${selectedTickets.length} tickets permanently deleted`);
+      
+      // Refresh the tickets list
+      setTickets(tickets.filter(t => (!ticketIds.includes(t.ticketId))));
+      setSelectedTickets([]);
+      setIsBulkMode(false);
+      
+      // Fetch fresh stats
+      const res = await GlobalApi.getSupportTicketStats("month");
+      setStats(res.data.data.overallStats);
+    } catch (err) {
+      console.error("Failed to bulk delete tickets:", err);
+      toast.error(err.response?.data?.message || "Failed to delete tickets");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteTicket = async (ticketId) => {
+    if (!window.confirm("Are you sure you want to permanently delete this ticket? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await GlobalApi.permanentDeleteSupportTicket(ticketId);
+      toast.success("Ticket permanently deleted");
+      
+      // Refresh the tickets list
+      setTickets(tickets.filter(t => t.ticketId !== ticketId));
+      
+      // Fetch fresh stats
+      const res = await GlobalApi.getSupportTicketStats("month");
+      setStats(res.data.data.overallStats);
+    } catch (err) {
+      console.error("Failed to delete ticket:", err);
+      toast.error(err.response?.data?.message || "Failed to delete ticket");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
 
   useEffect(() => {
@@ -281,6 +352,25 @@ export default function HelpSupport({ theme = "dark" }) {
           </select>
 
           <button
+            className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg transition-colors ${
+              isBulkMode ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" : bgColors.button
+            }`}
+            onClick={toggleBulkMode}
+          >
+            <ListChecks className="w-4 h-4 mr-2" /> {isBulkMode ? 'Exit Bulk Actions' : 'Bulk Actions'}
+          </button>
+
+          {isBulkMode && selectedTickets.length > 0 && (
+            <button
+               className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50`}
+               onClick={handleBulkPermanentDelete}
+               disabled={isDeleting}
+            >
+               <Trash2 className="w-4 h-4" /> Delete Permanently ({selectedTickets.length})
+            </button>
+          )}
+
+          <button
             className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg ${bgColors.button}`}
             onClick={() => setIsExportModalOpen(true)}
           >
@@ -307,6 +397,11 @@ export default function HelpSupport({ theme = "dark" }) {
                     : "text-gray-600 border-b border-gray-200"
                 }
               >
+                {isBulkMode && (
+                    <th className="px-4 py-3 w-[50px] whitespace-nowrap">
+                        <span className="sr-only">Select</span>
+                    </th>
+                )}
                 <th className="text-left whitespace-nowrap py-3 px-4">Ticket Id</th>
                 <th className="text-left whitespace-nowrap py-3 px-4">Account Id</th>
                 <th className="text-left whitespace-nowrap py-3 px-4">User</th>
@@ -332,7 +427,16 @@ export default function HelpSupport({ theme = "dark" }) {
                 </tr>
               ) : (
                 tickets.map((t, i) => (
-                  <tr key={i} className={`last:border-none ${bgColors.rowHover}`}>
+                  <tr key={i} className={`last:border-none ${bgColors.rowHover} ${selectedTickets.some(r => r.ticketId === t.ticketId) ? (theme === 'dark' ? 'bg-purple-900/10' : 'bg-purple-50') : ''}`}>
+                    {isBulkMode && (
+                      <td className="px-4 py-3 w-[50px] whitespace-nowrap">
+                          <Checkbox 
+                              checked={selectedTickets.some(r => r.ticketId === t.ticketId)}
+                              onCheckedChange={() => handleSelectTicket(t)}
+                              className={theme === 'dark' ? "border-gray-500 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600" : ""}
+                          />
+                      </td>
+                    )}
                     <td className="py-3 px-4">{t.ticketId}</td>
                     <td className="py-3 px-4">{t.userId?.accountId}</td>
                     <td className="py-3 px-4">
@@ -386,20 +490,31 @@ export default function HelpSupport({ theme = "dark" }) {
                     </td>
 
 
-                    <td className="py-3 px-4 flex items-center gap-1">
-                      <MessageSquare className="w-4 h-4 text-gray-400" />
-                      {t.responses?.length || 0}
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-1">
+                        <MessageSquare className="w-4 h-4 text-gray-400" />
+                        {t.responses?.length || 0}
+                      </div>
                     </td>
 
                     <td className="py-3 px-4">
-                      <button
-                        className={`px-3.5 py-2 rounded-lg text-xs ${bgColors.button}`}
-                        onClick={() => setSelectedTicket(t)}
+                      <div className="flex gap-2">
+                        <button
+                          className={`px-3.5 py-2 rounded-lg text-xs ${bgColors.button}`}
+                          onClick={() => setSelectedTicket(t)}
 
-                      >
-                        View
-                      </button>
-
+                        >
+                          View
+                        </button>
+                        <button
+                          title="Permanent Delete"
+                          disabled={isDeleting}
+                          onClick={() => handleDeleteTicket(t.ticketId)}
+                          className={`p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors ${isDeleting ? "opacity-50 cursor-not-allowed" : ""}`}
+                        >
+                           <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
