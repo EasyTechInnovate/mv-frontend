@@ -6,6 +6,7 @@ import { Toaster as HotToaster } from "react-hot-toast";
 import { MediaQueryProvider } from "@/contexts/MediaQueryContext";
 import { CompanyInfoProvider } from "@/contexts/CompanyInfoContext";
 import { TestimonialProvider } from "@/contexts/TestimonialContext";
+import N8nChatWidget from "@/components/N8nChatWidget";
 
 const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
@@ -63,6 +64,7 @@ export default function RootLayout({ children }) {
                   },
                 }}
               />
+              <N8nChatWidget />
             </MediaQueryProvider>
           </TestimonialProvider>
         </CompanyInfoProvider>

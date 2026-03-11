@@ -1,138 +1,320 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Send, Bot, User } from 'lucide-react';
+import React, { useEffect, useRef, useState } from "react";
 
-const MahiAI = () => {
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'bot',
-      senderName: 'Mahi AI',
-      text: "I'm unable to upload my new track. The upload keeps failing at 50%. I've tried multiple times with different browsers but the same issue persists. File size is about 120MB in WAV format.",
-      timestamp: '3/15/2024, 10:00:00 AM'
-    },
-    {
-      id: 2,
-      sender: 'user',
-      senderName: 'Aditya',
-      text: "Thank you for contacting us. We're looking into this issue. The 100MB limit is currently in place for technical reasons. We're working on increasing this limit. In the meantime, you can compress your file or contact us for a manual upload.",
-      timestamp: '3/15/2024, 10:30:00 AM'
-    },
-    {
-      id: 3,
-      sender: 'bot',
-      senderName: 'Mahi AI',
-      text: "When will the limit be increased? I have several tracks that are over 100MB and this is blocking my release schedule.",
-      timestamp: '3/15/2024, 2:00:00 PM'
-    }
-  ]);
-  const messagesEndRef = useRef(null);
+const CHAT_URL =
+  "https://n8n.seyreon.com/webhook/f090ba98-678a-4a71-b119-26190f16ab6b/chat";
 
-  // Auto scroll to bottom when messages change
+const SESSION_DURATION = 5 * 60 * 1000;
+const WARNING_TIME = 4 * 60 * 1000;
+const COOLDOWN_DURATION = 5 * 60 * 1000;
+
+const INITIAL_MESSAGE = {
+  role: "bot",
+  content:
+    "Hello 👋 I’m your Mahi AI assistant. I am here to help you with your music Journey.",
+};
+
+const WARNING_MESSAGE = {
+  role: "bot",
+  content: "Hey, the chat window will close in 1 minute.",
+};
+
+const CLOSE_MESSAGE = {
+  role: "bot",
+  content:
+    "5 minutes are completed, so now you can chat here for further details:\nhttps://chatgpt.com/g/g-6967a747227c81918462a107fd3d9ab6-maheshwari-visuals",
+};
+
+export default function ChatSection() {
+  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const [chatLocked, setChatLocked] = useState(false);
+  const [cooldownEnd, setCooldownEnd] = useState(null);
+
+  const messagesRef = useRef(null);
+  const isUserAtBottomRef = useRef(true);
+
+  const warningQueued = useRef(false);
+  const closingQueued = useRef(false);
+
+  const warningTimer = useRef(null);
+  const closingTimer = useRef(null);
+
+  const sessionStartRef = useRef(null);
+
+  const sessionIdRef = useRef(
+    localStorage.getItem("n8n-chat-session") || crypto.randomUUID(),
+  );
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    localStorage.setItem("n8n-chat-session", sessionIdRef.current);
+  }, []);
 
-  const handleSendMessage = () => {
-    if (message.trim() === '') return;
+  const handleScroll = () => {
+    const el = messagesRef.current;
+    if (!el) return;
 
-    const newMessage = {
-      id: messages.length + 1,
-      sender: 'user',
-      senderName: 'You',
-      text: message,
-      timestamp: new Date().toLocaleString()
-    };
+    const threshold = 40;
 
-    setMessages([...messages, newMessage]);
-    setMessage('');
+    isUserAtBottomRef.current =
+      el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+  useEffect(() => {
+    const el = messagesRef.current;
+    if (!el || !isUserAtBottomRef.current) return;
+
+    el.scrollTop = el.scrollHeight;
+  }, [messages, loading]);
+
+  const addBotMessage = (message) => {
+    setMessages((prev) => [...prev, message]);
+  };
+
+  const startSessionTimers = () => {
+    sessionStartRef.current = Date.now();
+
+    warningTimer.current = setTimeout(() => {
+      if (loading) {
+        warningQueued.current = true;
+      } else {
+        addBotMessage(WARNING_MESSAGE);
+      }
+    }, WARNING_TIME);
+
+    closingTimer.current = setTimeout(() => {
+      if (loading) {
+        closingQueued.current = true;
+      } else {
+        addBotMessage(CLOSE_MESSAGE);
+      }
+
+      setChatLocked(true);
+      setCooldownEnd(Date.now() + COOLDOWN_DURATION);
+    }, SESSION_DURATION);
+  };
+
+  const processQueuedMessages = () => {
+    if (warningQueued.current) {
+      warningQueued.current = false;
+      addBotMessage(WARNING_MESSAGE);
     }
+
+    if (closingQueued.current) {
+      closingQueued.current = false;
+      addBotMessage(CLOSE_MESSAGE);
+    }
+  };
+
+  const extractBotReply = (responseData) => {
+    try {
+      if (responseData?.data?.[0]?.output) return responseData.data[0].output;
+      if (responseData?.output) return responseData.output;
+      if (responseData?.message) return responseData.message;
+      if (responseData?.text) return responseData.text;
+      if (typeof responseData === "string") return responseData;
+
+      return JSON.stringify(responseData);
+    } catch {
+      return "⚠️ Error reading response.";
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userText = input.trim();
+    setInput("");
+
+    setMessages((prev) => [...prev, { role: "user", content: userText }]);
+
+    if (chatLocked) {
+      if (Date.now() >= cooldownEnd) {
+        setChatLocked(false);
+        startSessionTimers();
+      } else {
+        addBotMessage({
+          role: "bot",
+          content: "You need to wait for 5 minutes to be able to chat again here.",
+        });
+        return;
+      }
+    }
+
+    if (!sessionStartRef.current) {
+      startSessionTimers();
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(CHAT_URL, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "sendMessage",
+          sessionId: sessionIdRef.current,
+          chatInput: userText,
+        }),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      const botReply = extractBotReply(data);
+
+      setMessages((prev) => [...prev, { role: "bot", content: botReply }]);
+    } catch (error) {
+      console.error("Chat error:", error);
+
+      addBotMessage({
+        role: "bot",
+        content: "⚠️ Connection issue. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+
+      processQueuedMessages();
+    }
+  };
+
+  const resetChat = () => {
+    const newSession = crypto.randomUUID();
+
+    sessionIdRef.current = newSession;
+    localStorage.setItem("n8n-chat-session", newSession);
+
+    clearTimeout(warningTimer.current);
+    clearTimeout(closingTimer.current);
+
+    warningQueued.current = false;
+    closingQueued.current = false;
+
+    sessionStartRef.current = null;
+
+    setChatLocked(false);
+    setCooldownEnd(null);
+
+    setMessages([INITIAL_MESSAGE]);
+    setInput("");
+    setLoading(false);
+
+    requestAnimationFrame(() => {
+      if (messagesRef.current) messagesRef.current.scrollTop = 0;
+    });
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-6">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Mahi - Your Personal AI Assistant</h1>
-          <p className="text-muted-foreground">Get instant help and support from our AI assistant</p>
+    <div className="min-h-screen bg-background p-6 text-foreground">
+      {/* Header */}
+      <div className="mb-8 flex flex-col gap-4 md:flex-row items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Mahi AI Assistant</h1>
+          <p className="text-muted-foreground mt-1 ">
+            When prospects reach out, speed determines whether the opportunity moves forward or disappears. 
+            This AI assistant responds instantly, answers questions, and guides toward the next step.
+          </p>
         </div>
+      </div>
 
-        {/* Chat Card */}
-        <Card className="border-slate-700 h-[calc(100vh-220px)] flex flex-col">
-          <CardHeader className="border-b border-slate-700">
-            <CardTitle className="flex items-center gap-2">
-              <Bot className="w-5 h-5 text-purple-500" />
-              Mahi AI
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent className="flex-1 overflow-y-auto p-6 space-y-4 custom-scroll">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] md:max-w-[70%] ${
-                    msg.sender === 'user'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-slate-800/50 text-white'
-                  } rounded-lg p-4 space-y-2`}
-                >
-                  <div className="flex items-center gap-2">
-                    {msg.sender === 'bot' ? (
-                      <Bot className="w-4 h-4" />
-                    ) : (
-                      <User className="w-4 h-4" />
-                    )}
-                    <span className="font-semibold text-sm">{msg.senderName}</span>
-                    <span className="text-xs opacity-70 ml-auto">{msg.timestamp}</span>
-                  </div>
-                  <p className="text-sm leading-relaxed">{msg.text}</p>
-                </div>
+      {/* Main Chat Area matching Dashboard Cards */}
+      <div className="flex flex-col relative w-full h-[70vh] min-h-[500px] border border-border bg-card text-card-foreground shadow-sm rounded-xl overflow-hidden">
+        
+        {/* Chat header (internal) */}
+        <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-muted/30">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#711CE9]/15 flex items-center justify-center text-[#711CE9] font-bold shadow-sm">
+              M
+            </div>
+            <div className="flex flex-col">
+              <div className="font-semibold text-foreground">
+                Mahi AI Assistant 
               </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </CardContent>
-
-          {/* Message Input */}
-          <div className="border-t border-slate-700 p-4">
-            <div className="flex gap-3 items-end">
-              <div className="flex-1">
-                <label className="text-sm font-medium mb-2 block">Message</label>
-                <Textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Type your message here..."
-                  className="border-slate-700 min-h-[60px] max-h-[120px] resize-none"
-                  rows={2}
-                />
+              <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                Online • Responds instantly
               </div>
-              <Button
-                onClick={handleSendMessage}
-                className="bg-purple-600 text-white hover:bg-purple-700 h-[60px] px-6"
-                disabled={message.trim() === ''}
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Send Reply
-              </Button>
             </div>
           </div>
-        </Card>
+
+          <button
+            className="w-8 h-8 rounded-full bg-background border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground flex items-center justify-center hover:-rotate-180 duration-300"
+            onClick={resetChat}
+            title="Reset Chat"
+          >
+            ↻
+          </button>
+        </div>
+
+        {/* Chat messages */}
+        <div
+          className="flex-1 p-6 overflow-y-auto flex flex-col gap-6"
+          ref={messagesRef}
+          onScroll={handleScroll}
+        >
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`flex flex-col gap-1.5 w-full ${
+                msg.role === "user" ? "items-end" : "items-start"
+              }`}
+            >
+              <div className="flex items-end gap-2 max-w-[80%] md:max-w-[70%]">
+                {msg.role === "bot" && (
+                  <div className="w-8 h-8 rounded-full bg-[#711CE9] flex items-center justify-center text-white text-xs font-bold shadow-sm shrink-0 mb-1">M</div>
+                )}
+
+                <div
+                  className={`py-3 px-4 leading-[1.6] text-[0.95rem] ${
+                    msg.role === "bot"
+                      ? "bg-muted text-foreground rounded-2xl rounded-bl-sm border border-border/50"
+                      : "bg-[#711CE9] text-white rounded-2xl rounded-br-sm shadow-sm"
+                  }`}
+                  style={{ whiteSpace: "pre-line" }}
+                >
+                  {msg.content}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {loading && (
+            <div className="flex flex-col items-start gap-1.5 w-full">
+              <div className="flex items-end gap-2 max-w-[80%] md:max-w-[70%]">
+                <div className="w-8 h-8 rounded-full bg-[#711CE9] flex items-center justify-center text-white text-xs font-bold shadow-sm shrink-0 mb-1">M</div>
+                <div
+                  className="py-3 px-4 leading-[1.6] text-[0.95rem] bg-muted text-muted-foreground italic rounded-2xl rounded-bl-sm border border-border/50 animate-pulse"
+                >
+                  Thinking…
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input area */}
+        <div className="p-4 border-t border-border bg-card/80 flex gap-3 items-center">
+          <input
+            className="flex-1 px-4 py-3 rounded-md border border-input bg-background text-foreground outline-none focus:ring-1 focus:ring-[#711CE9] focus:border-[#711CE9] transition-all text-[0.95rem] placeholder:text-muted-foreground"
+            placeholder="Ask ..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          />
+
+          <button
+            className="px-6 py-3 rounded-md border-none bg-[#711CE9] text-white font-medium hover:bg-[#5a16ba] transition-all shadow-sm active:scale-95 disabled:opacity-70"
+            onClick={sendMessage}
+            disabled={loading || chatLocked}
+          >
+            Send
+          </button>
+        </div>
       </div>
     </div>
   );
-};
-
-export default MahiAI;
+}
