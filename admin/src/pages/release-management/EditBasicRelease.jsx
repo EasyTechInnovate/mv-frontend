@@ -245,7 +245,7 @@ const EditBasicRelease = ({ theme }) => {
                 releaseDate: formData.releaseDate ? new Date(formData.releaseDate).toISOString() : null,
                 territorialRights: {
                     hasRights: worldWideRelease === 'yes',
-                    territories: worldWideRelease === 'yes' ? [] : selectedTerritories
+                    territories: worldWideRelease === 'yes' ? territoryOptions.map(t => t.value) : selectedTerritories
                 },
                 partnerSelection: {
                     hasPartners: selectedPartners.length > 0,

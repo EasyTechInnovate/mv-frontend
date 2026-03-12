@@ -327,7 +327,7 @@ const EditAdvancedRelease = ({ theme }) => {
                 },
                 territorialRights: {
                     isWorldwide: worldWideRelease === 'yes',
-                    territories: worldWideRelease === 'yes' ? [] : selectedTerritories
+                    territories: worldWideRelease === 'yes' ? territoryOptions.map(t => t.value) : selectedTerritories
                 },
                 distributionPartners: selectedPartners.map(p => p.toLowerCase().replace(/\s+/g, '_')), 
                 copyrightOptions: {

@@ -411,8 +411,8 @@ const BasicReleaseBuilder = () => {
             <div className="mb-6">
               <Plus className="w-12 h-12 text-muted-foreground group-hover:text-foreground transition-colors" />
             </div>
-            <h3 className="text-foreground text-xl font-medium mb-2">Select a Single track</h3>
-            <p className="text-muted-foreground text-sm">Add a track from MV Catalog or Spotify</p>
+            <h3 className="text-foreground text-xl font-medium mb-2">Single</h3>
+            <p className="text-muted-foreground text-sm">1 Track</p>
           </div>
         </div>
 
@@ -424,8 +424,8 @@ const BasicReleaseBuilder = () => {
             <div className="mb-6">
               <Plus className="w-12 h-12 text-muted-foreground group-hover:text-foreground transition-colors" />
             </div>
-            <h3 className="text-foreground text-xl font-medium mb-2">Select a Album track</h3>
-            <p className="text-muted-foreground text-sm">Add a track from MV Catalog or Spotify</p>
+            <h3 className="text-foreground text-xl font-medium mb-2">Album</h3>
+            <p className="text-muted-foreground text-sm">Multiple Tracks</p>
           </div>
         </div>
       </div>

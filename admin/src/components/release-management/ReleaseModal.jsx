@@ -374,7 +374,9 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                 
                 // Distribution
                 'Release Date': step3.releaseDate || step3.deliveryDetails?.forFutureRelease || '',
-                'Territories': step3.territorialRights?.isWorldwide ? 'Worldwide' : step3.territorialRights?.territories?.join(', ') || '',
+                'Territories': (step3.territorialRights?.territories || step3.territorialRights?.selectedTerritories || [])
+                    .map(t => t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))
+                    .join(', '),
                 'Distribution Partners': step3.distributionPartners?.join(', ') || step3.partnerSelection?.partners?.join(', ') || '',
                 'Owns Copyright': step3.copyrightOptions?.ownsCopyrights ? 'Yes' : 'No',
                 
@@ -781,22 +783,32 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
 
                     <div className="md:col-span-2">
                         <label className="text-sm font-medium mb-2 block">Territories</label>
-                        {(release.step3?.territorialRights?.isWorldwide || release.step3?.territorialRights?.hasRights) ? (
-                            <p className={isDark ? 'text-gray-300' : 'text-gray-700'}>Worldwide</p>
-                        ) : (
-                            <div className={`p-4 mt-2 border rounded-md ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'}`}>
-                                <label className="text-sm font-medium">
-                                    Selected Territories ({(release.step3?.territorialRights?.territories?.length || release.step3?.territorialRights?.selectedTerritories?.length || 0)})
-                                </label>
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-3 max-h-40 overflow-y-auto">
-                                    {(release.step3?.territorialRights?.territories || release.step3?.territorialRights?.selectedTerritories)?.map((territory, idx) => (
-                                        <div key={idx} className={`text-sm px-2 py-1 rounded ${isDark ? 'bg-[#151F28]' : 'bg-white'}`}>
-                                            {territory.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        {(() => {
+                            const isWorldwide = release.step3?.territorialRights?.isWorldwide || release.step3?.territorialRights?.hasRights;
+                            const displayTerritories = release.step3?.territorialRights?.territories || release.step3?.territorialRights?.selectedTerritories || [];
+
+                            return (
+                                <>
+                                    {/* {isWorldwide && (
+                                        <p className={`mb-3 font-semibold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                                            Worldwide
+                                        </p>
+                                    )} */}
+                                    <div className={`p-4 border rounded-md ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'}`}>
+                                        <label className="text-sm font-medium">
+                                            Selected Territories ({displayTerritories.length})
+                                        </label>
+                                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-3 max-h-40 overflow-y-auto">
+                                            {displayTerritories.map((territory, idx) => (
+                                                <div key={idx} className={`text-sm px-2 py-1 rounded ${isDark ? 'bg-[#151F28]' : 'bg-white'}`}>
+                                                    {territory.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                                    </div>
+                                </>
+                            );
+                        })()}
                     </div>
 
                     <div className="md:col-span-2">
