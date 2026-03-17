@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { Country, State } from 'country-state-city'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
 
 const App = () => {
     const router = useRouter()
@@ -45,6 +46,8 @@ const App = () => {
     const [isLabel, setIsLabel] = useState(false)
     const [errors, setErrors] = useState({})
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
     useEffect(() => {
         if (formData.country) {
@@ -79,15 +82,33 @@ const App = () => {
         // Basic fields validation
         if (!formData.firstName.trim()) newErrors.firstName = 'First name is required'
         if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required'
-        if (!formData.email.trim()) newErrors.email = 'Email is required'
-        if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required'
+        
+        if (!formData.email.trim()) {
+            newErrors.email = 'Email is required'
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = 'Invalid email address'
+        }
+
+        if (!formData.phoneNumber.trim()) {
+            newErrors.phoneNumber = 'Phone number is required'
+        } else if (formData.phoneNumber.replace(/\D/g, '').length < 10) {
+            newErrors.phoneNumber = 'Phone number must be at least 10 digits'
+        }
+
         if (!formData.address.trim()) newErrors.address = 'Address is required'
         if (!formData.pincode.trim()) newErrors.pincode = 'Pincode is required'
         if (!formData.state) newErrors.state = 'State is required'
         if (!formData.country) newErrors.country = 'Country is required'
-        if (!formData.password) newErrors.password = 'Password is required'
-        if (!formData.confirmPassword) newErrors.confirmPassword = 'Confirm password is required'
-        if (formData.password !== formData.confirmPassword) {
+        
+        if (!formData.password) {
+            newErrors.password = 'Password is required'
+        } else if (formData.password.length < 6) {
+            newErrors.password = 'Password must be at least 6 characters'
+        }
+
+        if (!formData.confirmPassword) {
+            newErrors.confirmPassword = 'Confirm password is required'
+        } else if (formData.password !== formData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match'
         }
         if (!formData.userType) newErrors.userType = 'Please select user type'
@@ -167,8 +188,9 @@ const App = () => {
                     name="artistName"
                     value={formData.artistName}
                     onChange={handleChange}
-                    className="w-full bg-transparent border border-gray-500 rounded-md px-3 py-2"
+                    className={`w-full bg-transparent border ${errors.artistName ? 'border-red-500' : 'border-gray-500'} rounded-md px-3 py-2 focus:border-purple-500 outline-none`}
                 />
+                {errors.artistName && <p className="text-red-500 text-xs mt-1">{errors.artistName}</p>}
             </div>
             <div>
                 <label>
@@ -357,8 +379,9 @@ const App = () => {
                             name="firstName"
                             value={formData.firstName}
                             onChange={handleChange}
-                            className="w-full bg-transparent border border-gray-500 rounded-md px-3 py-2"
+                            className={`w-full bg-transparent border ${errors.firstName ? 'border-red-500' : 'border-gray-500'} rounded-md px-3 py-2 focus:border-purple-500 outline-none`}
                         />
+                        {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
                     </div>
                     <div>
                         <label>
@@ -369,8 +392,9 @@ const App = () => {
                             name="lastName"
                             value={formData.lastName}
                             onChange={handleChange}
-                            className="w-full bg-transparent border border-gray-500 rounded-md px-3 py-2"
+                            className={`w-full bg-transparent border ${errors.lastName ? 'border-red-500' : 'border-gray-500'} rounded-md px-3 py-2 focus:border-purple-500 outline-none`}
                         />
+                        {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
                     </div>
                 </div>
 
@@ -383,8 +407,9 @@ const App = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        className="w-full bg-transparent border border-gray-500 rounded-md px-3 py-2"
+                        className={`w-full bg-transparent border ${errors.email ? 'border-red-500' : 'border-gray-500'} rounded-md px-3 py-2 focus:border-purple-500 outline-none`}
                     />
+                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                 </div>
 
                 <label>
@@ -405,9 +430,10 @@ const App = () => {
                         name="phoneNumber"
                         value={formData.phoneNumber}
                         onChange={handleChange}
-                        className="flex-1 bg-transparent border border-gray-500 rounded-md px-3 py-2"
+                        className={`flex-1 bg-transparent border ${errors.phoneNumber ? 'border-red-500' : 'border-gray-500'} rounded-md px-3 py-2 focus:border-purple-500 outline-none`}
                     />
                 </div>
+                {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -419,8 +445,9 @@ const App = () => {
                             name="address"
                             value={formData.address}
                             onChange={handleChange}
-                            className="w-full bg-transparent border border-gray-500 rounded-md px-3 py-2"
+                            className={`w-full bg-transparent border ${errors.address ? 'border-red-500' : 'border-gray-500'} rounded-md px-3 py-2 focus:border-purple-500 outline-none`}
                         />
+                        {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
                     </div>
                     <div>
                         <label>
@@ -431,8 +458,9 @@ const App = () => {
                             name="pincode"
                             value={formData.pincode}
                             onChange={handleChange}
-                            className="w-full bg-transparent border border-gray-500 rounded-md px-3 py-2"
+                            className={`w-full bg-transparent border ${errors.pincode ? 'border-red-500' : 'border-gray-500'} rounded-md px-3 py-2 focus:border-purple-500 outline-none`}
                         />
+                        {errors.pincode && <p className="text-red-500 text-xs mt-1">{errors.pincode}</p>}
                     </div>
                 </div>
 
@@ -445,7 +473,7 @@ const App = () => {
                             name="country"
                             value={formData.country}
                             onChange={handleChange}
-                            className="w-full bg-transparent border border-gray-500 rounded-md px-3 py-2">
+                            className={`w-full bg-transparent border ${errors.country ? 'border-red-500' : 'border-gray-500'} rounded-md px-3 py-2 focus:border-purple-500 outline-none`}>
                             <option
                                 className="bg-[#151A27] text-white"
                                 value="">
@@ -460,6 +488,7 @@ const App = () => {
                                 </option>
                             ))}
                         </select>
+                        {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
                     </div>
 
                     <div>
@@ -470,7 +499,7 @@ const App = () => {
                             name="state"
                             value={formData.state}
                             onChange={handleChange}
-                            className="w-full bg-transparent border border-gray-500 rounded-md px-3 py-2">
+                            className={`w-full bg-transparent border ${errors.state ? 'border-red-500' : 'border-gray-500'} rounded-md px-3 py-2 focus:border-purple-500 outline-none`}>
                             <option
                                 className="bg-[#151A27] text-white"
                                 value="">
@@ -485,6 +514,7 @@ const App = () => {
                                 </option>
                             ))}
                         </select>
+                        {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
                     </div>
                 </div>
 
@@ -493,25 +523,45 @@ const App = () => {
                         <label>
                             Password <span className="text-[#652CD6]">*</span>
                         </label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            className="w-full bg-transparent border border-gray-500 rounded-md px-3 py-2"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                className={`w-full bg-transparent border ${errors.password ? 'border-red-500' : 'border-gray-500'} rounded-md px-3 py-2 pr-10 focus:border-purple-500 outline-none`}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                            >
+                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </button>
+                        </div>
+                        {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                     </div>
                     <div>
                         <label>
                             Confirm Password <span className="text-[#652CD6]">*</span>
                         </label>
-                        <input
-                            type="password"
-                            name="confirmPassword"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            className="w-full bg-transparent border border-gray-500 rounded-md px-3 py-2"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                className={`w-full bg-transparent border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-500'} rounded-md px-3 py-2 pr-10 focus:border-purple-500 outline-none`}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                            >
+                                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                            </button>
+                        </div>
+                        {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
                     </div>
                 </div>
 
@@ -545,6 +595,7 @@ const App = () => {
                             <label htmlFor="label">Label</label>
                         </div>
                     </div>
+                    {errors.userType && <p className="text-red-500 text-xs mt-1">{errors.userType}</p>}
                 </div>
 
                 {isArtist && renderArtistFields()}
@@ -558,8 +609,11 @@ const App = () => {
                         onChange={handleChange}
                         className="h-5 w-5 accent-purple-500"
                     />
-                    <label>I accept the terms and conditions</label>
+                    <label className="text-sm">
+                        I accept the <a href="/legal/terms-conditions" target="_blank" className="text-blue-400 hover:underline">Terms & Conditions</a> and <a href="/legal/privacy-policy" target="_blank" className="text-blue-400 hover:underline">Privacy Policy</a>
+                    </label>
                 </div>
+                {errors.acceptTerms && <p className="text-red-500 text-xs">{errors.acceptTerms}</p>}
 
                 <div className="w-full flex justify-center items-center">
                     <Button

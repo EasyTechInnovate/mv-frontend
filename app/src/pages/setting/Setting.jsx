@@ -6,11 +6,22 @@ import Profile from './tabs/Profile';
 import Account from './tabs/Account';
 import Notifications from './tabs/Notifications';
 import Billing from './tabs/Billing';
-import Privacy from './tabs/Privacy';
+import LegalTab from './tabs/LegalTab';
 import Advanced from './tabs/Advanced';
+import { useSearchParams } from 'react-router-dom';
+import { FileText } from 'lucide-react';
 
 const SettingsPage = () => {
-  const [activeTab, setActiveTab] = useState('profile');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'profile';
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    // Update the URL to match the active tab
+    // We use { replace: true } to avoid cluttering history
+    setSearchParams({ tab: value }, { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -22,8 +33,8 @@ const SettingsPage = () => {
         </div>
 
         {/* Main Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="max-lg:flex max-lg:gap-2 lg:grid w-full grid-cols-6 mb-6  overflow-x-auto justify-start ">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="max-lg:flex max-lg:gap-2 lg:grid w-full grid-cols-4 mb-6  overflow-x-auto justify-start ">
             <TabsTrigger value="profile" className="flex  items-center gap-2">
               <User className="w-4 h-4 " />
               Profile
@@ -32,22 +43,22 @@ const SettingsPage = () => {
               <Cog className="w-4 h-4 " />
               Account
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex  items-center gap-2">
+            {/* <TabsTrigger value="notifications" className="flex  items-center gap-2">
               <Bell className="w-4 h-4 " />
               Notifications
-            </TabsTrigger>
+            </TabsTrigger> */}
             <TabsTrigger value="billing" className="flex  items-center gap-2">
               <CreditCard className="w-4 h-4 " />
               Billing
             </TabsTrigger>
-            <TabsTrigger value="privacy" className="flex  items-center gap-2">
-              <Shield className="w-4 h-4 " />
-              Privacy
+            <TabsTrigger value="legal" className="flex  items-center gap-2">
+              <FileText className="w-4 h-4 " />
+              Legal
             </TabsTrigger>
-            <TabsTrigger value="advanced" className="flex  items-center gap-2">
+            {/* <TabsTrigger value="advanced" className="flex  items-center gap-2">
               <Settings className="w-4 h-4 " />
               Advanced
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
 
           {/* Profile Tab Content */}
@@ -60,21 +71,21 @@ const SettingsPage = () => {
             <Account />
           </TabsContent>
 
-          <TabsContent value="notifications">
+          {/* <TabsContent value="notifications">
             <Notifications/>
-          </TabsContent>
+          </TabsContent> */}
 
           <TabsContent value="billing">
            <Billing/>
           </TabsContent>
 
-          <TabsContent value="privacy">
-           <Privacy/>
+          <TabsContent value="legal">
+           <LegalTab/>
           </TabsContent>
 
-          <TabsContent value="advanced">
+          {/* <TabsContent value="advanced">
           <Advanced/>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </div>
     </div>

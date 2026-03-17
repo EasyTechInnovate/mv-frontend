@@ -131,8 +131,8 @@ export default function N8nChatWidget() {
         ],
         i18n: {
           en: {
-            title: 'Hi there! 👋',
-            subtitle: "Start a chat. We're here to help you 24/7.",
+            title: 'Mahi AI',
+            subtitle: " ",
             inputPlaceholder: 'Type your question..',
           },
         }

@@ -46,11 +46,12 @@ const Footer = () => {
   ];
 
   const legalLinks = [
-    { title: 'Content Policy', href: '#' },
-    { title: 'Cookie Policy', href: '#' },
-    { title: 'Privacy Policy', href: '#' },
-    { title: 'Terms of Service', href: '#' },
-    { title: 'Distribution Agreement', href: '/signup/distribution-agreement' },
+    { title: 'Content Policy', href: '/legal/content-policy' },
+    { title: 'Cookie Policy', href: '/legal/cookies-policy' },
+    { title: 'Privacy Policy', href: '/legal/privacy-policy' },
+    { title: 'Terms & Conditions', href: '/legal/terms-conditions' },
+    { title: 'Shipping & Refund', href: '/legal/shipping-refund-policy' },
+    { title: 'Distribution Agreement', href: '/legal/distribution-agreement' },
   ];
 
   return (

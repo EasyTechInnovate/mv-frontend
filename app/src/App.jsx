@@ -34,6 +34,12 @@ import MahiAI from './pages/mahiAI/MahiAI'
 import FanLinksBuilder from './pages/fanLink/FanLink'
 import Royalties from './pages/royalties/Royalties'
 import NotificationsPage from './pages/notifications/NotificationsPage'
+import ContentPolicy from './pages/legal/ContentPolicy'
+import CookiesPolicy from './pages/legal/CookiesPolicy'
+import PrivacyPolicy from './pages/legal/PrivacyPolicy'
+import TermsConditions from './pages/legal/TermsConditions'
+import DistributionAgreement from './pages/legal/DistributionAgreement'
+import ShippingRefundPolicy from './pages/legal/ShippingRefundPolicy'
 
 const AuthProvider = ({ children }) => {
   const { setUser, setAuthenticated, setLoading, clearAuth } = useAuthStore();
@@ -124,6 +130,12 @@ const ProtectedRoutes = () => {
           <Route path='fan-link' element={<FanLinksBuilder />} />
           <Route path='notifications' element={<NotificationsPage />} />
           <Route path='settings' element={<SettingsPage />} />
+          <Route path='legal/content-policy' element={<ContentPolicy />} />
+          <Route path='legal/cookies-policy' element={<CookiesPolicy />} />
+          <Route path='legal/privacy-policy' element={<PrivacyPolicy />} />
+          <Route path='legal/terms-conditions' element={<TermsConditions />} />
+          <Route path='legal/distribution-agreement' element={<DistributionAgreement />} />
+          <Route path='legal/shipping-refund-policy' element={<ShippingRefundPolicy />} />
         </Route>
     </Routes>
   );
