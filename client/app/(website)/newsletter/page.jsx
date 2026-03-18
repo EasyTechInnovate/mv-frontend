@@ -21,39 +21,16 @@ export default function NewsletterPage() {
     const [subscribing, setSubscribing] = useState(false)
     const [subscribed, setSubscribed] = useState(false)
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
+    const handleSubmit = (e) => {
+        // Native form submission will handle the redirect to the success or error page of the BillionMail API
         setSubscribing(true)
-
-        try {
-            const response = await fetch('/api/newsletter/subscribe', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
-
-            const data = await response.json()
-
-            if (response.ok) {
-                toast.success('Successfully subscribed to our newsletter!')
-                setSubscribed(true)
-                setFormData({
-                    email: '',
-                    firstName: '',
-                    lastName: '',
-                    subscriberType: 'general'
-                })
-            } else {
-                toast.error(data.message || 'Failed to subscribe. Please try again.')
-            }
-        } catch (error) {
-            console.error('Error subscribing:', error)
-            toast.error('An error occurred. Please try again.')
-        } finally {
-            setSubscribing(false)
-        }
+        
+        // We pack all extra attributes into the hidden "attribs" field as JSON
+        e.target.elements['attribs'].value = JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            subscriberType: formData.subscriberType
+        })
     }
 
     return (
@@ -92,12 +69,21 @@ export default function NewsletterPage() {
                             transition={{ duration: 0.6, delay: 0.2 }}
                             className="bg-gradient-to-b from-[#1d2334] to-[#151A27] rounded-3xl p-8 md:p-12 shadow-custom"
                         >
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form 
+                                action="https://mail.app.maheshwarivisuals.com/api/subscribe/submit"
+                                method="post"
+                                onSubmit={handleSubmit} 
+                                className="space-y-6"
+                            >
+                                <input type="hidden" name="token" value="7e4bffae1f4c" />
+                                <input type="hidden" name="attribs" value="" />
+                                
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm text-gray-400 mb-2">First Name</label>
                                         <input
                                             type="text"
+                                            name="firstName"
                                             placeholder="John"
                                             value={formData.firstName}
                                             onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
@@ -108,6 +94,7 @@ export default function NewsletterPage() {
                                         <label className="block text-sm text-gray-400 mb-2">Last Name</label>
                                         <input
                                             type="text"
+                                            name="lastName"
                                             placeholder="Doe"
                                             value={formData.lastName}
                                             onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
@@ -120,6 +107,7 @@ export default function NewsletterPage() {
                                     <label className="block text-sm text-gray-400 mb-2">Email Address *</label>
                                     <input
                                         type="email"
+                                        name="email"
                                         placeholder="john@example.com"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -131,6 +119,7 @@ export default function NewsletterPage() {
                                 <div>
                                     <label className="block text-sm text-gray-400 mb-2">I am a...</label>
                                     <select
+                                        name="subscriberType"
                                         value={formData.subscriberType}
                                         onChange={(e) => setFormData({ ...formData, subscriberType: e.target.value })}
                                         className="w-full px-4 py-3 bg-[#0A0E1A] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-600"

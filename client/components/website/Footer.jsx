@@ -7,6 +7,7 @@ import { Button } from '../ui/button';
 import logo from '@/public/images/maheshwarilogo.png'; 
 import Image from 'next/image';
 import { Youtube } from 'lucide-react';
+import NewsletterSubscribe from './NewsletterSubscribe';
 
 const Footer = () => {
   const { contact, socials, isLoading } = useCompanyInfo();
@@ -29,6 +30,7 @@ const Footer = () => {
     { title: 'Press', href: '/press' },
     { title: 'Contact', href: '/contact-us' },
     { title: 'Blog', href: '/blog' },
+    { title: 'Newsletter', href: '/newsletter' },
     { title: 'Sign up', href: '/signin' },
     { title: 'Log in', href: '/signin' },
   ];
@@ -69,15 +71,18 @@ const Footer = () => {
 
             <div className="p-6 bg-[#212533] rounded-lg w-[80%]">
               <h3 className="text-base font-semibold mb-3">Subscribe to our newsletter for updates</h3>
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+              <form action="https://mail.app.maheshwarivisuals.com/api/subscribe/submit" method="post" className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <input type="hidden" name="token" value="7e4bffae1f4c" />
                 <input
                   type="email"
+                  name="email"
+                  required
                   placeholder="Enter your email"
                   className="w-full px-4 py-2 text-sm bg-[#1C1F2B] text-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]"
                 />
-                <Button variant='blue'>Subscribe</Button>
+                <Button type="submit" variant='blue'>Subscribe</Button>
                
-              </div>
+              </form>
             </div>
 
             <div className="space-y-4 w-[80%]">

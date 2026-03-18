@@ -2,7 +2,6 @@
 import React, { useState } from 'react'
 import { Anton } from 'next/font/google'
 import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 
 const anton = Anton({
@@ -14,33 +13,14 @@ export default function NewsletterSubscribe() {
     const [email, setEmail] = useState('')
     const [subscribing, setSubscribing] = useState(false)
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
+    const handleSubmit = (e) => {
+        // We don't prevent default here because we want the form to submit natively to the action URL
         setSubscribing(true)
-
-        try {
-            const response = await fetch('/api/newsletter/subscribe', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email })
-            })
-
-            const data = await response.json()
-
-            if (response.ok) {
-                toast.success('Successfully subscribed to our newsletter!')
-                setEmail('')
-            } else {
-                toast.error(data.message || 'Failed to subscribe. Please try again.')
-            }
-        } catch (error) {
-            console.error('Error subscribing:', error)
-            toast.error('An error occurred. Please try again.')
-        } finally {
-            setSubscribing(false)
-        }
+        
+        // Prepare the attribs hidden field with JSON data before submission
+        e.target.elements['attribs'].value = JSON.stringify({
+            subscriberType: 'general' // Default for this simple component
+        })
     }
 
     return (
@@ -59,9 +39,17 @@ export default function NewsletterSubscribe() {
                     Get the latest updates, tips, and exclusive content delivered to your inbox.
                 </p>
 
-                <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">
+                <form 
+                    action="https://mail.app.maheshwarivisuals.com/api/subscribe/submit" 
+                    method="post" 
+                    onSubmit={handleSubmit} 
+                    className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto"
+                >
+                    <input type="hidden" name="token" value="7e4bffae1f4c" />
+                    <input type="hidden" name="attribs" value="" />
                     <input
                         type="email"
+                        name="email"
                         placeholder="Enter your email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
