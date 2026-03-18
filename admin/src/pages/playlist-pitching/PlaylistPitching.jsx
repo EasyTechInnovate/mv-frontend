@@ -13,6 +13,8 @@ import {
   ChevronRight,
   Trash2,
   Pencil,
+  CheckSquare,
+  ListChecks,
 } from "lucide-react";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
@@ -55,6 +57,10 @@ export default function PlaylistPitching({ theme }) {
   const [selectedPitchForEdit, setSelectedPitchForEdit] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
+  // Bulk actions state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkMode, setBulkMode] = useState(false);
+
   const normalizeResponse = (res) => {
     if (!res || !res.data || !res.data.data) return { submissions: [], pagination: {} };
 
@@ -92,6 +98,7 @@ export default function PlaylistPitching({ theme }) {
 
   useEffect(() => {
     fetchPlaylistPitches();
+    setSelectedIds([]); // Clear selection when page changes
   }, [currentPage, debouncedSearch, status]);
 
   // Debounce search term
@@ -157,6 +164,38 @@ export default function PlaylistPitching({ theme }) {
     } catch (err) {
       console.error("Failed to delete submission:", err);
       toast.error(err?.response?.data?.message || "Failed to delete submission.");
+    }
+  };
+
+  const toggleSelection = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.length === pitches.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(pitches.map((p) => p._id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!selectedIds.length) return;
+    if (!window.confirm(`Are you sure you want to permanently delete these ${selectedIds.length} submissions?`)) {
+      return;
+    }
+
+    try {
+      await GlobalApi.bulkDeletePlayPitching({ submissionIds: selectedIds });
+      toast.success("Submissions permanently deleted");
+      setSelectedIds([]);
+      setBulkMode(false);
+      fetchPlaylistPitches();
+    } catch (err) {
+      console.error("Bulk delete error:", err);
+      toast.error(err?.response?.data?.message || "Failed to perform bulk delete");
     }
   };
 
@@ -229,13 +268,35 @@ export default function PlaylistPitching({ theme }) {
               <option key={s} value={s}>{s === "" ? "All Status" : s.charAt(0).toUpperCase() + s.slice(1)}</option>
             ))}
           </select>
-
-          <Button
+           <Button
             variant={isDark ? "outline" : "secondary"}
             onClick={() => setIsExportModalOpen(true)}
           >
             <Download className="h-4 w-4 mr-2" /> Export as CSV
           </Button>
+
+          <button
+            onClick={() => {
+              setBulkMode(!bulkMode);
+              setSelectedIds([]);
+            }}
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition ${
+              bulkMode ? "bg-red-100 text-red-700" : isDark ? "bg-[#1C252E] hover:bg-gray-700 border border-gray-700" : "bg-white hover:bg-gray-100 border border-gray-300"
+            }`}
+          >
+            <ListChecks className="w-4 h-4" />
+            {bulkMode ? "Exit Bulk Mode" : "Bulk Actions"}
+          </button>
+          {bulkMode && selectedIds.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4" /> Delete ({selectedIds.length})
+            </button>
+          )}
+
+         
         </div>
       </div>
 
@@ -249,6 +310,16 @@ export default function PlaylistPitching({ theme }) {
           <table className="w-full text-sm min-w-[1300px]">
             <thead className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left `}>
               <tr>
+                {bulkMode && (
+                  <th className="px-4 py-3 w-12">
+                    <input
+                      type="checkbox"
+                      checked={pitches.length > 0 && selectedIds.length === pitches.length}
+                      onChange={toggleAll}
+                      className="w-4 h-4 cursor-pointer accent-red-600 rounded border-gray-400"
+                    />
+                  </th>
+                )}
                 <th className="px-4 py-3 font-medium whitespace-nowrap">Account Name</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">Account ID</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">Track Name</th>
@@ -261,7 +332,17 @@ export default function PlaylistPitching({ theme }) {
             </thead>
             <tbody>
               {pitches.map((row) => (
-                <tr key={row._id} className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"} hover:bg-gray-800/40`}>
+                <tr key={row._id} className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"} hover:bg-gray-800/40 ${selectedIds.includes(row._id) ? (isDark ? "bg-red-900/10" : "bg-red-50") : ""}`}>
+                  {bulkMode && (
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(row._id)}
+                        onChange={() => toggleSelection(row._id)}
+                        className="w-4 h-4 cursor-pointer accent-red-600 rounded border-gray-400"
+                      />
+                    </td>
+                  )}
                   <td className="px-4 py-3">{row.userId ? `${row.userId.firstName || ""} ${row.userId.lastName || ""}`.trim() || "—" : "—"}</td>
                   <td className="px-4 py-3">{row.userId?.accountId || "—"}</td>
                   <td className="px-4 py-3 font-medium">{row.trackName || "—"}</td>

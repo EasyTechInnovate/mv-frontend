@@ -116,7 +116,9 @@ const getAllSyncSubmissions = (params) => axiosClient.get(`/v1/marketing/admin/s
 
 const reviewSyncSubmission = (submissionId, data) => axiosClient.post(`/v1/marketing/admin/sync/submissions/${submissionId}/review`, data)
 
-const deleteSyncSubmission = (submissionId) => axiosClient.delete(`/v1/marketing/admin/sync/submissions/${submissionId}`)
+const deleteSyncSubmission = (submissionId) => axiosClient.delete(`/v1/marketing/admin/sync/submissions/${submissionId}/permanent`)
+
+const bulkDeleteSyncSubmissions = (payload) => axiosClient.post(`/v1/marketing/admin/sync/submissions/bulk/permanent`, payload)
 
 const updateSyncSubmission = (submissionId, data) => axiosClient.patch(`/v1/marketing/admin/sync/submissions/${submissionId}`, data)
 
@@ -126,7 +128,9 @@ const getPlayPitching = (params) => axiosClient.get(`/v1/marketing/admin/playlis
 
 const reviewPlayPitching = (submissionId, data) => axiosClient.post(`/v1/marketing/admin/playlist-pitching/submissions/${submissionId}/review`, data)
 
-const deletePlayPitching = (submissionId) => axiosClient.delete(`/v1/marketing/admin/playlist-pitching/submissions/${submissionId}`)
+const deletePlayPitching = (submissionId) => axiosClient.delete(`/v1/marketing/admin/playlist-pitching/submissions/${submissionId}/permanent`)
+
+const bulkDeletePlayPitching = (payload) => axiosClient.post(`/v1/marketing/admin/playlist-pitching/submissions/bulk/permanent`, payload)
 
 const updatePlayPitching = (submissionId, data) => axiosClient.patch(`/v1/marketing/admin/playlist-pitching/submissions/${submissionId}`, data)
 
@@ -377,7 +381,9 @@ export const updateMVProductionStatus = (productionId, payload) => axiosClient.p
 
 export const reviewMVProduction = (productionId, payload) => axiosClient.post(`/v1/mv-production/admin/${productionId}/review`, payload)
 
-export const deleteMVProduction = (productionId) => axiosClient.delete(`/v1/mv-production/admin/${productionId}`)
+export const deleteMVProduction = (productionId) => axiosClient.delete(`/v1/mv-production/admin/${productionId}/permanent`)
+
+export const bulkDeleteMVProductions = (payload) => axiosClient.post(`/v1/mv-production/admin/bulk/permanent`, payload)
 
 // ---------------------- Trending Artists (Admin) ----------------------
 
@@ -508,10 +514,12 @@ export default {
     getAllSyncSubmissions,
     reviewSyncSubmission,
     deleteSyncSubmission,
+    bulkDeleteSyncSubmissions,
     updateSyncSubmission,
     getPlayPitching,
     reviewPlayPitching,
     deletePlayPitching,
+    bulkDeletePlayPitching,
     updatePlayPitching,
     getTrendingLabel,
     updateTrendingLabel,
@@ -618,6 +626,7 @@ export default {
     updateMVProductionStatus,
     reviewMVProduction,
     deleteMVProduction,
+    bulkDeleteMVProductions,
     getAllTrendingArtists,
     getTrendingArtistsStats,
     createTrendingArtist,

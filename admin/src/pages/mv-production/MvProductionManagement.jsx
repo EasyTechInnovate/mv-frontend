@@ -9,7 +9,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Music, MoreHorizontal, Upload, ChevronLeft, ChevronRight, Eye, Pencil } from "lucide-react";
+import { Music, MoreHorizontal, Upload, ChevronLeft, ChevronRight, Eye, Pencil, Trash2, CheckSquare, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import GlobalApi from "@/lib/GlobalApi"; 
 import MVProductionUserPage from "@/components/mv-production/MVProductionUserPage"; 
@@ -43,6 +43,10 @@ export default function MVProductionManagement({ theme = "dark" }) {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
+  // Bulk actions state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkMode, setBulkMode] = useState(false);
+
   const fetchProductions = async () => {
     setLoading(true);
     try {
@@ -68,6 +72,7 @@ export default function MVProductionManagement({ theme = "dark" }) {
 
   useEffect(() => {
     fetchProductions();
+    setSelectedIds([]); // Clear selection when page changes
   }, [currentPage, debouncedSearch, statusFilter]);
 
   // Debounce search term
@@ -130,7 +135,37 @@ const handleDeleteConfirm = async () => {
   }
 };
 
+const toggleSelection = (id) => {
+  setSelectedIds((prev) =>
+    prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+  );
+};
 
+const toggleAll = () => {
+  if (selectedIds.length === productions.length) {
+    setSelectedIds([]);
+  } else {
+    setSelectedIds(productions.map((p) => p._id));
+  }
+};
+
+const handleBulkDeleteAction = async () => {
+  if (!selectedIds.length) return;
+  if (!window.confirm(`Are you sure you want to permanently delete these ${selectedIds.length} productions?`)) {
+    return;
+  }
+
+  try {
+    await GlobalApi.bulkDeleteMVProductions({ productionIds: selectedIds });
+    toast.success("Productions permanently deleted");
+    setSelectedIds([]);
+    setBulkMode(false);
+    fetchProductions();
+  } catch (err) {
+    console.error("Bulk delete error:", err);
+    toast.error(err?.response?.data?.message || "Failed to perform bulk delete");
+  }
+};
   
   if (activePage === "modal") {
     return (
@@ -200,9 +235,26 @@ const handleDeleteConfirm = async () => {
             <option value="reject">Rejected</option>
           </select>
 
-          {/* <Button variant={isDark ? "outline" : "secondary"} className="flex items-center gap-2 px-5">
-            <Upload className="h-4 w-4" /> Bulk Action
-          </Button> */}
+          <button
+            onClick={() => {
+              setBulkMode(!bulkMode);
+              setSelectedIds([]);
+            }}
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition ${
+              bulkMode ? "bg-red-100 text-red-700" : isDark ? "bg-[#1C252E] hover:bg-gray-700 border border-gray-700" : "bg-white hover:bg-gray-100 border border-gray-300"
+            }`}
+          >
+            <ListChecks className="w-4 h-4" />
+            {bulkMode ? "Exit Bulk Mode" : "Bulk Actions"}
+          </button>
+          {bulkMode && selectedIds.length > 0 && (
+            <button
+              onClick={handleBulkDeleteAction}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4" /> Delete ({selectedIds.length})
+            </button>
+          )}
         </div>
       </div>
 
@@ -211,6 +263,16 @@ const handleDeleteConfirm = async () => {
   <table className={`w-full min-w-full text-sm`}>
     <thead className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left`}>
       <tr>
+        {bulkMode && (
+          <th className="px-4 py-3 w-12">
+            <input
+              type="checkbox"
+              checked={productions.length > 0 && selectedIds.length === productions.length}
+              onChange={toggleAll}
+              className="w-4 h-4 cursor-pointer accent-red-600 rounded border-gray-400"
+            />
+          </th>
+        )}
         {[
           "Account ID",
           "Account Name",
@@ -254,8 +316,18 @@ const handleDeleteConfirm = async () => {
               key={p._id}
               className={`border-t ${tableBorder} ${
                 isDark ? "hover:bg-gray-800/10" : "hover:bg-gray-100"
-              }`}
+              } ${selectedIds.includes(p._id) ? (isDark ? "bg-red-900/10" : "bg-red-50") : ""}`}
             >
+              {bulkMode && (
+                <td className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(p._id)}
+                    onChange={() => toggleSelection(p._id)}
+                    className="w-4 h-4 cursor-pointer accent-red-600 rounded border-gray-400"
+                  />
+                </td>
+              )}
               <td className="whitespace-nowrap px-4 py-3 font-medium">{p.accountId || "-"}</td>
               <td className="whitespace-nowrap px-4 py-3">{accountName || "-"}</td>
               <td className="whitespace-nowrap px-4 py-3">{projectTitle}</td>

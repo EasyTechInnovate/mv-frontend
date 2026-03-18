@@ -13,6 +13,8 @@ import {
   ChevronRight,
   Trash2,
   Pencil,
+  CheckSquare,
+  ListChecks,
 } from "lucide-react";
 import { toast } from "sonner";
 import GlobalApi from "@/lib/GlobalApi";
@@ -157,7 +159,10 @@ export default function SyncManagement({ theme }) {
   const itemsPerPage = 10;
 
   const dropdownRef = useRef(null);
-  const [showBulk, setShowBulk] = useState(false);
+
+  // Bulk actions state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkMode, setBulkMode] = useState(false);
 
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -205,6 +210,7 @@ export default function SyncManagement({ theme }) {
 
   useEffect(() => {
     fetchSyncRequests();
+    setSelectedIds([]); // Clear selection when page changes
   }, [currentPage, debouncedSearch, status]);
 
   // Debounce search term
@@ -230,9 +236,6 @@ export default function SyncManagement({ theme }) {
     { key: "pending", label: "Pending Requests", value: pending },
   ];
 
-  const handleBulkDelete = () => setShowBulk(false);
-  const handleBulkEdit = () => setShowBulk(false);
-
   const handleReviewClick = (row) => {
     setSelectedRequest(row);
     setIsModalOpen(true);
@@ -255,6 +258,38 @@ export default function SyncManagement({ theme }) {
     } catch (err) {
       console.error("Failed to delete submission:", err);
       toast.error(err?.response?.data?.message || "Failed to delete submission.");
+    }
+  };
+
+  const toggleSelection = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.length === requests.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(requests.map((p) => p._id));
+    }
+  };
+
+  const handleBulkDeleteAction = async () => {
+    if (!selectedIds.length) return;
+    if (!window.confirm(`Are you sure you want to permanently delete these ${selectedIds.length} submissions?`)) {
+      return;
+    }
+
+    try {
+      await GlobalApi.bulkDeleteSyncSubmissions({ submissionIds: selectedIds });
+      toast.success("Submissions permanently deleted");
+      setSelectedIds([]);
+      setBulkMode(false);
+      fetchSyncRequests();
+    } catch (err) {
+      console.error("Bulk delete error:", err);
+      toast.error(err?.response?.data?.message || "Failed to perform bulk delete");
     }
   };
 
@@ -385,42 +420,26 @@ export default function SyncManagement({ theme }) {
             <Download className="w-4 h-4 mr-2" /> Export as CSV
           </Button>
 
-          <div className="relative" ref={dropdownRef}>
-            <Button
-              variant="outline"
-              className="px-5 text-red-500"
-              onClick={() => setShowBulk((s) => !s)}
+          <button
+            onClick={() => {
+              setBulkMode(!bulkMode);
+              setSelectedIds([]);
+            }}
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition ${
+              bulkMode ? "bg-red-100 text-red-700" : isDark ? "bg-[#1C252E] hover:bg-gray-700 border border-gray-700" : "bg-white hover:bg-gray-100 border border-gray-300"
+            }`}
+          >
+            <ListChecks className="w-4 h-4" />
+            {bulkMode ? "Exit Bulk Mode" : "Bulk Actions"}
+          </button>
+          {bulkMode && selectedIds.length > 0 && (
+            <button
+              onClick={handleBulkDeleteAction}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition disabled:opacity-50"
             >
-              Bulk Action
-              <ChevronDown className="ml-1 h-4 w-4" />
-            </Button>
-            {showBulk && (
-              <div
-                className={`absolute top-11 right-0 w-36 rounded-md shadow-md border z-20 ${
-                  isDark
-                    ? "bg-[#151F28] text-gray-200 border-gray-700"
-                    : "bg-white text-gray-800 border-gray-200"
-                }`}
-              >
-                <button
-                  onClick={handleBulkDelete}
-                  className={`w-full text-left px-3 py-2 text-sm ${
-                    isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"
-                  }`}
-                >
-                  Bulk Delete
-                </button>
-                <button
-                  onClick={handleBulkEdit}
-                  className={`w-full text-left px-3 py-2 text-sm ${
-                    isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"
-                  }`}
-                >
-                  Bulk Edit
-                </button>
-              </div>
-            )}
-          </div>
+              <Trash2 className="w-4 h-4" /> Delete ({selectedIds.length})
+            </button>
+          )}
         </div>
       </div>
 
@@ -451,6 +470,16 @@ export default function SyncManagement({ theme }) {
         }`}
       >
         <tr>
+          {bulkMode && (
+            <th className="px-4 py-3 w-12">
+              <input
+                type="checkbox"
+                checked={requests.length > 0 && selectedIds.length === requests.length}
+                onChange={toggleAll}
+                className="w-4 h-4 cursor-pointer accent-red-600 rounded border-gray-400"
+              />
+            </th>
+          )}
           {[
             "Account Name",
             "Account ID",
@@ -477,8 +506,18 @@ export default function SyncManagement({ theme }) {
                 isDark
                   ? "border-gray-700 hover:bg-gray-800/50"
                   : "border-gray-200 hover:bg-gray-100"
-              }`}
+              } ${selectedIds.includes(row._id) ? (isDark ? "bg-red-900/10" : "bg-red-50") : ""}`}
             >
+              {bulkMode && (
+                <td className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(row._id)}
+                    onChange={() => toggleSelection(row._id)}
+                    className="w-4 h-4 cursor-pointer accent-red-600 rounded border-gray-400"
+                  />
+                </td>
+              )}
               <td className="px-4 py-3">{row.userId ? `${row.userId.firstName || ""} ${row.userId.lastName || ""}`.trim() || "—" : "—"}</td>
               <td className="px-4 py-3">{row.userId?.accountId || "—"}</td>
               <td className="px-4 py-3">{toTitleCase(row.trackName)}</td>
