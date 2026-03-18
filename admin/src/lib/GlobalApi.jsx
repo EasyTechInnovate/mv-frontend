@@ -468,6 +468,10 @@ const createAdminNotification = (payload) => axiosClient.post('/v1/admin/notific
 const toggleAdminNotificationStatus = (notificationId, payload) =>
     axiosClient.patch(`/v1/admin/notifications/${notificationId}/status`, payload)
 
+const deleteAdminNotification = (notificationId) => axiosClient.delete(`/v1/admin/notifications/${notificationId}/permanent`)
+
+const bulkDeleteAdminNotifications = (payload) => axiosClient.post(`/v1/admin/notifications/bulk/permanent`, payload)
+
 // ---------------------- Notifications (Bell / User APIs) ----------------------
 
 const getNotifications = (params) => axiosClient.get('/v1/notifications', { params })
@@ -675,6 +679,8 @@ export default {
     getAdminNotificationById,
     createAdminNotification,
     toggleAdminNotificationStatus,
+    deleteAdminNotification,
+    bulkDeleteAdminNotifications,
     // Notifications (Bell)
     getNotifications,
     getNotificationCount,

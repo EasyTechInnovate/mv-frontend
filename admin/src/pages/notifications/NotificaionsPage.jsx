@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Bell, Send, Filter, Loader2, RefreshCw, User, X } from "lucide-react";
+import { Bell, Send, Filter, Loader2, RefreshCw, User, X, Trash2, ListChecks } from "lucide-react";
+import { toast } from "sonner";
 import GlobalApi from "../../lib/GlobalApi";
 import UserPickerDialog from "../../components/UserPickerDialog";
 
@@ -41,6 +42,10 @@ export default function NotificationPage({ theme = "dark" }) {
   const [listLoading, setListLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({ type: "", category: "", status: "" });
+
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [selectedNotifs, setSelectedNotifs] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // ─── Compose Form ─────────────────────────────────────────
   const [title, setTitle] = useState("");
@@ -96,6 +101,46 @@ export default function NotificationPage({ theme = "dark" }) {
       );
     } catch {
       // ignore
+    }
+  };
+
+  // ─── Delete ───────────────────────────────────────────────
+  const handleSelectNotif = (notifId) => {
+    setSelectedNotifs((prev) =>
+      prev.includes(notifId) ? prev.filter((id) => id !== notifId) : [...prev, notifId]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (!selectedNotifs.length) return;
+    if (!window.confirm(`Are you sure you want to permanently delete ${selectedNotifs.length} notifications?`)) return;
+
+    try {
+      setIsDeleting(true);
+      await GlobalApi.bulkDeleteAdminNotifications({ notificationIds: selectedNotifs });
+      toast.success("Notifications deleted successfully.");
+      setIsBulkMode(false);
+      setSelectedNotifs([]);
+      fetchNotifications(currentPage, filters);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to delete notifications.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDelete = async (notifId) => {
+    if (!window.confirm("Are you sure you want to permanently delete this notification?")) return;
+
+    try {
+      setIsDeleting(true);
+      await GlobalApi.deleteAdminNotification(notifId);
+      toast.success("Notification deleted successfully.");
+      fetchNotifications(currentPage, filters);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to delete notification.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -341,6 +386,27 @@ export default function NotificationPage({ theme = "dark" }) {
             >
               <RefreshCw className="w-4 h-4" />
             </button>
+            <button
+              onClick={() => {
+                setIsBulkMode(!isBulkMode);
+                setSelectedNotifs([]);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition ${
+                isBulkMode ? "bg-red-100 text-red-700" : isDark ? "bg-[#1C252E] hover:bg-gray-700 border border-gray-700" : "bg-white hover:bg-gray-100 border border-gray-300"
+              }`}
+            >
+              <ListChecks className="w-4 h-4" />
+              {isBulkMode ? "Exit Bulk Mode" : "Bulk Actions"}
+            </button>
+            {isBulkMode && selectedNotifs.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                disabled={isDeleting}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" /> Delete ({selectedNotifs.length})
+              </button>
+            )}
           </div>
         </div>
 
@@ -358,21 +424,34 @@ export default function NotificationPage({ theme = "dark" }) {
             <table className="min-w-full text-sm">
               <thead className={`border-b ${isDark ? "text-gray-400 border-gray-700" : "text-gray-600 border-gray-200"}`}>
                 <tr>
+                  {isBulkMode && <th className="py-2 px-3 text-left font-medium w-10">Select</th>}
                   <th className="py-2 px-3 text-left font-medium">#</th>
                   <th className="py-2 px-3 text-left font-medium">Title</th>
                   <th className="py-2 px-3 text-left font-medium">Category</th>
                   <th className="py-2 px-3 text-left font-medium">Target</th>
                   <th className="py-2 px-3 text-left font-medium">Read</th>
                   <th className="py-2 px-3 text-left font-medium">Date</th>
-                  <th className="py-2 px-3 text-left font-medium">Status</th>
+                  <th className="py-2 px-3 text-left font-medium">Status / Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {notifications.map((notif) => (
                   <tr
                     key={notif.notificationId}
-                    className={`border-b ${isDark ? "border-gray-800" : "border-gray-100"}`}
+                    className={`border-b ${isDark ? "border-gray-800" : "border-gray-100"} ${
+                      selectedNotifs.includes(notif.notificationId) ? (isDark ? "bg-red-900/10" : "bg-red-50") : ""
+                    }`}
                   >
+                    {isBulkMode && (
+                      <td className="py-3 px-3">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 cursor-pointer accent-red-600"
+                          checked={selectedNotifs.includes(notif.notificationId)}
+                          onChange={() => handleSelectNotif(notif.notificationId)}
+                        />
+                      </td>
+                    )}
                     <td className={`py-3 px-3 text-xs whitespace-nowrap ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                       {notif.notificationId}
                     </td>
@@ -401,19 +480,29 @@ export default function NotificationPage({ theme = "dark" }) {
                       {timeAgo(notif.createdAt)}
                     </td>
                     <td className="py-3 px-3">
-                      <button
-                        onClick={() => handleToggleStatus(notif)}
-                        title={notif.status ? "Deactivate" : "Activate"}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                          notif.status ? "bg-purple-500" : isDark ? "bg-gray-700" : "bg-gray-300"
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            notif.status ? "translate-x-6" : "translate-x-1"
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleToggleStatus(notif)}
+                          title={notif.status ? "Deactivate" : "Activate"}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                            notif.status ? "bg-purple-500" : isDark ? "bg-gray-700" : "bg-gray-300"
                           }`}
-                        />
-                      </button>
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              notif.status ? "translate-x-6" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                        <button
+                           onClick={() => handleDelete(notif.notificationId)}
+                           disabled={isDeleting}
+                           className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                           title="Permanent Delete"
+                        >
+                           <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

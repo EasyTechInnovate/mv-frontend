@@ -369,6 +369,45 @@ const App = () => {
             <form
                 onSubmit={handleSubmit}
                 className="bg-[#191E2A] border border-gray-400 rounded-xl p-8 md:p-20 mt-10 w-full max-w-6xl text-white space-y-6">
+                
+                {/* User Type Selector at the Top */}
+                <div className="mb-8">
+                    <label className="block text-center text-lg font-semibold mb-4 text-gray-200">
+                        Which of these best describes you? <span className="text-[#652CD6]">*</span>
+                    </label>
+                    <div className="flex justify-center">
+                        <div className="inline-flex bg-[#0A0E1A] p-1.5 rounded-2xl border border-gray-700/50 shadow-inner">
+                            <button
+                                type="button"
+                                onClick={() => handleChange({ target: { name: 'userType', value: 'artist' }})}
+                                className={`px-8 py-3 rounded-xl font-medium transition-all duration-300 ${
+                                    isArtist 
+                                    ? 'bg-gradient-to-r from-[#652CD6] to-[#0466C7] text-white shadow-lg shadow-blue-500/25' 
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                }`}
+                            >
+                                <span className="flex items-center gap-2">
+                                    <span className="text-xl">🎤</span> Artist
+                                </span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleChange({ target: { name: 'userType', value: 'label' }})}
+                                className={`px-8 py-3 rounded-xl font-medium transition-all duration-300 ${
+                                    isLabel 
+                                    ? 'bg-gradient-to-r from-[#652CD6] to-[#0466C7] text-white shadow-lg shadow-blue-500/25' 
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                }`}
+                            >
+                                <span className="flex items-center gap-2">
+                                    <span className="text-xl">🎧</span> Label
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    {errors.userType && <p className="text-red-500 text-xs mt-2 text-center">{errors.userType}</p>}
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label>
@@ -565,38 +604,6 @@ const App = () => {
                     </div>
                 </div>
 
-                <div>
-                    <label>
-                        Which of these best describes you? <span className="text-[#652CD6]">*</span>
-                    </label>
-                    <div className="flex items-center gap-6 mt-2">
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="radio"
-                                id="artist"
-                                name="userType"
-                                value="artist"
-                                onChange={handleChange}
-                                checked={isArtist}
-                                className="h-5 w-5 accent-purple-500"
-                            />
-                            <label htmlFor="artist">Artist</label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="radio"
-                                id="label"
-                                name="userType"
-                                value="label"
-                                onChange={handleChange}
-                                checked={isLabel}
-                                className="h-5 w-5 accent-purple-500"
-                            />
-                            <label htmlFor="label">Label</label>
-                        </div>
-                    </div>
-                    {errors.userType && <p className="text-red-500 text-xs mt-1">{errors.userType}</p>}
-                </div>
 
                 {isArtist && renderArtistFields()}
                 {isLabel && renderLabelFields()}
