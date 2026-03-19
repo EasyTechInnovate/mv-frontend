@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, Share2, Cookie, Lock, UserRoundCog, ExternalLink, Mail, Phone, Globe, Info, Shield, ShoppingCart } from 'lucide-react';
+import { Lock, Mail, Phone, Shield, Truck, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const ShippingRefundPolicy = () => {
@@ -19,202 +19,124 @@ const ShippingRefundPolicy = () => {
         </div>
 
         <div className="grid gap-6">
-          {/* Section 1: Information We Collect */}
+          {/* Section 1: No Refund Policy */}
           <Card className="border-slate-700 bg-card/50">
             <CardHeader className="flex flex-row items-center gap-4 space-y-0">
               <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Database className="w-5 h-5 text-blue-500" />
+                <Shield className="w-5 h-5 text-blue-500" />
               </div>
-              <CardTitle className="text-xl font-bold uppercase tracking-tight">1. Information We Collect</CardTitle>
+              <CardTitle className="text-xl font-bold uppercase tracking-tight">1. No Refund Policy</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-muted-foreground leading-relaxed">
-              <p>We may collect the following types of information:</p>
               <ul className="space-y-4 ml-2">
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-                  <p><strong className="text-foreground">Personal Information:</strong> Name, email address, phone number, payment details, and identification documents (e.g., Aadhaar, PAN, Passport).</p>
+                  <p>All transactions processed through Maheshwari Visuals are <strong className="text-foreground">final and non-refundable</strong>.</p>
                 </li>
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-                  <p><strong className="text-foreground">Usage Data:</strong> IP address, browser type, operating system, and browsing behavior on our website.</p>
+                  <p>Once payment has been successfully completed, no cancellations, refunds, credits, or exchanges will be permitted under any circumstances.</p>
                 </li>
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-                  <p><strong className="text-foreground">Cookies and Tracking Data:</strong> Information collected through cookies to enhance user experience and analyze website performance.</p>
+                  <p>Clients are advised to carefully review all service details, product specifications, and distribution requirements prior to purchase.</p>
+                </li>
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
+                  <p>By engaging with Maheshwari Visuals, you acknowledge and consent to this strict no-refund policy.</p>
                 </li>
               </ul>
             </CardContent>
           </Card>
 
-          {/* Section 2: How We Use Your Information */}
+          {/* Section 2: Shipping & Delivery Policy */}
           <Card className="border-slate-700 bg-card/50">
             <CardHeader className="flex flex-row items-center gap-4 space-y-0">
               <div className="p-2 bg-purple-500/10 rounded-lg">
-                <Shield className="w-5 h-5 text-purple-500" />
+                <Truck className="w-5 h-5 text-purple-500" />
               </div>
-              <CardTitle className="text-xl font-bold uppercase tracking-tight">2. How We Use Your Information</CardTitle>
+              <CardTitle className="text-xl font-bold uppercase tracking-tight">2. Shipping & Delivery Policy</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-muted-foreground leading-relaxed">
-              <p>We use your information to:</p>
-              <ul className="space-y-2 gap-4 ml-2">
-                {[
-                  "Provide and improve our services, including music distribution and royalty management.",
-                  "Process payments and comply with legal obligations (e.g., tax reporting).",
-                  "Communicate with you regarding updates, promotions, and support.",
-                  "Analyze website traffic and user behavior to enhance functionality."
-                ].map((item, i) => (
-                  <li key={i} className="flex gap-3 items-start">
-                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0" />
-                    <span>{item}</span>
+            <CardContent className="space-y-6 text-muted-foreground leading-relaxed">
+              <div className="space-y-3">
+                <h4 className="text-foreground font-bold flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-purple-500" />
+                  Digital Services:
+                </h4>
+                <ul className="space-y-2 ml-6">
+                  <li className="flex gap-3">
+                    <div className="w-1 h-1 rounded-full bg-purple-500/50 mt-2 shrink-0" />
+                    <p>Music distribution services, licenses, and digital deliverables will be provided electronically via email or through designated online platforms.</p>
                   </li>
-                ))}
-              </ul>
+                  <li className="flex gap-3">
+                    <div className="w-1 h-1 rounded-full bg-purple-500/50 mt-2 shrink-0" />
+                    <p>Delivery timelines may vary depending on processing requirements, platform approvals, and technical factors.</p>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-foreground font-bold flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-purple-500" />
+                  Physical Products (if applicable):
+                </h4>
+                <ul className="space-y-2 ml-6">
+                  <li className="flex gap-3">
+                    <div className="w-1 h-1 rounded-full bg-purple-500/50 mt-2 shrink-0" />
+                    <p>Any physical items such as promotional materials, merchandise, or hard copies will be shipped using recognized courier or postal services.</p>
+                  </li>
+                  <li className="flex gap-3">
+                    <div className="w-1 h-1 rounded-full bg-purple-500/50 mt-2 shrink-0" />
+                    <p>Customers are responsible for providing accurate and complete shipping information. Maheshwari Visuals shall not be held liable for delays, losses, or misdeliveries caused by incorrect addresses or third-party courier errors.</p>
+                  </li>
+                  <li className="flex gap-3">
+                    <div className="w-1 h-1 rounded-full bg-purple-500/50 mt-2 shrink-0" />
+                    <p>Estimated delivery times will be communicated at the point of sale; however, these are subject to change based on courier availability and destination.</p>
+                  </li>
+                  <li className="flex gap-3">
+                    <div className="w-1 h-1 rounded-full bg-purple-500/50 mt-2 shrink-0" />
+                    <p>For international shipments, all customs duties, taxes, and additional fees are the sole responsibility of the customer.</p>
+                  </li>
+                </ul>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Section 3: Sharing Your Information */}
+          {/* Section 3: Limitation of Liability */}
           <Card className="border-slate-700 bg-card/50">
             <CardHeader className="flex flex-row items-center gap-4 space-y-0">
               <div className="p-2 bg-green-500/10 rounded-lg">
-                <Share2 className="w-5 h-5 text-green-500" />
+                <Lock className="w-5 h-5 text-green-500" />
               </div>
-              <CardTitle className="text-xl font-bold uppercase tracking-tight">3. Sharing Your Information</CardTitle>
+              <CardTitle className="text-xl font-bold uppercase tracking-tight">3. Limitation of Liability</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-muted-foreground leading-relaxed">
-              <p>We do not sell your personal information. However, we may share your data with:</p>
               <ul className="space-y-3 ml-2">
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 shrink-0" />
-                  <p><strong className="text-foreground">Service Providers:</strong> For payment processing, analytics, and marketing.</p>
+                  <p>Maheshwari Visuals shall not be liable for delays or failures in delivery arising from circumstances beyond its reasonable control, including but not limited to courier delays, technical issues, or force majeure events.</p>
                 </li>
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 shrink-0" />
-                  <p><strong className="text-foreground">Legal Authorities:</strong> When required by law or to protect our rights.</p>
-                </li>
-                <li className="flex gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 shrink-0" />
-                  <p><strong className="text-foreground">DSPs (Digital Service Providers):</strong> To distribute your music and manage royalties.</p>
+                  <p>Responsibility for verifying the accuracy of order details rests with the customer.</p>
                 </li>
               </ul>
             </CardContent>
           </Card>
 
-          {/* Section 4: Cookies and Tracking Technologies */}
-          <Card className="border-slate-700 bg-card/50">
-            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-              <div className="p-2 bg-yellow-500/10 rounded-lg">
-                <Cookie className="w-5 h-5 text-yellow-500" />
-              </div>
-              <CardTitle className="text-xl font-bold uppercase tracking-tight">4. Cookies and Tracking Technologies</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-muted-foreground leading-relaxed">
-              <p>We use cookies to:</p>
-              <ul className="space-y-3 ml-2">
-                <li className="flex gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 mt-2 shrink-0" />
-                  <p>Remember your preferences and login details.</p>
-                </li>
-                <li className="flex gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 mt-2 shrink-0" />
-                  <p>Analyze website traffic and improve user experience.</p>
-                </li>
-                <li className="flex gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 mt-2 shrink-0" />
-                  <p>Deliver personalized ads and promotions.</p>
-                </li>
-              </ul>
-              <p className="mt-4">
-                You can manage or disable cookies through your browser settings. For more details, see our <a href="/app/legal/cookies-policy" className="text-purple-500 hover:underline">Cookie Policy</a>.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Section 5: Data Security */}
-          <Card className="border-slate-700 bg-card/50">
-            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-              <div className="p-2 bg-red-500/10 rounded-lg">
-                <Lock className="w-5 h-5 text-red-500" />
-              </div>
-              <CardTitle className="text-xl font-bold uppercase tracking-tight">5. Data Security</CardTitle>
-            </CardHeader>
-            <CardContent className="text-muted-foreground leading-relaxed">
-              <p>
-                We implement industry-standard security measures to protect your data. However, no method of transmission or storage is 100% secure, and we cannot guarantee absolute security.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Section 6: Your Rights */}
-          <Card className="border-slate-700 bg-card/50">
-            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-              <div className="p-2 bg-orange-500/10 rounded-lg">
-                <UserRoundCog className="w-5 h-5 text-orange-500" />
-              </div>
-              <CardTitle className="text-xl font-bold uppercase tracking-tight">6. Your Rights</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-muted-foreground leading-relaxed">
-              <p>Depending on your location, you may have the following rights:</p>
-              <ul className="space-y-3 ml-2">
-                <li className="flex gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 shrink-0" />
-                  <p>Access, update, or delete your personal information.</p>
-                </li>
-                <li className="flex gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 shrink-0" />
-                  <p>Withdraw consent for data processing.</p>
-                </li>
-                <li className="flex gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 shrink-0" />
-                  <p>File a complaint with a data protection authority.</p>
-                </li>
-              </ul>
-              <p className="pt-2">To exercise your rights, contact us at <a href="mailto:contact@maheshwarivisuals.com" className="text-purple-500 hover:underline">contact@maheshwarivisuals.com</a></p>
-            </CardContent>
-          </Card>
-
-          {/* Section 7: Third-Party Links */}
-          <Card className="border-slate-700 bg-card/50">
-            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-              <div className="p-2 bg-indigo-500/10 rounded-lg">
-                <Globe className="w-5 h-5 text-indigo-500" />
-              </div>
-              <CardTitle className="text-xl font-bold uppercase tracking-tight">7. Third-Party Links</CardTitle>
-            </CardHeader>
-            <CardContent className="text-muted-foreground leading-relaxed">
-              <p>
-                Our website may contain links to third-party websites. We are not responsible for their privacy practices.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Section 8: Changes to This Policy */}
-          <Card className="border-slate-700 bg-card/50">
-            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-              <div className="p-2 bg-cyan-500/10 rounded-lg">
-                <ShoppingCart className="w-5 h-5 text-cyan-500" />
-              </div>
-              <CardTitle className="text-xl font-bold uppercase tracking-tight">8. Changes to This Policy</CardTitle>
-            </CardHeader>
-            <CardContent className="text-muted-foreground leading-relaxed">
-              <p>
-                We may update this Privacy Policy periodically. Changes will be posted on this page with a revised effective date.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Section 9: Contact Us */}
+          {/* Section 4: Contact Us */}
           <Card className="border-slate-700 bg-slate-900/40">
             <CardContent className="p-8">
               <div className="text-center max-w-2xl mx-auto space-y-6">
-                <h3 className="text-2xl font-bold text-foreground">9. Contact Us</h3>
+                <h3 className="text-2xl font-bold text-foreground">4. Contact Us</h3>
                 <p className="text-muted-foreground px-4">For questions or concerns, contact us at:</p>
                 <div className="grid sm:grid-cols-2 gap-4 pt-4">
                   <div className="flex items-center gap-4 p-4 bg-background rounded-xl border border-slate-700/50">
                     <Mail className="w-5 h-5 text-purple-500" />
                     <div className="text-left">
                       <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Email</p>
-                      <a href="mailto:contact@maheshwarivisuals.com" className="text-sm text-foreground font-medium truncate hover:text-purple-500 transition-colors">
-                        contact@maheshwarivisuals.com
+                      <a href="mailto:Contact@maheshwarivisuals.com" className="text-sm text-foreground font-medium truncate hover:text-purple-500 transition-colors">
+                        Contact@maheshwarivisuals.com
                       </a>
                     </div>
                   </div>

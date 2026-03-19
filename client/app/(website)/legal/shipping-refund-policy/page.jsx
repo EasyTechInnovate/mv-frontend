@@ -2,9 +2,7 @@
 import { HeadingText } from '@/components/FixedUiComponents'
 import React from 'react'
 import { 
-  FaTruck, FaMoneyBillWave, FaDatabase, FaShareAlt, 
-  FaCookieBite, FaLock, FaUserEdit, FaExternalLinkAlt, 
-  FaEnvelope, FaPhone, FaShieldAlt 
+  FaTruck, FaLock, FaEnvelope, FaPhone, FaShieldAlt 
 } from 'react-icons/fa'
 
 const ShippingRefundPolicyPage = () => {
@@ -16,7 +14,7 @@ const ShippingRefundPolicyPage = () => {
         
         {/* Header Section */}
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold text-white mb-6">SHIPPING & REFUND POLICY</h2>
+          <h2 className="text-2xl font-bold text-white mb-6 uppercase">Shipping & Refund Policy</h2>
           <div className="flex flex-col items-center gap-2 text-sm">
             <p>Effective Date: <span className="text-blue-400">04/12/2023</span></p>
             <p>Last Updated: <span className="text-blue-400">26/06/2025</span></p>
@@ -26,167 +24,105 @@ const ShippingRefundPolicyPage = () => {
           </p>
         </div>
 
-        {/* Section 1: Information We Collect */}
+        {/* Section 1: No Refund Policy */}
         <div className="bg-[#1A1F2E] p-6 rounded-lg border-l-4 border-blue-500">
           <div className="flex items-center gap-3 mb-4">
-            <FaDatabase className="text-blue-500 text-xl" />
-            <h3 className="text-xl font-semibold text-white">1. Information We Collect</h3>
+            <FaShieldAlt className="text-blue-500 text-xl" />
+            <h3 className="text-xl font-semibold text-white">1. No Refund Policy</h3>
           </div>
-          <p className="mb-4">We may collect the following types of information:</p>
           <ul className="space-y-3 ml-4">
             <li className="flex gap-2">
               <span className="text-blue-500 font-bold">•</span>
-              <p><strong className="text-white">Personal Information:</strong> Name, email address, phone number, payment details, and identification documents (e.g., Aadhaar, PAN, Passport).</p>
+              <p>All transactions processed through Maheshwari Visuals are <strong className="text-white">final and non-refundable</strong>.</p>
             </li>
             <li className="flex gap-2">
               <span className="text-blue-500 font-bold">•</span>
-              <p><strong className="text-white">Usage Data:</strong> IP address, browser type, operating system, and browsing behavior on our website.</p>
+              <p>Once payment has been successfully completed, no cancellations, refunds, credits, or exchanges will be permitted under any circumstances.</p>
             </li>
             <li className="flex gap-2">
               <span className="text-blue-500 font-bold">•</span>
-              <p><strong className="text-white">Cookies and Tracking Data:</strong> Information collected through cookies to enhance user experience and analyze website performance.</p>
+              <p>Clients are advised to carefully review all service details, product specifications, and distribution requirements prior to purchase.</p>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-blue-500 font-bold">•</span>
+              <p>By engaging with Maheshwari Visuals, you acknowledge and consent to this strict no-refund policy.</p>
             </li>
           </ul>
         </div>
 
-        {/* Section 2: How We Use Your Information */}
+        {/* Section 2: Shipping & Delivery Policy */}
         <div className="bg-[#1A1F2E] p-6 rounded-lg border-l-4 border-purple-500">
           <div className="flex items-center gap-3 mb-4">
-            <FaShieldAlt className="text-purple-500 text-xl" />
-            <h3 className="text-xl font-semibold text-white">2. How We Use Your Information</h3>
+            <FaTruck className="text-purple-500 text-xl" />
+            <h3 className="text-xl font-semibold text-white">2. Shipping & Delivery Policy</h3>
           </div>
-          <p className="mb-4">We use your information to:</p>
-          <ul className="space-y-3 ml-4">
-            <li className="flex gap-2">
-              <span className="text-purple-500 font-bold">•</span>
-              <p>Provide and improve our services, including music distribution and royalty management.</p>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-purple-500 font-bold">•</span>
-              <p>Process payments and comply with legal obligations (e.g., tax reporting).</p>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-purple-500 font-bold">•</span>
-              <p>Communicate with you regarding updates, promotions, and support.</p>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-purple-500 font-bold">•</span>
-              <p>Analyze website traffic and user behavior to enhance functionality.</p>
-            </li>
-          </ul>
+          
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                Digital Services:
+              </h4>
+              <ul className="space-y-2 ml-6">
+                <li className="flex gap-2 text-sm italic">
+                  <span className="text-purple-500/70">•</span>
+                  <p>Music distribution services, licenses, and digital deliverables will be provided electronically via email or through designated online platforms.</p>
+                </li>
+                <li className="flex gap-2 text-sm italic">
+                  <span className="text-purple-500/70">•</span>
+                  <p>Delivery timelines may vary depending on processing requirements, platform approvals, and technical factors.</p>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                Physical Products (if applicable):
+              </h4>
+              <ul className="space-y-2 ml-6">
+                <li className="flex gap-2 text-sm italic">
+                  <span className="text-purple-500/70">•</span>
+                  <p>Any physical items such as promotional materials, merchandise, or hard copies will be shipped using recognized courier or postal services.</p>
+                </li>
+                <li className="flex gap-2 text-sm italic">
+                  <span className="text-purple-500/70">•</span>
+                  <p>Customers are responsible for providing accurate and complete shipping information. Maheshwari Visuals shall not be held liable for delays, losses, or misdeliveries caused by incorrect addresses or third-party courier errors.</p>
+                </li>
+                <li className="flex gap-2 text-sm italic">
+                  <span className="text-purple-500/70">•</span>
+                  <p>Estimated delivery times will be communicated at the point of sale; however, these are subject to change based on courier availability and destination.</p>
+                </li>
+                <li className="flex gap-2 text-sm italic">
+                  <span className="text-purple-500/70">•</span>
+                  <p>For international shipments, all customs duties, taxes, and additional fees are the sole responsibility of the customer.</p>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
-        {/* Section 3: Sharing Your Information */}
+        {/* Section 3: Limitation of Liability */}
         <div className="bg-[#1A1F2E] p-6 rounded-lg border-l-4 border-green-500">
           <div className="flex items-center gap-3 mb-4">
-            <FaShareAlt className="text-green-500 text-xl" />
-            <h3 className="text-xl font-semibold text-white">3. Sharing Your Information</h3>
+            <FaLock className="text-green-500 text-xl" />
+            <h3 className="text-xl font-semibold text-white">3. Limitation of Liability</h3>
           </div>
-          <p className="mb-4">We do not sell your personal information. However, we may share your data with:</p>
           <ul className="space-y-3 ml-4">
             <li className="flex gap-2">
               <span className="text-green-500 font-bold">•</span>
-              <p><strong className="text-white">Service Providers:</strong> For payment processing, analytics, and marketing.</p>
+              <p>Maheshwari Visuals shall not be liable for delays or failures in delivery arising from circumstances beyond its reasonable control, including but not limited to courier delays, technical issues, or force majeure events.</p>
             </li>
             <li className="flex gap-2">
               <span className="text-green-500 font-bold">•</span>
-              <p><strong className="text-white">Legal Authorities:</strong> When required by law or to protect our rights.</p>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-green-500 font-bold">•</span>
-              <p><strong className="text-white">DSPs (Digital Service Providers):</strong> To distribute your music and manage royalties.</p>
+              <p>Responsibility for verifying the accuracy of order details rests with the customer.</p>
             </li>
           </ul>
         </div>
 
-        {/* Section 4: Cookies and Tracking Technologies */}
-        <div className="bg-[#1A1F2E] p-6 rounded-lg border-l-4 border-yellow-500">
-          <div className="flex items-center gap-3 mb-4">
-            <FaCookieBite className="text-yellow-500 text-xl" />
-            <h3 className="text-xl font-semibold text-white">4. Cookies and Tracking Technologies</h3>
-          </div>
-          <p className="mb-4">We use cookies to:</p>
-          <ul className="space-y-3 ml-4 mb-4">
-            <li className="flex gap-2">
-              <span className="text-yellow-500 font-bold">•</span>
-              <p>Remember your preferences and login details.</p>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-yellow-500 font-bold">•</span>
-              <p>Analyze website traffic and improve user experience.</p>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-yellow-500 font-bold">•</span>
-              <p>Deliver personalized ads and promotions.</p>
-            </li>
-          </ul>
-          <p>
-            You can manage or disable cookies through your browser settings. For more details, see our <a href="/legal/cookies-policy" className="text-blue-400 hover:underline">Cookie Policy</a>.
-          </p>
-        </div>
-
-        {/* Section 5: Data Security */}
-        <div className="bg-[#1A1F2E] p-6 rounded-lg border-l-4 border-red-500">
-          <div className="flex items-center gap-3 mb-4">
-            <FaLock className="text-red-500 text-xl" />
-            <h3 className="text-xl font-semibold text-white">5. Data Security</h3>
-          </div>
-          <p>
-            We implement industry-standard security measures to protect your data. However, no method of transmission or storage is 100% secure, and we cannot guarantee absolute security.
-          </p>
-        </div>
-
-        {/* Section 6: Your Rights */}
-        <div className="bg-[#1A1F2E] p-6 rounded-lg border-l-4 border-orange-500">
-          <div className="flex items-center gap-3 mb-4">
-            <FaUserEdit className="text-orange-500 text-xl" />
-            <h3 className="text-xl font-semibold text-white">6. Your Rights</h3>
-          </div>
-          <p className="mb-4">Depending on your location, you may have the following rights:</p>
-          <ul className="space-y-3 ml-4">
-            <li className="flex gap-2">
-              <span className="text-orange-500 font-bold">•</span>
-              <p>Access, update, or delete your personal information.</p>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-orange-500 font-bold">•</span>
-              <p>Withdraw consent for data processing.</p>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-orange-500 font-bold">•</span>
-              <p>File a complaint with a data protection authority.</p>
-            </li>
-          </ul>
-          <p className="mt-4">
-            To exercise your rights, contact us at <a href="mailto:contact@maheshwarivisuals.com" className="text-blue-400 hover:underline">contact@maheshwarivisuals.com</a>
-          </p>
-        </div>
-
-        {/* Section 7: Third-Party Links */}
-        <div className="bg-[#1A1F2E] p-6 rounded-lg border-l-4 border-cyan-500">
-          <div className="flex items-center gap-3 mb-4">
-            <FaExternalLinkAlt className="text-cyan-500 text-xl" />
-            <h3 className="text-xl font-semibold text-white">7. Third-Party Links</h3>
-          </div>
-          <p>
-            Our website may contain links to third-party websites. We are not responsible for their privacy practices.
-          </p>
-        </div>
-
-        {/* Section 8: Changes to This Policy */}
-        <div className="bg-[#1A1F2E] p-6 rounded-lg border-l-4 border-indigo-500">
-          <div className="flex items-center gap-3 mb-4">
-            <FaTruck className="text-indigo-500 text-xl" />
-            <h3 className="text-xl font-semibold text-white">8. Changes to This Policy</h3>
-          </div>
-          <p>
-            We may update this Policy periodically. Changes will be posted on this page with a revised effective date.
-          </p>
-        </div>
-
-        {/* Section 9: Contact Us */}
+        {/* Section 4: Contact Us */}
         <div className="bg-[#1A1F2E] p-8 rounded-lg border border-gray-600">
-          <h3 className="text-xl font-semibold text-white mb-6 text-center">Contact Us</h3>
+          <h3 className="text-xl font-semibold text-white mb-6 text-center">4. Contact Us</h3>
           <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <div className="flex items-center gap-4 p-4 bg-[#232938] rounded-lg">
               <FaEnvelope className="text-blue-400 text-2xl" />

@@ -210,7 +210,6 @@ export default function SyncManagement({ theme }) {
 
   useEffect(() => {
     fetchSyncRequests();
-    setSelectedIds([]); // Clear selection when page changes
   }, [currentPage, debouncedSearch, status]);
 
   // Debounce search term
@@ -267,11 +266,20 @@ export default function SyncManagement({ theme }) {
     );
   };
 
+  const isAllSelected = requests.length > 0 && requests.every(p => selectedIds.includes(p._id));
+
   const toggleAll = () => {
-    if (selectedIds.length === requests.length) {
-      setSelectedIds([]);
+    if (isAllSelected) {
+      const idsOnPage = requests.map((p) => p._id);
+      setSelectedIds((prev) => prev.filter((id) => !idsOnPage.includes(id)));
     } else {
-      setSelectedIds(requests.map((p) => p._id));
+      setSelectedIds((prev) => {
+        const newSelected = [...prev];
+        requests.forEach((p) => {
+          if (!newSelected.includes(p._id)) newSelected.push(p._id);
+        });
+        return newSelected;
+      });
     }
   };
 
@@ -474,7 +482,7 @@ export default function SyncManagement({ theme }) {
             <th className="px-4 py-3 w-12">
               <input
                 type="checkbox"
-                checked={requests.length > 0 && selectedIds.length === requests.length}
+                checked={isAllSelected}
                 onChange={toggleAll}
                 className="w-4 h-4 cursor-pointer accent-red-600 rounded border-gray-400"
               />

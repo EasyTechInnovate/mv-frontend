@@ -208,6 +208,28 @@ export default function ChatSection() {
     });
   };
 
+  const renderMessageContent = (content) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = content.split(urlRegex);
+
+    return parts.map((part, i) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 underline hover:text-blue-600 break-all"
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background p-6 text-foreground">
       {/* Header */}
@@ -227,8 +249,8 @@ export default function ChatSection() {
         {/* Chat header (internal) */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-muted/30">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#711CE9]/15 flex items-center justify-center text-[#711CE9] font-bold shadow-sm">
-              M
+            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center shadow-sm">
+              <img src="MahiAI.jpeg" alt="M" className="w-full h-full object-cover" />
             </div>
             <div className="flex flex-col">
               <div className="font-semibold text-foreground">
@@ -252,7 +274,7 @@ export default function ChatSection() {
 
         {/* Chat messages */}
         <div
-          className="flex-1 p-6 overflow-y-auto flex flex-col gap-6"
+          className="flex-1 p-6 overflow-y-auto flex flex-col gap-6 custom-scroll"
           ref={messagesRef}
           onScroll={handleScroll}
         >
@@ -265,7 +287,9 @@ export default function ChatSection() {
             >
               <div className="flex items-end gap-2 max-w-[80%] md:max-w-[70%]">
                 {msg.role === "bot" && (
-                  <div className="w-8 h-8 rounded-full bg-[#711CE9] flex items-center justify-center text-white text-xs font-bold shadow-sm shrink-0 mb-1">M</div>
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shadow-sm shrink-0 mb-1">
+                    <img src="MahiAI.jpeg" alt="M" className="w-full h-full object-cover" />
+                  </div>
                 )}
 
                 <div
@@ -276,7 +300,7 @@ export default function ChatSection() {
                   }`}
                   style={{ whiteSpace: "pre-line" }}
                 >
-                  {msg.content}
+                  {renderMessageContent(msg.content)}
                 </div>
               </div>
             </div>
@@ -285,7 +309,9 @@ export default function ChatSection() {
           {loading && (
             <div className="flex flex-col items-start gap-1.5 w-full">
               <div className="flex items-end gap-2 max-w-[80%] md:max-w-[70%]">
-                <div className="w-8 h-8 rounded-full bg-[#711CE9] flex items-center justify-center text-white text-xs font-bold shadow-sm shrink-0 mb-1">M</div>
+                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shadow-sm shrink-0 mb-1">
+                  <img src="MahiAI.jpeg" alt="M" className="w-full h-full object-cover" />
+                </div>
                 <div
                   className="py-3 px-4 leading-[1.6] text-[0.95rem] bg-muted text-muted-foreground italic rounded-2xl rounded-bl-sm border border-border/50 animate-pulse"
                 >

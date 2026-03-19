@@ -376,8 +376,8 @@ const DistributionAgreement = () => {
           </Card>
 
           {/* Contact Details & Required Documents Section */}
-          <div className="grid md:grid-cols-2 gap-6 mt-8">
-            <Card className="border-slate-700 bg-slate-900/40 px-2 h-full">
+          <div className="grid md:grid-cols-1 gap-6 mt-8">
+            <Card className="border-slate-700 bg-card/50 px-2 h-full">
                <CardContent className="pt-6 space-y-4">
                   <h4 className="font-bold text-foreground">Maheshwari Visuals C/O Harshit Maheshwari</h4>
                   <p className="text-sm text-muted-foreground">Address : Maheshwari Complex, Near Gandhi Park, Bilsi, UttarPradesh, India, 243633</p>
@@ -387,7 +387,7 @@ const DistributionAgreement = () => {
                </CardContent>
             </Card>
 
-            <Card className="border-slate-700 bg-slate-900/40 px-2 h-full">
+            {/* <Card className="border-slate-700 bg-slate-900/40 px-2 h-full">
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-bold  p-2 text-center rounded">
                   After Sign Up : Required Self Attested Documents
@@ -408,7 +408,7 @@ const DistributionAgreement = () => {
                   ))}
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
 

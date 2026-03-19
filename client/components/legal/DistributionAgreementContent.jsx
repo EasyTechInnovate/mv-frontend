@@ -311,7 +311,7 @@ const DistributionAgreementContent = () => {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 mt-8">
+      <div className="grid md:grid-cols-1 gap-6 mt-8">
         <div className="bg-[#1A1F2E] p-6 rounded-lg">
           <h4 className="font-bold text-white mb-4 uppercase">Maheshwari Visuals C/O Harshit Maheshwari</h4>
           <div className="space-y-2 text-sm text-gray-400">
@@ -322,7 +322,7 @@ const DistributionAgreementContent = () => {
           </div>
         </div>
 
-        <div className="bg-[#1A1F2E] p-6 rounded-lg">
+        {/* <div className="bg-[#1A1F2E] p-6 rounded-lg">
           <h4 className="text-lg font-bold text-white  p-2 text-center rounded mb-4">
             After Sign Up : Required Self Attested Documents
           </h4>
@@ -339,7 +339,7 @@ const DistributionAgreementContent = () => {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   )

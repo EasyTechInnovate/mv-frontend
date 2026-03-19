@@ -105,6 +105,26 @@ export default function NotificationPage({ theme = "dark" }) {
   };
 
   // ─── Delete ───────────────────────────────────────────────
+  const isAllSelected = notifications.length > 0 && notifications.every(n => selectedNotifs.includes(n.notificationId));
+
+  const handleSelectAll = (e) => {
+    const checked = e.target.checked;
+    if (checked) {
+      setSelectedNotifs(prev => {
+        const newSelected = [...prev];
+        notifications.forEach(n => {
+          if (!newSelected.includes(n.notificationId)) {
+            newSelected.push(n.notificationId);
+          }
+        });
+        return newSelected;
+      });
+    } else {
+      const notifIdsOnPage = notifications.map(n => n.notificationId);
+      setSelectedNotifs(prev => prev.filter(id => !notifIdsOnPage.includes(id)));
+    }
+  };
+
   const handleSelectNotif = (notifId) => {
     setSelectedNotifs((prev) =>
       prev.includes(notifId) ? prev.filter((id) => id !== notifId) : [...prev, notifId]
@@ -424,7 +444,16 @@ export default function NotificationPage({ theme = "dark" }) {
             <table className="min-w-full text-sm">
               <thead className={`border-b ${isDark ? "text-gray-400 border-gray-700" : "text-gray-600 border-gray-200"}`}>
                 <tr>
-                  {isBulkMode && <th className="py-2 px-3 text-left font-medium w-10">Select</th>}
+                  {isBulkMode && (
+                    <th className="py-2 px-3 text-left font-medium w-10">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 cursor-pointer accent-red-600"
+                        checked={isAllSelected}
+                        onChange={handleSelectAll}
+                      />
+                    </th>
+                  )}
                   <th className="py-2 px-3 text-left font-medium">#</th>
                   <th className="py-2 px-3 text-left font-medium">Title</th>
                   <th className="py-2 px-3 text-left font-medium">Category</th>

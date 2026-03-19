@@ -98,7 +98,6 @@ export default function PlaylistPitching({ theme }) {
 
   useEffect(() => {
     fetchPlaylistPitches();
-    setSelectedIds([]); // Clear selection when page changes
   }, [currentPage, debouncedSearch, status]);
 
   // Debounce search term
@@ -173,11 +172,20 @@ export default function PlaylistPitching({ theme }) {
     );
   };
 
+  const isAllSelected = pitches.length > 0 && pitches.every(p => selectedIds.includes(p._id));
+
   const toggleAll = () => {
-    if (selectedIds.length === pitches.length) {
-      setSelectedIds([]);
+    if (isAllSelected) {
+      const idsOnPage = pitches.map((p) => p._id);
+      setSelectedIds((prev) => prev.filter((id) => !idsOnPage.includes(id)));
     } else {
-      setSelectedIds(pitches.map((p) => p._id));
+      setSelectedIds((prev) => {
+        const newSelected = [...prev];
+        pitches.forEach((p) => {
+          if (!newSelected.includes(p._id)) newSelected.push(p._id);
+        });
+        return newSelected;
+      });
     }
   };
 
@@ -314,7 +322,7 @@ export default function PlaylistPitching({ theme }) {
                   <th className="px-4 py-3 w-12">
                     <input
                       type="checkbox"
-                      checked={pitches.length > 0 && selectedIds.length === pitches.length}
+                      checked={isAllSelected}
                       onChange={toggleAll}
                       className="w-4 h-4 cursor-pointer accent-red-600 rounded border-gray-400"
                     />

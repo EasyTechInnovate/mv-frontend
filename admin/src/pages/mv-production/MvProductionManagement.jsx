@@ -72,7 +72,6 @@ export default function MVProductionManagement({ theme = "dark" }) {
 
   useEffect(() => {
     fetchProductions();
-    setSelectedIds([]); // Clear selection when page changes
   }, [currentPage, debouncedSearch, statusFilter]);
 
   // Debounce search term
@@ -141,11 +140,20 @@ const toggleSelection = (id) => {
   );
 };
 
+const isAllSelected = productions.length > 0 && productions.every(p => selectedIds.includes(p._id));
+
 const toggleAll = () => {
-  if (selectedIds.length === productions.length) {
-    setSelectedIds([]);
+  if (isAllSelected) {
+    const idsOnPage = productions.map((p) => p._id);
+    setSelectedIds((prev) => prev.filter((id) => !idsOnPage.includes(id)));
   } else {
-    setSelectedIds(productions.map((p) => p._id));
+    setSelectedIds((prev) => {
+      const newSelected = [...prev];
+      productions.forEach((p) => {
+        if (!newSelected.includes(p._id)) newSelected.push(p._id);
+      });
+      return newSelected;
+    });
   }
 };
 
@@ -267,7 +275,7 @@ const handleBulkDeleteAction = async () => {
           <th className="px-4 py-3 w-12">
             <input
               type="checkbox"
-              checked={productions.length > 0 && selectedIds.length === productions.length}
+              checked={isAllSelected}
               onChange={toggleAll}
               className="w-4 h-4 cursor-pointer accent-red-600 rounded border-gray-400"
             />

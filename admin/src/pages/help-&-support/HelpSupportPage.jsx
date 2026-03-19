@@ -133,6 +133,25 @@ export default function HelpSupport({ theme = "dark" }) {
     fetchTickets();
   }, [page, limit, debouncedSearchQuery, statusFilter, priorityFilter]);
 
+  const isAllSelected = tickets.length > 0 && tickets.every(t => selectedTickets.some(s => s.ticketId === t.ticketId));
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedTickets(prev => {
+        const newSelected = [...prev];
+        tickets.forEach(t => {
+          if (!newSelected.some(s => s.ticketId === t.ticketId)) {
+            newSelected.push(t);
+          }
+        });
+        return newSelected;
+      });
+    } else {
+      const ticketIdsOnPage = tickets.map(t => t.ticketId);
+      setSelectedTickets(prev => prev.filter(t => !ticketIdsOnPage.includes(t.ticketId)));
+    }
+  };
+
   const toggleBulkMode = () => {
     setIsBulkMode(!isBulkMode);
     setSelectedTickets([]);
@@ -398,9 +417,13 @@ export default function HelpSupport({ theme = "dark" }) {
                 }
               >
                 {isBulkMode && (
-                    <th className="px-4 py-3 w-[50px] whitespace-nowrap">
-                        <span className="sr-only">Select</span>
-                    </th>
+                  <th className="px-4 py-3 w-[50px] whitespace-nowrap">
+                    <Checkbox
+                      checked={isAllSelected}
+                      onCheckedChange={handleSelectAll}
+                      className={theme === 'dark' ? "border-gray-500 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600" : ""}
+                    />
+                  </th>
                 )}
                 <th className="text-left whitespace-nowrap py-3 px-4">Ticket Id</th>
                 <th className="text-left whitespace-nowrap py-3 px-4">Account Id</th>
