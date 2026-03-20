@@ -111,7 +111,7 @@ const SubscriptionsPage = () => {
 
                             if (verifyResponse.success) {
                                 toast.success('Payment successful! Your subscription is now active.', { id: verifyToast })
-                                setTimeout(() => router.push('/app'), 1500)
+                                setTimeout(() => router.push('/signin'), 1500)
                             }
                         } catch (error) {
                             console.error('Payment verification error:', error)
