@@ -6,7 +6,6 @@ import { FaIndianRupeeSign } from 'react-icons/fa6'
 import { MdOutlineDone } from 'react-icons/md'
 import { PiCrownFill } from "react-icons/pi"
 import toast from 'react-hot-toast'
-
 const SubscriptionsPage = () => {
     const router = useRouter()
     const [plans, setPlans] = useState([])
@@ -52,21 +51,10 @@ const SubscriptionsPage = () => {
         setProcessingPlanId(planId)
 
         try {
-            // Load Razorpay script
-            const scriptLoaded = await loadRazorpayScript()
-
-            if (!scriptLoaded) {
-                toast.error('Failed to load Razorpay SDK. Please try again.')
-                setProcessingPlanId(null)
-                return
-            }
-
             // Create payment intent
             const loadingToast = toast.loading('Preparing payment...')
 
             let paymentIntentResponse
-            let orderId, amount, currency, razorpayKeyId
-
             try {
                 paymentIntentResponse = await createPaymentIntent({ planId })
                 toast.dismiss(loadingToast)
@@ -74,82 +62,73 @@ const SubscriptionsPage = () => {
                 if (!paymentIntentResponse.success) {
                     throw new Error('Failed to create payment intent')
                 }
-
-                ({ orderId, amount, currency, razorpayKeyId } = paymentIntentResponse.data)
             } catch (apiError) {
                 toast.dismiss(loadingToast)
                 console.error('API Error:', apiError)
-
-                // TEMPORARY: For testing without backend - use mock data
-                toast.error('Backend API not ready. Using test mode.')
-
-                // Mock data for testing
-                const selectedPlan = plans.find(p => p.planId === planId)
-                orderId = 'order_test_' + Date.now()
-                amount = selectedPlan.price.current * 100 // Convert to paise
-                currency = 'INR'
-                razorpayKeyId = 'rzp_test_2iGum6ouGCqpBs' // Replace with your Razorpay test key
-
-                console.log('Test Mode - Payment Data:', { orderId, amount, currency, razorpayKeyId })
+                toast.error('Failed to initiate payment. Please try again.')
+                setProcessingPlanId(null)
+                return
             }
 
-            // Get user profile for pre-filling
-            const profileResponse = await getUserProfile()
-            const userProfile = profileResponse.data.user
+            const checkoutData = paymentIntentResponse.data
 
-            // Razorpay options
-            const options = {
-                key: razorpayKeyId || 'rzp_test_2iGum6ouGCqpBs', // Use test key if not provided
-                amount: amount,
-                currency: currency,
-                name: 'Maheshwari Visuals',
-                description: 'Subscription Payment',
-                order_id: orderId,
-                prefill: {
-                    name: `${userProfile.firstName} ${userProfile.lastName}`,
-                    email: userProfile.emailAddress,
-                    contact: ''
-                },
-                theme: {
-                    color: '#652CD6'
-                },
-                handler: async function (response) {
-                    const verifyToast = toast.loading('Verifying payment...')
-                    try {
-                        // Verify payment
-                        const verificationData = {
-                            razorpayPaymentId: response.razorpay_payment_id,
-                            razorpayOrderId: response.razorpay_order_id,
-                            razorpaySignature: response.razorpay_signature,
-                            planId: planId
+            // Razorpay Flow
+            const scriptLoaded = await loadRazorpayScript()
+                if (!scriptLoaded) {
+                    toast.error('Failed to load Razorpay SDK. Please try again.')
+                    setProcessingPlanId(null)
+                    return
+                }
+
+                const profileResponse = await getUserProfile()
+                const userProfile = profileResponse.data.user
+
+                const options = {
+                    key: checkoutData.razorpayKeyId || 'rzp_test_STPawDcpBFe3oE',
+                    amount: checkoutData.amount * 100,
+                    currency: checkoutData.currency,
+                    name: 'Maheshwari Visuals',
+                    description: 'Subscription Payment',
+                    order_id: checkoutData.razorpayOrderId,
+                    prefill: {
+                        name: `${userProfile.firstName} ${userProfile.lastName}`,
+                        email: userProfile.emailAddress,
+                        contact: ''
+                    },
+                    theme: {
+                        color: '#652CD6'
+                    },
+                    handler: async function (response) {
+                        const verifyToast = toast.loading('Verifying payment...')
+                        try {
+                            const verificationData = {
+                                razorpayPaymentId: response.razorpay_payment_id,
+                                razorpayOrderId: response.razorpay_order_id,
+                                razorpaySignature: response.razorpay_signature,
+                                planId: planId
+                            }
+                            const verifyResponse = await verifyPayment(verificationData)
+
+                            if (verifyResponse.success) {
+                                toast.success('Payment successful! Your subscription is now active.', { id: verifyToast })
+                                setTimeout(() => router.push('/app'), 1500)
+                            }
+                        } catch (error) {
+                            console.error('Payment verification error:', error)
+                            toast.error('Payment verification failed. Please contact support.', { id: verifyToast })
+                        } finally {
+                            setProcessingPlanId(null)
                         }
-
-                        const verifyResponse = await verifyPayment(verificationData)
-
-                        if (verifyResponse.success) {
-                            toast.success('Payment successful! Your subscription is now active.', { id: verifyToast })
-                            // Redirect to user dashboard or home
-                            setTimeout(() => {
-                                router.push('/app')
-                            }, 1500)
+                    },
+                    modal: {
+                        ondismiss: function () {
+                            setProcessingPlanId(null)
                         }
-                    } catch (error) {
-                        console.error('Payment verification error:', error)
-                        toast.error('Payment verification failed. Please contact support.', { id: verifyToast })
-                    } finally {
-                        setProcessingPlanId(null)
-                    }
-                },
-                modal: {
-                    ondismiss: function () {
-                        setProcessingPlanId(null)
                     }
                 }
-            }
 
-            const razorpay = new window.Razorpay(options)
-            razorpay.open()
-
+                const razorpay = new window.Razorpay(options)
+                razorpay.open()
         } catch (error) {
             console.error('Payment initiation error:', error)
             const errorMessage = error.response?.data?.message || 'Failed to initiate payment. Please try again.'
