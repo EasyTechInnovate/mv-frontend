@@ -52,7 +52,7 @@ const MetaManualClaimForm = ({ onSubmit, isLoading, user }) => {
         }
 
         for (const claim of claims) {
-            if (!claim.metaVideoLink || !claim.isrc || !claim.startTime || !claim.endTime) {
+            if (!claim.metaVideoLink || !claim.startTime || !claim.endTime) {
                 toast.error('Please fill all required fields for each claim.');
                 return;
             }
@@ -131,7 +131,7 @@ const MetaManualClaimForm = ({ onSubmit, isLoading, user }) => {
                                     onChange={(e) => handleClaimChange(index, 'officialVideoLink', e.target.value)}
                                 />
                             </FormField>
-                            <FormField label="ISRC of the Release" required>
+                            <FormField label="ISRC of the Release">
                                 <Input
                                     placeholder="e.g., QZ1234567890"
                                     className="border-slate-700"

@@ -60,11 +60,6 @@ const MetaProfileMappingForm = ({ onSubmit, isLoading, user }) => {
             toast.error('Please provide an Instagram Profile URL.');
             return;
         }
-        if (isrcs.some(isrc => !isrc)) {
-            toast.error('Please ensure all ISRC fields are filled.');
-            return;
-        }
-
         if (!confirmation) {
             toast.error('You must agree to the terms to submit.');
             return;

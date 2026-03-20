@@ -39,8 +39,8 @@ const YoutubeOACMappingForm = ({ onSubmit, isLoading, user }) => {
                 return;
             }
         } else if (mapType === 'Release') {
-            if (!youtubeOacTopicLink || !artTrackLink || !isrc) {
-                toast.error('Please provide YouTube OAC/Topic Link, Art Track Link, and ISRC for Release mapping.');
+            if (!youtubeOacTopicLink || !artTrackLink) {
+                toast.error('Please provide YouTube OAC/Topic Link and Art Track Link for Release mapping.');
                 return;
             }
         }
@@ -109,7 +109,7 @@ const YoutubeOACMappingForm = ({ onSubmit, isLoading, user }) => {
                     <FormField label="Art Track Link" required>
                         <Input placeholder="https://www.youtube.com/watch?v=..." className="border-slate-700" value={artTrackLink} onChange={(e) => setArtTrackLink(e.target.value)} />
                     </FormField>
-                    <FormField label="ISRC Of the release" required>
+                    <FormField label="ISRC Of the release">
                         <Input placeholder="e.g., QZ1234567890" className="border-slate-700" value={isrc} onChange={(e) => setIsrc(e.target.value)} />
                     </FormField>
                 </div>
