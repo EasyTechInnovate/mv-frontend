@@ -52,17 +52,17 @@ export default function ContactPage() {
 
     return (
         <div className="bg-[#151A27] text-white min-h-screen w-full overflow-hidden pb-20 relative">
-            <div className="w-50 h-50 blur-3xl bg-purple-600/20 rounded-full  absolute top-[200px] left-[100px] z-[9]"></div>
-            <div className="w-40 h-40 blur-3xl bg-purple-700/20 rounded-full  absolute top-[600px] left-[100px] z-[9]"></div>
-            <div className="w-30 h-30 blur-3xl bg-purple-700/20 rounded-full  absolute top-[200px] right-[100px] z-[9]"></div>
+            <div className="w-50 h-50 blur-3xl bg-purple-600/20 rounded-full  absolute top-[200px] left-[100px] z-9"></div>
+            <div className="w-40 h-40 blur-3xl bg-purple-700/20 rounded-full  absolute top-[600px] left-[100px] z-9"></div>
+            <div className="w-30 h-30 blur-3xl bg-purple-700/20 rounded-full  absolute top-[200px] right-[100px] z-9"></div>
 
                 <MainHeadingText text='Get In Touch' className='pt-[150px]'/>
-            <div className="max-w-6xl mx-auto px-6 text-center relative z-[10] ">
+            <div className="max-w-6xl mx-auto px-6 text-center relative z-10 ">
                 
                 <p className="mt-3 text-gray-300 text-lg">Reach out, and let's create a universe of possibilities together!</p>
             </div>
 
-            <section className="max-w-6xl mx-auto px-6 mt-10 relative z-[10]">
+            <section className="max-w-6xl mx-auto px-6 mt-10 relative z-10">
                 <div className="bg-[#1F2330] rounded-3xl  shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                         <div className="rounded-2xl  p-8 md:p-12 ">
@@ -118,7 +118,7 @@ export default function ContactPage() {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="mt-2 w-full py-3 rounded-md bg-gradient-to-r from-[#8B3DF5] to-[#E241FF] font-semibold text-black">
+                                    className="mt-2 w-full py-3 rounded-md bg-linear-to-r from-[#8B3DF5] to-[#E241FF] font-semibold text-black">
                                     {submitting ? 'Sending...' : 'Send it to the Us 🚀'}
                                 </button>
                             </form>
@@ -216,13 +216,13 @@ export default function ContactPage() {
 
                                 <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400 ">
                                     <h3 className="text-xl font-semibold">© Infringements</h3>
-                                     {contact?.supportEmail && (
+                                     {contact?.legalEmail && (
                                             <div>
-                                                Support Email:{' '}
+                                                Legal Email:{' '}
                                                 <a
                                                     className=""
-                                                    href={`mailto:${contact.supportEmail}`}>
-                                                    {contact.supportEmail}
+                                                    href={`mailto:${contact.legalEmail}`}>
+                                                    {contact.legalEmail}
                                                 </a>
                                             </div>
                                         )}
@@ -233,23 +233,14 @@ export default function ContactPage() {
                                 <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400 ">
                                     <h3 className="text-2xl font-semibold mb-4">Partnerships & Media</h3>
                                     <p className=" text-sm">For collaborations and press:</p>
-                                    {contact?.businessEmail && (
-                                        <p className="mt-2 text-sm">
-                                            Email:{' '}
-                                            <a
-                                                className=""
-                                                href={`mailto:${contact.businessEmail}`}>
-                                                {contact.businessEmail}
-                                            </a>
-                                        </p>
-                                    )}
-                                    {contact?.primaryEmail && (
+                                    
+                                    {contact?.pressEmail && (
                                         <p className="mt-2 text-sm">
                                             For Press & Media :{' '}
                                             <a
                                                 className=""
-                                                href={`mailto:${contact.primaryEmail}`}>
-                                                {contact.primaryEmail}
+                                                href={`mailto:${contact.pressEmail}`}>
+                                                {contact.pressEmail}
                                             </a>
                                         </p>
                                     )}

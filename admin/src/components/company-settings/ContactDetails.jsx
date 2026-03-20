@@ -66,6 +66,8 @@ export default function ContactPage({
       { id: "email-primary", label: "Primary Email", value: contactInfo.primaryEmail || "" },
       { id: "email-support", label: "Support Email", value: contactInfo.supportEmail || "" },
       { id: "email-business", label: "Business Email", value: contactInfo.businessEmail || "" },
+      { id: "email-press", label: "Press & Media Email", value: contactInfo.pressEmail || "" },
+      { id: "email-legal", label: "Infringements/Legal Email", value: contactInfo.legalEmail || "" },
     ].map((e) => ({ ...e, valid: isValidEmail(e.value) }));
     setEmails(emailsArr);
 
@@ -180,6 +182,8 @@ export default function ContactPage({
       primaryEmail: emails.find((e) => e.id === "email-primary")?.value || null,
       supportEmail: emails.find((e) => e.id === "email-support")?.value || null,
       businessEmail: emails.find((e) => e.id === "email-business")?.value || null,
+      pressEmail: emails.find((e) => e.id === "email-press")?.value || null,
+      legalEmail: emails.find((e) => e.id === "email-legal")?.value || null,
       whatsappQRCode: qr.fileUrl || null,
 
       physicalAddress: addresses.reduce((acc, field) => {

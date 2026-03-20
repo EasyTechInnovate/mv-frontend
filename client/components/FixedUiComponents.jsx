@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { Anton } from 'next/font/google'
 import Image from 'next/image'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Button } from './ui/button'
 import Link from 'next/link'
 import { useIsDesktop } from '../contexts/MediaQueryContext'

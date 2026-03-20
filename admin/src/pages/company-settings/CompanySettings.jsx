@@ -36,6 +36,8 @@ export default function CompanySettingsPage({ theme = "dark", companySettingsId 
     primaryEmail: "",
     supportEmail: "",
     businessEmail: "",
+    pressEmail: "",
+    legalEmail: "",
     whatsappQRCode: "",
     physicalAddress: {
       street: "",
@@ -75,6 +77,8 @@ export default function CompanySettingsPage({ theme = "dark", companySettingsId 
         primaryEmail: "",
         supportEmail: "",
         businessEmail: "",
+        pressEmail: "",
+        legalEmail: "",
         whatsappQRCode: "",
         physicalAddress: {
           street: "",
@@ -113,7 +117,8 @@ export default function CompanySettingsPage({ theme = "dark", companySettingsId 
       primaryEmail: contact.primaryEmail || "",
       supportEmail: contact.supportEmail || "",
       businessEmail: contact.businessEmail || "",
-
+      pressEmail: contact.pressEmail || "",
+      legalEmail: contact.legalEmail || "",
       whatsappQRCode: contact.whatsappQRCode || "",
 
       physicalAddress: {
@@ -187,6 +192,8 @@ export default function CompanySettingsPage({ theme = "dark", companySettingsId 
         primaryEmail: contactInfo.primaryEmail || null,
         supportEmail: contactInfo.supportEmail || null,
         businessEmail: contactInfo.businessEmail || null,
+        pressEmail: contactInfo.pressEmail || null,
+        legalEmail: contactInfo.legalEmail || null,
         whatsappQRCode: contactInfo.whatsappQRCode || null,
         physicalAddress: contactInfo.physicalAddress || {
           street: null,
