@@ -1,7 +1,7 @@
 'use client'
 import Faq from '@/components/website/Faq'
 import LetTheWorld from '@/components/website/LetTheWorld'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import herobg from '@/public/images/mvadvertisement/herobg.png'
 import { HeadingText, MainHeadingText } from '@/components/FixedUiComponents'
@@ -14,8 +14,9 @@ import { GiQueenCrown } from "react-icons/gi";
 
 
 import { Anton } from 'next/font/google'
-import ApplyToJoin from '@/components/website/ApplyToJoin'
 import Link from 'next/link'
+import { createPaymentIntent, verifyPayment, getSubscriptionPlans, getUserProfile } from '@/services/api.services.js'
+
 const anton = Anton({
     weight: ['400'],
     subsets: ['latin']
@@ -96,6 +97,105 @@ const comparisonData = [
 
 const PageForArtists = () => {
     const [hoveredItem, setHoveredItem] = useState(null)
+    const [isLoading, setIsLoading] = useState(false)
+    const [dynamicPlans, setDynamicPlans] = useState({})
+
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const response = await getSubscriptionPlans()
+                if (response?.data) {
+                    const plansMap = {}
+                    response.data.forEach(plan => {
+                        plansMap[plan.planId] = plan
+                    })
+                    setDynamicPlans(plansMap)
+                }
+            } catch (error) {
+                console.error("Failed to fetch plans", error)
+            }
+        }
+        fetchPlans()
+    }, [])
+
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            const script = document.createElement('script')
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+            script.onload = () => resolve(true)
+            script.onerror = () => resolve(false)
+            document.body.appendChild(script)
+        })
+    }
+
+    const handleSubscribe = async (planId) => {
+        try {
+            setIsLoading(true)
+            const response = await createPaymentIntent({ planId })
+            
+            if (response.success) {
+                const checkoutData = response.data
+                const scriptLoaded = await loadRazorpayScript()
+                if (!scriptLoaded) {
+                    alert('Failed to load Razorpay SDK. Please try again.')
+                    return
+                }
+
+                let userProfile = {}
+                try {
+                    const profileResponse = await getUserProfile()
+                    if (profileResponse?.data?.user) {
+                        userProfile = profileResponse.data.user
+                    }
+                } catch (e) {
+                    console.log('User not logged in or profile fetch failed')
+                }
+
+                const options = {
+                    key: checkoutData.razorpayKeyId || 'rzp_test_STPawDcpBFe3oE',
+                    amount: checkoutData.amount * 100,
+                    currency: checkoutData.currency,
+                    name: 'Maheshwari Visuals',
+                    description: 'Subscription Payment',
+                    order_id: checkoutData.razorpayOrderId,
+                    prefill: {
+                        name: userProfile.firstName ? `${userProfile.firstName} ${userProfile.lastName}` : '',
+                        email: userProfile.emailAddress || '',
+                        contact: ''
+                    },
+                    theme: {
+                        color: '#652CD6'
+                    },
+                    handler: async function (response) {
+                        try {
+                            await verifyPayment({
+                                razorpayPaymentId: response.razorpay_payment_id,
+                                razorpayOrderId: response.razorpay_order_id,
+                                razorpaySignature: response.razorpay_signature,
+                                planId: planId
+                            })
+                            alert('Payment successful and subscription activated!')
+                            window.location.href = '/app'
+                        } catch (err) {
+                            console.error("Verification error", err)
+                            alert('Payment verification failed. Please contact support.')
+                        }
+                    }
+                }
+
+                const razorpay = new window.Razorpay(options)
+                razorpay.open()
+            } else {
+                alert(response.message || 'Failed to initiate payment')
+            }
+        } catch (err) {
+            console.error("Subscription error", err)
+            // If user is not authenticated, API might return 401. Handled by generic error for now.
+            alert(err.response?.data?.message || err.message || "Failed to initiate subscription.")
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     return (
         <div className="overflow-x-hidden ">
@@ -124,18 +224,25 @@ const PageForArtists = () => {
                         <div className="flex flex-wrap items-center gap-2 border-b border-gray-600 pb-8 mb-8">
                             <h1 className="text-[#652CD6] font-semibold text-4xl flex items-center">
                                 <FaIndianRupeeSign />
-                                499
+                                {dynamicPlans['artist_standard']?.price?.current || 499}
                             </h1>
                             <h1 className="text-gray-300 opacity-70 text-2xl relative">
                                 {' '}
                                 <div className="w-full h-[2px] bg-gray-300 absolute top-[16px] left-0 "></div>{' '}
                                 <FaIndianRupeeSign className="inline-block" />
-                                699 
+                                {dynamicPlans['artist_standard']?.price?.original || 699} 
                             </h1>
                              <h1 className="text-gray-300 opacity-70 text-sm relative">       
                                  /3 MONTHS
                             </h1>
                         </div>
+                        
+                        <Button 
+                            disabled={isLoading} 
+                            onClick={() => handleSubscribe('artist_standard')} 
+                            className="w-full mb-8 bg-[#0099FF] text-white hover:bg-[#007acc]">
+                            Subscribe Now
+                        </Button>
 
                         {standardData.map((item, index) => (
                             <div
@@ -170,18 +277,25 @@ const PageForArtists = () => {
                         <div className="flex flex-wrap items-center gap-2 border-b border-gray-600 pb-8 mb-8">
                             <h1 className="text-[#652CD6] font-semibold text-4xl flex items-center">
                                 <FaIndianRupeeSign />
-                                1499
+                                {dynamicPlans['artist_best_value']?.price?.current || 1499}
                             </h1>
                             <h1 className="text-gray-300 opacity-70 text-2xl relative">
                                 {' '}
                                 <div className="w-full h-[2px] bg-gray-300 absolute top-[16px] left-0 "></div>{' '}
                                 <FaIndianRupeeSign className="inline-block" />
-                                1999
+                                {dynamicPlans['artist_best_value']?.price?.original || 1999}
                             </h1>
                              <h1 className="text-gray-300 opacity-70 text-sm relative">       
                                  /3 MONTHS
                             </h1>
                         </div>
+
+                        <Button 
+                            disabled={isLoading} 
+                            onClick={() => handleSubscribe('artist_best_value')} 
+                            className="w-full mb-8 bg-[#FFC727] text-black hover:bg-[#e5b323]">
+                            Subscribe Now
+                        </Button>
 
                         {bestValueData.map((item, index) => (
                             <div
@@ -214,19 +328,26 @@ const PageForArtists = () => {
                         <div className="flex flex-wrap items-center gap-2 border-b border-gray-600 pb-8 mb-8">
                             <h1 className="text-[#652CD6] font-semibold text-4xl flex items-center">
                                 <FaIndianRupeeSign />
-                                899
+                                {dynamicPlans['artist_popular']?.price?.current || 899}
                             </h1>
                             <h1 className="text-gray-300 opacity-70 text-2xl relative">
                                 {' '}
                                 <div className="w-full h-[2px] bg-gray-300 absolute top-[16px] left-0 "></div>{' '}
                                 <FaIndianRupeeSign className="inline-block" />
-                                1299 
+                                {dynamicPlans['artist_popular']?.price?.original || 1299} 
                             </h1>
                             <h1 className="text-gray-300 opacity-70 text-sm relative">       
                                  /3 MONTHS
                             </h1>
                             
                         </div>
+
+                        <Button 
+                            disabled={isLoading} 
+                            onClick={() => handleSubscribe('artist_popular')} 
+                            className="w-full mb-8 bg-[#652CD6] text-white hover:bg-[#502bb5]">
+                            Subscribe Now
+                        </Button>
 
                         {popularData.map((item, index) => (
                             <div
