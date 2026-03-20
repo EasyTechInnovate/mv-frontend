@@ -16,6 +16,7 @@ import { GiQueenCrown } from "react-icons/gi";
 import { Anton } from 'next/font/google'
 import Link from 'next/link'
 import { createPaymentIntent, verifyPayment, getSubscriptionPlans, getUserProfile } from '@/services/api.services.js'
+import ApplyToJoin from '@/components/website/ApplyToJoin'
 
 const anton = Anton({
     weight: ['400'],
