@@ -464,6 +464,7 @@ export const updateSocialMedia = async (data) => {
     return response.data;
 };
 
+/*
 export const getSessions = async () => {
     const response = await servicesAxiosInstance.get('/v1/auth/sessions');
     return response.data;
@@ -478,6 +479,7 @@ export const revokeAllSessions = async () => {
     const response = await servicesAxiosInstance.post('/v1/auth/sessions/revoke-all');
     return response.data;
 };
+*/
 
 // Change Password API
 export const changePassword = async (data) => {

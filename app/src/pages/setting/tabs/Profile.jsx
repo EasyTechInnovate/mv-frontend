@@ -42,6 +42,7 @@ const Profile = () => {
     artistName: '',
     phoneNumber: '',
     emailAddress: '',
+    accountId: '',
     bio: '',
     primaryGenre: '',
     location: '',
@@ -123,6 +124,7 @@ const Profile = () => {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         emailAddress: user.emailAddress || '',
+        accountId: user.accountId || '',
         // artistName is nested under artistData
         artistName: user.artistData?.artistName || user.artistName || '',
         phoneNumber: user.phoneNumber?.internationalNumber || '',
@@ -373,7 +375,6 @@ const Profile = () => {
               <p className="text-sm text-muted-foreground">JPG, PNG up to 5MB</p>
             </div>
           </div>
-
           {/* Personal Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -418,7 +419,15 @@ const Profile = () => {
                 value={formData.emailAddress}
                 onChange={(e) => handleInputChange('emailAddress', e.target.value)}
                 placeholder="your@email.com"
-                className="border-slate-700"
+                disabled
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Account ID</label>
+              <Input
+                value={formData.accountId}
+                placeholder="MV-XXXXXX"
+                className="border-slate-700 font-mono"
                 disabled
               />
             </div>
