@@ -181,8 +181,8 @@ const PageForLabels = () => {
                                 razorpaySignature: response.razorpay_signature,
                                 planId: planId
                             })
-                            alert('Payment successful and subscription activated!')
-                            window.location.href = '/app'
+                            alert('Payment successful and subscription activated! Please log in to your dashboard.')
+                            window.location.href = '/signin'
                         } catch (err) {
                             console.error("Verification error", err)
                             alert('Payment verification failed. Please contact support.')
