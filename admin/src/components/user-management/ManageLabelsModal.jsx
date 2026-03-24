@@ -9,8 +9,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Upload } from "lucide-react";
 import CreateSublabelModal from "./CreateSublabelModal";
+import BulkSublabelUploadModal from "./BulkSublabelUploadModal";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
@@ -37,6 +38,7 @@ export default function ManageLabelsModal({
 }) {
   const isDark = theme === "dark";
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [sublabels, setSublabels] = useState([]);
@@ -190,12 +192,26 @@ export default function ManageLabelsModal({
                 View and manage label assignments for this user.
               </DialogDescription>
             </div>
-            <Button
-              onClick={handleOpenCreate}
-              className="bg-gradient-to-r from-purple-500 to-purple-700 hover:opacity-90"
-            >
-              Add New Label
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsBulkUploadOpen(true)}
+                className={`flex items-center gap-2 ${
+                  isDark 
+                    ? "border-purple-500 text-purple-400 hover:bg-purple-500/10" 
+                    : "border-purple-600 text-purple-600 hover:bg-purple-50"
+                }`}
+              >
+                <Upload size={16} />
+                Bulk Create
+              </Button>
+              <Button
+                onClick={handleOpenCreate}
+                className="bg-gradient-to-r from-purple-500 to-purple-700 hover:opacity-90"
+              >
+                Add New Label
+              </Button>
+            </div>
           </DialogHeader>
 
           <div className="flex items-center justify-between gap-4 my-4">
@@ -374,6 +390,13 @@ export default function ManageLabelsModal({
             filename="sublabels"
             title="Export Sublabels"
             description="Select a data range to export as a CSV file."
+          />
+
+          <BulkSublabelUploadModal
+            isOpen={isBulkUploadOpen}
+            onClose={() => setIsBulkUploadOpen(false)}
+            theme={theme}
+            onSuccess={() => fetchSublabels(page)}
           />
         </DialogContent>
       </Dialog>
