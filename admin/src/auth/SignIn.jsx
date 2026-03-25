@@ -67,7 +67,16 @@ export default function AdminLogin() {
 
          
           <div>
-            <label className="text-gray-300 text-sm mb-2 block">Password</label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-gray-300 text-sm block">Password</label>
+              <button
+                type="button"
+                onClick={() => navigate("/admin/forgot-password")}
+                className="text-indigo-400 hover:text-indigo-300 text-xs transition duration-200"
+              >
+                Forgot Password?
+              </button>
+            </div>
             <div className="relative">
               <Lock className="absolute left-3 top-2.5 text-gray-400" size={18} />
               <input

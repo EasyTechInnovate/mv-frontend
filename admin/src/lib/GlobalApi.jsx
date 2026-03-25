@@ -702,4 +702,6 @@ export default {
     searchUsersForNotification,
     getInvitationDetails,
     acceptInvitation,
+    forgotPassword: (data) => axiosClient.post('/v1/auth/forgot-password', data),
+    resetPassword: (data) => axiosClient.post('/v1/auth/reset-password', data),
 }

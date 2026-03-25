@@ -34,6 +34,8 @@ import FaqManager from "./pages/faq-management/FAQManagement";
 import BlogManagement from "./pages/blog-management/BlogManagement";
 import NewsManagement from "./pages/news-management/NewsManagement";
 import AdminLogin from "./auth/SignIn";
+import ForgotPassword from "./auth/ForgotPassword";
+import ResetPassword from "./auth/ResetPassword";
 import KycManagement from "./pages/kyc-management/KYCManagement";
 import UnifiedSettingsPage from "./pages/company-settings/CompanySettings";
 import MVProductionManagement from "./pages/mv-production/MvProductionManagement";
@@ -64,13 +66,19 @@ function AppContent() {
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
-  const isAuthPage = location.pathname === "/admin/login" || location.pathname === "/admin/accept-invitation";
+  const isAuthPage = 
+    location.pathname === "/admin/login" || 
+    location.pathname === "/admin/accept-invitation" ||
+    location.pathname === "/admin/forgot-password" ||
+    location.pathname === "/admin/reset-password";
 
   if (isAuthPage) {
     return (
       <div className={theme === "dark" ? "bg-[#111A22]" : "bg-white"}>
         <Routes>
           <Route path="/admin/login" element={<AdminLogin theme={theme} />} />
+          <Route path="/admin/forgot-password" element={<ForgotPassword theme={theme} />} />
+          <Route path="/admin/reset-password" element={<ResetPassword theme={theme} />} />
           <Route path="/admin/accept-invitation" element={<AcceptInvitation theme={theme} />} />
         </Routes>
         <Toaster position="top-right" richColors theme={theme === "dark" ? "dark" : "light"} />
