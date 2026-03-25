@@ -704,4 +704,5 @@ export default {
     acceptInvitation,
     forgotPassword: (data) => axiosClient.post('/v1/auth/forgot-password', data),
     resetPassword: (data) => axiosClient.post('/v1/auth/reset-password', data),
+    resetUserPassword: (userId, data) => axiosClient.post(`/v1/admin/users/${userId}/reset-password`, data),
 }

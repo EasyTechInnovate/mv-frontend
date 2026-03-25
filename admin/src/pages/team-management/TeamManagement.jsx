@@ -6,6 +6,8 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
 import { ETeamRole, ETeamMemberStatus } from "./teamEnums";
+import ResetPasswordModal from "@/components/user-management/ResetPasswordModal.jsx";
+import { KeyRound } from "lucide-react";
 
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -42,6 +44,9 @@ export default function TeamManagement({ theme }) {
     memberId: null,
     memberName: "",
   });
+
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
+  const [selectedMemberForReset, setSelectedMemberForReset] = useState(null);
 
   const fetchTeamData = async () => {
     setLoading(true);
@@ -343,6 +348,18 @@ export default function TeamManagement({ theme }) {
                     >
                       Remove
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-orange-500"
+                      onClick={() => {
+                        setSelectedMemberForReset(m.raw);
+                        setIsResetPasswordOpen(true);
+                      }}
+                    >
+                      <KeyRound className="h-4 w-4 mr-1" />
+                      Reset Password
+                    </Button>
                     {!m.isInvitationAccepted && (
                       <Button
                         size="sm"
@@ -408,6 +425,16 @@ export default function TeamManagement({ theme }) {
           theme={theme}
         />
       )}
+
+      <ResetPasswordModal
+        isOpen={isResetPasswordOpen}
+        onClose={() => {
+          setIsResetPasswordOpen(false);
+          setSelectedMemberForReset(null);
+        }}
+        userData={selectedMemberForReset}
+        theme={theme}
+      />
     </div>
   );
 }
