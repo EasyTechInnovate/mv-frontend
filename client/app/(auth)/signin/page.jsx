@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link';
 import herobg from "@/public/images/mvadvertisement/herobg.png";
 import Image from "next/image";
 import signinimage from "@/public/images/signinimage.png";
@@ -127,9 +128,11 @@ const Page = () => {
           />
 
           {isLogin && (
-            <p className="text-sm cursor-pointer ">
-              Forgot Password?
-            </p>
+            <Link href="/forgot-password">
+              <p className="text-sm cursor-pointer hover:text-[#652CD6] transition-colors">
+                Forgot Password?
+              </p>
+            </Link>
           )}
 
           <button

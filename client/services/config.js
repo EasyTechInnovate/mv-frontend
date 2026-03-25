@@ -47,6 +47,11 @@ servicesAxiosInstance.interceptors.response.use(
 
 
         if (error.response?.status === 401 && !originalRequest._retry) {
+            // Skip redirect if it's a login attempt
+            if (originalRequest.url?.includes('/v1/auth/login')) {
+                return Promise.reject(error);
+            }
+
             if (isRefreshing) {
 
                 return new Promise((resolve, reject) => {
@@ -70,7 +75,7 @@ servicesAxiosInstance.interceptors.response.use(
 
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
-                window.location.href = '/login';
+                window.location.href = '/signin';
                 return Promise.reject(error);
             }
 
@@ -99,7 +104,7 @@ servicesAxiosInstance.interceptors.response.use(
                 processQueue(refreshError, null);
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
-                window.location.href = '/app/login';
+                window.location.href = '/signin';
                 return Promise.reject(refreshError);
             } finally {
                 isRefreshing = false;

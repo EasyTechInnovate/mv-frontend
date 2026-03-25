@@ -38,6 +38,7 @@ import KycManagement from "./pages/kyc-management/KYCManagement";
 import UnifiedSettingsPage from "./pages/company-settings/CompanySettings";
 import MVProductionManagement from "./pages/mv-production/MvProductionManagement";
 import AggregatorManagement from "./pages/aggregator-management/AggregatorManagement";
+import AcceptInvitation from "./auth/AcceptInvitation";
 
 // Module name constants — must match EModuleAccess in backend
 const M = {
@@ -63,12 +64,16 @@ function AppContent() {
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
-  const isLoginPage = location.pathname === "/admin/login";
+  const isAuthPage = location.pathname === "/admin/login" || location.pathname === "/admin/accept-invitation";
 
-  if (isLoginPage) {
+  if (isAuthPage) {
     return (
-      <div>
-        <AdminLogin theme={theme} />
+      <div className={theme === "dark" ? "bg-[#111A22]" : "bg-white"}>
+        <Routes>
+          <Route path="/admin/login" element={<AdminLogin theme={theme} />} />
+          <Route path="/admin/accept-invitation" element={<AcceptInvitation theme={theme} />} />
+        </Routes>
+        <Toaster position="top-right" richColors theme={theme === "dark" ? "dark" : "light"} />
       </div>
     );
   }

@@ -37,6 +37,26 @@ export const getUserProfile = async () => {
     return response.data
 }
 
+/**
+ * Forgot password - request reset link
+ * @param {Object} data - { emailAddress }
+ * @returns {Promise} Response with status
+ */
+export const forgotPassword = async (data) => {
+    const response = await servicesAxiosInstance.post('/v1/auth/forgot-password', data)
+    return response.data
+}
+
+/**
+ * Reset password - set new password
+ * @param {Object} data - { token, password }
+ * @returns {Promise} Response with status
+ */
+export const resetPassword = async (data) => {
+    const response = await servicesAxiosInstance.post('/v1/auth/reset-password', data)
+    return response.data
+}
+
 // ============= Subscription APIs =============
 
 /**

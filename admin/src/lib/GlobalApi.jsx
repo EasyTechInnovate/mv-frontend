@@ -200,6 +200,10 @@ const resendTeamInvitation = (teamMemberId) => axiosClient.post(`/v1/admin/team-
 
 const getTeamStatistics = () => axiosClient.get(`/v1/admin/team-members/statistics`)
 
+const getInvitationDetails = (token) => axiosClient.get(`/v1/team-members/invitation/${token}`)
+
+const acceptInvitation = (payload) => axiosClient.post(`/v1/team-members/accept-invitation`, payload)
+
 // ---------------------- Sublabels (Admin) ----------------------
 
 const createSubLabel = (payload) => axiosClient.post(`/v1/admin/sublabels`, payload)
@@ -696,4 +700,6 @@ export default {
     markNotificationRead,
     markAllNotificationsRead,
     searchUsersForNotification,
+    getInvitationDetails,
+    acceptInvitation,
 }

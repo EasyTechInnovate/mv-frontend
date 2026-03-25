@@ -264,7 +264,7 @@ export default function TeamManagement({ theme }) {
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Invitation</th>
                 <th className="px-4 py-3 font-medium">Join Date</th>
-                <th className="px-4 py-3 font-medium">Last Active</th>
+                {/* <th className="px-4 py-3 font-medium">Last Active</th> */}
                 <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
@@ -326,7 +326,7 @@ export default function TeamManagement({ theme }) {
                     )}
                   </td>
                   <td className="px-4 py-3">{m.joinDate}</td>
-                  <td className="px-4 py-3">{m.lastActive}</td>
+                  {/* <td className="px-4 py-3">{m.lastActive}</td> */}
                   <td className="px-4 py-3 flex flex-wrap gap-2">
                     <Button
                       size="sm"
