@@ -27,6 +27,7 @@ import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 import CsvUploadModal from "@/components/csv-upload/CsvUploadModal";
 import ManageWalletModal from "@/components/user-management/ManageWalletModal";
 import SetAggregatorBannerModal from "@/components/user-management/SetAggregatorBannerModal";
+import EditKycModal from "@/components/user-management/EditKycModal";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -79,6 +80,9 @@ export default function UserManagement({ theme }) {
   // Aggregator Banner State
   const [isAggregatorBannerModalOpen, setIsAggregatorBannerModalOpen] = useState(false);
   const [selectedAggregatorUser, setSelectedAggregatorUser] = useState(null);
+
+  // Edit KYC State
+  const [isEditKycModalOpen, setIsEditKycModalOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -239,6 +243,7 @@ export default function UserManagement({ theme }) {
                       "Membership",
                       "Email",
                       "Join Date",
+                      "KYC Status",
                       "Actions",
                     ].map((header) => (
                       <th key={header} className="px-4 py-3 font-medium">
@@ -305,6 +310,19 @@ export default function UserManagement({ theme }) {
 
                         <td className="px-4 py-3">
                           {new Date(u.createdAt).toLocaleDateString()}
+                        </td>
+
+                        <td className="px-4 py-3">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              u.kyc?.status === 'verified' ? 'bg-green-500/20 text-green-400' :
+                              u.kyc?.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                              u.kyc?.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                              'bg-gray-500/20 text-gray-400'
+                            }`}
+                          >
+                            {u.kyc?.status ? u.kyc.status.charAt(0).toUpperCase() + u.kyc.status.slice(1) : 'Unverified'}
+                          </span>
                         </td>
 
                         <td className="px-4 py-3">
@@ -386,6 +404,12 @@ setIsResetPasswordOpen(true);
                                   setIsUserDetailsModalOpen(true);
                                 }}>
                                   View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => {
+                                  setSelectedUserForDetails(u);
+                                  setIsEditKycModalOpen(true);
+                                }}>
+                                  Edit KYC
                                 </DropdownMenuItem>
                                 {u.userType === "aggregator" && (
                                   <DropdownMenuItem onSelect={() => {
@@ -488,6 +512,7 @@ setIsResetPasswordOpen(true);
           { label: "Membership", key: "membership" },
           { label: "Email", key: "emailAddress" },
           { label: "Join Date", key: "joinDate" },
+          { label: "KYC Status", key: "kycStatus" },
         ]}
         fetchData={async (page, limit) => {
           try {
@@ -522,6 +547,7 @@ setIsResetPasswordOpen(true);
                 membership: "Active", // Placeholder as in UI
                 emailAddress: u.emailAddress,
                 joinDate: new Date(u.createdAt).toLocaleDateString(),
+                kycStatus: u.kyc?.status || "unverified",
               }
             });
           } catch (err) {
@@ -565,6 +591,17 @@ setIsResetPasswordOpen(true);
         }}
         user={selectedAggregatorUser}
         theme={theme}
+      />
+      <EditKycModal
+        isOpen={isEditKycModalOpen}
+        onClose={() => {
+          setIsEditKycModalOpen(false);
+          setSelectedUserForDetails(null);
+          fetchUsers();
+        }}
+        user={selectedUserForDetails}
+        theme={theme}
+        onSuccess={fetchUsers}
       />
     </div>
   );

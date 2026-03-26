@@ -464,6 +464,11 @@ export const updateSocialMedia = async (data) => {
     return response.data;
 };
 
+export const verifyKYC = async (data) => {
+    const response = await servicesAxiosInstance.post('/v1/auth/verify-kyc', data);
+    return response.data;
+};
+
 /*
 export const getSessions = async () => {
     const response = await servicesAxiosInstance.get('/v1/auth/sessions');

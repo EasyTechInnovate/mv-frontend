@@ -482,6 +482,10 @@ const deleteAdminNotification = (notificationId) => axiosClient.delete(`/v1/admi
 
 const bulkDeleteAdminNotifications = (payload) => axiosClient.post(`/v1/admin/notifications/bulk/permanent`, payload)
 
+// ---------------------- KYC ----------------------
+const reviewUserKYC = (userId, data) => axiosClient.post(`/v1/admin/users/${userId}/kyc/review`, data)
+const updateUserKYC = (userId, data) => axiosClient.put(`/v1/admin/users/${userId}/kyc/update`, data)
+
 // ---------------------- Notifications (Bell / User APIs) ----------------------
 
 const getNotifications = (params) => axiosClient.get('/v1/notifications', { params })
@@ -705,4 +709,6 @@ export default {
     forgotPassword: (data) => axiosClient.post('/v1/auth/forgot-password', data),
     resetPassword: (data) => axiosClient.post('/v1/auth/reset-password', data),
     resetUserPassword: (userId, data) => axiosClient.post(`/v1/admin/users/${userId}/reset-password`, data),
+    reviewUserKYC,
+    updateUserKYC,
 }

@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Camera, Link, Shield, CreditCard, Loader } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { getMySubscription, getAllSubscriptionPlans, updateProfile, updateSocialMedia } from '@/services/api.services';
+import { getMySubscription, getAllSubscriptionPlans, updateProfile, updateSocialMedia, verifyKYC } from '@/services/api.services';
 import { showToast } from '@/utils/toast';
 import { uploadToImageKit } from '@/utils/imagekitUploader';
 
@@ -57,13 +57,13 @@ const Profile = () => {
       twitter: ''
     },
     kyc: {
-      documents: {
-        aadhaar: {
-          number: '',
-        },
-        pan: {
-          number: '',
-        }
+      residencyType: 'indian',
+      details: {
+        aadhaarNumber: '',
+        panNumber: '',
+        gstUdhyamNumber: '',
+        passportNumber: '',
+        vatNumber: '',
       },
       bankDetails: {
         accountNumber: '',
@@ -146,9 +146,13 @@ const Profile = () => {
         },
         kyc: {
           ...prev.kyc,
-          documents: {
-            aadhaar: { number: user.kyc?.documents?.aadhaar?.number || '' },
-            pan: { number: user.kyc?.documents?.pan?.number || '' }
+          residencyType: user.kyc?.residencyType || 'indian',
+          details: {
+            aadhaarNumber: user.kyc?.details?.aadhaarNumber || '',
+            panNumber: user.kyc?.details?.panNumber || '',
+            gstUdhyamNumber: user.kyc?.details?.gstUdhyamNumber || '',
+            passportNumber: user.kyc?.details?.passportNumber || '',
+            vatNumber: user.kyc?.details?.vatNumber || '',
           },
           bankDetails: {
             accountNumber: user.kyc?.bankDetails?.accountNumber || '',
@@ -207,16 +211,21 @@ const Profile = () => {
   };
 
   const handleKycChange = (section, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      kyc: {
-        ...prev.kyc,
-        [section]: {
+    setFormData(prev => {
+      const updatedKyc = { ...prev.kyc };
+      if (section === 'root') {
+        updatedKyc[field] = value;
+      } else {
+        updatedKyc[section] = {
           ...prev.kyc[section],
           [field]: value
-        }
+        };
       }
-    }));
+      return {
+        ...prev,
+        kyc: updatedKyc
+      };
+    });
   };
 
   const handleImageUpload = async (event) => {
@@ -305,18 +314,78 @@ const Profile = () => {
   };
 
   const handleSaveKyc = async () => {
+    const { residencyType, details, bankDetails, upiDetails } = formData.kyc;
+
+    // Validation
+    if (residencyType === 'indian') {
+      if (!details.aadhaarNumber || !/^\d{12}$/.test(details.aadhaarNumber)) {
+        showToast.error('Please enter a valid 12-digit Aadhaar Number');
+        return;
+      }
+      if (details.panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(details.panNumber.toUpperCase())) {
+        showToast.error('Please enter a valid PAN Number (e.g., ABCDE1234F)');
+        return;
+      }
+    } else {
+      if (!details.passportNumber || details.passportNumber.length < 6) {
+        showToast.error('Please enter a valid Passport Number (min 6 characters)');
+        return;
+      }
+    }
+
+    if (bankDetails.accountNumber && !/^\d{9,18}$/.test(bankDetails.accountNumber)) {
+      showToast.error('Please enter a valid Bank Account Number (9-18 digits)');
+      return;
+    }
+
+    if (bankDetails.ifscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankDetails.ifscCode.toUpperCase())) {
+      showToast.error('Please enter a valid 11-character IFSC Code');
+      return;
+    }
+
+    if (upiDetails.upiId && !/^[\w.-]+@[\w.-]+$/.test(upiDetails.upiId)) {
+      showToast.error('Please enter a valid UPI ID');
+      return;
+    }
+
     setSaving(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Saving KYC data:', formData.kyc);
-      alert('KYC details saved successfully!');
+      const payload = {
+        residencyType: formData.kyc.residencyType,
+        details: formData.kyc.details,
+        bankDetails: formData.kyc.bankDetails,
+        upiDetails: formData.kyc.upiDetails
+      };
+      
+      const response = await verifyKYC(payload);
+      
+      if (response && response.data && response.data.kyc) {
+        setFormData(prev => ({
+          ...prev,
+          kyc: {
+            ...prev.kyc,
+            ...response.data.kyc
+          }
+        }));
+        // Update local user state via store if necessary, or let re-fetch handle it
+        if (user) {
+          useAuthStore.getState().setUser({
+            ...user,
+            kyc: response.data.kyc
+          });
+        }
+      }
+      
+      showToast.success('KYC details submitted for review!');
     } catch (error) {
       console.error('Error saving KYC:', error);
-      alert('Error saving KYC details. Please try again.');
+      showToast.error(error?.response?.data?.message || 'Error saving KYC details. Please try again.');
     } finally {
       setSaving(false);
     }
   };
+
+  const isKycLocked = formData.kyc.status !== 'unverified';
 
   return (
     <div className="space-y-8">
@@ -577,79 +646,159 @@ const Profile = () => {
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5" />
             <CardTitle>KYC Details</CardTitle>
-            <Badge className="bg-green-600 text-white">
-              {formData.kyc.status === 'verified' ? 'Verified' : formData.kyc.status.charAt(0).toUpperCase() + formData.kyc.status.slice(1)}
+            <Badge className={`text-white ${
+              formData.kyc.status === 'verified' ? 'bg-green-600' : 
+              formData.kyc.status === 'pending' ? 'bg-yellow-600' :
+              formData.kyc.status === 'rejected' ? 'bg-red-600' :
+              'bg-slate-600'
+            }`}>
+              {formData.kyc.status.charAt(0).toUpperCase() + formData.kyc.status.slice(1)}
             </Badge>
           </div>
-          <Button 
-            onClick={handleSaveKyc}
-            disabled={saving || formData.kyc.status === 'approved'}
-            className="text-white bg-purple-600 hover:bg-purple-700"
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
+          {isKycLocked ? (
+            <div className="text-sm font-medium text-purple-400">
+              To update KYC, please contact support.
+            </div>
+          ) : (
+            <Button 
+              onClick={handleSaveKyc}
+              disabled={saving}
+              className="text-white bg-purple-600 hover:bg-purple-700"
+            >
+              {saving ? 'Submitting...' : 'Submit KYC'}
+            </Button>
+          )}
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Aadhaar Number</label>
-              <Input
-                value={formData.kyc.documents.aadhaar.number}
-                onChange={(e) => handleKycChange('documents', 'aadhaar', { ...formData.kyc.documents.aadhaar, number: e.target.value })}
-                placeholder="1234 5678 9012 3456"
-                className="border-slate-700"
-                disabled={formData.kyc.status === 'verified'}
-              />
+              <label className="text-sm font-medium">Residency Type</label>
+              <Select 
+                value={formData.kyc.residencyType} 
+                onValueChange={(value) => handleKycChange('root', 'residencyType', value)}
+                disabled={isKycLocked}
+              >
+                <SelectTrigger className="border-slate-700 focus:ring-purple-600 focus:ring-offset-0">
+                  <SelectValue placeholder="Select residency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="indian">Indian Resident</SelectItem>
+                  <SelectItem value="foreign">Foreign Resident</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">PAN Card Number</label>
-              <Input
-                value={formData.kyc.documents.pan.number}
-                onChange={(e) => handleKycChange('documents', 'pan', { ...formData.kyc.documents.pan, number: e.target.value })}
-                placeholder="ABCDE1234F"
-                className="border-slate-700"
-                disabled={formData.kyc.status === 'verified'}
-              />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+              {formData.kyc.residencyType === 'indian' ? (
+                <div className="contents animate-in fade-in duration-300">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Aadhaar Number (Mandatory)</label>
+                    <Input
+                      value={formData.kyc.details.aadhaarNumber}
+                      onChange={(e) => handleKycChange('details', 'aadhaarNumber', e.target.value)}
+                      placeholder="1234 5678 9012"
+                      className="border-slate-700"
+                      disabled={isKycLocked}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">PAN Number</label>
+                    <Input
+                      value={formData.kyc.details.panNumber}
+                      onChange={(e) => handleKycChange('details', 'panNumber', e.target.value)}
+                      placeholder="ABCDE1234F"
+                      className="border-slate-700"
+                      disabled={isKycLocked}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">GST / Udhyam Registration Number</label>
+                    <Input
+                      value={formData.kyc.details.gstUdhyamNumber}
+                      onChange={(e) => handleKycChange('details', 'gstUdhyamNumber', e.target.value)}
+                      placeholder="27ABCDE1234F1Z5"
+                      className="border-slate-700"
+                      disabled={isKycLocked}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="contents animate-in fade-in duration-300">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Passport Number (Mandatory)</label>
+                    <Input
+                      value={formData.kyc.details.passportNumber}
+                      onChange={(e) => handleKycChange('details', 'passportNumber', e.target.value)}
+                      placeholder="E1234567"
+                      className="border-slate-700"
+                      disabled={isKycLocked}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">VAT Registration Number</label>
+                    <Input
+                      value={formData.kyc.details.vatNumber}
+                      onChange={(e) => handleKycChange('details', 'vatNumber', e.target.value)}
+                      placeholder="VAT123456789"
+                      className="border-slate-700"
+                      disabled={isKycLocked}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Account Holder Name</label>
-              <Input
-                value={formData.kyc.bankDetails.accountHolderName}
-                onChange={(e) => handleKycChange('bankDetails', 'accountHolderName', e.target.value)}
-                placeholder="John Doe"
-                className="border-slate-700"
-                disabled={formData.kyc.status === 'verified'}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Bank Number</label>
-              <Input
-                value={formData.kyc.bankDetails.accountNumber}
-                onChange={(e) => handleKycChange('bankDetails', 'accountNumber', e.target.value)}
-                placeholder="1234567890123456"
-                className="border-slate-700"
-                disabled={formData.kyc.status === 'verified'}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">IFSC Code</label>
-              <Input
-                value={formData.kyc.bankDetails.ifscCode}
-                onChange={(e) => handleKycChange('bankDetails', 'ifscCode', e.target.value)}
-                placeholder="HDFC0000123"
-                className="border-slate-700"
-                disabled={formData.kyc.status === 'verified'}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Bank Name</label>
-              <Input
-                value={formData.kyc.bankDetails.bankName}
-                onChange={(e) => handleKycChange('bankDetails', 'bankName', e.target.value)}
-                placeholder="HDFC Bank"
-                className="border-slate-700"
-                disabled={formData.kyc.status === 'verified'}
-              />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Account Holder Name</label>
+                <Input
+                  value={formData.kyc.bankDetails.accountHolderName}
+                  onChange={(e) => handleKycChange('bankDetails', 'accountHolderName', e.target.value)}
+                  placeholder="John Doe"
+                  className="border-slate-700"
+                  disabled={isKycLocked}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Bank Account Number</label>
+                <Input
+                  value={formData.kyc.bankDetails.accountNumber}
+                  onChange={(e) => handleKycChange('bankDetails', 'accountNumber', e.target.value)}
+                  placeholder="1234567890123456"
+                  className="border-slate-700"
+                  disabled={isKycLocked}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">IFSC Code</label>
+                <Input
+                  value={formData.kyc.bankDetails.ifscCode}
+                  onChange={(e) => handleKycChange('bankDetails', 'ifscCode', e.target.value)}
+                  placeholder="HDFC0000123"
+                  className="border-slate-700"
+                  disabled={isKycLocked}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Bank Name</label>
+                <Input
+                  value={formData.kyc.bankDetails.bankName}
+                  onChange={(e) => handleKycChange('bankDetails', 'bankName', e.target.value)}
+                  placeholder="HDFC Bank"
+                  className="border-slate-700"
+                  disabled={isKycLocked}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">UPI ID</label>
+                <Input
+                  value={formData.kyc.upiDetails.upiId}
+                  onChange={(e) => handleKycChange('upiDetails', 'upiId', e.target.value)}
+                  placeholder="name@upi"
+                  className="border-slate-700"
+                  disabled={isKycLocked}
+                />
+              </div>
             </div>
           </div>
         </CardContent>

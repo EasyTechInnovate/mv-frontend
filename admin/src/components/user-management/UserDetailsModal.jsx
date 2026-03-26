@@ -9,6 +9,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from 'lucide-react';
+import GlobalApi from '@/lib/GlobalApi';
+import { toast } from 'sonner';
 
 const DetailItem = ({ label, value, isBadge = false, badgeVariant = "secondary" }) => (
   <div className="flex flex-col">
@@ -127,12 +129,64 @@ export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark'
             )}
 
             <Section title="KYC Details">
-              <DetailItem label="Overall KYC Status" value={user.kyc?.status} isBadge badgeVariant={kycStatusVariant[user.kyc?.status]} />
-              <DetailItem label="Aadhaar Verified" value={user.kyc?.documents?.aadhaar?.verified ? 'Yes' : 'No'} />
-              <DetailItem label="PAN Verified" value={user.kyc?.documents?.pan?.verified ? 'Yes' : 'No'} />
-              <DetailItem label="Bank Details Verified" value={user.kyc?.bankDetails?.verified ? 'Yes' : 'No'} />
-              <DetailItem label="UPI Verified" value={user.kyc?.upiDetails?.verified ? 'Yes' : 'No'} />
+              <DetailItem label="Status" value={user.kyc?.status} isBadge badgeVariant={kycStatusVariant[user.kyc?.status]} />
+              <DetailItem label="Residency" value={user.kyc?.residencyType?.toUpperCase()} />
+              {user.kyc?.residencyType === 'indian' ? (
+                <>
+                  <DetailItem label="Aadhaar" value={user.kyc?.details?.aadhaarNumber} />
+                  <DetailItem label="PAN" value={user.kyc?.details?.panNumber} />
+                  <DetailItem label="GST/Udhyam" value={user.kyc?.details?.gstUdhyamNumber} />
+                </>
+              ) : (
+                <>
+                  <DetailItem label="Passport" value={user.kyc?.details?.passportNumber} />
+                  <DetailItem label="VAT" value={user.kyc?.details?.vatNumber} />
+                </>
+              )}
+              <DetailItem label="Bank Account" value={user.kyc?.bankDetails?.accountNumber} />
+              <DetailItem label="IFSC" value={user.kyc?.bankDetails?.ifscCode} />
+              <DetailItem label="Account Holder" value={user.kyc?.bankDetails?.accountHolderName} />
+              <DetailItem label="Bank Name" value={user.kyc?.bankDetails?.bankName} />
+              <DetailItem label="UPI ID" value={user.kyc?.upiDetails?.upiId} />
             </Section>
+
+            {user.kyc?.status === 'pending' && (
+              <div className="mt-8 pt-6 border-t border-gray-800 space-y-4">
+                <h3 className="text-lg font-bold text-gray-100">Review KYC Submission</h3>
+                <div className="flex gap-4">
+                  <button
+                    onClick={async () => {
+                      try {
+                        await GlobalApi.reviewUserKYC(user._id, { status: 'verified' });
+                        toast.success("KYC Approved successfully");
+                        onClose();
+                      } catch (err) {
+                        toast.error(err.response?.data?.message || "Failed to approve KYC");
+                      }
+                    }}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Approve KYC
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const reason = prompt("Enter rejection reason:");
+                      if (!reason) return;
+                      try {
+                        await GlobalApi.reviewUserKYC(user._id, { status: 'rejected', reason });
+                        toast.success("KYC Rejected");
+                        onClose();
+                      } catch (err) {
+                        toast.error(err.response?.data?.message || "Failed to reject KYC");
+                      }
+                    }}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Reject KYC
+                  </button>
+                </div>
+              </div>
+            )}
 
             <Section title="Subscription">
               <DetailItem label="Plan ID" value={user.subscription?.planId} />
