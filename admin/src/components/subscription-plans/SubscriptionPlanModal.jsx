@@ -23,6 +23,12 @@ import {
 
 
 const PLAN_IDS = [
+  { label: "Artist Standard", value: "artist_standard" },
+  { label: "Artist Popular", value: "artist_popular" },
+  { label: "Artist Best Value", value: "artist_best_value" },
+  { label: "Label Standard", value: "label_standard" },
+  { label: "Label Popular", value: "label_popular" },
+  { label: "Label Best Value", value: "label_best_value" },
   { label: "Maheshwari Standard", value: "maheshwari_standard" },
   { label: "Maheshwari Best Value", value: "maheshwari_best_value" },
   { label: "Maheshwari Popular", value: "maheshwari_popular" },
@@ -32,24 +38,31 @@ const PLAN_IDS = [
 
 const DEFAULT_FEATURES = {
   unlimitedReleases: false,
-  artistProfile: true,
-  collaborateWithOthers: false,
-  revenueShare: { enabled: false, percentage: 0 },
-  metaContentId: false,
+  unlimitedArtists: false,
+  singleLabel: false,
+  ownership100: true,
+  revenueShare: { enabled: true, percentage: 95 },
   youtubeContentId: false,
-  analyticsDemo: false,
+  metaContentId: false,
+  tiktokContentId: false,
+  youtubeOac: false,
+  analyticsCenter: false,
+  royaltyClaimCentre: false,
+  merchandisePanel: false,
+  dolbyAtmos: false,
   spotifyDiscoveryMode: false,
-  assistedPlaylists: false,
-  preReleasePromo: false,
+  playlistPitching: false,
+  synchronization: false,
+  fanLinksBuilder: false,
+  mahiAi: false,
+  youtubeMcnAccess: false,
+  available150Stores: false,
+  worldwideAvailability: true,
   freeUpcCode: false,
   freeIsrcCode: false,
   lifetimeAvailability: false,
   supportHours: "72_hours",
-  businessHours: false,
-  liveSupport: false,
-  dailyArtistDistribution: false,
-  worldwideAvailability: true,
-  analyticsCenter: false,
+  liveSupportTime: "48_to_72_business_hours",
 };
 
 const DEFAULT_LIMITS = {
@@ -61,50 +74,70 @@ const DEFAULT_LIMITS = {
 
 const FEATURE_ORDER = [
   "unlimitedReleases",
-  "artistProfile",
-  "collaborateWithOthers",
+  "unlimitedArtists",
+  "singleLabel",
   "revenueShare",
   "youtubeContentId",
   "metaContentId",
+  "tiktokContentId",
+  "youtubeOac",
   "analyticsCenter",
+  "royaltyClaimCentre",
+  "merchandisePanel",
+  "dolbyAtmos",
   "spotifyDiscoveryMode",
-  "assistedPlaylists",
-  "preReleasePromo",
+  "playlistPitching",
+  "synchronization",
+  "fanLinksBuilder",
+  "mahiAi",
+  "youtubeMcnAccess",
+  "available150Stores",
+  "worldwideAvailability",
   "freeUpcCode",
   "freeIsrcCode",
   "lifetimeAvailability",
   "supportHours",
-  "businessHours",
-  "liveSupport",
-  "dailyArtistDistribution",
-  "worldwideAvailability",
+  "liveSupportTime",
 ];
 
 const FEATURE_LABELS = {
   unlimitedReleases: "Unlimited Release",
-  artistProfile: "One Artist Profile, Can Collaborate With Others",
-  collaborateWithOthers: "Can Collaborate With Others",
-  revenueShare: "Revenue Share",
+  unlimitedArtists: "Unlimited Artists",
+  singleLabel: "Single Label (100% Ownership)",
+  revenueShare: "Net Revenue Share",
   youtubeContentId: "YouTube Content ID",
   metaContentId: "Meta Content ID",
+  tiktokContentId: "TikTok Content ID",
+  youtubeOac: "YouTube OAC",
   analyticsCenter: "Analytics Centre",
+  royaltyClaimCentre: "Royalty Claim Centre",
+  merchandisePanel: "Merchandise Distribution Panel",
+  dolbyAtmos: "Dolby Atmos Distribution",
   spotifyDiscoveryMode: "Spotify Discovery Mode",
-  assistedPlaylists: "Assisted Playlists",
-  preReleasePromo: "Pre-release Promo",
+  playlistPitching: "Playlist Pitching",
+  synchronization: "Synchronization",
+  fanLinksBuilder: "Fan Links Builder",
+  mahiAi: "Mahi AI",
+  youtubeMcnAccess: "YouTube MCN Access",
+  available150Stores: "Available to all 150 stores",
+  worldwideAvailability: "Worldwide Availability",
   freeUpcCode: "Free UPC Code",
   freeIsrcCode: "Free ISRC Code",
   lifetimeAvailability: "Lifetime Availability",
   supportHours: "Support Time",
-  businessHours: "Business Hours",
-  liveSupport: "Live Support",
-  dailyArtistDistribution: "Daily Artist Distribution",
-  worldwideAvailability: "Worldwide Availability",
+  liveSupportTime: "Live Processing Time",
 };
 
 const SUPPORT_OPTIONS = [
   { value: "24_hours", label: "24 Hours" },
   { value: "48_hours", label: "48 Hours" },
   { value: "72_hours", label: "72 Hours" },
+];
+
+const LIVE_PROCESS_OPTIONS = [
+  { value: "48_to_72_business_hours", label: "48 to 72 Business Hours" },
+  { value: "24_to_48_business_hours", label: "24 to 48 Business Hours" },
+  { value: "instant", label: "Instant" },
 ];
 
 
@@ -223,8 +256,8 @@ export default function CreateSubscriptionPlanModal({
           payload.revenueShare = { percentage: Number(features.revenueShare.percentage) || 0 };
         }
 
-      } else if (k === "supportHours") {
-        payload.supportHours = features.supportHours || "72_hours";
+      } else if (k === "supportHours" || k === "liveSupportTime") {
+        payload[k] = features[k] || (k === "supportHours" ? "24_business_hours" : "48_to_72_business_hours");
       } else {
 
         payload[k] = !!features[k];
@@ -478,32 +511,33 @@ export default function CreateSubscriptionPlanModal({
                     );
                   }
 
-                  if (key === "supportHours") {
-                    return (
-                      <div
-                        key={key}
-                        className={`flex items-center justify-between px-3 py-2 rounded-md ${isDark ? "hover:bg-gray-800/30" : "hover:bg-gray-100"
-                          }`}
-                      >
-                        <div className="text-sm">{FEATURE_LABELS[key]}</div>
-                        <Select
-                          onValueChange={(v) => setNested("features", "supportHours", v)}
-                          value={form.features.supportHours}
+                    if (key === "supportHours" || key === "liveSupportTime") {
+                      const options = key === "supportHours" ? SUPPORT_OPTIONS : LIVE_PROCESS_OPTIONS;
+                      return (
+                        <div
+                          key={key}
+                          className={`flex items-center justify-between px-3 py-2 rounded-md ${isDark ? "hover:bg-gray-800/30" : "hover:bg-gray-100"
+                            }`}
                         >
-                          <SelectTrigger className="w-[140px] h-9">
-                            <SelectValue placeholder="Support" />
-                          </SelectTrigger>
-                          <SelectContent className={`${isDark ? "bg-[#0b1220] text-gray-200" : "bg-white text-[#151F28]"} rounded-md shadow-lg`}>
-                            {SUPPORT_OPTIONS.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    );
-                  }
+                          <div className="text-sm">{FEATURE_LABELS[key]}</div>
+                          <Select
+                            onValueChange={(v) => setNested("features", key, v)}
+                            value={form.features[key]}
+                          >
+                            <SelectTrigger className="w-[180px] h-9">
+                              <SelectValue placeholder="Select Option" />
+                            </SelectTrigger>
+                            <SelectContent className={`${isDark ? "bg-[#0b1220] text-gray-200" : "bg-white text-[#151F28]"} rounded-md shadow-lg`}>
+                              {options.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      );
+                    }
 
 
                   return (

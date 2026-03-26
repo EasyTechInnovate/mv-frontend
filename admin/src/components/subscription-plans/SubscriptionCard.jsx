@@ -18,31 +18,43 @@ import {
 import { toast } from "sonner";
 
 const FEATURE_LABELS = {
-  revenueShare: "Revenue Share",
-  unlimitedReleases: "Unlimited Releases",
-  artistProfile: "Artist Profile",
-  collaborateWithOthers: "Collaborate with Others",
-  metaContentId: "Meta Content ID",
+  unlimitedReleases: "Unlimited Release",
+  unlimitedArtists: "Unlimited Artists",
+  singleLabel: "Single Label (100% Ownership)",
+  revenueShare: "Net Revenue Share",
   youtubeContentId: "YouTube Content ID",
-  analyticsDemo: "Analytics Demo",
+  metaContentId: "Meta Content ID",
+  tiktokContentId: "TikTok Content ID",
+  youtubeOac: "YouTube OAC",
+  analyticsCenter: "Analytics Centre",
+  royaltyClaimCentre: "Royalty Claim Centre",
+  merchandisePanel: "Merchandise Distribution Panel",
+  dolbyAtmos: "Dolby Atmos Distribution",
   spotifyDiscoveryMode: "Spotify Discovery Mode",
-  assistedPlaylists: "Assisted Playlists",
-  preReleasePromo: "Pre-release Promo",
+  playlistPitching: "Playlist Pitching",
+  synchronization: "Synchronization",
+  fanLinksBuilder: "Fan Links Builder",
+  mahiAi: "Mahi AI",
+  youtubeMcnAccess: "YouTube MCN Access",
+  available150Stores: "Available to all 150 stores",
+  worldwideAvailability: "Worldwide Availability",
   freeUpcCode: "Free UPC Code",
   freeIsrcCode: "Free ISRC Code",
   lifetimeAvailability: "Lifetime Availability",
-  supportHours: "Support Hours",
-  businessHours: "Business Hours",
-  liveSupport: "Live Support",
-  dailyArtistDistribution: "Daily Artist Distribution",
-  worldwideAvailability: "Worldwide Availability",
-  analyticsCenter: "Analytics Center",
+  supportHours: "Support Time",
+  liveSupportTime: "Live Processing Time",
 };
 
 const SUPPORT_HOURS_LABELS = {
-  "24_hours": "24 Hours",
-  "48_hours": "48 Hours",
-  "72_hours": "72 Hours",
+  "24_business_hours": "24 Business Hours",
+  "48_business_hours": "48 Business Hours",
+  "72_business_hours": "72 Business Hours",
+};
+
+const LIVE_PROCESS_LABELS = {
+  "48_to_72_business_hours": "48 to 72 Business Hours",
+  "24_to_48_business_hours": "24 to 48 Business Hours",
+  "instant": "Instant",
 };
 
 export default function SubscriptionCard({
@@ -216,9 +228,11 @@ export default function SubscriptionCard({
             visibleFeatures.map(([key, value]) => {
               let label = FEATURE_LABELS[key] || key;
               if (key === "supportHours")
-                label = `Support: ${SUPPORT_HOURS_LABELS[value] || value}`;
+                label = `${FEATURE_LABELS[key]}: ${SUPPORT_HOURS_LABELS[value] || value}`;
+              if (key === "liveSupportTime")
+                label = `${FEATURE_LABELS[key]}: ${LIVE_PROCESS_LABELS[value] || value}`;
               if (key === "revenueShare" && value?.percentage)
-                label = `Revenue Share: ${value.percentage}%`;
+                label = `${value.percentage}% of the Net Revenue`;
               return (
                 <li key={key} className="flex items-center gap-2 text-gray-300">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
