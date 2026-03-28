@@ -121,7 +121,7 @@ export default function SubscriptionCard({
     
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h2 className="text-xl font-semibold flex items-center gap-2">
+          <h2 className="text-xl font-semibold flex items-center gap-2 flex-wrap">
             {plan.name}
             {plan.isBestValue && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">
@@ -134,6 +134,18 @@ export default function SubscriptionCard({
               </span>
             )}
           </h2>
+          <div className="flex items-center gap-2 mt-1">
+            {plan.targetType && (
+              <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${
+                plan.targetType === 'artist' ? 'bg-indigo-500/20 text-indigo-400' :
+                plan.targetType === 'label' ? 'bg-purple-500/20 text-purple-400' :
+                'bg-gray-500/20 text-gray-400'
+              }`}>
+                {plan.targetType}
+              </span>
+            )}
+            <span className="text-xs text-gray-500 font-mono">{plan.planId}</span>
+          </div>
           <p className="text-sm text-gray-400 mt-1">{plan.description}</p>
         </div>
 

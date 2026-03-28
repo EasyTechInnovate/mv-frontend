@@ -17,12 +17,20 @@ export default function SubscriptionPlans({ theme }) {
 
   
   useEffect(() => {
-    fetchPlans();
-  }, []);
+    fetchPlans(activeTab);
+  }, [activeTab]);
 
-  const fetchPlans = async () => {
+  const TAB_TARGET_TYPE = {
+    Everyone: "everyone",
+    Artists: "artist",
+    Labels: "label",
+  };
+
+  const fetchPlans = async (tab = activeTab) => {
+    if (tab === "Subscribers") return;
     try {
-      const res = await GlobalApi.getSubscriptionPlans(true);
+      const targetType = TAB_TARGET_TYPE[tab] || null;
+      const res = await GlobalApi.getSubscriptionPlans(true, targetType);
       if (res.data?.data?.plans) {
         const normalized = res.data.data.plans.map((p) => ({
           ...p,
@@ -87,7 +95,7 @@ export default function SubscriptionPlans({ theme }) {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedPlan(null);
-    fetchPlans();
+    fetchPlans(activeTab);
   };
 
   return (

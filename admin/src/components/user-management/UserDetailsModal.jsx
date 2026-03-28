@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { X, CalendarDays, Loader2 } from 'lucide-react';
 import GlobalApi from '@/lib/GlobalApi';
 import { toast } from 'sonner';
 
@@ -43,11 +45,23 @@ const SocialLink = ({ label, link }) => (
   ) : null
 );
 
-export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark' }) {
+export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark', onUserUpdated }) {
   if (!user) return null;
 
   const isDark = theme === 'dark';
   const bgColor = isDark ? "bg-[#151F28]" : "bg-white";
+
+  const toDateInput = (isoStr) => {
+    if (!isoStr) return '';
+    return new Date(isoStr).toISOString().slice(0, 10);
+  };
+
+  const [aggSub, setAggSub] = useState({
+    startDate: toDateInput(user.aggregatorSubscription?.startDate),
+    endDate: toDateInput(user.aggregatorSubscription?.endDate),
+    notes: user.aggregatorSubscription?.notes || '',
+  });
+  const [aggLoading, setAggLoading] = useState(false);
 
   const kycStatusVariant = {
     verified: "success",
@@ -229,12 +243,90 @@ export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark'
 
            
 
-            <Section title="Subscription">
-              <DetailItem label="Plan ID" value={user.subscription?.planId} />
-              <DetailItem label="Status" value={user.subscription?.status} isBadge badgeVariant={subscriptionStatusVariant[user.subscription?.status]}/>
-              <DetailItem label="Valid Until" value={user.subscription?.validUntil ? new Date(user.subscription.validUntil).toLocaleDateString() : 'N/A'} />
-              <DetailItem label="Auto-Renewal" value={user.subscription?.autoRenewal ? 'Enabled' : 'Disabled'} />
-            </Section>
+            {user.userType !== 'aggregator' && (
+              <Section title="Subscription">
+                <DetailItem label="Plan ID" value={user.subscription?.planId} />
+                <DetailItem label="Status" value={user.subscription?.status} isBadge badgeVariant={subscriptionStatusVariant[user.subscription?.status]}/>
+                <DetailItem label="Valid Until" value={user.subscription?.validUntil ? new Date(user.subscription.validUntil).toLocaleDateString() : 'N/A'} />
+                <DetailItem label="Auto-Renewal" value={user.subscription?.autoRenewal ? 'Enabled' : 'Disabled'} />
+              </Section>
+            )}
+
+            {user.userType === 'aggregator' && (
+              <div className="space-y-4 rounded-lg border border-gray-800 p-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-md font-semibold text-gray-300 flex items-center gap-2">
+                    <CalendarDays className="w-4 h-4" /> Aggregator Subscription
+                  </h3>
+                  {user.aggregatorSubscription?.startDate && user.aggregatorSubscription?.endDate && (
+                    <Badge
+                      className={
+                        new Date() >= new Date(user.aggregatorSubscription.startDate) &&
+                        new Date() <= new Date(user.aggregatorSubscription.endDate)
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-600 text-white"
+                      }
+                    >
+                      {new Date() >= new Date(user.aggregatorSubscription.startDate) &&
+                      new Date() <= new Date(user.aggregatorSubscription.endDate)
+                        ? "Active"
+                        : "Inactive"}
+                    </Badge>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Start Date</p>
+                    <Input
+                      type="date"
+                      value={aggSub.startDate}
+                      onChange={(e) => setAggSub(p => ({ ...p, startDate: e.target.value }))}
+                      className="h-9 bg-transparent border-gray-700 text-gray-200"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">End Date</p>
+                    <Input
+                      type="date"
+                      value={aggSub.endDate}
+                      onChange={(e) => setAggSub(p => ({ ...p, endDate: e.target.value }))}
+                      className="h-9 bg-transparent border-gray-700 text-gray-200"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-xs text-gray-500 mb-1">Notes (optional)</p>
+                    <Input
+                      value={aggSub.notes}
+                      onChange={(e) => setAggSub(p => ({ ...p, notes: e.target.value }))}
+                      placeholder="e.g. Renewal discussed, paid via bank"
+                      className="h-9 bg-transparent border-gray-700 text-gray-200"
+                    />
+                  </div>
+                </div>
+                <Button
+                  disabled={aggLoading || !aggSub.startDate || !aggSub.endDate}
+                  onClick={async () => {
+                    setAggLoading(true);
+                    try {
+                      await GlobalApi.updateAggregatorSubscription(user._id, {
+                        startDate: aggSub.startDate,
+                        endDate: aggSub.endDate,
+                        notes: aggSub.notes || undefined,
+                      });
+                      toast.success("Aggregator subscription updated");
+                      onUserUpdated?.();
+                    } catch (err) {
+                      toast.error(err.response?.data?.message || "Failed to update subscription");
+                    } finally {
+                      setAggLoading(false);
+                    }
+                  }}
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-sm"
+                >
+                  {aggLoading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Saving...</> : "Save Subscription Dates"}
+                </Button>
+              </div>
+            )}
 
             <Section title="Social Media">
                 <SocialLink label="Spotify" link={user.socialMedia?.spotify} />

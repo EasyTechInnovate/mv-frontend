@@ -22,17 +22,10 @@ import {
 } from "@/components/ui/select";
 
 
-const PLAN_IDS = [
-  { label: "Artist Standard", value: "artist_standard" },
-  { label: "Artist Popular", value: "artist_popular" },
-  { label: "Artist Best Value", value: "artist_best_value" },
-  { label: "Label Standard", value: "label_standard" },
-  { label: "Label Popular", value: "label_popular" },
-  { label: "Label Best Value", value: "label_best_value" },
-  { label: "Maheshwari Standard", value: "maheshwari_standard" },
-  { label: "Maheshwari Best Value", value: "maheshwari_best_value" },
-  { label: "Maheshwari Popular", value: "maheshwari_popular" },
-  { label: "Maheshwari Premium", value: "maheshwari_premium" },
+const TARGET_TYPE_OPTIONS = [
+  { label: "Everyone", value: "everyone" },
+  { label: "Artist", value: "artist" },
+  { label: "Label", value: "label" },
 ];
 
 
@@ -173,11 +166,13 @@ export default function CreateSubscriptionPlanModal({
     planId: "",
     name: "",
     description: "",
+    targetType: "everyone",
     price: { current: 0, original: 0 },
     currency: "INR",
     interval: "month",
     intervalCount: 1,
     features: { ...DEFAULT_FEATURES },
+    showcaseFeatures: [],
     isPopular: false,
     isBestValue: false,
     displayOrder: 0,
@@ -193,6 +188,7 @@ export default function CreateSubscriptionPlanModal({
         planId: planData.planId ?? "",
         name: planData.name ?? "",
         description: planData.description ?? "",
+        targetType: planData.targetType ?? "everyone",
         price: {
           current: planData.price?.current ?? 0,
           original: planData.price?.original ?? 0,
@@ -201,6 +197,7 @@ export default function CreateSubscriptionPlanModal({
         interval: planData.interval ?? "month",
         intervalCount: planData.intervalCount ?? 1,
         features: { ...DEFAULT_FEATURES, ...(planData.features || {}) },
+        showcaseFeatures: planData.showcaseFeatures ?? [],
         isPopular: planData.isPopular ?? false,
         isBestValue: planData.isBestValue ?? false,
         displayOrder: planData.displayOrder ?? 0,
@@ -227,11 +224,13 @@ export default function CreateSubscriptionPlanModal({
         planId: "",
         name: "",
         description: "",
+        targetType: "everyone",
         price: { current: 0, original: 0 },
         currency: "INR",
         interval: "month",
         intervalCount: 1,
         features: { ...DEFAULT_FEATURES },
+        showcaseFeatures: [],
         isPopular: false,
         isBestValue: false,
         displayOrder: 0,
@@ -279,6 +278,7 @@ export default function CreateSubscriptionPlanModal({
       planId: form.planId,
       name: form.name.trim(),
       description: form.description?.trim() || "No description provided",
+      targetType: form.targetType || "everyone",
       price: {
         current: Number(form.price.current),
         original: Number(form.price.original ?? form.price.current ?? 0),
@@ -287,6 +287,7 @@ export default function CreateSubscriptionPlanModal({
       interval: form.interval,
       intervalCount: Number(form.intervalCount) || 1,
       features: featuresPayload,
+      showcaseFeatures: (form.showcaseFeatures || []).filter(f => f.text?.trim()),
       isPopular: !!form.isPopular,
       isBestValue: !!form.isBestValue,
       displayOrder: Number(form.displayOrder) || 0,
@@ -345,26 +346,35 @@ export default function CreateSubscriptionPlanModal({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label>Plan ID</Label>
-                <Select
-                  onValueChange={(v) => setField("planId", v)}
+                <Label>Plan ID <span className="text-gray-400 text-xs">(lowercase, underscores only)</span></Label>
+                <Input
                   value={form.planId}
+                  onChange={(e) => setField("planId", e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                  placeholder="e.g. artist_standard"
+                  className="h-10"
+                  disabled={!!planData}
+                />
+              </div>
+
+              <div>
+                <Label>Target Type</Label>
+                <Select
+                  onValueChange={(v) => setField("targetType", v)}
+                  value={form.targetType}
                 >
-                  <SelectTrigger
-                    className={`w-full h-10 rounded-md ${isDark ? "bg-[#111827] text-gray-200" : "bg-white text-[#151F28]"}`}
-                  >
-                    <SelectValue placeholder="Select Plan ID" />
+                  <SelectTrigger className={`w-full h-10 ${isDark ? "bg-[#111827] text-gray-200" : "bg-white text-[#151F28]"}`}>
+                    <SelectValue placeholder="Select target" />
                   </SelectTrigger>
-                  <SelectContent className={`rounded-md shadow-lg ${isDark ? "bg-[#0b1220] text-gray-200" : "bg-white text-[#151F28]"}`}>
-                    {PLAN_IDS.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>
-                        {p.label}
-                      </SelectItem>
+                  <SelectContent className={`${isDark ? "bg-[#0b1220] text-gray-200" : "bg-white text-[#151F28]"} rounded-md shadow-lg`}>
+                    {TARGET_TYPE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
+            <div className="grid gap-4 sm:grid-cols-2 mt-3">
               <div>
                 <Label>Display Order</Label>
                 <Input
@@ -679,6 +689,54 @@ export default function CreateSubscriptionPlanModal({
               )}
             </div>
 
+
+            <Separator className={`${isDark ? "border-gray-800/30" : "border-gray-200"}`} />
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label>Showcase Features <span className="text-xs text-gray-400">(shown on pricing cards)</span></Label>
+                <button
+                  type="button"
+                  onClick={() => setField("showcaseFeatures", [...(form.showcaseFeatures || []), { text: "", included: true }])}
+                  className="text-xs text-purple-400 hover:text-purple-300 border border-purple-400/40 px-2 py-1 rounded"
+                >
+                  + Add Feature
+                </button>
+              </div>
+              <div className="space-y-2">
+                {(form.showcaseFeatures || []).map((sf, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <Switch
+                      checked={sf.included !== false}
+                      onCheckedChange={(c) => {
+                        const updated = [...form.showcaseFeatures];
+                        updated[idx] = { ...updated[idx], included: c };
+                        setField("showcaseFeatures", updated);
+                      }}
+                    />
+                    <Input
+                      value={sf.text}
+                      onChange={(e) => {
+                        const updated = [...form.showcaseFeatures];
+                        updated[idx] = { ...updated[idx], text: e.target.value };
+                        setField("showcaseFeatures", updated);
+                      }}
+                      placeholder="Feature text..."
+                      className="h-8 flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = form.showcaseFeatures.filter((_, i) => i !== idx);
+                        setField("showcaseFeatures", updated);
+                      }}
+                      className="text-red-400 hover:text-red-300 text-xs px-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <Separator className={`${isDark ? "border-gray-800/30" : "border-gray-200"}`} />
             <div className="flex items-center gap-6">

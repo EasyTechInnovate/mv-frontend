@@ -322,8 +322,25 @@ export const getMySubscription = async () => {
     return response.data
 }
 
-export const getAllSubscriptionPlans = async () => {
-    const response = await servicesAxiosInstance.get('/v1/subscription/plans')
+export const getAllSubscriptionPlans = async (targetType = null) => {
+    const params = {}
+    if (targetType) params.targetType = targetType
+    const response = await servicesAxiosInstance.get('/v1/subscription/plans', { params })
+    return response.data
+}
+
+export const createPaymentIntent = async (data) => {
+    const response = await servicesAxiosInstance.post('/v1/subscription/create-payment-intent', data)
+    return response.data
+}
+
+export const verifyPayment = async (data) => {
+    const response = await servicesAxiosInstance.post('/v1/subscription/verify-payment', data)
+    return response.data
+}
+
+export const getPaymentHistory = async (params = {}) => {
+    const response = await servicesAxiosInstance.get('/v1/subscription/payment-history', { params })
     return response.data
 }
 

@@ -110,7 +110,7 @@ const PageForLabels = () => {
     useEffect(() => {
         const fetchPlans = async () => {
             try {
-                const response = await getSubscriptionPlans()
+                const response = await getSubscriptionPlans('label')
                 if (response?.data) {
                     const plansMap = {}
                     response.data.forEach(plan => {

@@ -504,6 +504,7 @@ setIsResetPasswordOpen(true);
         onClose={() => setIsUserDetailsModalOpen(false)}
         user={selectedUserForDetails}
         theme={theme}
+        onUserUpdated={fetchUsers}
       />
       <ExportCsvDialog
         isOpen={isExportModalOpen}

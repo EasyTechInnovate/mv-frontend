@@ -70,7 +70,11 @@ const login = (data) => axiosClient.post('/v1/auth/login', data)
 
 // ---------------------- Subscription Plans ----------------------
 
-const getSubscriptionPlans = (includeInactive = true) => axiosClient.get(`/v1/admin/plans?includeInactive=${includeInactive}`)
+const getSubscriptionPlans = (includeInactive = true, targetType = null) => {
+    const params = { includeInactive }
+    if (targetType) params.targetType = targetType
+    return axiosClient.get('/v1/admin/plans', { params })
+}
 
 const createSubscriptionPlan = async (payload) => {
     try {
@@ -713,4 +717,8 @@ export default {
     reviewUserKYC,
     updateUserKYC,
     adminUpdateUserPayoutMethods,
+    // Subscribers
+    getSubscribers: (params) => axiosClient.get('/v1/admin/subscribers', { params }),
+    // Aggregator Subscription Management
+    updateAggregatorSubscription: (userId, data) => axiosClient.patch(`/v1/admin/users/${userId}/aggregator-subscription`, data),
 }

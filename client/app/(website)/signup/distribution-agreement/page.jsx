@@ -134,20 +134,18 @@ const DistributionAgreementPage = () => {
         localStorage.setItem('accessToken', accessToken)
         localStorage.setItem('refreshToken', refreshToken)
 
-        // Get user profile to check account status
-        const profileResponse = await getUserProfile()
+        // Store email for verify-email page
+        sessionStorage.setItem('verifyEmail', apiData.emailAddress)
 
-        if (profileResponse.success) {
-          // Clear signup form data from sessionStorage
-          sessionStorage.removeItem('signupFormData')
+        // Clear signup form data from sessionStorage
+        sessionStorage.removeItem('signupFormData')
 
-          toast.success('Account created successfully!', { id: loadingToast })
+        toast.success('Account created! Please verify your email.', { id: loadingToast })
 
-          // Navigate to subscriptions page
-          setTimeout(() => {
-            router.push('/subscriptions')
-          }, 1000)
-        }
+        // Navigate to verify-email page
+        setTimeout(() => {
+          router.push('/verify-email?email=' + encodeURIComponent(apiData.emailAddress))
+        }, 1000)
       }
     } catch (error) {
       console.error('Registration error:', error)

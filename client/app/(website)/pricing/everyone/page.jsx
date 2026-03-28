@@ -1,7 +1,7 @@
 'use client'
 import Faq from '@/components/website/Faq'
 import LetTheWorld from '@/components/website/LetTheWorld'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import herobg from '@/public/images/mvadvertisement/herobg.png'
 import { HeadingText, MainHeadingText } from '@/components/FixedUiComponents'
@@ -12,6 +12,7 @@ import { IoMdInformationCircleOutline } from 'react-icons/io'
 
 import { Anton } from 'next/font/google'
 import ApplyToJoin from '@/components/website/ApplyToJoin'
+import { createPaymentIntent, verifyPayment, getSubscriptionPlans, getUserProfile } from '@/services/api.services.js'
 const anton = Anton({
     weight: ['400'],
     subsets: ['latin']
@@ -71,6 +72,90 @@ const comparisonData = [
 
 const page = () => {
     const [hoveredItem, setHoveredItem] = useState(null)
+    const [isLoading, setIsLoading] = useState(false)
+    const [dynamicPlans, setDynamicPlans] = useState({})
+
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const response = await getSubscriptionPlans('everyone')
+                if (response?.data) {
+                    const plansMap = {}
+                    response.data.forEach(plan => {
+                        plansMap[plan.planId] = plan
+                    })
+                    setDynamicPlans(plansMap)
+                }
+            } catch (error) {
+                console.error('Failed to fetch plans', error)
+            }
+        }
+        fetchPlans()
+    }, [])
+
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            const script = document.createElement('script')
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+            script.onload = () => resolve(true)
+            script.onerror = () => resolve(false)
+            document.body.appendChild(script)
+        })
+    }
+
+    const handleSubscribe = async (planId) => {
+        try {
+            setIsLoading(true)
+            const response = await createPaymentIntent({ planId })
+            if (response.success) {
+                const checkoutData = response.data
+                const scriptLoaded = await loadRazorpayScript()
+                if (!scriptLoaded) {
+                    alert('Failed to load Razorpay SDK. Please try again.')
+                    return
+                }
+                let userProfile = {}
+                try {
+                    const profileResponse = await getUserProfile()
+                    if (profileResponse?.data?.user) userProfile = profileResponse.data.user
+                } catch {}
+                const options = {
+                    key: checkoutData.razorpayKeyId || 'rzp_test_STPawDcpBFe3oE',
+                    amount: checkoutData.amount * 100,
+                    currency: checkoutData.currency,
+                    name: 'Maheshwari Visuals',
+                    description: 'Subscription Payment',
+                    order_id: checkoutData.razorpayOrderId,
+                    prefill: {
+                        name: userProfile.firstName ? `${userProfile.firstName} ${userProfile.lastName}` : '',
+                        email: userProfile.emailAddress || '',
+                    },
+                    theme: { color: '#652CD6' },
+                    handler: async function (response) {
+                        try {
+                            await verifyPayment({
+                                razorpayPaymentId: response.razorpay_payment_id,
+                                razorpayOrderId: response.razorpay_order_id,
+                                razorpaySignature: response.razorpay_signature,
+                                planId,
+                            })
+                            alert('Payment successful! Please log in to your dashboard.')
+                            window.location.href = '/signin'
+                        } catch {
+                            alert('Payment verification failed. Please contact support.')
+                        }
+                    },
+                }
+                new window.Razorpay(options).open()
+            } else {
+                alert(response.message || 'Failed to initiate payment')
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || err.message || 'Failed to initiate subscription.')
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     return (
         <div className="overflow-x-hidden ">
@@ -92,15 +177,21 @@ const page = () => {
                         <div className="flex items-center gap-5 border-b border-gray-600 pb-8 mb-8">
                             <h1 className="text-[#652CD6] font-semibold text-4xl flex items-center">
                                 <FaIndianRupeeSign />
-                                199
+                                {dynamicPlans['one_song']?.price?.current || 199}
                             </h1>
                             <h1 className="text-gray-300 opacity-70 text-2xl relative">
                                 {' '}
                                 <div className="w-full h-[2px] bg-gray-300 absolute top-[16px] left-0 "></div>{' '}
                                 <FaIndianRupeeSign className="inline-block" />
-                                399
+                                {dynamicPlans['one_song']?.price?.original || 399}
                             </h1>
                         </div>
+                        <Button
+                            disabled={isLoading}
+                            onClick={() => handleSubscribe('one_song')}
+                            className="w-full mb-8 bg-[#0099FF] text-white hover:bg-[#007acc]">
+                            Subscribe Now
+                        </Button>
 
                         {oneSongData.map((item, index) => (
                             <div
@@ -133,15 +224,21 @@ const page = () => {
                         <div className="flex items-center gap-5 border-b border-gray-600 pb-8 mb-8">
                             <h1 className="text-[#652CD6] font-semibold text-4xl flex items-center">
                                 <FaIndianRupeeSign />
-                                499
+                                {dynamicPlans['one_album']?.price?.current || 499}
                             </h1>
                             <h1 className="text-gray-300 opacity-70 text-2xl relative">
                                 {' '}
                                 <div className="w-full h-[2px] bg-gray-300 absolute top-[16px] left-0 "></div>{' '}
                                 <FaIndianRupeeSign className="inline-block" />
-                                699
+                                {dynamicPlans['one_album']?.price?.original || 699}
                             </h1>
                         </div>
+                        <Button
+                            disabled={isLoading}
+                            onClick={() => handleSubscribe('one_album')}
+                            className="w-full mb-8 bg-[#652CD6] text-white hover:bg-[#5520b5]">
+                            Subscribe Now
+                        </Button>
 
                         {oneAlbumData.map((item, index) => (
                             <div

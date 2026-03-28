@@ -18,6 +18,16 @@ export const registerUser = async (userData) => {
     return response.data
 }
 
+export const verifyEmail = async (data) => {
+    const response = await servicesAxiosInstance.post('/v1/auth/verify-email', data)
+    return response.data
+}
+
+export const resendVerificationEmail = async (data) => {
+    const response = await servicesAxiosInstance.post('/v1/auth/resend-verification', data)
+    return response.data
+}
+
 /**
  * Login a user
  * @param {Object} credentials - User login credentials (emailAddress, password)
@@ -63,8 +73,10 @@ export const resetPassword = async (data) => {
  * Get all subscription plans
  * @returns {Promise} Response with list of subscription plans
  */
-export const getSubscriptionPlans = async () => {
-    const response = await servicesAxiosInstance.get('/v1/subscription/plans')
+export const getSubscriptionPlans = async (targetType = null) => {
+    const params = {}
+    if (targetType) params.targetType = targetType
+    const response = await servicesAxiosInstance.get('/v1/subscription/plans', { params })
     return response.data
 }
 
