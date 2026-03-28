@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { verifyEmail, resendVerificationEmail } from '@/services/api.services'
 import Link from 'next/link'
 
-const VerifyEmailPage = () => {
+const VerifyEmailContent = () => {
     const router = useRouter()
     const searchParams = useSearchParams()
     const [code, setCode] = useState(['', '', '', '', '', ''])
@@ -188,5 +188,11 @@ const VerifyEmailPage = () => {
         </div>
     )
 }
+
+const VerifyEmailPage = () => (
+    <Suspense fallback={null}>
+        <VerifyEmailContent />
+    </Suspense>
+)
 
 export default VerifyEmailPage
