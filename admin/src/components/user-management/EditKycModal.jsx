@@ -27,15 +27,6 @@ export default function EditKycModal({ isOpen, onClose, user, theme, onSuccess }
       passportNumber: "",
       vatNumber: "",
     },
-    bankDetails: {
-      accountNumber: "",
-      ifscCode: "",
-      accountHolderName: "",
-      bankName: "",
-    },
-    upiDetails: {
-      upiId: "",
-    },
   });
 
   useEffect(() => {
@@ -50,21 +41,12 @@ export default function EditKycModal({ isOpen, onClose, user, theme, onSuccess }
           passportNumber: user.kyc.details?.passportNumber || "",
           vatNumber: user.kyc.details?.vatNumber || "",
         },
-        bankDetails: {
-          accountNumber: user.kyc.bankDetails?.accountNumber || "",
-          ifscCode: user.kyc.bankDetails?.ifscCode || "",
-          accountHolderName: user.kyc.bankDetails?.accountHolderName || "",
-          bankName: user.kyc.bankDetails?.bankName || "",
-        },
-        upiDetails: {
-          upiId: user.kyc.upiDetails?.upiId || "",
-        },
       });
     }
-  }, [user]);
+  }, [user, isOpen]);
 
   const handleUpdate = async () => {
-    const { residencyType, details, bankDetails, upiDetails } = formData;
+    const { residencyType, details } = formData;
 
     // Validation
     if (residencyType === 'indian') {
@@ -81,21 +63,6 @@ export default function EditKycModal({ isOpen, onClose, user, theme, onSuccess }
         toast.error('Please enter a valid Passport Number (min 6 characters)');
         return;
       }
-    }
-
-    if (bankDetails.accountNumber && !/^\d{9,18}$/.test(bankDetails.accountNumber)) {
-      toast.error('Please enter a valid Bank Account Number (9-18 digits)');
-      return;
-    }
-
-    if (bankDetails.ifscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankDetails.ifscCode.toUpperCase())) {
-      toast.error('Please enter a valid 11-character IFSC Code');
-      return;
-    }
-
-    if (upiDetails.upiId && !/^[\w.-]+@[\w.-]+$/.test(upiDetails.upiId)) {
-      toast.error('Please enter a valid UPI ID');
-      return;
     }
 
     try {
@@ -187,7 +154,7 @@ export default function EditKycModal({ isOpen, onClose, user, theme, onSuccess }
               <h4 className="text-sm font-bold mb-4 text-purple-400 uppercase tracking-wider">Document Details</h4>
               <div className="grid grid-cols-2 gap-4">
                 {formData.residencyType === "indian" ? (
-                  <div className="contents animate-in fade-in duration-300">
+                  <>
                     <div className="space-y-1">
                       <label className="text-xs">Aadhaar Number</label>
                       <Input
@@ -212,9 +179,9 @@ export default function EditKycModal({ isOpen, onClose, user, theme, onSuccess }
                         className={isDark ? "bg-[#111A22] border-gray-700" : ""}
                       />
                     </div>
-                  </div>
+                  </>
                 ) : (
-                  <div className="contents animate-in fade-in duration-300">
+                  <>
                     <div className="space-y-1">
                       <label className="text-xs">Passport Number</label>
                       <Input
@@ -231,54 +198,8 @@ export default function EditKycModal({ isOpen, onClose, user, theme, onSuccess }
                         className={isDark ? "bg-[#111A22] border-gray-700" : ""}
                       />
                     </div>
-                  </div>
+                  </>
                 )}
-              </div>
-            </div>
-
-            <div className="border-t border-gray-800 pt-4">
-              <h4 className="text-sm font-bold mb-4 text-purple-400 uppercase tracking-wider">Bank & UPI Details</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs">Account Holder Name</label>
-                  <Input
-                    value={formData.bankDetails.accountHolderName}
-                    onChange={(e) => handleFieldChange("bankDetails", "accountHolderName", e.target.value)}
-                    className={isDark ? "bg-[#111A22] border-gray-700" : ""}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs">Account Number</label>
-                  <Input
-                    value={formData.bankDetails.accountNumber}
-                    onChange={(e) => handleFieldChange("bankDetails", "accountNumber", e.target.value)}
-                    className={isDark ? "bg-[#111A22] border-gray-700" : ""}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs">IFSC Code</label>
-                  <Input
-                    value={formData.bankDetails.ifscCode}
-                    onChange={(e) => handleFieldChange("bankDetails", "ifscCode", e.target.value)}
-                    className={isDark ? "bg-[#111A22] border-gray-700" : ""}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs">Bank Name</label>
-                  <Input
-                    value={formData.bankDetails.bankName}
-                    onChange={(e) => handleFieldChange("bankDetails", "bankName", e.target.value)}
-                    className={isDark ? "bg-[#111A22] border-gray-700" : ""}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs">UPI ID</label>
-                  <Input
-                    value={formData.upiDetails.upiId}
-                    onChange={(e) => handleFieldChange("upiDetails", "upiId", e.target.value)}
-                    className={isDark ? "bg-[#111A22] border-gray-700" : ""}
-                  />
-                </div>
               </div>
             </div>
           </div>
@@ -298,5 +219,5 @@ export default function EditKycModal({ isOpen, onClose, user, theme, onSuccess }
         </div>
       </DialogContent>
     </Dialog>
-);
+  );
 }

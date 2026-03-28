@@ -128,29 +128,7 @@ export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark'
               </Section>
             )}
 
-            <Section title="KYC Details">
-              <DetailItem label="Status" value={user.kyc?.status} isBadge badgeVariant={kycStatusVariant[user.kyc?.status]} />
-              <DetailItem label="Residency" value={user.kyc?.residencyType?.toUpperCase()} />
-              {user.kyc?.residencyType === 'indian' ? (
-                <>
-                  <DetailItem label="Aadhaar" value={user.kyc?.details?.aadhaarNumber} />
-                  <DetailItem label="PAN" value={user.kyc?.details?.panNumber} />
-                  <DetailItem label="GST/Udhyam" value={user.kyc?.details?.gstUdhyamNumber} />
-                </>
-              ) : (
-                <>
-                  <DetailItem label="Passport" value={user.kyc?.details?.passportNumber} />
-                  <DetailItem label="VAT" value={user.kyc?.details?.vatNumber} />
-                </>
-              )}
-              <DetailItem label="Bank Account" value={user.kyc?.bankDetails?.accountNumber} />
-              <DetailItem label="IFSC" value={user.kyc?.bankDetails?.ifscCode} />
-              <DetailItem label="Account Holder" value={user.kyc?.bankDetails?.accountHolderName} />
-              <DetailItem label="Bank Name" value={user.kyc?.bankDetails?.bankName} />
-              <DetailItem label="UPI ID" value={user.kyc?.upiDetails?.upiId} />
-            </Section>
-
-            {user.kyc?.status === 'pending' && (
+             {user.kyc?.status === 'pending' && (
               <div className="mt-8 pt-6 border-t border-gray-800 space-y-4">
                 <h3 className="text-lg font-bold text-gray-100">Review KYC Submission</h3>
                 <div className="flex gap-4">
@@ -187,6 +165,69 @@ export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark'
                 </div>
               </div>
             )}
+
+            <Section title="KYC (Identity Verification)">
+              <DetailItem label="Status" value={user.kyc?.status} isBadge badgeVariant={kycStatusVariant[user.kyc?.status]} />
+              <DetailItem label="Residency" value={user.kyc?.residencyType?.toUpperCase() || "NOT SET"} />
+              {user.kyc?.residencyType === 'indian' ? (
+                <>
+                  <DetailItem label="Aadhaar Number" value={user.kyc?.details?.aadhaarNumber} />
+                  <DetailItem label="PAN Number" value={user.kyc?.details?.panNumber} />
+                  <DetailItem label="GST/Udhyam" value={user.kyc?.details?.gstUdhyamNumber} />
+                </>
+              ) : (
+                <>
+                  <DetailItem label="Passport Number" value={user.kyc?.details?.passportNumber} />
+                  <DetailItem label="VAT Number" value={user.kyc?.details?.vatNumber} />
+                </>
+              )}
+              {user.kyc?.rejectionReason && (
+                <div className="md:col-span-2 lg:col-span-3 p-2 bg-red-500/10 border border-red-500/20 rounded text-red-400 text-sm">
+                  <strong>Rejection Reason:</strong> {user.kyc.rejectionReason}
+                </div>
+              )}
+            </Section>
+
+            <Section title="Payout Methods">
+              <DetailItem label="Primary Method" value={user.payoutMethods?.primaryMethod?.toUpperCase()} isBadge />
+              
+              {/* Bank */}
+              <div className="md:col-span-2 lg:col-span-3 mt-2 pt-2 border-t border-gray-800">
+                <p className="text-sm font-bold text-blue-400 mb-2">Bank Transfer {user.payoutMethods?.bank?.verified && <Badge variant="success" className="ml-2">Verified</Badge>}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <DetailItem label="Account Holder" value={user.payoutMethods?.bank?.accountHolderName} />
+                  <DetailItem label="Bank Name" value={user.payoutMethods?.bank?.bankName} />
+                  <DetailItem label="Account Number" value={user.payoutMethods?.bank?.accountNumber} />
+                  <DetailItem label="IFSC / SWIFT" value={user.payoutMethods?.bank?.ifscSwiftCode} />
+                </div>
+              </div>
+
+              {/* UPI */}
+              <div className="md:col-span-2 lg:col-span-3 mt-4 pt-2 border-t border-gray-800">
+                <p className="text-sm font-bold text-purple-400 mb-2">UPI {user.payoutMethods?.upi?.verified && <Badge variant="success" className="ml-2">Verified</Badge>}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <DetailItem label="UPI ID" value={user.payoutMethods?.upi?.upiId} />
+                  <DetailItem label="Account Holder" value={user.payoutMethods?.upi?.accountHolderName} />
+                </div>
+              </div>
+
+              {/* PayPal */}
+              <div className="md:col-span-2 lg:col-span-3 mt-4 pt-2 border-t border-gray-800">
+                <p className="text-sm font-bold text-blue-600 mb-2">PayPal {user.payoutMethods?.paypal?.verified && <Badge variant="success" className="ml-2">Verified</Badge>}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <DetailItem label="PayPal Email" value={user.payoutMethods?.paypal?.paypalEmail} />
+                  <DetailItem label="Account Name" value={user.payoutMethods?.paypal?.accountName} />
+                </div>
+              </div>
+
+              {user.payoutMethods?.primaryMethod === 'upi' && !user.payoutMethods?.upi?.upiId && (
+                <div className="col-span-full mt-2 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded text-yellow-500 text-xs">
+                  Primary method is UPI but details are missing.
+                </div>
+              )}
+            </Section>
+
+           
 
             <Section title="Subscription">
               <DetailItem label="Plan ID" value={user.subscription?.planId} />

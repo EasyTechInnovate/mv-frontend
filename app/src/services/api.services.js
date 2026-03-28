@@ -454,6 +454,11 @@ export const cancelPayoutRequest = async (requestId, data) => {
 };
 
 // Auth Profile & Settings APIs
+export const getProfile = async () => {
+    const response = await servicesAxiosInstance.get('/v1/auth/profile');
+    return response.data;
+};
+
 export const updateProfile = async (data) => {
     const response = await servicesAxiosInstance.patch('/v1/auth/profile', data);
     return response.data;
@@ -466,6 +471,16 @@ export const updateSocialMedia = async (data) => {
 
 export const verifyKYC = async (data) => {
     const response = await servicesAxiosInstance.post('/v1/auth/verify-kyc', data);
+    return response.data;
+};
+
+export const updatePayoutMethods = async (data) => {
+    const response = await servicesAxiosInstance.patch('/v1/auth/payout-methods', data);
+    return response.data;
+};
+
+export const adminUpdateUserPayoutMethods = async (userId, data) => {
+    const response = await servicesAxiosInstance.patch(`/v1/admin/users/${userId}/payout-methods`, data);
     return response.data;
 };
 

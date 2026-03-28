@@ -45,7 +45,7 @@ const StatusBadge = ({ status }) => {
 const PAYOUT_METHODS = [
   { value: "bank_transfer", label: "Bank Transfer" },
   { value: "upi", label: "UPI" },
-  { value: "cheque", label: "Cheque" },
+  { value: "paypal", label: "PayPal" },
 ];
 
 export default function WithdrawFund() {

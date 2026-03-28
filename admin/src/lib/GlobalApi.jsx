@@ -485,6 +485,7 @@ const bulkDeleteAdminNotifications = (payload) => axiosClient.post(`/v1/admin/no
 // ---------------------- KYC ----------------------
 const reviewUserKYC = (userId, data) => axiosClient.post(`/v1/admin/users/${userId}/kyc/review`, data)
 const updateUserKYC = (userId, data) => axiosClient.put(`/v1/admin/users/${userId}/kyc/update`, data)
+const adminUpdateUserPayoutMethods = (userId, data) => axiosClient.put(`/v1/admin/users/${userId}/payout-methods`, data)
 
 // ---------------------- Notifications (Bell / User APIs) ----------------------
 
@@ -711,4 +712,5 @@ export default {
     resetUserPassword: (userId, data) => axiosClient.post(`/v1/admin/users/${userId}/reset-password`, data),
     reviewUserKYC,
     updateUserKYC,
+    adminUpdateUserPayoutMethods,
 }

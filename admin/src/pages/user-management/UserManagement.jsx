@@ -27,7 +27,8 @@ import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 import CsvUploadModal from "@/components/csv-upload/CsvUploadModal";
 import ManageWalletModal from "@/components/user-management/ManageWalletModal";
 import SetAggregatorBannerModal from "@/components/user-management/SetAggregatorBannerModal";
-import EditKycModal from "@/components/user-management/EditKycModal";
+import EditKycModal from "../../components/user-management/EditKycModal";
+import EditPayoutMethodsModal from "../../components/user-management/EditPayoutMethodsModal";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -83,6 +84,7 @@ export default function UserManagement({ theme }) {
 
   // Edit KYC State
   const [isEditKycModalOpen, setIsEditKycModalOpen] = useState(false);
+  const [isEditPayoutModalOpen, setIsEditPayoutModalOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -262,7 +264,7 @@ export default function UserManagement({ theme }) {
                           ? u?.labelData?.labelName
                           : u.userType === "aggregator"
                             ? u?.aggregatorData?.companyName
-                            : "—";
+                            : "";
 
                     return (
                       <tr
@@ -272,7 +274,7 @@ export default function UserManagement({ theme }) {
                       >
                         <td className="px-4 py-3">{u.accountId}</td>
                         <td className="px-4 py-3">
-                          {u.firstName || u.lastName ? `${u.firstName || ""} ${u.lastName || ""}`.trim() : "—"}
+                          {u.firstName || u.lastName ? `${u.firstName || ""} ${u.lastName || ""}`.trim() : ""}
                         </td>
                         <td className="px-4 py-3">{stageName}</td>
 
@@ -411,6 +413,12 @@ setIsResetPasswordOpen(true);
                                 }}>
                                   Edit KYC
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => {
+                                  setSelectedUserForDetails(u);
+                                  setIsEditPayoutModalOpen(true);
+                                }}>
+                                  Edit Payouts
+                                </DropdownMenuItem>
                                 {u.userType === "aggregator" && (
                                   <DropdownMenuItem onSelect={() => {
                                     setSelectedAggregatorUser(u);
@@ -513,6 +521,20 @@ setIsResetPasswordOpen(true);
           { label: "Email", key: "emailAddress" },
           { label: "Join Date", key: "joinDate" },
           { label: "KYC Status", key: "kycStatus" },
+          { label: "Residency", key: "residency" },
+          { label: "Aadhaar Number", key: "aadhaar" },
+          { label: "PAN Number", key: "pan" },
+          { label: "GST/Udhyam", key: "gst" },
+          { label: "Passport Number", key: "passport" },
+          { label: "VAT Number", key: "vat" },
+          { label: "Bank Account Holder", key: "bankHolder" },
+          { label: "Bank Name", key: "bankName" },
+          { label: "Bank Account Number", key: "bankAccountNumber" },
+          { label: "Bank IFSC/SWIFT", key: "bankIfsc" },
+          { label: "UPI ID", key: "upiId" },
+          { label: "UPI Holder Name", key: "upiHolder" },
+          { label: "PayPal Email", key: "paypalEmail" },
+          { label: "PayPal Name", key: "paypalName" },
         ]}
         fetchData={async (page, limit) => {
           try {
@@ -535,8 +557,8 @@ setIsResetPasswordOpen(true);
                     ? u?.labelData?.labelName
                     : u.userType === "aggregator"
                       ? u?.aggregatorData?.companyName
-                      : "—";
-              const accountName = u.firstName || u.lastName ? `${u.firstName || ""} ${u.lastName || ""}`.trim() : "—";
+                      : "";
+              const accountName = u.firstName || u.lastName ? `${u.firstName || ""} ${u.lastName || ""}`.trim() : "";
               
               return {
                 accountId: u.accountId,
@@ -548,6 +570,20 @@ setIsResetPasswordOpen(true);
                 emailAddress: u.emailAddress,
                 joinDate: new Date(u.createdAt).toLocaleDateString(),
                 kycStatus: u.kyc?.status || "unverified",
+                residency: u.kyc?.residencyType || "",
+                aadhaar: u.kyc?.details?.aadhaarNumber || "",
+                pan: u.kyc?.details?.panNumber || "",
+                gst: u.kyc?.details?.gstUdhyamNumber || "",
+                passport: u.kyc?.details?.passportNumber || "",
+                vat: u.kyc?.details?.vatNumber || "",
+                bankHolder: u.payoutMethods?.bank?.accountHolderName || "",
+                bankName: u.payoutMethods?.bank?.bankName || "",
+                bankAccountNumber: u.payoutMethods?.bank?.accountNumber || "",
+                bankIfsc: u.payoutMethods?.bank?.ifscSwiftCode || "",
+                upiId: u.payoutMethods?.upi?.upiId || "",
+                upiHolder: u.payoutMethods?.upi?.accountHolderName || "",
+                paypalEmail: u.payoutMethods?.paypal?.paypalEmail || "",
+                paypalName: u.payoutMethods?.paypal?.accountName || "",
               }
             });
           } catch (err) {
@@ -596,6 +632,17 @@ setIsResetPasswordOpen(true);
         isOpen={isEditKycModalOpen}
         onClose={() => {
           setIsEditKycModalOpen(false);
+          setSelectedUserForDetails(null);
+          fetchUsers();
+        }}
+        user={selectedUserForDetails}
+        theme={theme}
+        onSuccess={fetchUsers}
+      />
+      <EditPayoutMethodsModal
+        isOpen={isEditPayoutModalOpen}
+        onClose={() => {
+          setIsEditPayoutModalOpen(false);
           setSelectedUserForDetails(null);
           fetchUsers();
         }}

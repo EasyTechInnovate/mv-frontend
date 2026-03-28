@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Camera, Link, Shield, CreditCard, Loader } from 'lucide-react';
+import { User, Camera, Link, Shield, CreditCard, Loader, IndianRupee, Wallet } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { getMySubscription, getAllSubscriptionPlans, updateProfile, updateSocialMedia, verifyKYC } from '@/services/api.services';
 import { showToast } from '@/utils/toast';
@@ -65,16 +65,13 @@ const Profile = () => {
         passportNumber: '',
         vatNumber: '',
       },
-      bankDetails: {
-        accountNumber: '',
-        ifscCode: '',
-        accountHolderName: '',
-        bankName: '',
-      },
-      upiDetails: {
-        upiId: '',
-      },
       status: 'unverified',
+    },
+    payoutMethods: {
+      bank: { accountNumber: '', ifscSwiftCode: '', accountHolderName: '', bankName: '', verified: false },
+      upi: { upiId: '', accountHolderName: '', verified: false },
+      paypal: { paypalEmail: '', accountName: '', verified: false },
+      primaryMethod: 'bank'
     },
     subscription: {
       plan: '',
@@ -154,17 +151,28 @@ const Profile = () => {
             passportNumber: user.kyc?.details?.passportNumber || '',
             vatNumber: user.kyc?.details?.vatNumber || '',
           },
-          bankDetails: {
-            accountNumber: user.kyc?.bankDetails?.accountNumber || '',
-            ifscCode: user.kyc?.bankDetails?.ifscCode || '',
-            accountHolderName: user.kyc?.bankDetails?.accountHolderName || '',
-            bankName: user.kyc?.bankDetails?.bankName || '',
-          },
-          upiDetails: {
-            upiId: user.kyc?.upiDetails?.upiId || '',
-          },
           status: user.kyc?.status || 'unverified'
         },
+        payoutMethods: {
+          bank: {
+            accountNumber: user.payoutMethods?.bank?.accountNumber || '',
+            ifscSwiftCode: user.payoutMethods?.bank?.ifscSwiftCode || '',
+            accountHolderName: user.payoutMethods?.bank?.accountHolderName || '',
+            bankName: user.payoutMethods?.bank?.bankName || '',
+            verified: user.payoutMethods?.bank?.verified || false
+          },
+          upi: {
+            upiId: user.payoutMethods?.upi?.upiId || '',
+            accountHolderName: user.payoutMethods?.upi?.accountHolderName || '',
+            verified: user.payoutMethods?.upi?.verified || false
+          },
+          paypal: {
+            paypalEmail: user.payoutMethods?.paypal?.paypalEmail || '',
+            accountName: user.payoutMethods?.paypal?.accountName || '',
+            verified: user.payoutMethods?.paypal?.verified || false
+          },
+          primaryMethod: user.payoutMethods?.primaryMethod || 'bank'
+        }
       }));
     }
   }, [user]);
@@ -313,8 +321,21 @@ const Profile = () => {
     }
   };
 
+  const handlePayoutChange = (section, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      payoutMethods: {
+        ...prev.payoutMethods,
+        [section]: {
+          ...prev.payoutMethods[section],
+          [field]: value
+        }
+      }
+    }));
+  };
+
   const handleSaveKyc = async () => {
-    const { residencyType, details, bankDetails, upiDetails } = formData.kyc;
+    const { residencyType, details } = formData.kyc;
 
     // Validation
     if (residencyType === 'indian') {
@@ -333,28 +354,11 @@ const Profile = () => {
       }
     }
 
-    if (bankDetails.accountNumber && !/^\d{9,18}$/.test(bankDetails.accountNumber)) {
-      showToast.error('Please enter a valid Bank Account Number (9-18 digits)');
-      return;
-    }
-
-    if (bankDetails.ifscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankDetails.ifscCode.toUpperCase())) {
-      showToast.error('Please enter a valid 11-character IFSC Code');
-      return;
-    }
-
-    if (upiDetails.upiId && !/^[\w.-]+@[\w.-]+$/.test(upiDetails.upiId)) {
-      showToast.error('Please enter a valid UPI ID');
-      return;
-    }
-
     setSaving(true);
     try {
       const payload = {
         residencyType: formData.kyc.residencyType,
         details: formData.kyc.details,
-        bankDetails: formData.kyc.bankDetails,
-        upiDetails: formData.kyc.upiDetails
       };
       
       const response = await verifyKYC(payload);
@@ -367,7 +371,6 @@ const Profile = () => {
             ...response.data.kyc
           }
         }));
-        // Update local user state via store if necessary, or let re-fetch handle it
         if (user) {
           useAuthStore.getState().setUser({
             ...user,
@@ -380,6 +383,50 @@ const Profile = () => {
     } catch (error) {
       console.error('Error saving KYC:', error);
       showToast.error(error?.response?.data?.message || 'Error saving KYC details. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSavePayouts = async (method) => {
+    // Validation
+    if (method === 'bank') {
+      const { accountNumber, ifscSwiftCode } = formData.payoutMethods.bank;
+      if (accountNumber && !/^\d{9,18}$/.test(accountNumber)) {
+        showToast.error('Please enter a valid Bank Account Number (9-18 digits)');
+        return;
+      }
+      if (ifscSwiftCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscSwiftCode.toUpperCase())) {
+        showToast.error('Please enter a valid 11-character IFSC/SWIFT Code');
+        return;
+      }
+    } else if (method === 'upi') {
+      const { upiId } = formData.payoutMethods.upi;
+      if (upiId && !/^[\w.-]+@[\w.-]+$/.test(upiId)) {
+        showToast.error('Please enter a valid UPI ID');
+        return;
+      }
+    } else if (method === 'paypal') {
+        const { paypalEmail } = formData.payoutMethods.paypal;
+        if (paypalEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paypalEmail)) {
+            showToast.error('Please enter a valid PayPal Email');
+            return;
+        }
+    }
+
+    setSaving(true);
+    try {
+      const payload = { [method]: formData.payoutMethods[method] };
+      const response = await updatePayoutMethods(payload);
+      
+      if (response.success) {
+        showToast.success(`${method.toUpperCase()} details updated!`);
+        // Refresh local user state if needed
+      } else {
+        showToast.error(response.message || 'Error updating payout details.');
+      }
+    } catch (error) {
+      showToast.error('Error saving payout details.');
     } finally {
       setSaving(false);
     }
@@ -747,58 +794,135 @@ const Profile = () => {
                 </div>
               )}
             </div>
+          </div>
+        </CardContent>
+      </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Account Holder Name</label>
-                <Input
-                  value={formData.kyc.bankDetails.accountHolderName}
-                  onChange={(e) => handleKycChange('bankDetails', 'accountHolderName', e.target.value)}
-                  placeholder="John Doe"
-                  className="border-slate-700"
-                  disabled={isKycLocked}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Bank Account Number</label>
-                <Input
-                  value={formData.kyc.bankDetails.accountNumber}
-                  onChange={(e) => handleKycChange('bankDetails', 'accountNumber', e.target.value)}
-                  placeholder="1234567890123456"
-                  className="border-slate-700"
-                  disabled={isKycLocked}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">IFSC Code</label>
-                <Input
-                  value={formData.kyc.bankDetails.ifscCode}
-                  onChange={(e) => handleKycChange('bankDetails', 'ifscCode', e.target.value)}
-                  placeholder="HDFC0000123"
-                  className="border-slate-700"
-                  disabled={isKycLocked}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Bank Name</label>
-                <Input
-                  value={formData.kyc.bankDetails.bankName}
-                  onChange={(e) => handleKycChange('bankDetails', 'bankName', e.target.value)}
-                  placeholder="HDFC Bank"
-                  className="border-slate-700"
-                  disabled={isKycLocked}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">UPI ID</label>
-                <Input
-                  value={formData.kyc.upiDetails.upiId}
-                  onChange={(e) => handleKycChange('upiDetails', 'upiId', e.target.value)}
-                  placeholder="name@upi"
-                  className="border-slate-700"
-                  disabled={isKycLocked}
-                />
-              </div>
+      {/* Payout Methods Section */}
+      <Card className="border-slate-700">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5" />
+            <CardTitle>Payout Methods</CardTitle>
+          </div>
+          <p className="text-sm text-muted-foreground mr-auto ml-2">Manage your payout destinations</p>
+        </CardHeader>
+        <CardContent className="space-y-8">
+          {/* Bank Account */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-blue-500" /> Bank Transfer
+                </h3>
+                {formData.payoutMethods.bank.verified && <Badge className="bg-green-600 text-white">Verified</Badge>}
+                <Button onClick={() => handleSavePayouts('bank')} disabled={saving} size="sm" className="bg-purple-600 hover:bg-purple-700">
+                    Save Bank Details
+                </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Account Holder Name</label>
+                    <Input
+                        value={formData.payoutMethods.bank.accountHolderName}
+                        onChange={(e) => handlePayoutChange('bank', 'accountHolderName', e.target.value)}
+                        placeholder="John Doe"
+                        className="border-slate-700"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Bank Name</label>
+                    <Input
+                        value={formData.payoutMethods.bank.bankName}
+                        onChange={(e) => handlePayoutChange('bank', 'bankName', e.target.value)}
+                        placeholder="HDFC Bank"
+                        className="border-slate-700"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Account Number</label>
+                    <Input
+                        value={formData.payoutMethods.bank.accountNumber}
+                        onChange={(e) => handlePayoutChange('bank', 'accountNumber', e.target.value)}
+                        placeholder="1234567890"
+                        className="border-slate-700"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">IFSC / SWIFT Code</label>
+                    <Input
+                        value={formData.payoutMethods.bank.ifscSwiftCode}
+                        onChange={(e) => handlePayoutChange('bank', 'ifscSwiftCode', e.target.value)}
+                        placeholder="HDFC0001234"
+                        className="border-slate-700"
+                    />
+                </div>
+            </div>
+          </div>
+
+          {/* UPI */}
+          <div className="space-y-4 pt-6 border-t border-slate-800">
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                    <IndianRupee className="w-4 h-4 text-purple-500" /> UPI ID
+                </h3>
+                {formData.payoutMethods.upi.verified && <Badge className="bg-green-600 text-white">Verified</Badge>}
+                <Button onClick={() => handleSavePayouts('upi')} disabled={saving} size="sm" className="bg-purple-600 hover:bg-purple-700">
+                    Save UPI
+                </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">UPI ID</label>
+                    <Input
+                        value={formData.payoutMethods.upi.upiId}
+                        onChange={(e) => handlePayoutChange('upi', 'upiId', e.target.value)}
+                        placeholder="artist@upi"
+                        className="border-slate-700"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Account Holder Name</label>
+                    <Input
+                        value={formData.payoutMethods.upi.accountHolderName}
+                        onChange={(e) => handlePayoutChange('upi', 'accountHolderName', e.target.value)}
+                        placeholder="John Doe"
+                        className="border-slate-700"
+                    />
+                </div>
+            </div>
+          </div>
+
+          {/* PayPal */}
+          <div className="space-y-4 pt-6 border-t border-slate-800">
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-blue-600" /> PayPal
+                </h3>
+                {formData.payoutMethods.paypal.verified && <Badge className="bg-green-600 text-white">Verified</Badge>}
+                <Button onClick={() => handleSavePayouts('paypal')} disabled={saving} size="sm" className="bg-purple-600 hover:bg-purple-700">
+                    Save PayPal
+                </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">PayPal Email</label>
+                    <Input
+                        type="email"
+                        value={formData.payoutMethods.paypal.paypalEmail}
+                        onChange={(e) => handlePayoutChange('paypal', 'paypalEmail', e.target.value)}
+                        placeholder="artist@email.com"
+                        className="border-slate-700"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Account Name</label>
+                    <Input
+                        value={formData.payoutMethods.paypal.accountName}
+                        onChange={(e) => handlePayoutChange('paypal', 'accountName', e.target.value)}
+                        placeholder="John Doe"
+                        className="border-slate-700"
+                    />
+                </div>
             </div>
           </div>
         </CardContent>

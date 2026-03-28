@@ -52,9 +52,19 @@ import {
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
 } from "recharts";
-import { getMyWallet, getMyWalletDetails, getMyPayoutRequests, cancelPayoutRequest, getMyWalletTransactions } from "@/services/api.services";
+import { 
+  getMyWallet, 
+  getMyWalletDetails, 
+  getMyPayoutRequests, 
+  cancelPayoutRequest, 
+  getMyWalletTransactions,
+  getProfile,
+  updatePayoutMethods
+} from "@/services/api.services";
 import ExportCsvDialog from "@/components/common/ExportCsvDialog";
 import jsonToCsv, { exportToCsv } from "@/lib/csv";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 const INR = new Intl.NumberFormat("en-IN");
 
@@ -81,10 +91,47 @@ export default function FinanceWallet() {
   const [tab, setTab] = useState("transactions");
   const [wallet, setWallet] = useState(null);
   const [loadingWallet, setLoadingWallet] = useState(true);
+  const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [isDownloadingStatement, setIsDownloadingStatement] = useState(false);
+
+  const fetchWallet = async () => {
+    try {
+      setLoadingWallet(true);
+      const response = await getMyWallet();
+      if (response.success) {
+        setWallet(response.data.wallet);
+      } else {
+        showToast.error(response.message || "Failed to fetch wallet data.");
+      }
+    } catch (error) {
+      showToast.error("An error occurred while fetching wallet data.");
+      console.error(error);
+    } finally {
+      setLoadingWallet(false);
+    }
+  };
+
+  const fetchUser = async () => {
+    try {
+      setLoadingUser(true);
+      const response = await getProfile();
+      if (response.success) {
+        setUser(response.data.user);
+      } else {
+        showToast.error(response.message || "Failed to fetch profile details.");
+      }
+    } catch (error) {
+      showToast.error("An error occurred while fetching profile details.");
+      console.error(error);
+    } finally {
+      setLoadingUser(false);
+    }
+  };
+
   const handleDownloadStatement = async () => {
     setIsDownloadingStatement(true);
     try {
@@ -114,23 +161,45 @@ export default function FinanceWallet() {
     }
   };
 
-  useEffect(() => {
-    const fetchWallet = async () => {
-      try {
-        setLoadingWallet(true);
-        const response = await getMyWallet();
-        if (response.success) {
-          setWallet(response.data.wallet);
-        } else {
-          showToast.error(response.message || "Failed to fetch wallet data.");
-        }
-      } catch (error) {
-                  showToast.error("An error occurred while fetching wallet data.");        console.error(error);
-      } finally {
-        setLoadingWallet(false);
+  const [editMethod, setEditMethod] = useState(null); // 'bank', 'upi', 'paypal'
+  const [editData, setEditData] = useState({});
+  const [isSubmittingPayout, setIsSubmittingPayout] = useState(false);
+
+  const handleUpdatePayout = async (method, data) => {
+    try {
+      setIsSubmittingPayout(true);
+      const response = await updatePayoutMethods({ [method]: data });
+      if (response.success) {
+        showToast.success(`${method.toUpperCase()} details updated successfully.`);
+        fetchUser(); // Refresh user data
+        setEditMethod(null);
+      } else {
+        showToast.error(response.message || "Failed to update payout details.");
       }
-    };
+    } catch (error) {
+      showToast.error("An error occurred while updating payout details.");
+    } finally {
+      setIsSubmittingPayout(false);
+    }
+  };
+
+  const handleSetPrimary = async (method) => {
+    try {
+        const response = await updatePayoutMethods({ primaryMethod: method });
+        if (response.success) {
+            showToast.success(`${method.replace('_', ' ').toUpperCase()} set as primary.`);
+            fetchUser();
+        } else {
+            showToast.error(response.message || "Failed to update primary method.");
+        }
+    } catch (error) {
+        showToast.error("An error occurred while updating primary method.");
+    }
+  };
+
+  useEffect(() => {
     fetchWallet();
+    fetchUser();
   }, []);
 
   const statCards = useMemo(() => [
@@ -519,33 +588,99 @@ export default function FinanceWallet() {
           </Card>
         </TabsContent>
 
-        {/* Payout Methods */}
         <TabsContent value="payouts">
           <Card>
-            <CardHeader>
-              <CardTitle>Payout Methods</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Payout Methods</CardTitle>
+                <CardDescription>Manage your preferred methods for receiving payments.</CardDescription>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {payoutMethods.map((m) => (
-                <div key={m.id} className="flex items-center justify-between rounded-lg border p-4">
-                  <div>
-                    <p className="font-medium">{m.kind}</p>
-                    <p className="text-xs text-muted-foreground">{m.sub}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {m.default && <Badge className="bg-primary/15 text-primary">Default</Badge>}
-                    <Badge className={m.active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}>
-                      {m.active ? "Active" : "Inactive"}
-                    </Badge>
-                    <Button variant="outline" size="sm">
-                      <Edit3 className="mr-2 h-4 w-4" /> Edit
-                    </Button>
-                  </div>
+            <CardContent className="space-y-4">
+              {loadingUser ? (
+                <div className="space-y-3">
+                   {[1,2,3].map(i => <div key={i} className="h-20 w-full animate-pulse rounded-lg bg-muted/50" />)}
                 </div>
-              ))}
-              <button className="mx-auto block w-full rounded-md border border-dashed py-3 text-center text-sm text-muted-foreground hover:bg-muted/20">
-                + Add New Payout Method
-              </button>
+              ) : (
+                <>
+                  {/* Bank Transfer */}
+                  <div className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/5">
+                    <div className="flex items-center gap-4">
+                      <div className="rounded-full bg-blue-500/10 p-2">
+                        <CreditCard className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Bank Transfer</p>
+                        <p className="text-xs text-muted-foreground">
+                          {user?.payoutMethods?.bank?.accountNumber 
+                            ? `${user.payoutMethods.bank.bankName} • ****${user.payoutMethods.bank.accountNumber.slice(-4)}`
+                            : "Not configured"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {user?.payoutMethods?.primaryMethod === 'bank' && <Badge className="bg-[#711CE9]/10 text-[#711CE9]">Primary</Badge>}
+                      {user?.payoutMethods?.bank?.verified ? <Badge className="bg-green-500/10 text-green-500">Verified</Badge> : <Badge variant="outline" className="text-muted-foreground">Unverified</Badge>}
+                      <Button variant="ghost" size="sm" onClick={() => { setEditMethod('bank'); setEditData(user?.payoutMethods?.bank || {}); }}>
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                      {user?.payoutMethods?.primaryMethod !== 'bank' && user?.payoutMethods?.bank?.accountNumber && (
+                        <Button variant="outline" size="sm" onClick={() => handleSetPrimary('bank')}>Set Primary</Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* UPI */}
+                  <div className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/5">
+                    <div className="flex items-center gap-4">
+                      <div className="rounded-full bg-purple-500/10 p-2">
+                        <IndianRupee className="h-5 w-5 text-purple-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium">UPI ID</p>
+                        <p className="text-xs text-muted-foreground">
+                          {user?.payoutMethods?.upi?.upiId || "Not configured"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {user?.payoutMethods?.primaryMethod === 'upi' && <Badge className="bg-[#711CE9]/10 text-[#711CE9]">Primary</Badge>}
+                      {user?.payoutMethods?.upi?.verified ? <Badge className="bg-green-500/10 text-green-500">Verified</Badge> : <Badge variant="outline" className="text-muted-foreground">Unverified</Badge>}
+                      <Button variant="ghost" size="sm" onClick={() => { setEditMethod('upi'); setEditData(user?.payoutMethods?.upi || {}); }}>
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                      {user?.payoutMethods?.primaryMethod !== 'upi' && user?.payoutMethods?.upi?.upiId && (
+                        <Button variant="outline" size="sm" onClick={() => handleSetPrimary('upi')}>Set Primary</Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* PayPal */}
+                  <div className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/5">
+                    <div className="flex items-center gap-4">
+                      <div className="rounded-full bg-blue-600/10 p-2">
+                        <Wallet className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">PayPal</p>
+                        <p className="text-xs text-muted-foreground">
+                          {user?.payoutMethods?.paypal?.paypalEmail || "Not configured"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {user?.payoutMethods?.primaryMethod === 'paypal' && <Badge className="bg-[#711CE9]/10 text-[#711CE9]">Primary</Badge>}
+                      {user?.payoutMethods?.paypal?.verified ? <Badge className="bg-green-500/10 text-green-500">Verified</Badge> : <Badge variant="outline" className="text-muted-foreground">Unverified</Badge>}
+                      <Button variant="ghost" size="sm" onClick={() => { setEditMethod('paypal'); setEditData(user?.payoutMethods?.paypal || {}); }}>
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                      {user?.payoutMethods?.primaryMethod !== 'paypal' && user?.payoutMethods?.paypal?.paypalEmail && (
+                        <Button variant="outline" size="sm" onClick={() => handleSetPrimary('paypal')}>Set Primary</Button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -646,6 +781,110 @@ export default function FinanceWallet() {
         title="Export Transaction History"
         description="Select a data range to export as a CSV file."
       />
+      {/* Edit Payout Modals */}
+      <Dialog open={!!editMethod} onOpenChange={(open) => !open && setEditMethod(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update {editMethod?.toUpperCase()} Details</DialogTitle>
+            <DialogDescription>
+              Changes will reset verification status. Admin review required.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {editMethod === 'bank' && (
+              <>
+                <div className="space-y-2">
+                  <Label>Account Holder Name</Label>
+                  <Input 
+                    value={editData.accountHolderName || ""} 
+                    onChange={(e) => setEditData({...editData, accountHolderName: e.target.value})}
+                    placeholder="As per bank records"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Bank Name</Label>
+                  <Input 
+                    value={editData.bankName || ""} 
+                    onChange={(e) => setEditData({...editData, bankName: e.target.value})}
+                    placeholder="e.g. HDFC Bank"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Account Number</Label>
+                  <Input 
+                    value={editData.accountNumber || ""} 
+                    onChange={(e) => setEditData({...editData, accountNumber: e.target.value})}
+                    placeholder="9-18 digits"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>IFSC / SWIFT Code</Label>
+                  <Input 
+                    value={editData.ifscSwiftCode || ""} 
+                    onChange={(e) => setEditData({...editData, ifscSwiftCode: e.target.value})}
+                    placeholder="e.g. HDFC0001234"
+                  />
+                </div>
+              </>
+            )}
+
+            {editMethod === 'upi' && (
+              <>
+                <div className="space-y-2">
+                  <Label>UPI ID</Label>
+                  <Input 
+                    value={editData.upiId || ""} 
+                    onChange={(e) => setEditData({...editData, upiId: e.target.value})}
+                    placeholder="username@bank"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Account Holder Name</Label>
+                  <Input 
+                    value={editData.accountHolderName || ""} 
+                    onChange={(e) => setEditData({...editData, accountHolderName: e.target.value})}
+                    placeholder="As per bank records"
+                  />
+                </div>
+              </>
+            )}
+
+            {editMethod === 'paypal' && (
+              <>
+                <div className="space-y-2">
+                  <Label>PayPal Email</Label>
+                  <Input 
+                    type="email"
+                    value={editData.paypalEmail || ""} 
+                    onChange={(e) => setEditData({...editData, paypalEmail: e.target.value})}
+                    placeholder="yourname@email.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Account Name</Label>
+                  <Input 
+                    value={editData.accountName || ""} 
+                    onChange={(e) => setEditData({...editData, accountName: e.target.value})}
+                    placeholder="As per PayPal records"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setEditMethod(null)}>Cancel</Button>
+            <Button 
+                className="bg-[#711CE9] text-white hover:bg-[#6f14ef]"
+                disabled={isSubmittingPayout}
+                onClick={() => handleUpdatePayout(editMethod, editData)}
+            >
+                {isSubmittingPayout ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
