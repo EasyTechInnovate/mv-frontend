@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import herobg from "@/public/images/mvadvertisement/herobg.png";
 import Image from "next/image";
@@ -10,7 +10,7 @@ import { resetPassword } from '@/services/api.services'
 import toast from 'react-hot-toast'
 import Link from 'next/link';
 
-const ResetPasswordPage = () => {
+const ResetPasswordContent = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
@@ -135,5 +135,11 @@ const ResetPasswordPage = () => {
     </div>
   );
 };
+
+const ResetPasswordPage = () => (
+  <Suspense fallback={null}>
+    <ResetPasswordContent />
+  </Suspense>
+)
 
 export default ResetPasswordPage;
