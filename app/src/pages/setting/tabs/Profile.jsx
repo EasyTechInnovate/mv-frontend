@@ -13,6 +13,26 @@ import { getMySubscription, getAllSubscriptionPlans, updateProfile, updateSocial
 import { showToast } from '@/utils/toast';
 import { uploadToImageKit } from '@/utils/imagekitUploader';
 
+const GENRE_LIST = [
+  "alternative", "alternative_rock", "alternative_and_rock_latino", "anime", "baladas_y_boleros", 
+  "big_band", "blues", "brazilian", "c_pop", "cantopop_hk_pop", "childrens", "chinese", 
+  "christian", "classical", "comedy", "contemporary_latin", "country", "dance", 
+  "easy_listening", "educational", "electronic", "enka", "experimental", 
+  "fitness_and_workout", "folk", "french_pop", "german_pop", "german_folk", 
+  "hip_hop_rap", "holiday", "instrumental", "indo_pop", "inspirational", 
+  "indian", "indian_pop", "indian_rap", "indian_folk", "indian_bollywood", 
+  "indian_devotional_and_spiritual", "indian_fusion", "indian_gazal", 
+  "indian_classical_vocal", "indian_dance", "indian_electronic", "jazz", 
+  "j_pop", "k_pop", "karaoke", "latin_jazz", "metal", "new_age", "opera", 
+  "pop", "punk", "r_and_b", "reggae", "reggaeton_y_hip_hop", "regional_mexicano", 
+  "rock", "salas_y_topical", "soul", "soundtrack", "spoken_word", "thai_pop", 
+  "trot", "vocal_nostalgia", "world"
+];
+
+function formatGenreLabel(genre) {
+  return genre.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
 const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
@@ -572,14 +592,11 @@ const Profile = () => {
                   <SelectValue placeholder="Select genre" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pop">Pop</SelectItem>
-                  <SelectItem value="rock">Rock</SelectItem>
-                  <SelectItem value="hip-hop">Hip Hop</SelectItem>
-                  <SelectItem value="electronic">Electronic</SelectItem>
-                  <SelectItem value="classical">Classical</SelectItem>
-                  <SelectItem value="jazz">Jazz</SelectItem>
-                  <SelectItem value="blues">Blues</SelectItem>
-                  <SelectItem value="country">Country</SelectItem>
+                   {GENRE_LIST.map(genre => (
+                    <SelectItem key={genre} value={genre}>
+                      {formatGenreLabel(genre)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

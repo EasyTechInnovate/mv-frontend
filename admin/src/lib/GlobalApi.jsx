@@ -229,7 +229,12 @@ const getUserSubLabels = (userId, page = 1, limit = 10, search = '') =>
 
 const toggleUserSubLabels = (userId, payload) => axiosClient.post(`/v1/admin/users/${userId}/sublabels`, payload)
 
-const getUsers = (page = 1, limit = 10, extraParams = '') => axiosClient.get(`/v1/admin/users?page=${page}&limit=${limit}${extraParams}`)
+const getUsers = (params = {}) => {
+    const defaultParams = { page: 1, limit: 10 };
+    return axiosClient.get('/v1/admin/users', { 
+        params: { ...defaultParams, ...params } 
+    });
+}
 
 const searchUsersForNotification = (page = 1, limit = 100, search = '') =>
     axiosClient.get(`/v1/admin/notifications/users/search?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`)
@@ -486,7 +491,8 @@ const deleteAdminNotification = (notificationId) => axiosClient.delete(`/v1/admi
 
 const bulkDeleteAdminNotifications = (payload) => axiosClient.post(`/v1/admin/notifications/bulk/permanent`, payload)
 
-// ---------------------- KYC ----------------------
+// ---------------------- KYC & User Profiles ----------------------
+const updateUserProfile = (userId, data) => axiosClient.patch(`/v1/admin/users/${userId}/profile`, data)
 const reviewUserKYC = (userId, data) => axiosClient.post(`/v1/admin/users/${userId}/kyc/review`, data)
 const updateUserKYC = (userId, data) => axiosClient.put(`/v1/admin/users/${userId}/kyc/update`, data)
 const adminUpdateUserPayoutMethods = (userId, data) => axiosClient.put(`/v1/admin/users/${userId}/payout-methods`, data)
@@ -721,4 +727,7 @@ export default {
     getSubscribers: (params) => axiosClient.get('/v1/admin/subscribers', { params }),
     // Aggregator Subscription Management
     updateAggregatorSubscription: (userId, data) => axiosClient.patch(`/v1/admin/users/${userId}/aggregator-subscription`, data),
+    // Profile Management
+    updateUserProfile,
+    toggleUserStatus: (userId) => axiosClient.patch(`/v1/admin/users/${userId}/toggle-status`),
 }
