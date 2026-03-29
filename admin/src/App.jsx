@@ -137,7 +137,7 @@ function AppContent() {
             <Route path="/admin/release-management/:userId/:userName" element={<P module={M.RELEASE_MGMT}><ReleaseManagement theme={theme} /></P>} />
             <Route path="/admin/release-management/advanced/edit/:id" element={<P module={M.RELEASE_MGMT}><EditAdvancedRelease theme={theme} /></P>} />
             <Route path="/admin/release-management/basic/edit/:id" element={<P module={M.RELEASE_MGMT}><EditBasicRelease theme={theme} /></P>} />
-            <Route path="/admin/kyc-management" element={<P module={M.USER_MGMT}><KycManagement theme={theme} /></P>} />
+            {/* <Route path="/admin/kyc-management" element={<P module={M.USER_MGMT}><KycManagement theme={theme} /></P>} /> */}
             <Route path="/admin/aggregator-management" element={<P module={M.AGGREGATOR}><AggregatorManagement theme={theme} /></P>} />
 
             {/* Data & Analytics */}

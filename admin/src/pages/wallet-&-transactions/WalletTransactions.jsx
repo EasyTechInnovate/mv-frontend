@@ -652,6 +652,14 @@ export default function WalletTransactions({ theme }) {
                 { label: "Status", key: "status" },
                 { label: "Payment Ref", key: "transactionReference" },
                 { label: "Date", key: "requestedAt" },
+                { label: "Bank Account Holder", key: "bankHolder" },
+                { label: "Bank Name", key: "bankName" },
+                { label: "Bank Account Number", key: "bankAccountNumber" },
+                { label: "Bank IFSC/SWIFT", key: "bankIfsc" },
+                { label: "UPI ID", key: "upiId" },
+                { label: "UPI Holder Name", key: "upiHolder" },
+                { label: "PayPal Email", key: "paypalEmail" },
+                { label: "PayPal Name", key: "paypalName" },
             ]}
             fetchData={async (page, limit) => {
             const params = { page, limit, status: statusFilter || undefined, search: debouncedSearch || undefined };
@@ -684,6 +692,14 @@ export default function WalletTransactions({ theme }) {
                     ...row,
                     user: `${row.userId?.firstName || ''} ${row.userId?.lastName || ''}`,
                     requestedAt: new Date(row.requestedAt).toLocaleString(),
+                    bankHolder: row.userId?.payoutMethods?.bank?.accountHolderName || "",
+                    bankName: row.userId?.payoutMethods?.bank?.bankName || "",
+                    bankAccountNumber: row.userId?.payoutMethods?.bank?.accountNumber || "",
+                    bankIfsc: row.userId?.payoutMethods?.bank?.ifscSwiftCode || "",
+                    upiId: row.userId?.payoutMethods?.upi?.upiId || "",
+                    upiHolder: row.userId?.payoutMethods?.upi?.accountHolderName || "",
+                    paypalEmail: row.userId?.payoutMethods?.paypal?.paypalEmail || "",
+                    paypalName: row.userId?.payoutMethods?.paypal?.accountName || "",
                 }));
             }
             }}

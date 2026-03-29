@@ -41,7 +41,7 @@ export default function Sidebar({ isCollapsed = false, theme }) {
       links: [
         { label: "User Management", icon: <Users className="w-4 h-4" />, module: M.USER_MGMT },
         { label: "Release Management", icon: <Rocket className="w-4 h-4" />, module: M.RELEASE_MGMT },
-        { label: "KYC Management", icon: <IdCard className="w-4 h-4" />, module: M.USER_MGMT },
+        // { label: "KYC Management", icon: <IdCard className="w-4 h-4" />, module: M.USER_MGMT },
         { label: "Aggregator Management", icon: <Users className="w-4 h-4" />, module: M.AGGREGATOR },
       ],
     },

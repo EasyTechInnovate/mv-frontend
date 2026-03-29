@@ -115,7 +115,8 @@ export default function WithdrawFund() {
         showToast.error(response.message || "Failed to submit withdrawal request.");
       }
     } catch (error) {
-      showToast.error("An error occurred while submitting the request.");
+      const errorMessage = error.response?.data?.message || error.message || "An error occurred while submitting the request.";
+      showToast.error(errorMessage);
       console.error(error);
     } finally {
       setIsSubmitting(false);

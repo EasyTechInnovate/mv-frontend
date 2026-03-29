@@ -75,11 +75,27 @@ export default function TransactionDetailsModal({ isOpen, onClose, transaction, 
             {transaction.adminNotes && <DetailItem label="Admin Notes" value={transaction.adminNotes} />}
             {transaction.transactionReference && <DetailItem label="Transaction Reference" value={transaction.transactionReference} />}
             <hr className="col-span-full border-gray-700 my-2" />
-            <h3 className={`col-span-full text-md font-semibold ${textColor} mb-2`}>Bank Details</h3>
-            <DetailItem label="Account Holder" value={transaction.userId?.kyc?.bankDetails?.accountHolderName} />
-            <DetailItem label="Account Number" value={transaction.userId?.kyc?.bankDetails?.accountNumber} />
-            <DetailItem label="IFSC Code" value={transaction.userId?.kyc?.bankDetails?.ifscCode} />
-            <DetailItem label="Bank Name" value={transaction.userId?.kyc?.bankDetails?.bankName} />
+            <h3 className={`col-span-full text-md font-semibold ${textColor} mb-2`}>Payout Details</h3>
+            {transaction.payoutMethod === 'bank' || transaction.payoutMethod === 'bank_transfer' ? (
+                <>
+                <DetailItem label="Account Holder" value={transaction.userId?.payoutMethods?.bank?.accountHolderName} />
+                <DetailItem label="Account Number" value={transaction.userId?.payoutMethods?.bank?.accountNumber} />
+                <DetailItem label="IFSC/SWIFT Code" value={transaction.userId?.payoutMethods?.bank?.ifscSwiftCode} />
+                <DetailItem label="Bank Name" value={transaction.userId?.payoutMethods?.bank?.bankName} />
+                </>
+            ) : transaction.payoutMethod === 'upi' ? (
+                <>
+                <DetailItem label="Account Holder" value={transaction.userId?.payoutMethods?.upi?.accountHolderName} />
+                <DetailItem label="UPI ID" value={transaction.userId?.payoutMethods?.upi?.upiId} />
+                </>
+            ) : transaction.payoutMethod === 'paypal' ? (
+                <>
+                <DetailItem label="Account Name" value={transaction.userId?.payoutMethods?.paypal?.accountName} />
+                <DetailItem label="PayPal Email" value={transaction.userId?.payoutMethods?.paypal?.paypalEmail} />
+                </>
+            ) : (
+                <div className="col-span-full text-sm text-gray-500">Payout method details not found.</div>
+            )}
         </div>
       </DialogContent>
     </Dialog>
