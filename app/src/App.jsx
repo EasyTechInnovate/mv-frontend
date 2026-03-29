@@ -19,7 +19,8 @@ import WithdrawFund from './pages/financeAndWallet/WithdrawFund'
 import YouTubeMCN from './pages/youtubeMCN/YoutubeMCN'
 import YouTubeMCNRequest from './pages/youtubeMCN/YoutubeMCNRequest'
 import MVProduction from './pages/mvProduction/MVProduction'
-import MVMarketing from './pages/mvMarketing/MVMarketing'
+import Sync from './pages/mvMarketing/Sync'
+import PlaylistPitching from './pages/mvMarketing/PlaylistPitching'
 import Advertisement from './pages/advertisement/Advertisement'
 import MerchStore from './pages/merchStore/MerchStore'
 import HelpSupport from './pages/helpSupport/HelpSupport'
@@ -122,7 +123,8 @@ const ProtectedRoutes = () => {
           <Route path='youtube-mcn' element={<YouTubeMCN />} />
           <Route path='youtube-mcn/new-request' element={<YouTubeMCNRequest />} />
           <Route path='mv-production' element={<MVProduction />} />
-          <Route path='mv-marketing' element={<MVMarketing />} />
+          <Route path='sync' element={<Sync />} />
+          <Route path='playlist-pitching' element={<PlaylistPitching />} />
           {/* <Route path='advertisement' element={<Advertisement />} /> */}
           <Route path='merch' element={<MerchStore />} />
           <Route path='mahi-ai' element={<MahiAI />} />

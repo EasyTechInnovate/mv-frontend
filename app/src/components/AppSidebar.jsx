@@ -2,7 +2,7 @@ import React from 'react'
 import {  
   Music, Home, User, Calendar, Upload, Grid3x3, Users, BarChart3, DollarSign, 
   Wallet, Megaphone, Video, Wrench, Store, Bot, HelpCircle, Settings,
-  BotMessageSquare, LogOut, Bell ,FileText
+  BotMessageSquare, LogOut, Bell ,FileText, RefreshCw, ListMusic
 } from 'lucide-react';
 import { 
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, 
@@ -37,7 +37,8 @@ const AppSidebar = () => {
     {
       title: "MARKETING",
       items: [
-        { icon: Megaphone, label: "MV Marketing", url: "/app/mv-marketing" },
+        { icon: RefreshCw, label: "Sync", url: "/app/sync" },
+        { icon: ListMusic, label: "Playlist Pitching", url: "/app/playlist-pitching" },
         // { icon: Megaphone, label: "Advertisement", url: "/app/advertisement" },
         { icon: Video, label: "MV Production", url: "/app/mv-production" },
         { icon: Wrench, label: "Fan Links Builder", url: "/app/fan-link" },
