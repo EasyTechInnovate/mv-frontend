@@ -11,6 +11,7 @@ import { MdOutlineDone } from 'react-icons/md'
 import { IoMdInformationCircleOutline } from 'react-icons/io'
 
 import { Anton } from 'next/font/google'
+import Link from 'next/link'
 import ApplyToJoin from '@/components/website/ApplyToJoin'
 import { createPaymentIntent, verifyPayment, getSubscriptionPlans, getUserProfile } from '@/services/api.services.js'
 const anton = Anton({
@@ -170,7 +171,20 @@ const page = () => {
                         text2="for You"
                     />
                 </div>
-                <div className="mt-40 flex flex-col md:flex-row items-center justify-center gap-10 ">
+
+                <div className='relative flex items-center justify-center w-full mt-10 gap-5 text-white'>
+                    <Button variant="blue" className='w-[200px]'>
+                        <Link href='/pricing/everyone'>Plans for Everyone</Link>
+                    </Button>
+                    <Button variant="ghost" className='w-[200px]'>
+                        <Link href='/pricing/for-artists'>Plans for Artists</Link>
+                    </Button>
+                    <Button variant="ghost" className='w-[200px]'>
+                        <Link href='/pricing/for-labels'>Plans for Labels</Link>
+                    </Button>
+                </div>
+
+                <div className="mt-30 flex flex-col md:flex-row items-center justify-center gap-10 ">
                     {/* One Song Plan */}
                     <div className="w-[350px] p-6 bg-[#0F0F0F] rounded-xl relative pb-40">
                         <h1 className={`text-xl ${anton.className} text-white uppercase mb-4`}>one song</h1>

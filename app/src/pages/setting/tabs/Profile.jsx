@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,11 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Camera, Link, Shield, CreditCard, Loader, IndianRupee, Wallet } from 'lucide-react';
+import { User, Camera, Link, Shield, CreditCard, Loader, IndianRupee, Wallet, ArrowUp, Tag } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useAuthStore } from '@/store/authStore';
-import { getMySubscription, getAllSubscriptionPlans, updateProfile, updateSocialMedia, verifyKYC } from '@/services/api.services';
+import { getMySubscription, getAllSubscriptionPlans, updateProfile, updateSocialMedia, verifyKYC, createPaymentIntent, verifyPayment } from '@/services/api.services';
 import { showToast } from '@/utils/toast';
 import { uploadToImageKit } from '@/utils/imagekitUploader';
+import { useNavigate } from 'react-router-dom';
 
 const GENRE_LIST = [
   "alternative", "alternative_rock", "alternative_and_rock_latino", "anime", "baladas_y_boleros", 
@@ -36,7 +38,92 @@ function formatGenreLabel(genre) {
 const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [upgradeDialog, setUpgradeDialog] = useState(null);
   const { user } = useAuthStore();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const loadRazorpayScript = () => new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+
+  const openRazorpay = async (checkoutData, planId) => {
+    const scriptLoaded = await loadRazorpayScript();
+    if (!scriptLoaded) {
+      showToast.error('Failed to load payment SDK. Please try again.');
+      setIsUpgrading(false);
+      return;
+    }
+    const options = {
+      key: checkoutData.razorpayKeyId,
+      amount: checkoutData.chargeAmount * 100,
+      currency: checkoutData.currency,
+      name: 'Maheshwari Visuals',
+      description: checkoutData.isUpgrade
+        ? `Upgrade to ${checkoutData.planName} (₹${checkoutData.prorationCredit} credit applied)`
+        : `Subscription to ${checkoutData.planName}`,
+      order_id: checkoutData.razorpayOrderId,
+      prefill: {
+        name: user?.firstName ? `${user.firstName} ${user.lastName}` : '',
+        email: user?.emailAddress || '',
+      },
+      theme: { color: '#652CD6' },
+      handler: async (razorpayResponse) => {
+        try {
+          await verifyPayment({
+            razorpayPaymentId: razorpayResponse.razorpay_payment_id,
+            razorpayOrderId: razorpayResponse.razorpay_order_id,
+            razorpaySignature: razorpayResponse.razorpay_signature,
+            planId,
+          });
+          showToast.success('Payment successful! Subscription activated.');
+          queryClient.invalidateQueries({ queryKey: ['mySubscription'] });
+          queryClient.invalidateQueries({ queryKey: ['allSubscriptionPlans'] });
+        } catch {
+          showToast.error('Payment verification failed. Please contact support.');
+        }
+      },
+      modal: { ondismiss: () => setIsUpgrading(false) },
+    };
+    new window.Razorpay(options).open();
+  };
+
+  const handleUpgrade = async (planId) => {
+    try {
+      setIsUpgrading(true);
+      const response = await createPaymentIntent({ planId });
+      if (!response.success) {
+        showToast.error(response.message || 'Failed to initiate payment');
+        setIsUpgrading(false);
+        return;
+      }
+      const checkoutData = response.data;
+
+      if (checkoutData.isUpgrade && checkoutData.prorationCredit > 0) {
+        setUpgradeDialog({ checkoutData, planId });
+        setIsUpgrading(false);
+        return;
+      }
+
+      await openRazorpay(checkoutData, planId);
+    } catch (err) {
+      showToast.error(err.response?.data?.message || err.message || 'Failed to initiate payment.');
+      setIsUpgrading(false);
+    }
+  };
+
+  const handleUpgradeConfirm = async () => {
+    const { checkoutData, planId } = upgradeDialog;
+    setUpgradeDialog(null);
+    setIsUpgrading(true);
+    await openRazorpay(checkoutData, planId);
+  };
 
   const fileInputRef = useRef(null);
 
@@ -47,10 +134,12 @@ const Profile = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch all subscription plans
+  const userTargetType = user?.userType === 'label' ? 'label' : user?.userType === 'artist' ? 'artist' : 'everyone';
+
+  // Fetch all subscription plans filtered by user type
   const { data: allPlansData, isLoading: allPlansLoading } = useQuery({
-    queryKey: ['allSubscriptionPlans'],
-    queryFn: getAllSubscriptionPlans,
+    queryKey: ['allSubscriptionPlans', userTargetType],
+    queryFn: () => getAllSubscriptionPlans(userTargetType),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -100,9 +189,7 @@ const Profile = () => {
       status: 'Active',
       startDate: '',
       endDate: '',
-      paymentMethod: '•••• 1234',
-      nextBilling: '',
-      autoRenewal: true,
+      autoRenewal: false,
       features: []
     }
   });
@@ -212,10 +299,10 @@ const Profile = () => {
           status: subscription.status === 'active' ? 'Active' : 'Inactive',
           startDate: formatDate(subscription.validFrom),
           endDate: formatDate(subscription.validUntil),
-          paymentMethod: '•••• 1234',
-          nextBilling: formatDate(subscription.nextPaymentDate) || formatDate(subscription.validUntil),
           autoRenewal: subscription.autoRenewal || false,
-          features: transformFeatures(currentPlan.features),
+          features: currentPlan.showcaseFeatures?.length > 0
+            ? currentPlan.showcaseFeatures.filter(f => f.included !== false).map(f => f.text)
+            : transformFeatures(currentPlan.features),
         }
       }));
     }
@@ -456,6 +543,51 @@ const Profile = () => {
 
   return (
     <div className="space-y-8">
+      {/* Upgrade Confirmation Dialog */}
+      <Dialog open={!!upgradeDialog} onOpenChange={(open) => { if (!open) setUpgradeDialog(null); }}>
+        <DialogContent className="sm:max-w-md border-slate-700 bg-[#0f1117]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <ArrowUp className="w-5 h-5 text-purple-500" />
+              Confirm Plan Upgrade
+            </DialogTitle>
+          </DialogHeader>
+          {upgradeDialog && (
+            <div className="space-y-4 py-2">
+              <div className="rounded-lg border border-slate-700 bg-slate-900 p-4 space-y-3 text-sm">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>New plan price</span>
+                  <span className="text-white font-medium">₹{upgradeDialog.checkoutData.originalAmount}</span>
+                </div>
+                <div className="flex justify-between text-green-500">
+                  <span className="flex items-center gap-1">
+                    <Tag className="w-3 h-3" />
+                    Credit from current plan
+                  </span>
+                  <span className="font-medium">−₹{upgradeDialog.checkoutData.prorationCredit}</span>
+                </div>
+                <div className="border-t border-slate-700 pt-3 flex justify-between text-white font-semibold text-base">
+                  <span>You pay today</span>
+                  <span className="text-purple-400">₹{upgradeDialog.checkoutData.chargeAmount}</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Your new plan activates immediately and runs for a fresh billing period.
+                Unused days from your current plan are credited above.
+              </p>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="border-slate-600" onClick={() => setUpgradeDialog(null)}>
+              Cancel
+            </Button>
+            <Button className="bg-purple-600 hover:bg-purple-700 text-white" onClick={handleUpgradeConfirm}>
+              Proceed to Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Profile Information Section */}
       <Card className="border-slate-700">
         <CardHeader className="flex flex-row items-center justify-between">
@@ -1000,14 +1132,6 @@ const Profile = () => {
                   <h4 className="font-semibold mb-4">Billing Information</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span>Payment Method:</span>
-                      <span>{formData.subscription.paymentMethod}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Next Billing:</span>
-                      <span>{formData.subscription.nextBilling}</span>
-                    </div>
-                    <div className="flex justify-between">
                       <span>Auto-renewal:</span>
                       <span>{formData.subscription.autoRenewal ? 'Enabled' : 'Disabled'}</span>
                     </div>
@@ -1016,14 +1140,19 @@ const Profile = () => {
               </div>
 
               <div className="flex gap-4 mt-6 flex-wrap">
-                <Button className="bg-purple-600 text-white hover:bg-purple-700 flex-1">
+                <Button
+                  className="bg-purple-600 text-white hover:bg-purple-700 flex-1"
+                  disabled={isUpgrading}
+                  onClick={() => navigate('/app/plan')}
+                >
                   Upgrade Plan
                 </Button>
-                <Button variant="outline" className="border-slate-600">
+                <Button
+                  variant="outline"
+                  className="border-slate-600"
+                  onClick={() => navigate('/app/settings?tab=billing')}
+                >
                   Manage Billing
-                </Button>
-                <Button variant="outline" className="border-slate-600 text-red-400 hover:text-red-300">
-                  Cancel Subscription
                 </Button>
               </div>
             </>
@@ -1062,6 +1191,28 @@ const Profile = () => {
                       ₹{plan.price.current}
                       <span className="text-base font-normal text-muted-foreground"> per {plan.interval}</span>
                     </p>
+                    {(() => {
+                      const currentSub = currentSubData?.data?.subscription;
+                      const currentPlan = currentSubData?.data?.plan;
+                      if (
+                        currentSub?.planId &&
+                        currentSub.planId !== plan.planId &&
+                        currentSub.status === 'active' &&
+                        currentPlan?.price?.current &&
+                        plan.price.current > currentPlan.price.current
+                      ) {
+                        const daysRemaining = Math.max(0, Math.ceil((new Date(currentSub.validUntil) - new Date()) / (1000 * 60 * 60 * 24)));
+                        const totalDays = 90;
+                        const credit = Math.round((currentPlan.price.current / totalDays) * daysRemaining);
+                        const youPay = Math.max(1, plan.price.current - credit);
+                        return (
+                          <p className="text-sm text-green-500 mt-1">
+                            Today you pay ₹{youPay} <span className="text-muted-foreground">(₹{credit} credit applied)</span>
+                          </p>
+                        );
+                      }
+                      return null;
+                    })()}
                   </CardHeader>
                   <CardContent className="p-0 space-y-2">
                     <ul className="space-y-2">
@@ -1075,16 +1226,32 @@ const Profile = () => {
                           </li>
                         ))}
                     </ul>
-                    <Button 
-                      className={`w-full mt-4 ${
-                        currentSubData?.data?.subscription?.planId === plan.planId
-                          ? 'bg-slate-800 cursor-not-allowed text-white'
-                          : 'bg-purple-600 hover:bg-purple-700 text-white'
-                      }`}
-                      disabled={currentSubData?.data?.subscription?.planId === plan.planId}
-                    >
-                      {currentSubData?.data?.subscription?.planId === plan.planId ? 'Current Plan' : 'Upgrade'}
-                    </Button>
+                    {(() => {
+                      const currentPlanId = currentSubData?.data?.subscription?.planId;
+                      const currentPrice = currentSubData?.data?.plan?.price?.current ?? 0;
+                      const isCurrent = currentPlanId === plan.planId;
+                      const isDowngrade = !isCurrent && plan.price.current <= currentPrice && !!currentPlanId;
+
+                      if (isCurrent) {
+                        return (
+                          <Button className="w-full mt-4 bg-slate-800 cursor-not-allowed text-white" disabled>
+                            Current Plan
+                          </Button>
+                        );
+                      }
+                      if (isDowngrade) {
+                        return null;
+                      }
+                      return (
+                        <Button
+                          className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white"
+                          disabled={isUpgrading}
+                          onClick={() => handleUpgrade(plan.planId)}
+                        >
+                          {isUpgrading ? 'Processing...' : 'Upgrade'}
+                        </Button>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               ))}
