@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { User, Cog, Bell, Shield, CreditCard, Settings } from 'lucide-react';
@@ -13,13 +13,9 @@ import { FileText } from 'lucide-react';
 
 const SettingsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') || 'profile';
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const activeTab = searchParams.get('tab') || 'profile';
 
   const handleTabChange = (value) => {
-    setActiveTab(value);
-    // Update the URL to match the active tab
-    // We use { replace: true } to avoid cluttering history
     setSearchParams({ tab: value }, { replace: true });
   };
 

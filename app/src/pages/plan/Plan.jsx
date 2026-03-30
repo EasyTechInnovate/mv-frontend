@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Check, X, CreditCard, Calendar, Clock, Loader, ShieldCheck } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Check, X, CreditCard, Calendar, Clock, Loader, ShieldCheck, ArrowUp, Tag } from 'lucide-react'
 import { getMySubscription, getAllSubscriptionPlans, createPaymentIntent, verifyPayment } from '@/services/api.services'
 import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
@@ -13,6 +14,7 @@ const Plan = () => {
   const queryClient = useQueryClient()
   const userType = user?.userType
   const [buyingPlanId, setBuyingPlanId] = useState(null)
+  const [upgradeDialog, setUpgradeDialog] = useState(null)
 
   // Fetch current subscription
   const { data: currentSubData, isLoading: currentSubLoading } = useQuery({
@@ -48,59 +50,74 @@ const Plan = () => {
       document.body.appendChild(script)
     })
 
+  const openRazorpay = async (checkoutData, planId) => {
+    const loaded = await loadRazorpayScript()
+    if (!loaded) {
+      toast.error('Failed to load payment SDK. Please try again.')
+      setBuyingPlanId(null)
+      return
+    }
+    const options = {
+      key: checkoutData.keyId || checkoutData.razorpayKeyId,
+      amount: checkoutData.chargeAmount * 100,
+      currency: checkoutData.currency || 'INR',
+      name: 'Maheshwari Visuals',
+      description: checkoutData.isUpgrade
+        ? `Upgrade to ${checkoutData.planName} (₹${checkoutData.prorationCredit} credit applied)`
+        : `Subscription to ${checkoutData.planName}`,
+      order_id: checkoutData.razorpayOrderId,
+      prefill: {
+        name: user ? `${user.firstName} ${user.lastName}` : '',
+        email: user?.emailAddress || '',
+      },
+      theme: { color: '#652CD6' },
+      handler: async (rzpResponse) => {
+        try {
+          await verifyPayment({
+            razorpayPaymentId: rzpResponse.razorpay_payment_id,
+            razorpayOrderId: rzpResponse.razorpay_order_id,
+            razorpaySignature: rzpResponse.razorpay_signature,
+            planId,
+          })
+          toast.success('Subscription activated!')
+          queryClient.invalidateQueries({ queryKey: ['mySubscription'] })
+          queryClient.invalidateQueries({ queryKey: ['subscriptionPlans'] })
+        } catch {
+          toast.error('Payment verification failed. Contact support.')
+        }
+      },
+      modal: { ondismiss: () => setBuyingPlanId(null) },
+    }
+    new window.Razorpay(options).open()
+  }
+
   const handleBuyPlan = async (planId) => {
     try {
       setBuyingPlanId(planId)
       const res = await createPaymentIntent({ planId })
       if (!res.success) {
         toast.error(res.message || 'Failed to initiate payment')
+        setBuyingPlanId(null)
         return
       }
-
       const checkoutData = res.data
-      const gateway = checkoutData.gateway || 'razorpay'
-
-      if (gateway === 'razorpay') {
-        const loaded = await loadRazorpayScript()
-        if (!loaded) {
-          toast.error('Failed to load payment SDK. Please try again.')
-          return
-        }
-        const options = {
-          key: checkoutData.keyId || checkoutData.razorpayKeyId,
-          amount: checkoutData.amount * 100,
-          currency: checkoutData.currency || 'INR',
-          name: 'Maheshwari Visuals',
-          description: 'Subscription',
-          order_id: checkoutData.razorpayOrderId,
-          prefill: {
-            name: user ? `${user.firstName} ${user.lastName}` : '',
-            email: user?.emailAddress || '',
-          },
-          theme: { color: '#652CD6' },
-          handler: async (rzpResponse) => {
-            try {
-              await verifyPayment({
-                razorpayPaymentId: rzpResponse.razorpay_payment_id,
-                razorpayOrderId: rzpResponse.razorpay_order_id,
-                razorpaySignature: rzpResponse.razorpay_signature,
-                planId,
-              })
-              toast.success('Subscription activated!')
-              queryClient.invalidateQueries(['mySubscription'])
-              queryClient.invalidateQueries(['subscriptionPlans'])
-            } catch (err) {
-              toast.error('Payment verification failed. Contact support.')
-            }
-          },
-        }
-        new window.Razorpay(options).open()
+      if (checkoutData.isUpgrade && checkoutData.prorationCredit > 0) {
+        setUpgradeDialog({ checkoutData, planId })
+        setBuyingPlanId(null)
+        return
       }
+      await openRazorpay(checkoutData, planId)
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to initiate payment')
-    } finally {
       setBuyingPlanId(null)
     }
+  }
+
+  const handleUpgradeConfirm = async () => {
+    const { checkoutData, planId } = upgradeDialog
+    setUpgradeDialog(null)
+    setBuyingPlanId(planId)
+    await openRazorpay(checkoutData, planId)
   }
 
   if (currentSubLoading || allPlansLoading) {
@@ -164,10 +181,56 @@ const Plan = () => {
   // ── Artist / Label View ─────────────────────────────────────────────────────
   const currentSub = currentSubData?.data?.subscription
   const currentPlanId = currentSub?.planId
+  const currentPrice = currentSubData?.data?.plan?.price?.current ?? 0
   const allPlans = allPlansData?.data || []
 
   return (
     <div className="p-6 space-y-8">
+      {/* Upgrade Confirmation Dialog */}
+      <Dialog open={!!upgradeDialog} onOpenChange={(open) => { if (!open) setUpgradeDialog(null) }}>
+        <DialogContent className="sm:max-w-md border-slate-700 bg-[#0f1117]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <ArrowUp className="w-5 h-5 text-purple-500" />
+              Confirm Plan Upgrade
+            </DialogTitle>
+          </DialogHeader>
+          {upgradeDialog && (
+            <div className="space-y-4 py-2">
+              <div className="rounded-lg border border-slate-700 bg-slate-900 p-4 space-y-3 text-sm">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>New plan price</span>
+                  <span className="text-white font-medium">₹{upgradeDialog.checkoutData.originalAmount}</span>
+                </div>
+                <div className="flex justify-between text-green-500">
+                  <span className="flex items-center gap-1">
+                    <Tag className="w-3 h-3" />
+                    Credit from current plan
+                  </span>
+                  <span className="font-medium">−₹{upgradeDialog.checkoutData.prorationCredit}</span>
+                </div>
+                <div className="border-t border-slate-700 pt-3 flex justify-between text-white font-semibold text-base">
+                  <span>You pay today</span>
+                  <span className="text-purple-400">₹{upgradeDialog.checkoutData.chargeAmount}</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Your new plan activates immediately and runs for a fresh billing period.
+                Unused days from your current plan are credited above.
+              </p>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="border-slate-600" onClick={() => setUpgradeDialog(null)}>
+              Cancel
+            </Button>
+            <Button className="bg-purple-600 hover:bg-purple-700 text-white" onClick={handleUpgradeConfirm}>
+              Proceed to Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-bold">Choose Your Plan</h1>
@@ -207,6 +270,7 @@ const Plan = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {allPlans.map((plan) => {
             const isCurrent = currentPlanId === plan.planId
+            const isDowngrade = !isCurrent && !!currentPlanId && currentSub?.status === 'active' && plan.price.current <= currentPrice
             const features = plan.showcaseFeatures?.length > 0
               ? plan.showcaseFeatures
               : Object.entries(plan.features || {})
@@ -269,19 +333,22 @@ const Plan = () => {
                     })}
                   </ul>
 
-                  <Button
-                    className={`w-full mt-4 ${isCurrent ? 'bg-slate-600 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 text-white'}`}
-                    disabled={isCurrent || buyingPlanId === plan.planId}
-                    onClick={() => !isCurrent && handleBuyPlan(plan.planId)}
-                  >
-                    {buyingPlanId === plan.planId ? (
-                      <><Loader className="w-4 h-4 animate-spin mr-2" /> Processing...</>
-                    ) : isCurrent ? (
-                      'Current Plan'
-                    ) : (
-                      `Get ${plan.name}`
-                    )}
-                  </Button>
+                  {isCurrent ? (
+                    <Button className="w-full mt-4 bg-slate-600 cursor-not-allowed text-white" disabled>
+                      Current Plan
+                    </Button>
+                  ) : isDowngrade ? null : (
+                    <Button
+                      className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white"
+                      disabled={buyingPlanId === plan.planId}
+                      onClick={() => handleBuyPlan(plan.planId)}
+                    >
+                      {buyingPlanId === plan.planId
+                        ? <><Loader className="w-4 h-4 animate-spin mr-2" /> Processing...</>
+                        : currentPlanId ? 'Upgrade' : `Get ${plan.name}`
+                      }
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )
