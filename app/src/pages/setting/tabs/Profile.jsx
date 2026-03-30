@@ -15,6 +15,46 @@ import { showToast } from '@/utils/toast';
 import { uploadToImageKit } from '@/utils/imagekitUploader';
 import { useNavigate } from 'react-router-dom';
 
+const FEATURE_LABELS = {
+  unlimitedReleases: "Unlimited Release",
+  unlimitedArtists: "Unlimited Artists",
+  singleLabel: "Single Label (100% Ownership)",
+  revenueShare: "Net Revenue Share",
+  youtubeContentId: "YouTube Content ID",
+  metaContentId: "Meta Content ID",
+  tiktokContentId: "TikTok Content ID",
+  youtubeOac: "YouTube OAC",
+  analyticsCenter: "Analytics Centre",
+  royaltyClaimCentre: "Royalty Claim Centre",
+  merchandisePanel: "Merchandise Distribution Panel",
+  dolbyAtmos: "Dolby Atmos Distribution",
+  spotifyDiscoveryMode: "Spotify Discovery Mode",
+  playlistPitching: "Playlist Pitching",
+  synchronization: "Synchronization",
+  fanLinksBuilder: "Fan Links Builder",
+  mahiAi: "Mahi AI",
+  youtubeMcnAccess: "YouTube MCN Access",
+  available150Stores: "Available to all 150 stores",
+  worldwideAvailability: "Worldwide Availability",
+  freeUpcCode: "Free UPC Code",
+  freeIsrcCode: "Free ISRC Code",
+  lifetimeAvailability: "Lifetime Availability",
+  supportHours: "Support Time",
+  liveSupportTime: "Live Processing Time",
+};
+
+const SUPPORT_HOURS_LABELS = {
+  "24_business_hours": "24 Business Hours",
+  "48_business_hours": "48 Business Hours",
+  "72_business_hours": "72 Business Hours",
+};
+
+const LIVE_PROCESS_LABELS = {
+  "48_to_72_business_hours": "48 to 72 Business Hours",
+  "24_to_48_business_hours": "24 to 48 Business Hours",
+  "instant": "Instant",
+};
+
 const GENRE_LIST = [
   "alternative", "alternative_rock", "alternative_and_rock_latino", "anime", "baladas_y_boleros", 
   "big_band", "blues", "brazilian", "c_pop", "cantopop_hk_pop", "childrens", "chinese", 
@@ -207,17 +247,20 @@ const Profile = () => {
     }
   };
 
+  const getFeatureLabel = (key, value) => {
+    let label = FEATURE_LABELS[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+    if (key === "supportHours") label = `${FEATURE_LABELS[key]}: ${SUPPORT_HOURS_LABELS[value] || value}`;
+    if (key === "liveSupportTime") label = `${FEATURE_LABELS[key]}: ${LIVE_PROCESS_LABELS[value] || value}`;
+    if (key === "revenueShare" && value?.percentage) label = `${value.percentage}% of the Net Revenue`;
+    return label;
+  }
+
   // Transform feature object to array
   const transformFeatures = (features) => {
     if (!features) return [];
     return Object.entries(features)
-      .filter(([key, value]) => value === true || (typeof value === 'object' && value.description))
-      .map(([key]) => {
-        return key
-          .replace(/([A-Z])/g, ' $1')
-          .replace(/^./, (str) => str.toUpperCase())
-          .trim();
-      });
+      .filter(([key, value]) => !!value)
+      .map(([key, value]) => getFeatureLabel(key, value));
   };
 
   // Populate form data when user and subscription data is available
@@ -1216,13 +1259,13 @@ const Profile = () => {
                   </CardHeader>
                   <CardContent className="p-0 space-y-2">
                     <ul className="space-y-2">
-                      {Object.entries(plan.features)
-                        .filter(([key, value]) => value === true)
+                      {Object.entries(plan.features || {})
+                        .filter(([key, value]) => !!value)
                         .slice(0, 5)
-                        .map(([key], index) => (
+                        .map(([key, value], index) => (
                           <li key={index} className="flex items-center gap-2 text-sm">
                             <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-                            {key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase()).trim()}
+                            {getFeatureLabel(key, value)}
                           </li>
                         ))}
                     </ul>

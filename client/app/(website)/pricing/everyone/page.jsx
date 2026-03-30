@@ -19,62 +19,65 @@ const anton = Anton({
     subsets: ['latin']
 })
 
-const oneSongData = [
-    { title: 'Per track release', info: 'Release one song per purchase.' },
-    { title: '90% of the net revenue', info: 'You retain 90% of the net revenue generated from your track.' },
-    { title: 'YouTube Content ID', info: 'Monetize your music on YouTube and protect it from unauthorized use.' },
-    { title: 'Meta Content ID', info: 'Protect and monetize your music across Meta platforms (Facebook, Instagram).' },
-    { title: 'Analytics Centre', info: 'Access detailed analytics on your streams, audience, and revenue.' },
-    { title: 'Dolby Atmos Distribution', info: 'Distribute your music in immersive Dolby Atmos format.' },
-    { title: 'Spotify Discovery Mode', info: 'Opt-in to Spotify Discovery Mode to increase your reach.' },
-    { title: 'Available To All 150 Stores', info: 'Your music will be distributed to over 150 digital music stores and platforms worldwide.' },
-    { title: 'Worldwide Availability', info: 'Your music will be available globally.' },
-    { title: 'Free UPC Code', info: 'A unique UPC code will be provided for your release.' },
-    { title: 'Free ISRC Code', info: 'A unique ISRC code will be provided for your track.' },
-    { title: 'Lifetime Availability', info: 'Your music will remain on platforms indefinitely.' },
-    { title: 'Support Time 24 Business Hours', info: 'Receive support within 24 business hours.' },
-    { title: 'Live in 48 To 72 Business Hours', info: 'Your music will be live on platforms within 48 to 72 business hours.' }
-]
+const FEATURE_LABELS = {
+    unlimitedReleases: "Unlimited Release",
+    unlimitedArtists: "Unlimited Artists",
+    singleLabel: "Single Label (100% Ownership)",
+    revenueShare: "Net Revenue Share",
+    youtubeContentId: "YouTube Content ID",
+    metaContentId: "Meta Content ID",
+    tiktokContentId: "TikTok Content ID",
+    youtubeOac: "YouTube OAC",
+    analyticsCenter: "Analytics Centre",
+    royaltyClaimCentre: "Royalty Claim Centre",
+    merchandisePanel: "Merchandise Distribution Panel",
+    dolbyAtmos: "Dolby Atmos Distribution",
+    spotifyDiscoveryMode: "Spotify Discovery Mode",
+    playlistPitching: "Playlist Pitching",
+    synchronization: "Synchronization",
+    fanLinksBuilder: "Fan Links Builder",
+    mahiAi: "Mahi AI",
+    youtubeMcnAccess: "YouTube MCN Access",
+    available150Stores: "Available to all 150 stores",
+    worldwideAvailability: "Worldwide Availability",
+    freeUpcCode: "Free UPC Code",
+    freeIsrcCode: "Free ISRC Code",
+    lifetimeAvailability: "Lifetime Availability",
+    supportHours: "Support Time",
+    liveSupportTime: "Live Processing Time",
+};
 
-const oneAlbumData = [
-    { title: 'up to 9 track release', info: 'Release up to 9 tracks as part of one album.' },
-    { title: '90% of the net revenue', info: 'You retain 90% of the net revenue generated from your album.' },
-    { title: 'YouTube Content ID', info: 'Monetize your music on YouTube and protect it from unauthorized use.' },
-    { title: 'Meta Content ID', info: 'Protect and monetize your music across Meta platforms (Facebook, Instagram).' },
-    { title: 'Dolby Atmos Distribution', info: 'Distribute your music in immersive Dolby Atmos format.' },
-    { title: 'Spotify Discovery Mode', info: 'Opt-in to Spotify Discovery Mode to increase your reach.' },
-    { title: 'Analytics Centre', info: 'Access detailed analytics on your streams, audience, and revenue.' },
-    { title: 'Available to all 150 stores', info: 'Your album will be distributed to over 150 digital music stores and platforms worldwide.' },
-    { title: 'Worldwide availability', info: 'Your album will be available globally.' },
-    { title: 'Free UPC Code', info: 'A unique UPC code will be provided for your album release.' },
-    { title: 'Free ISRC Code', info: 'A unique ISRC code will be provided for each track in your album.' },
-    { title: 'Lifetime availability', info: 'Your album will remain on platforms indefinitely.' },
-    { title: 'Support Time 24 Business Hours', info: 'Receive support within 24 business hours.' },
-    { title: 'Live in 48 to 72 Business Hours', info: 'Your album will be live on platforms within 48 to 72 business hours.' }
-]
+const FEATURE_ORDER = Object.keys(FEATURE_LABELS);
 
-// Data for the comparison table
-const comparisonData = [
-    { feature: 'Royalty Share', oneSong: '90%', oneAlbum: '90%' },
-    { feature: 'No. of Releases', oneSong: '1', oneAlbum: 'Upto 9' },
-    { feature: 'YouTube Content ID', oneSong: true, oneAlbum: true },
-    { feature: 'Meta Content ID', oneSong: true, oneAlbum: true },
-    { feature: 'Analytics Centre', oneSong: true, oneAlbum: true },
-    { feature: 'Available to all 150 stores', oneSong: true, oneAlbum: true },
-    { feature: 'Dolby Atmos Distribution', oneSong: true, oneAlbum: true },
-    { feature: 'Spotify Discovery Mode', oneSong: true, oneAlbum: true },
-    { feature: 'Worldwide availability', oneSong: true, oneAlbum: true },
-    { feature: 'Free UPC Code', oneSong: true, oneAlbum: true },
-    { feature: 'Free ISRC Code', oneSong: true, oneAlbum: true },
-    { feature: 'Lifetime availability', oneSong: true, oneAlbum: true },
-    { feature: 'Support Time', oneSong: '24 Business hr', oneAlbum: '24 Business hr' },
-    { feature: 'Live in', oneSong: '48 to 72 Business hr', oneAlbum: '48 to 72 Business hr' }
-]
+const SUPPORT_HOURS_LABELS = {
+    "24_business_hours": "24 Business Hours",
+    "48_business_hours": "48 Business Hours",
+    "72_business_hours": "72 Business Hours",
+    "24_hours": "24 Hours",
+    "48_hours": "48 Hours",
+    "72_hours": "72 Hours",
+};
 
-const page = () => {
+const LIVE_PROCESS_LABELS = {
+    "48_to_72_business_hours": "48 to 72 Business Hours",
+    "24_to_48_business_hours": "24 to 48 Business Hours",
+    "instant": "Instant",
+};
+
+const PageEveryone = () => {
     const [hoveredItem, setHoveredItem] = useState(null)
     const [isLoading, setIsLoading] = useState(false)
     const [dynamicPlans, setDynamicPlans] = useState({})
+    const [plansList, setPlansList] = useState([]);
+    const [comparisonFeatures, setComparisonFeatures] = useState([]);
+
+    const getFeatureLabel = (key, value) => {
+        let label = FEATURE_LABELS[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        if (key === "supportHours") label = `${FEATURE_LABELS[key]}: ${SUPPORT_HOURS_LABELS[value] || value}`;
+        if (key === "liveSupportTime") label = `${FEATURE_LABELS[key]}: ${LIVE_PROCESS_LABELS[value] || value}`;
+        if (key === "revenueShare" && value?.percentage) label = `${value.percentage}% of the Net Revenue`;
+        return label;
+    }
 
     useEffect(() => {
         const fetchPlans = async () => {
@@ -86,6 +89,10 @@ const page = () => {
                         plansMap[plan.planId] = plan
                     })
                     setDynamicPlans(plansMap)
+                    setPlansList(response.data);
+
+                    // Filter and order features for comparison
+                    setComparisonFeatures(FEATURE_ORDER);
                 }
             } catch (error) {
                 console.error('Failed to fetch plans', error)
@@ -184,146 +191,100 @@ const page = () => {
                     </Button>
                 </div>
 
-                <div className="mt-30 flex flex-col md:flex-row items-center justify-center gap-10 ">
-                    {/* One Song Plan */}
-                    <div className="w-[350px] p-6 bg-[#0F0F0F] rounded-xl relative pb-40">
-                        <h1 className={`text-xl ${anton.className} text-white uppercase mb-4`}>one song</h1>
-                        <div className="flex items-center gap-5 border-b border-gray-600 pb-8 mb-8">
-                            <h1 className="text-[#652CD6] font-semibold text-4xl flex items-center">
-                                <FaIndianRupeeSign />
-                                {dynamicPlans['one_song']?.price?.current || 199}
-                            </h1>
-                            <h1 className="text-gray-300 opacity-70 text-2xl relative">
-                                {' '}
-                                <div className="w-full h-[2px] bg-gray-300 absolute top-[16px] left-0 "></div>{' '}
-                                <FaIndianRupeeSign className="inline-block" />
-                                {dynamicPlans['one_song']?.price?.original || 399}
-                            </h1>
-                        </div>
-                        <Button
-                            disabled={isLoading}
-                            onClick={() => handleSubscribe('one_song')}
-                            className="w-full mb-8 bg-[#0099FF] text-white hover:bg-[#007acc]">
-                            Subscribe Now
-                        </Button>
-
-                        {oneSongData.map((item, index) => (
-                            <div
-                                key={index}
-                                className="flex justify-between items-center space-y-4 relative ">
-                                <div className="flex items-center gap-2">
-                                    <MdOutlineDone className="text-[#0099FF] bg-[#0099FF]/10 w-8 h-8 p-2 rounded-full text-lg" />
-                                    <h1 className="text-gray-300 text-sm">{item.title}</h1>
-                                </div>
-                                <div
-                                    className="relative "
-                                    onMouseEnter={() => setHoveredItem({ type: 'song', index: index })}
-                                    onMouseLeave={() => setHoveredItem(null)}>
-                                    <IoMdInformationCircleOutline className="text-gray-500 w-6 h-6 text-lg cursor-pointer" />
-                                    {hoveredItem?.type === 'song' && hoveredItem?.index === index && (
-                                        <motion.div
-                                            whileInView={{ y: -10 }}
-                                            className="absolute bottom-full left-1/2 -translate-x-1/2  p-2 bg-gray-700 text-white text-xs rounded shadow-lg w-[200px]  border border-gray-600 z-10">
-                                            {item.info}
-                                        </motion.div>
-                                    )}
-                                </div>
+                <div className="mt-30 flex flex-wrap items-start justify-center gap-10 max-w-7xl mx-auto px-4">
+                    {plansList.map((plan) => (
+                        <div key={plan.planId} className={`w-[350px] p-6 bg-[#0F0F0F] rounded-xl relative pb-40 ${plan.isBestValue ? 'border-2 border-yellow-400' : ''}`}>
+                            <h1 className={`text-xl ${anton.className} text-white uppercase mb-4`}>{plan.name}</h1>
+                            <div className="flex items-center gap-5 border-b border-gray-600 pb-8 mb-8">
+                                <h1 className="text-[#652CD6] font-semibold text-4xl flex items-center">
+                                    <FaIndianRupeeSign />
+                                    {plan.price?.current}
+                                </h1>
+                                {plan.price?.original > plan.price?.current && (
+                                    <h1 className="text-gray-300 opacity-70 text-2xl relative">
+                                        {' '}
+                                        <div className="w-full h-[2px] bg-gray-300 absolute top-[16px] left-0 "></div>{' '}
+                                        <FaIndianRupeeSign className="inline-block" />
+                                        {plan.price.original}
+                                    </h1>
+                                )}
                             </div>
-                        ))}
-                    </div>
+                            <Link href="/signup">
+                            <Button
+                                disabled={isLoading}
+                                
+                                // onClick={() => handleSubscribe(plan.planId)}
+                                className={`w-full mb-8 text-white ${plan.isBestValue ? 'bg-[#FFC727] text-black hover:bg-[#e5b323]' : plan.isPopular ? 'bg-[#652CD6] hover:bg-[#5520b5]' : 'bg-[#0099FF] hover:bg-[#007acc]'}`}>
+                                Subscribe Now
+                            </Button>
+                            </Link>
 
-                    {/* One Album Plan */}
-                    <div className="w-[350px] p-6 bg-[#0F0F0F] rounded-xl relative pb-40">
-                        <h1 className={`text-xl ${anton.className} text-white uppercase mb-4`}>one album</h1>
-                        <div className="flex items-center gap-5 border-b border-gray-600 pb-8 mb-8">
-                            <h1 className="text-[#652CD6] font-semibold text-4xl flex items-center">
-                                <FaIndianRupeeSign />
-                                {dynamicPlans['one_album']?.price?.current || 499}
-                            </h1>
-                            <h1 className="text-gray-300 opacity-70 text-2xl relative">
-                                {' '}
-                                <div className="w-full h-[2px] bg-gray-300 absolute top-[16px] left-0 "></div>{' '}
-                                <FaIndianRupeeSign className="inline-block" />
-                                {dynamicPlans['one_album']?.price?.original || 699}
-                            </h1>
-                        </div>
-                        <Button
-                            disabled={isLoading}
-                            onClick={() => handleSubscribe('one_album')}
-                            className="w-full mb-8 bg-[#652CD6] text-white hover:bg-[#5520b5]">
-                            Subscribe Now
-                        </Button>
-
-                        {oneAlbumData.map((item, index) => (
-                            <div
-                                key={index}
-                                className="flex justify-between items-center space-y-4 relative">
-                                <div className="flex items-center gap-2">
-                                    <MdOutlineDone className="text-[#652CD6] bg-[#652CD6]/10 w-8 h-8 p-2 rounded-full text-lg" />
-                                    <h1 className="text-gray-300 text-sm">{item.title}</h1>
-                                </div>
-                                <div
-                                    className="relative "
-                                    onMouseEnter={() => setHoveredItem({ type: 'album', index: index })}
-                                    onMouseLeave={() => setHoveredItem(null)}>
-                                    <IoMdInformationCircleOutline className="text-gray-500 w-6 h-6 text-lg cursor-pointer" />
-                                    {hoveredItem?.type === 'album' && hoveredItem?.index === index && (
-                                        <motion.div
-                                            whileInView={{ y: -10 }}
-                                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-gray-700 text-white text-xs rounded shadow-lg w-[200px]  border border-gray-600 z-10">
-                                            {item.info}
-                                        </motion.div>
-                                    )}
-                                </div>
+                            <div className="space-y-4">
+                                {FEATURE_ORDER
+                                    .filter(key => !!plan.features?.[key])
+                                    .map((key) => (
+                                        <div
+                                            key={key}
+                                            className="flex justify-between items-center relative ">
+                                            <div className="flex items-center gap-2">
+                                                <MdOutlineDone className={`${plan.isBestValue ? 'text-[#FFC727] bg-[#FFC727]/10' : plan.isPopular ? 'text-[#652CD6] bg-[#652CD6]/10' : 'text-[#0099FF] bg-[#0099FF]/10'} w-8 h-8 p-2 rounded-full text-lg`} />
+                                                <h1 className="text-gray-300 text-sm">{getFeatureLabel(key, plan.features[key])}</h1>
+                                            </div>
+                                        </div>
+                                    ))}
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    ))}
                 </div>
 
                 {/* Compare Plan Section */}
-                <div className="flex flex-col items-center justify-center w-full mt-40 mb-20">
-                    <h1 className={`text-6xl ${anton.className} text-white uppercase mb-4`}>Compare Plan</h1>
+                {plansList.length > 1 && (
+                    <div className="flex flex-col items-center justify-center w-full mt-40 mb-20">
+                        <h1 className={`text-6xl ${anton.className} text-white uppercase mb-4`}>Compare Plan</h1>
 
-                    <div className="w-full max-w-3xl bg-[#1A1E2B] rounded-xl p-8 mt-20">
-                        {/* Table Header */}
-                        <div className="grid grid-cols-3 gap-4 pb-8  text-gray-300 font-semibold text-lg">
-                            <div></div> {/* Empty cell for alignment */}
-                            <div className="text-center">One Song</div>
-                            <div className="text-center">One Album</div>
-                        </div>
-
-                        {/* Table Rows */}
-                        {comparisonData.map((row, index) => (
-                            <div
-                                key={index}
-                                className="grid grid-cols-3 gap-4 py-4 border-b border-gray-800 last:border-b-0">
-                                <div className="text-gray-300 text-sm">{row.feature}</div>
-                                <div className="text-center text-gray-400 text-sm">
-                                    {typeof row.oneSong === 'boolean' ? (
-                                        row.oneSong ? (
-                                            <MdOutlineDone className="inline-block text-[#0099FF] w-5 h-5" />
-                                        ) : (
-                                            '-'
-                                        )
-                                    ) : (
-                                        row.oneSong
-                                    )}
-                                </div>
-                                <div className="text-center text-gray-400 text-sm">
-                                    {typeof row.oneAlbum === 'boolean' ? (
-                                        row.oneAlbum ? (
-                                            <MdOutlineDone className="inline-block text-[#652CD6] w-5 h-5" />
-                                        ) : (
-                                            '-'
-                                        )
-                                    ) : (
-                                        row.oneAlbum
-                                    )}
-                                </div>
+                        <div className="w-full max-w-5xl bg-[#1A1E2B] rounded-xl p-8 mt-20">
+                            {/* Table Header */}
+                            <div className={`grid gap-4 pb-8 text-gray-300 font-semibold text-lg`} style={{ gridTemplateColumns: `repeat(${plansList.length + 1}, 1fr)` }}>
+                                <div></div> {/* Empty cell for alignment */}
+                                {plansList.map(plan => (
+                                    <div key={plan.planId} className="text-center">{plan.name}</div>
+                                ))}
                             </div>
-                        ))}
+
+                            {/* Table Rows */}
+                            {comparisonFeatures.map((fKey, index) => (
+                                <div
+                                    key={fKey}
+                                    className={`grid gap-4 py-4 border-b border-gray-800 last:border-b-0`}
+                                    style={{ gridTemplateColumns: `repeat(${plansList.length + 1}, 1fr)` }}>
+                                    <div className="text-gray-300 text-sm">{FEATURE_LABELS[fKey] || fKey}</div>
+                                    {plansList.map(plan => {
+                                        const val = plan.features?.[fKey];
+                                        return (
+                                            <div key={plan.planId} className="text-center text-gray-400 text-sm">
+                                                {typeof val === 'boolean' ? (
+                                                    val ? (
+                                                        <MdOutlineDone className={`inline-block w-5 h-5 ${plan.isBestValue ? 'text-[#FFC727]' : plan.isPopular ? 'text-[#652CD6]' : 'text-[#0099FF]'}`} />
+                                                    ) : (
+                                                        '-'
+                                                    )
+                                                ) : fKey === 'revenueShare' ? (
+                                                    val?.percentage ? `${val.percentage}%` : '-'
+                                                ) : fKey === 'supportHours' ? (
+                                                    SUPPORT_HOURS_LABELS[val] || val || '-'
+                                                ) : fKey === 'liveSupportTime' ? (
+                                                    LIVE_PROCESS_LABELS[val] || val || '-'
+                                                ) : (
+                                                    (typeof val === 'string' ? val : '-') || '-'
+                                                )}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             <ApplyToJoin />
@@ -332,4 +293,4 @@ const page = () => {
     )
 }
 
-export default page
+export default PageEveryone

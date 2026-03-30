@@ -7,6 +7,51 @@ import { MdOutlineDone } from 'react-icons/md'
 import { PiCrownFill } from "react-icons/pi"
 import toast from 'react-hot-toast'
 
+const FEATURE_LABELS = {
+    unlimitedReleases: "Unlimited Release",
+    unlimitedArtists: "Unlimited Artists",
+    singleLabel: "Single Label (100% Ownership)",
+    revenueShare: "Net Revenue Share",
+    youtubeContentId: "YouTube Content ID",
+    metaContentId: "Meta Content ID",
+    tiktokContentId: "TikTok Content ID",
+    youtubeOac: "YouTube OAC",
+    analyticsCenter: "Analytics Centre",
+    royaltyClaimCentre: "Royalty Claim Centre",
+    merchandisePanel: "Merchandise Distribution Panel",
+    dolbyAtmos: "Dolby Atmos Distribution",
+    spotifyDiscoveryMode: "Spotify Discovery Mode",
+    playlistPitching: "Playlist Pitching",
+    synchronization: "Synchronization",
+    fanLinksBuilder: "Fan Links Builder",
+    mahiAi: "Mahi AI",
+    youtubeMcnAccess: "YouTube MCN Access",
+    available150Stores: "Available to all 150 stores",
+    worldwideAvailability: "Worldwide Availability",
+    freeUpcCode: "Free UPC Code",
+    freeIsrcCode: "Free ISRC Code",
+    lifetimeAvailability: "Lifetime Availability",
+    supportHours: "Support Time",
+    liveSupportTime: "Live Processing Time",
+};
+
+const FEATURE_ORDER = Object.keys(FEATURE_LABELS);
+
+const SUPPORT_HOURS_LABELS = {
+    "24_business_hours": "24 Business Hours",
+    "48_business_hours": "48 Business Hours",
+    "72_business_hours": "72 Business Hours",
+    "24_hours": "24 Hours",
+    "48_hours": "48 Hours",
+    "72_hours": "72 Hours",
+};
+
+const LIVE_PROCESS_LABELS = {
+    "48_to_72_business_hours": "48 to 72 Business Hours",
+    "24_to_48_business_hours": "24 to 48 Business Hours",
+    "instant": "Instant",
+};
+
 const SubscriptionsPage = () => {
     const router = useRouter()
     const [plans, setPlans] = useState([])
@@ -14,6 +59,14 @@ const SubscriptionsPage = () => {
     const [userType, setUserType] = useState(null)
     const [processingPlanId, setProcessingPlanId] = useState(null)
 
+    const getFeatureLabel = (key, value) => {
+        let label = FEATURE_LABELS[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        if (key === "supportHours") label = `${FEATURE_LABELS[key]}: ${SUPPORT_HOURS_LABELS[value] || value}`;
+        if (key === "liveSupportTime") label = `${FEATURE_LABELS[key]}: ${LIVE_PROCESS_LABELS[value] || value}`;
+        if (key === "revenueShare" && value?.percentage) label = `${value.percentage}% of the Net Revenue`;
+        return label;
+    }
+// ... rest of useEffect and init ...
     useEffect(() => {
         const accessToken = localStorage.getItem('accessToken')
         if (!accessToken) {
@@ -25,7 +78,6 @@ const SubscriptionsPage = () => {
 
     const init = async () => {
         try {
-            // Fetch user profile + all plans in parallel
             const [profileRes, plansRes] = await Promise.all([
                 getUserProfile(),
                 getSubscriptionPlans()
@@ -35,7 +87,6 @@ const SubscriptionsPage = () => {
             setUserType(type)
 
             if (plansRes.success) {
-                // Show plans matching user's type OR targetType === 'everyone'
                 const filtered = plansRes.data.filter(p =>
                     p.targetType === 'everyone' || p.targetType === type
                 )
@@ -157,10 +208,10 @@ const SubscriptionsPage = () => {
                     {plans.map((plan) => (
                         <div
                             key={plan.planId}
-                            className={`w-[350px] p-6 bg-[#0F0F0F] rounded-xl relative ${plan.isBestValue ? 'border-2 border-yellow-400' : ''}`}
+                            className={`flex flex-col w-[350px] p-6 bg-[#0F0F0F] rounded-xl relative pb-24 ${plan.isBestValue ? 'border-2 border-yellow-400' : ''}`}
                         >
                             {plan.isBestValue && (
-                                <PiCrownFill className='text-yellow-300 absolute right-[-20px] top-[-20px] rotate-[35deg] text-[60px]' />
+                                <PiCrownFill className='text-yellow-300 absolute right-[-20px] top-[-20px] rotate-35 text-[60px]' />
                             )}
                             {plan.isPopular && !plan.isBestValue && (
                                 <div className="absolute top-[-12px] right-4 bg-[#652CD6] text-white px-4 py-1 rounded-full text-sm">
@@ -190,31 +241,31 @@ const SubscriptionsPage = () => {
                                 <p className="text-gray-400 text-sm mb-4">{plan.description}</p>
                             )}
 
-                            {/* Features — use showcaseFeatures if available */}
-                            <div className="space-y-3 mb-8">
-                                {(plan.showcaseFeatures?.length > 0 ? plan.showcaseFeatures : []).map((feature, index) => (
-                                    <div key={index} className="flex items-center gap-2">
-                                        <MdOutlineDone
-                                            className={`${feature.included
-                                                ? plan.isBestValue
+                            {/* Features — use standardized mapping */}
+                            <div className="space-y-3 mb-8 grow">
+                                {FEATURE_ORDER
+                                    .filter(key => !!plan.features?.[key])
+                                    .map((key, index) => (
+                                        <div key={index} className="flex items-center gap-2">
+                                            <MdOutlineDone
+                                                className={`${plan.isBestValue
                                                     ? 'text-[#FFC727] bg-[#FFC727]/10'
                                                     : plan.isPopular
                                                         ? 'text-[#652CD6] bg-[#652CD6]/10'
                                                         : 'text-[#0099FF] bg-[#0099FF]/10'
-                                                : 'text-gray-600 bg-gray-800'
-                                            } w-6 h-6 p-1 rounded-full flex-shrink-0`}
-                                        />
-                                        <span className={`text-sm ${feature.included ? 'text-gray-300' : 'text-gray-600'}`}>
-                                            {feature.text}
-                                        </span>
-                                    </div>
-                                ))}
+                                                    } w-6 h-6 p-1 rounded-full flex-shrink-0`}
+                                            />
+                                            <span className="text-sm text-gray-300">
+                                                {getFeatureLabel(key, plan.features[key])}
+                                            </span>
+                                        </div>
+                                    ))}
                             </div>
 
                             <button
                                 onClick={() => handleChoosePlan(plan.planId)}
                                 disabled={processingPlanId === plan.planId}
-                                className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer
+                                className={`mt-auto w-full py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer
                                     ${plan.isBestValue
                                         ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black'
                                         : plan.isPopular

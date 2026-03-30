@@ -9,6 +9,49 @@ import { getMySubscription, getAllSubscriptionPlans, createPaymentIntent, verify
 import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
 
+const FEATURE_LABELS = {
+  unlimitedReleases: "Unlimited Release",
+  unlimitedArtists: "Unlimited Artists",
+  singleLabel: "Single Label (100% Ownership)",
+  revenueShare: "Net Revenue Share",
+  youtubeContentId: "YouTube Content ID",
+  metaContentId: "Meta Content ID",
+  tiktokContentId: "TikTok Content ID",
+  youtubeOac: "YouTube OAC",
+  analyticsCenter: "Analytics Centre",
+  royaltyClaimCentre: "Royalty Claim Centre",
+  merchandisePanel: "Merchandise Distribution Panel",
+  dolbyAtmos: "Dolby Atmos Distribution",
+  spotifyDiscoveryMode: "Spotify Discovery Mode",
+  playlistPitching: "Playlist Pitching",
+  synchronization: "Synchronization",
+  fanLinksBuilder: "Fan Links Builder",
+  mahiAi: "Mahi AI",
+  youtubeMcnAccess: "YouTube MCN Access",
+  available150Stores: "Available to all 150 stores",
+  worldwideAvailability: "Worldwide Availability",
+  freeUpcCode: "Free UPC Code",
+  freeIsrcCode: "Free ISRC Code",
+  lifetimeAvailability: "Lifetime Availability",
+  supportHours: "Support Time",
+  liveSupportTime: "Live Processing Time",
+};
+
+const SUPPORT_HOURS_LABELS = {
+  "24_business_hours": "24 Business Hours",
+  "48_business_hours": "48 Business Hours",
+  "72_business_hours": "72 Business Hours",
+  "24_hours": "24 Hours",
+  "48_hours": "48 Hours",
+  "72_hours": "72 Hours",
+};
+
+const LIVE_PROCESS_LABELS = {
+  "48_to_72_business_hours": "48 to 72 Business Hours",
+  "24_to_48_business_hours": "24 to 48 Business Hours",
+  "instant": "Instant",
+};
+
 const Plan = () => {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
@@ -271,12 +314,17 @@ const Plan = () => {
           {allPlans.map((plan) => {
             const isCurrent = currentPlanId === plan.planId
             const isDowngrade = !isCurrent && !!currentPlanId && currentSub?.status === 'active' && plan.price.current <= currentPrice
-            const features = plan.showcaseFeatures?.length > 0
-              ? plan.showcaseFeatures
-              : Object.entries(plan.features || {})
-                  .filter(([, v]) => v === true)
-                  .map(([k]) => ({ text: k.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()), included: true }))
-                  .slice(0, 8)
+            const getFeatureLabel = (key, value) => {
+              let label = FEATURE_LABELS[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+              if (key === "supportHours") label = `${FEATURE_LABELS[key]}: ${SUPPORT_HOURS_LABELS[value] || value}`;
+              if (key === "liveSupportTime") label = `${FEATURE_LABELS[key]}: ${LIVE_PROCESS_LABELS[value] || value}`;
+              if (key === "revenueShare" && value?.percentage) label = `${value.percentage}% of the Net Revenue`;
+              return label;
+            }
+
+            const features = Object.entries(plan.features || {})
+              .filter(([, v]) => !!v)
+              .map(([k, v]) => ({ text: getFeatureLabel(k, v), included: true }))
             const displayPrice = plan.discountedPrice || plan.price?.current
             const originalPrice = plan.price?.original
 

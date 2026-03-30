@@ -196,7 +196,16 @@ export default function CreateSubscriptionPlanModal({
         currency: planData.currency ?? "INR",
         interval: planData.interval ?? "month",
         intervalCount: planData.intervalCount ?? 1,
-        features: { ...DEFAULT_FEATURES, ...(planData.features || {}) },
+        features: (() => {
+          const normFeatures = { ...DEFAULT_FEATURES, ...(planData.features || {}) };
+          if (normFeatures.revenueShare && typeof normFeatures.revenueShare === "object") {
+            normFeatures.revenueShare = {
+              enabled: true,
+              percentage: normFeatures.revenueShare.percentage ?? DEFAULT_FEATURES.revenueShare.percentage,
+            };
+          }
+          return normFeatures;
+        })(),
         showcaseFeatures: planData.showcaseFeatures ?? [],
         isPopular: planData.isPopular ?? false,
         isBestValue: planData.isBestValue ?? false,
@@ -622,7 +631,7 @@ export default function CreateSubscriptionPlanModal({
 
 
             <Separator className={`${isDark ? "border-gray-800/30" : "border-gray-200"}`} />
-            <div>
+            {/* <div>
               <Label>Trial</Label>
               <div className="flex items-center gap-3 mt-2">
                 <Switch
@@ -645,10 +654,10 @@ export default function CreateSubscriptionPlanModal({
                   />
                 )}
               </div>
-            </div>
+            </div> */}
 
 
-            <Separator className={`${isDark ? "border-gray-800/30" : "border-gray-200"}`} />
+            {/* <Separator className={`${isDark ? "border-gray-800/30" : "border-gray-200"}`} />
             <div>
               <Label>Discount</Label>
               <div className="flex items-center gap-3 mt-2">
@@ -687,11 +696,11 @@ export default function CreateSubscriptionPlanModal({
                   </div>
                 </div>
               )}
-            </div>
+            </div> */}
 
 
-            <Separator className={`${isDark ? "border-gray-800/30" : "border-gray-200"}`} />
-            <div>
+            <Separator className={`mt-4 ${isDark ? "border-gray-800/30" : "border-gray-200"}`} />
+            {/* <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
                 <Label>Showcase Features <span className="text-xs text-gray-400">(shown on pricing cards)</span></Label>
                 <button
@@ -736,7 +745,7 @@ export default function CreateSubscriptionPlanModal({
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             <Separator className={`${isDark ? "border-gray-800/30" : "border-gray-200"}`} />
             <div className="flex items-center gap-6">
