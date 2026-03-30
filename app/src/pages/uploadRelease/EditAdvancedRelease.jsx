@@ -135,6 +135,38 @@ const EditAdvancedReleaseBuilder = () => {
     enabled: !!editReleaseId,
   });
 
+  const formatTiming = (value) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // Format as HH:MM:SS
+    let formatted = '';
+    if (digits.length > 0) {
+      const parts = [];
+      for (let i = 0; i < digits.length && i < 6; i += 2) {
+        parts.push(digits.slice(i, i + 2));
+      }
+      formatted = parts.join(':');
+    }
+    return formatted;
+  };
+
+  const secondsToHHMMSS = (totalSeconds) => {
+    if (totalSeconds === undefined || totalSeconds === null) return "00:00:00";
+    if (typeof totalSeconds === 'string' && totalSeconds.includes(':')) return totalSeconds;
+    
+    const secs = parseInt(totalSeconds, 10);
+    if (isNaN(secs)) return "00:00:00";
+    
+    const hours = Math.floor(secs / 3600);
+    const minutes = Math.floor((secs % 3600) / 60);
+    const seconds = Math.floor(secs % 60);
+    
+    return [hours, minutes, seconds]
+      .map(v => v < 10 ? "0" + v : v)
+      .join(":");
+  };
+
   useEffect(() => {
     if (releaseDataWrapper?.data) {
         const data = releaseDataWrapper.data;
@@ -199,7 +231,14 @@ const EditAdvancedReleaseBuilder = () => {
                 hasHumanVocals: track.hasHumanVocals ? 'yes' : 'no',
                 language: track.language || '',
                 isAvailableForDownload: track.isAvailableForDownload ? 'yes' : 'no',
-                previewStartTiming: track.previewStartTiming || track.callertuneStartTiming || ''
+                previewStartTiming: track.previewStartTiming !== undefined 
+                    ? secondsToHHMMSS(track.previewStartTiming) 
+                    : (track.callertuneStartTiming !== undefined ? secondsToHHMMSS(track.callertuneStartTiming) : "00:00:00"),
+                audioFileMetadata: track.audioFiles?.[0] ? {
+                    fileSize: track.audioFiles[0].fileSize || 1,
+                    format: track.audioFiles[0].format || 'mp3',
+                    duration: track.audioFiles[0].duration || 1
+                } : null
             })) : [{
                 id: generateUniqueId(),
                 trackLink: '',
@@ -471,11 +510,34 @@ const EditAdvancedReleaseBuilder = () => {
     if (file && file.type.startsWith('audio/')) {
       setUploadingTrackId(trackId);
       try {
+        // Extract basic metadata
+        const fileSize = file.size;
+        const format = file.name.split('.').pop().toLowerCase() || 'mp3';
+        
+        // Extract duration
+        const audio = new Audio();
+        audio.src = URL.createObjectURL(file);
+        
+        const duration = await new Promise((resolve) => {
+          audio.onloadedmetadata = () => {
+            URL.revokeObjectURL(audio.src);
+            resolve(Math.round(audio.duration) || 1);
+          };
+          audio.onerror = () => resolve(1);
+        });
+
         const response = await uploadToImageKit(file, 'advanced_release/tracks');
         setFormData(prev => ({
           ...prev,
           tracks: prev.tracks.map(track =>
-            track.id === trackId ? { ...track, trackLink: response.url, audioFileName: file.name } : track
+            track.id === trackId 
+              ? { 
+                  ...track, 
+                  trackLink: response.url, 
+                  audioFileName: file.name,
+                  audioFileMetadata: { fileSize, format, duration } 
+                } 
+              : track
           )
         }));
       } catch (error) {
@@ -1110,8 +1172,14 @@ const EditAdvancedReleaseBuilder = () => {
                   </div>
 
                   <div>
-                    <Label className="text-foreground">Preview Start Timing / Callertune Start Timing</Label>
-                    <Input placeholder="Enter timing in seconds" className="mt-1" value={track.previewStartTiming} onChange={(e) => handleTrackFieldChange(track.id, 'previewStartTiming', e.target.value)} />
+                    <Label className="text-foreground">Preview Timing (HH:MM:SS)</Label>
+                    <Input 
+                      placeholder="00:00:00" 
+                      className="mt-1" 
+                      value={track.previewStartTiming} 
+                      maxLength={8}
+                      onChange={(e) => handleTrackFieldChange(track.id, 'previewStartTiming', formatTiming(e.target.value))} 
+                    />
                   </div>
                 </div>
               </div>
@@ -1386,8 +1454,15 @@ const EditAdvancedReleaseBuilder = () => {
               contributors: c.contributors
             })),
           needsISRC: track.needISRC === 'yes',
-          callertuneStartTiming: track.previewStartTiming ? parseInt(track.previewStartTiming) : undefined,
-          previewStartTiming: track.previewStartTiming ? parseInt(track.previewStartTiming) : undefined,
+          previewStartTiming: track.previewStartTiming || "00:00:00",
+          audioFiles: [
+            {
+              format: track.audioFileMetadata?.format || "mp3",
+              fileUrl: track.trackLink,
+              fileSize: track.audioFileMetadata?.fileSize || 1,
+              duration: track.audioFileMetadata?.duration || 1
+            }
+          ],
           primaryGenre: track.primaryGenre,
           secondaryGenre: track.secondaryGenre,
           hasHumanVocals: track.hasHumanVocals === 'yes',

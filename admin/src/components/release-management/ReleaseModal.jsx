@@ -347,13 +347,13 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                 'ISRC': track.isrcCode || track.adminProvidedISRC || track.isrc || '',
                 'Track Genre': track.primaryGenre || track.genre || '',
                 'Track Secondary Genre': track.secondaryGenre || '',
+                'Preview Timing': track.previewStartTiming || '',
                 
                 // Advanced Track Specific
                 ...(isAdvanced && {
                     'Mix Version': track.mixVersion || '',
                     'Has Human Vocals': track.hasHumanVocals ? 'Yes' : 'No',
                     'Available for Download': track.isAvailableForDownload ? 'Yes' : 'No',
-                    'Caller Tune Start': track.callertuneStartTiming || '',
                     'Sound Recording Contributors': (track.contributorsToSoundRecording || track.contributorsToSound)?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '',
                     'Musical Work Contributors': track.contributorsToMusicalWork?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '',
                 }),
@@ -370,7 +370,9 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                 
                 // Audio Files
                 'Audio File URL': track.trackLink || track.audioFiles?.[0]?.fileUrl || '',
-                'Audio Format': track.audioFiles?.map(f => f.format).join(', ') || '',
+                'Audio Format': track.audioFiles?.[0]?.format || (track.audioFiles?.map(f => f.format).join(', ')) || '',
+                'File Size (MB)': track.audioFiles?.[0]?.fileSize ? (track.audioFiles[0].fileSize / (1024 * 1024)).toFixed(2) : '',
+                'Duration (Sec)': track.audioFiles?.[0]?.duration || '',
                 
                 // Distribution
                 'Release Date': step3.releaseDate || step3.deliveryDetails?.forFutureRelease || '',
@@ -1189,6 +1191,10 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                                 label="Available for Download"
                                 value={track.isAvailableForDownload ? 'Yes' : 'No'}
                             />
+                            <InfoField
+                                label="Preview Timing"
+                                value={track.previewStartTiming}
+                            />
                             <InfoField label="ISRC" />
                             <div className="col-span-2">
                                 {track.adminProvidedISRC ? (
@@ -1293,8 +1299,8 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                                 value={track.language}
                             />
                             <InfoField
-                                label="Preview Start Time"
-                                value={track.previewTiming?.startTime != null ? `${track.previewTiming.startTime}` : null}
+                                label="Preview Timing"
+                                value={track.previewStartTiming}
                             />
                         </>
                     )}

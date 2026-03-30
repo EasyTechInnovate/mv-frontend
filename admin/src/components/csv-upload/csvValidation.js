@@ -234,8 +234,11 @@ export function validateBasicTrackRow(row, index) {
   if (row.language && !MUSIC_LANGUAGES.includes(row.language.toLowerCase().trim())) {
     errors.push(`Row ${rowNum}: language must be a valid language`)
   }
+  if (row.previewStartTiming && !/^(\d{2}):(\d{2}):(\d{2})$/.test(row.previewStartTiming.trim())) {
+    errors.push(`Row ${rowNum}: previewStartTiming must be in HH:MM:SS format (e.g., 00:00:30)`)
+  }
 
-  return errors
+  return errors;
 }
 
 /**
@@ -262,6 +265,9 @@ export function validateAdvancedTrackRow(row, index) {
   }
   if (row.language && !MUSIC_LANGUAGES.includes(row.language.toLowerCase().trim())) {
     errors.push(`Row ${rowNum}: language must be a valid language`)
+  }
+  if (row.previewStartTiming && !/^(\d{2}):(\d{2}):(\d{2})$/.test(row.previewStartTiming.trim())) {
+    errors.push(`Row ${rowNum}: previewStartTiming must be in HH:MM:SS format (e.g., 00:00:30)`)
   }
 
   // Validate contributor roles
@@ -434,20 +440,10 @@ export function basicTrackRowsToPayload(rows) {
     if (row.isrc?.trim()) track.isrc = row.isrc.trim()
     if (row.language?.trim()) track.language = row.language.toLowerCase().trim()
 
-    const pStart = parseFloat(row.previewStartTime)
-    const pEnd = parseFloat(row.previewEndTime)
-    if (!isNaN(pStart) || !isNaN(pEnd)) {
-      track.previewTiming = {}
-      if (!isNaN(pStart)) track.previewTiming.startTime = pStart
-      if (!isNaN(pEnd)) track.previewTiming.endTime = pEnd
-    }
+    if (row.language?.trim()) track.language = row.language.toLowerCase().trim()
 
-    const cStart = parseFloat(row.callerTuneStartTime)
-    const cEnd = parseFloat(row.callerTuneEndTime)
-    if (!isNaN(cStart) || !isNaN(cEnd)) {
-      track.callerTuneTiming = {}
-      if (!isNaN(cStart)) track.callerTuneTiming.startTime = cStart
-      if (!isNaN(cEnd)) track.callerTuneTiming.endTime = cEnd
+    if (row.previewStartTiming?.trim()) {
+      track.previewStartTiming = row.previewStartTiming.trim()
     }
 
     return track
@@ -485,11 +481,9 @@ export function advancedTrackRowsToPayload(rows) {
     const availDownload = parseBool(row.isAvailableForDownload)
     if (availDownload !== undefined) track.isAvailableForDownload = availDownload
 
-    const prevStart = parseFloat(row.previewStartTiming)
-    if (!isNaN(prevStart)) track.previewStartTiming = prevStart
-
-    const callerStart = parseFloat(row.callertuneStartTiming)
-    if (!isNaN(callerStart)) track.callertuneStartTiming = callerStart
+    if (row.previewStartTiming?.trim()) {
+      track.previewStartTiming = row.previewStartTiming.trim()
+    }
 
     const soundRecContrib = parseContributorsFlexible(row.contributorsSoundRecording)
     if (soundRecContrib.length) track.contributorsToSoundRecording = soundRecContrib

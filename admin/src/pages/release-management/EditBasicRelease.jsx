@@ -62,7 +62,7 @@ const EditBasicRelease = ({ theme }) => {
       lyricistName: '',
       producerName: '',
       isrc: '',
-      previewCallTiming: '',
+      previewStartTiming: '',
       language: ''
     }],
     
@@ -115,8 +115,15 @@ const EditBasicRelease = ({ theme }) => {
                         lyricistName: track.lyricistName || '',
                         producerName: track.producerName || '',
                         isrc: track.isrc || '',
-                        previewCallTiming: `${track.previewTiming?.startTime || 0}-${track.previewTiming?.endTime || 0}`,
-                        language: track.language || ''
+                        previewStartTiming: track.previewStartTiming !== undefined 
+                            ? secondsToHHMMSS(track.previewStartTiming) 
+                            : "00:00:00",
+                        language: track.language || '',
+                        audioFileMetadata: track.audioFiles?.[0] ? {
+                            fileSize: track.audioFiles[0].fileSize || 1,
+                            format: track.audioFiles[0].format || 'mp3',
+                            duration: track.audioFiles[0].duration || 1
+                        } : null
                     })) : [{
                         id: generateUniqueId(),
                         trackLink: '',
@@ -128,7 +135,7 @@ const EditBasicRelease = ({ theme }) => {
                         lyricistName: '',
                         producerName: '',
                         isrc: '',
-                        previewCallTiming: '',
+                        previewStartTiming: '',
                         language: ''
                     }],
 
@@ -223,7 +230,6 @@ const EditBasicRelease = ({ theme }) => {
             },
             step2: {
                 tracks: formData.tracks.map(track => {
-                    const timings = track.previewCallTiming ? track.previewCallTiming.split('-') : [0, 0];
                     return {
                         trackLink: track.trackLink,
                         trackName: track.songName,
@@ -233,11 +239,16 @@ const EditBasicRelease = ({ theme }) => {
                         lyricistName: track.lyricistName,
                         producerName: track.producerName,
                         isrc: track.isrc || undefined,
-                        previewTiming: {
-                            startTime: parseFloat(timings[0]) || 0,
-                            endTime: parseFloat(timings[1]) || 0
-                        },
-                        language: track.language
+                        previewStartTiming: track.previewStartTiming || "00:00:00",
+                        language: track.language,
+                        audioFiles: [
+                            {
+                                format: track.audioFileMetadata?.format || "mp3",
+                                fileUrl: track.trackLink,
+                                fileSize: track.audioFileMetadata?.fileSize || 1,
+                                duration: track.audioFileMetadata?.duration || 1
+                            }
+                        ]
                     };
                 })
             },
@@ -329,6 +340,39 @@ const EditBasicRelease = ({ theme }) => {
     }
   };
 
+
+	const formatTiming = (value) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // Format as HH:MM:SS
+    let formatted = '';
+    if (digits.length > 0) {
+      const parts = [];
+      for (let i = 0; i < digits.length && i < 6; i += 2) {
+        parts.push(digits.slice(i, i + 2));
+      }
+      formatted = parts.join(':');
+    }
+    return formatted;
+  };
+
+  const secondsToHHMMSS = (totalSeconds) => {
+    if (totalSeconds === undefined || totalSeconds === null) return "00:00:00";
+    if (typeof totalSeconds === 'string' && totalSeconds.includes(':')) return totalSeconds;
+    
+    const secs = parseInt(totalSeconds, 10);
+    if (isNaN(secs)) return "00:00:00";
+    
+    const hours = Math.floor(secs / 3600);
+    const minutes = Math.floor((secs % 3600) / 60);
+    const seconds = Math.floor(secs % 60);
+    
+    return [hours, minutes, seconds]
+      .map(v => v < 10 ? "0" + v : v)
+      .join(":");
+  };
+
   const handleAudioUpload = async (trackId, event) => {
     const file = event.target.files[0];
     if (file) {
@@ -338,19 +382,40 @@ const EditBasicRelease = ({ theme }) => {
       }
       setUploadingTrackId(trackId);
       try {
+        // Extract basic metadata
+        const fileSize = file.size;
+        const format = file.name.split('.').pop().toLowerCase() || 'mp3';
+        
+        // Extract duration
+        const audio = new Audio();
+        audio.src = URL.createObjectURL(file);
+        
+        const duration = await new Promise((resolve) => {
+          audio.onloadedmetadata = () => {
+            URL.revokeObjectURL(audio.src);
+            resolve(Math.round(audio.duration) || 1);
+          };
+          audio.onerror = () => resolve(1);
+        });
+
         const response = await uploadToImageKit(file, 'basic_release/tracks');
-         const url = response.url || response;
+        const url = response.url || response;
         setFormData(prev => ({
           ...prev,
           tracks: prev.tracks.map(track =>
             track.id === trackId
-              ? { ...track, trackLink: url, audioFileName: file.name }
+               ? { 
+                  ...track, 
+                  trackLink: url, 
+                  audioFileName: file.name,
+                  audioFileMetadata: { fileSize, format, duration }
+                }
               : track
           )
         }));
       } catch (error) {
         console.error("Audio upload failed", error);
-         toast.error("Audio upload failed");
+        toast.error("Audio upload failed");
       } finally {
         setUploadingTrackId(null);
       }
@@ -423,7 +488,7 @@ const EditBasicRelease = ({ theme }) => {
       lyricistName: '',
       producerName: '',
       isrc: '',
-      previewCallTiming: '',
+      previewStartTiming: '',
       language: ''
     };
     setFormData(prev => ({
@@ -648,7 +713,15 @@ const EditBasicRelease = ({ theme }) => {
                                 <div><Label>Lyricist</Label><Input value={track.lyricistName} onChange={(e) => handleTrackFieldChange(track.id, 'lyricistName', e.target.value)} /></div>
                                 <div><Label>Producer</Label><Input value={track.producerName} onChange={(e) => handleTrackFieldChange(track.id, 'producerName', e.target.value)} /></div>
                                 <div><Label>ISRC</Label><Input value={track.isrc} onChange={(e) => handleTrackFieldChange(track.id, 'isrc', e.target.value)} /></div>
-                                <div><Label>Preview (Start-End)</Label><Input placeholder="0:30-1:00" value={track.previewCallTiming} onChange={(e) => handleTrackFieldChange(track.id, 'previewCallTiming', e.target.value)} /></div>
+                                <div>
+                                  <Label>Preview Timing (HH:MM:SS)</Label>
+                                  <Input 
+                                    placeholder="00:00:00" 
+                                    value={track.previewStartTiming} 
+                                    maxLength={8}
+                                    onChange={(e) => handleTrackFieldChange(track.id, 'previewStartTiming', formatTiming(e.target.value))} 
+                                  />
+                                </div>
                         </div>
                     </div>
                 </Card>

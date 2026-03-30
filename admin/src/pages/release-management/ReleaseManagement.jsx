@@ -784,8 +784,9 @@ export default function ReleaseManagement({ theme }) {
           { label: "Explicit", key: "isExplicit" },
           { label: "Language", key: "trackLanguage" },
           { label: "Audio File", key: "audioFileUrl" },
-          { label: "Preview Start", key: "previewStart" },
-          { label: "Preview Duration", key: "previewDuration" },
+          { label: "Audio Format", key: "audioFormat" },
+          { label: "File Size (MB)", key: "fileSize" },
+          { label: "Preview Timing", key: "previewStartTiming" },
           { label: "Lyrics", key: "lyrics" },
           // Contributors
           { label: "Primary Artists", key: "primaryArtists" },
@@ -832,10 +833,8 @@ export default function ReleaseManagement({ theme }) {
           { label: "Audio Format", key: "audioFormat" },
           { label: "Audio File URL", key: "audioFileUrl" },
           { label: "Duration", key: "duration" },
-          { label: "Preview Start", key: "previewStart" },
-          { label: "Preview End", key: "previewEnd" },
-          { label: "Caller Tune Start", key: "callerTuneStart" },
-          { label: "Caller Tune End", key: "callerTuneEnd" },
+          { label: "File Size (MB)", key: "fileSize" },
+          { label: "Preview Timing", key: "previewStartTiming" },
           // Step 3 Details (Moved to End)
           { label: "Release Date", key: "releaseDate" },
           { label: "Has Rights", key: "hasRights" },
@@ -915,15 +914,16 @@ export default function ReleaseManagement({ theme }) {
                                 trackDisplayName: track.displayName || '-',
                                 trackVersion: track.version || '-',
                                 isrc: track.adminProvidedISRC || track.isrcCode ? `\t${track.adminProvidedISRC || track.isrcCode}` : '-',
-                                trackLength: track.audioFile?.duration ? `${Math.floor(track.audioFile.duration)}s` : '-',
+                                trackLength: track.audioFiles?.[0]?.duration ? `${Math.floor(track.audioFiles[0].duration)}s` : '-',
                                 trackPrimaryGenre: track.primaryGenre || '-',
                                 trackSecondaryGenre: track.secondaryGenre || '-',
                                 isInstrumental: track.isInstrumental ? "Yes" : "No",
                                 isExplicit: track.parentalAdvisory ? "Yes" : "No",
                                 trackLanguage: track.language || '-',
-                                audioFileUrl: track.audioFile?.url || '-',
-                                previewStart: track.previewDetails?.startTime || '-',
-                                previewDuration: track.previewDetails?.duration || '-',
+                                audioFileUrl: track.trackLink || track.audioFiles?.[0]?.fileUrl || '-',
+                                audioFormat: track.audioFiles?.[0]?.format || '-',
+                                fileSize: track.audioFiles?.[0]?.fileSize ? (track.audioFiles[0].fileSize / (1024 * 1024)).toFixed(2) : '-',
+                                previewStartTiming: track.previewStartTiming || '-',
                                 lyrics: track.lyrics ? "Yes" : "No",
                                 primaryArtists: track.primaryArtists?.join(", ") || step1.primaryArtists?.join(", ") || '-',
                                 featuringArtists: track.featuringArtists?.join(", ") || '-',
@@ -1000,10 +1000,8 @@ export default function ReleaseManagement({ theme }) {
                         audioFormat: track.audioFiles?.[0]?.format || '-',
                         audioFileUrl: track.audioFiles?.[0]?.fileUrl || '-',
                         duration: track.audioFiles?.[0]?.duration ? `${Math.floor(track.audioFiles[0].duration)}s` : '-',
-                        previewStart: track.previewTiming?.startTime ?? '-',
-                        previewEnd: track.previewTiming?.endTime ?? '-',
-                        callerTuneStart: track.callerTuneTiming?.startTime ?? '-',
-                        callerTuneEnd: track.callerTuneTiming?.endTime ?? '-'
+                        fileSize: track.audioFiles?.[0]?.fileSize ? (track.audioFiles[0].fileSize / (1024 * 1024)).toFixed(2) : '-',
+                        previewStartTiming: track.previewStartTiming || '-',
                       });
                     });
                   } else {
@@ -1022,10 +1020,7 @@ export default function ReleaseManagement({ theme }) {
                       audioFormat: '-',
                       audioFileUrl: '-',
                       duration: '-',
-                      previewStart: '-',
-                      previewEnd: '-',
-                      callerTuneStart: '-',
-                      callerTuneEnd: '-'
+                      previewStartTiming: '-',
                     });
                   }
                 });

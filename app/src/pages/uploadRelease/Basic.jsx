@@ -78,7 +78,7 @@ const BasicReleaseBuilder = () => {
       lyricistName: '',
       producerName: '',
       isrc: '',
-      previewCallTiming: '',
+      previewStartTiming: '',
       language: ''
     }],
     
@@ -221,6 +221,23 @@ const BasicReleaseBuilder = () => {
     }
   };
 
+
+	const formatTiming = (value) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // Format as HH:MM:SS
+    let formatted = '';
+    if (digits.length > 0) {
+      const parts = [];
+      for (let i = 0; i < digits.length && i < 6; i += 2) {
+        parts.push(digits.slice(i, i + 2));
+      }
+      formatted = parts.join(':');
+    }
+    return formatted;
+  };
+
   // Handle audio file upload
   const handleAudioUpload = async (trackId, event) => {
     const file = event.target.files[0];
@@ -233,12 +250,39 @@ const BasicReleaseBuilder = () => {
 
       setUploadingTrackId(trackId);
       try {
+        // Extract basic metadata
+        const fileSize = file.size;
+        const format = file.name.split('.').pop().toLowerCase() || 'mp3';
+        
+        // Extract duration
+        const audio = new Audio();
+        audio.src = URL.createObjectURL(file);
+        
+        const duration = await new Promise((resolve) => {
+          audio.onloadedmetadata = () => {
+            URL.revokeObjectURL(audio.src);
+            resolve(Math.round(audio.duration) || 1);
+          };
+          audio.onerror = () => {
+             resolve(1);
+          }
+        });
+
         const response = await uploadToImageKit(file, 'basic_release/tracks');
         setFormData(prev => ({
           ...prev,
           tracks: prev.tracks.map(track =>
             track.id === trackId
-              ? { ...track, trackLink: response.url, audioFileName: file.name }
+              ? { 
+                  ...track, 
+                  trackLink: response.url, 
+                  audioFileName: file.name,
+                  audioFileMetadata: {
+                    fileSize,
+                    format,
+                    duration
+                  }
+                }
               : track
           )
         }));
@@ -303,7 +347,7 @@ const BasicReleaseBuilder = () => {
       lyricistName: '',
       producerName: '',
       isrc: '',
-      previewCallTiming: '',
+      previewStartTiming: '',
       language: ''
     };
     setFormData(prev => ({
@@ -700,12 +744,13 @@ const BasicReleaseBuilder = () => {
                   />
                 </div>
                 <div>
-                  <Label className="text-foreground">Preview/Call-tune timing</Label>
+                  <Label className="text-foreground">Preview Timing (HH:MM:SS)</Label>
                   <Input 
-                    placeholder="Enter timing (e.g., 0:30-1:00)" 
+                    placeholder="00:00:00" 
                     className="mt-1" 
-                    value={track.previewCallTiming}
-                    onChange={(e) => handleTrackFieldChange(track.id, 'previewCallTiming', e.target.value)}
+                    value={track.previewStartTiming}
+                    maxLength={8}
+                    onChange={(e) => handleTrackFieldChange(track.id, 'previewStartTiming', formatTiming(e.target.value))}
                   />
                 </div>
                 <div>
@@ -969,20 +1014,13 @@ const BasicReleaseBuilder = () => {
           isrc: track.isrc,
           audioFiles: [
             {
-              format: "mp3",
+              format: track.audioFileMetadata?.format || "mp3", 
               fileUrl: track.trackLink,
-              fileSize: 5242880, // This is a placeholder, ImageKit doesn't return size easily
-              duration: 210
+              fileSize: track.audioFileMetadata?.fileSize || 1, 
+              duration: track.audioFileMetadata?.duration || 1
             }
           ],
-          previewTiming: {
-            startTime: 30,
-            endTime: 60
-          },
-          callerTuneTiming: {
-            startTime: 45,
-            endTime: 75
-          },
+          previewStartTiming: track.previewStartTiming || "00:00:00",
           ...(track.language && { language: track.language })
         }));
 

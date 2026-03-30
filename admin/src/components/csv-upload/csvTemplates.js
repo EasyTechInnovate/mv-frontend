@@ -106,10 +106,7 @@ export const BASIC_TRACK_HEADERS = [
   'producerName',       // optional
   'isrc',               // optional
   'language',           // optional: EMusicLanguage value
-  'previewStartTime',   // optional: seconds
-  'previewEndTime',     // optional: seconds
-  'callerTuneStartTime', // optional: seconds
-  'callerTuneEndTime',  // optional: seconds
+  'previewStartTiming', // optional: HH:MM:SS
 ]
 
 export const BASIC_TRACK_SAMPLE = [
@@ -123,10 +120,8 @@ export const BASIC_TRACK_SAMPLE = [
     producerName: 'Producer Name',
     isrc: '',
     language: 'hindi',
-    previewStartTime: '0',
-    previewEndTime: '30',
-    callerTuneStartTime: '0',
-    callerTuneEndTime: '30',
+    language: 'hindi',
+    previewStartTiming: '00:00:30',
   },
   {
     releaseId: 'RE-B-A-002',
@@ -138,10 +133,8 @@ export const BASIC_TRACK_SAMPLE = [
     producerName: 'Producer Name',
     isrc: '',
     language: 'hindi',
-    previewStartTime: '0',
-    previewEndTime: '30',
-    callerTuneStartTime: '0',
-    callerTuneEndTime: '30',
+    language: 'hindi',
+    previewStartTiming: '00:00:30',
   },
   {
     releaseId: 'RE-B-A-002',
@@ -153,10 +146,8 @@ export const BASIC_TRACK_SAMPLE = [
     producerName: 'Producer Name',
     isrc: '',
     language: 'hindi',
-    previewStartTime: '0',
-    previewEndTime: '30',
-    callerTuneStartTime: '0',
-    callerTuneEndTime: '30',
+    language: 'hindi',
+    previewStartTiming: '00:00:30',
   }
 ]
 
@@ -176,8 +167,7 @@ export const ADVANCED_TRACK_HEADERS = [
   'hasHumanVocals',       // optional: true/false (default true)
   'language',             // optional: EMusicLanguage value
   'isAvailableForDownload', // optional: true/false (default true)
-  'previewStartTiming',   // optional: seconds
-  'callertuneStartTiming', // optional: seconds
+  'previewStartTiming',   // optional: HH:MM:SS
 ]
 
 export const ADVANCED_TRACK_SAMPLE = [
@@ -196,8 +186,7 @@ export const ADVANCED_TRACK_SAMPLE = [
     hasHumanVocals: 'true',
     language: 'hindi',
     isAvailableForDownload: 'true',
-    previewStartTiming: '0',
-    callertuneStartTiming: '0',
+    previewStartTiming: '00:00:30',
   }
 ]
 

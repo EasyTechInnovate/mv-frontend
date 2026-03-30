@@ -23,8 +23,7 @@ export default function AudioUploadSection({ theme, tracks = [] }) {
     lyricistName: "",
     producerName: "",
     isrc: "",
-    previewTiming: "",
-    callerTuneTiming: "",
+    previewStartTiming: "",
   });
 
 
@@ -117,8 +116,7 @@ export default function AudioUploadSection({ theme, tracks = [] }) {
       lyricistName: firstTrack.lyricistName || "",
       producerName: firstTrack.producerName || "",
       isrc: firstTrack.isrc || "",
-      previewTiming: firstTrack.previewTiming || "",
-      callerTuneTiming: firstTrack.callerTuneTiming || "",
+      previewStartTiming: firstTrack.previewStartTiming || "",
     });
 
     if (firstTrack.audioUrl) {
@@ -381,24 +379,12 @@ export default function AudioUploadSection({ theme, tracks = [] }) {
 
             <div>
               <label className="text-xs mb-2 block text-gray-400">
-                Preview/Callertune Timing
+                Preview Timing (HH:MM:SS)
               </label>
               <Input
-                value={audioInfo.previewTiming}
-                onChange={(e) => handleInfoChange("previewTiming", e.target.value)}
-                placeholder="Enter timing"
-                className={isDark ? "bg-[#0f1724] border border-gray-700 text-gray-200" : ""}
-              />
-            </div>
-
-            <div>
-              <label className="text-xs mb-2 block text-gray-400">
-                CallerTune Timing
-              </label>
-              <Input
-                value={audioInfo.callerTuneTiming}
-                onChange={(e) => handleInfoChange("callerTuneTiming", e.target.value)}
-                placeholder="Enter timing"
+                value={audioInfo.previewStartTiming}
+                onChange={(e) => handleInfoChange("previewStartTiming", e.target.value)}
+                placeholder="00:00:00"
                 className={isDark ? "bg-[#0f1724] border border-gray-700 text-gray-200" : ""}
               />
             </div>
