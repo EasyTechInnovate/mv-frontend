@@ -161,6 +161,7 @@ export default function AddNewAggregatorRequestModal({
           (s) => serviceMapping[s] || s
         ),
         howDidYouKnow: howKnowUsMapping[formData.howKnowUs] || "social_media",
+        howDidYouKnowOther: formData.howKnowUs === "Others" ? formData.otherClient : undefined,
         agreeToTerms: formData.acceptTerms,
       };
 
@@ -170,10 +171,18 @@ export default function AddNewAggregatorRequestModal({
       onClose();
     } catch (error) {
       console.error("Error submitting application:", error);
-      const errorMessage =
+      let errorMessage =
         error.response?.data?.message ||
         error.message ||
         "Failed to submit application";
+
+      // Check for detailed validation errors
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const detailMessages = error.response.data.errors.map(err => err.message);
+        if (detailMessages.length > 0) {
+          errorMessage = detailMessages.join(" | ");
+        }
+      }
       toast.error(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
@@ -507,16 +516,20 @@ export default function AddNewAggregatorRequestModal({
                 </div>
             </div>
 
-            <div className="space-y-2">
-                <Label>If Choose Other/our existing client</Label>
+            {formData.howKnowUs === "Others" && (
+              <div className="space-y-2">
+                <Label htmlFor="otherClient">If Choose Other</Label>
                 <Input
-                    type="text"
-                    name="otherClient"
-                    value={formData.otherClient}
-                    onChange={handleChange}
-                    className={`${isDark ? "bg-[#151F28] border-gray-700" : ""}`}
+                  id="otherClient"
+                  type="text"
+                  name="otherClient"
+                  value={formData.otherClient}
+                  onChange={handleChange}
+                  placeholder="Please specify how you know about us..."
+                  className={`${isDark ? "bg-[#151F28] border-gray-700" : ""}`}
                 />
-            </div>
+              </div>
+            )}
 
             <div className="flex items-center gap-3">
                 <Checkbox

@@ -65,8 +65,20 @@ export default function AggregatorRequestReviewModal({
       onReviewed();
       onClose();
     } catch (error) {
-      toast.error(`Failed to ${status} application.`);
-      console.error(error);
+      console.error(`Error ${status} application:`, error);
+      let errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        `Failed to ${status} application.`;
+
+      // Check for detailed validation errors
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const detailMessages = error.response.data.errors.map(err => err.message);
+        if (detailMessages.length > 0) {
+          errorMessage = detailMessages.join(" | ");
+        }
+      }
+      toast.error(`Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }

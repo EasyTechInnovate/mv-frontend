@@ -329,27 +329,47 @@ const Profile = () => {
 
   // Update subscription data when API response is received
   useEffect(() => {
-    if (currentSubData?.data && allPlansData?.data) {
-      const currentPlan = currentSubData.data.plan || {};
-      const subscription = currentSubData.data.subscription || {};
+    if (currentSubData?.data) {
+      const isAggregator = user?.userType === 'aggregator';
+      
+      if (isAggregator) {
+        const aggSub = currentSubData.data.aggregatorSubscription || {};
+        setFormData(prev => ({
+          ...prev,
+          subscription: {
+            plan: 'Aggregator Plan',
+            price: 'N/A',
+            period: 'N/A',
+            status: aggSub.isActive ? 'Active' : 'Inactive',
+            startDate: formatDate(aggSub.startDate),
+            endDate: formatDate(aggSub.endDate),
+            autoRenewal: false,
+            notes: aggSub.notes || null,
+            features: ['Unlimited Releases', 'Priority Support', 'Account Management']
+          }
+        }));
+      } else if (allPlansData?.data) {
+        const currentPlan = currentSubData.data.plan || {};
+        const subscription = currentSubData.data.subscription || {};
 
-      setFormData(prev => ({
-        ...prev,
-        subscription: {
-          plan: currentPlan.name || '',
-          price: `₹${currentPlan.price?.current || '0'}`,
-          period: 'per month',
-          status: subscription.status === 'active' ? 'Active' : 'Inactive',
-          startDate: formatDate(subscription.validFrom),
-          endDate: formatDate(subscription.validUntil),
-          autoRenewal: subscription.autoRenewal || false,
-          features: currentPlan.showcaseFeatures?.length > 0
-            ? currentPlan.showcaseFeatures.filter(f => f.included !== false).map(f => f.text)
-            : transformFeatures(currentPlan.features),
-        }
-      }));
+        setFormData(prev => ({
+          ...prev,
+          subscription: {
+            plan: currentPlan.name || '',
+            price: `₹${currentPlan.price?.current || '0'}`,
+            period: 'per month',
+            status: subscription.status === 'active' ? 'Active' : 'Inactive',
+            startDate: formatDate(subscription.validFrom),
+            endDate: formatDate(subscription.validUntil),
+            autoRenewal: subscription.autoRenewal || false,
+            features: currentPlan.showcaseFeatures?.length > 0
+              ? currentPlan.showcaseFeatures.filter(f => f.included !== false).map(f => f.text)
+              : transformFeatures(currentPlan.features),
+          }
+        }));
+      }
     }
-  }, [currentSubData, allPlansData]);
+  }, [currentSubData, allPlansData, user?.userType]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -1136,22 +1156,32 @@ const Profile = () => {
             </div>
           ) : (
             <>
-              <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg p-6 text-white mb-6">
+              <div className={`rounded-lg p-6 text-white mb-6 ${user?.userType === 'aggregator' ? 'bg-gradient-to-r from-slate-700 to-slate-800 border border-slate-600' : 'bg-gradient-to-r from-purple-600 to-purple-700'}`}>
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-2xl font-bold">{formData.subscription.plan}</h3>
-                    <p className="text-purple-100">Access to all premium features</p>
+                    <p className={user?.userType === 'aggregator' ? 'text-slate-300' : 'text-purple-100'}>{user?.userType === 'aggregator' ? 'Managed by Maheshwari Visuals Admin' : 'Access to all premium features'}</p>
                   </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold">{formData.subscription.price}</div>
-                    <div className="text-purple-100">{formData.subscription.period}</div>
-                  </div>
+                  {user?.userType !== 'aggregator' && (
+                    <div className="text-right">
+                      <div className="text-3xl font-bold">{formData.subscription.price}</div>
+                      <div className="text-purple-100">{formData.subscription.period}</div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-4 text-sm flex-wrap">
-                  <span>Started: {formData.subscription.startDate}</span>
-                  <span>Ends: {formData.subscription.endDate}</span>
-                  <Badge className="bg-green-500 text-white">{formData.subscription.status}</Badge>
+                  {formData.subscription.startDate !== 'N/A' && <span>Started: {formData.subscription.startDate}</span>}
+                  {formData.subscription.endDate !== 'N/A' && <span>Ends: {formData.subscription.endDate}</span>}
+                  <Badge className={formData.subscription.status === 'Active' ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'}>{formData.subscription.status}</Badge>
                 </div>
+                {user?.userType === 'aggregator' && formData.subscription.notes && (
+                  <div className="mt-4 pt-4 border-t border-slate-600/50">
+                    <p className="text-xs font-semibold text-purple-400 mb-1 flex items-center gap-1 uppercase tracking-wider">
+                       Admin Note
+                    </p>
+                    <p className="text-slate-200 italic text-sm">"{formData.subscription.notes}"</p>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -1165,34 +1195,38 @@ const Profile = () => {
                       </li>
                     ))}
                     {formData.subscription.features.length > 8 && (
-                      <li className="text-purple-600 font-semibold">
+                      <li className={user?.userType === 'aggregator' ? 'text-slate-400 font-semibold' : 'text-purple-600 font-semibold'}>
                         +{formData.subscription.features.length - 8} more features
                       </li>
                     )}
                   </ul>
                 </div>
-                <div>
-                  <h4 className="font-semibold mb-4">Billing Information</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Auto-renewal:</span>
-                      <span>{formData.subscription.autoRenewal ? 'Enabled' : 'Disabled'}</span>
+                {user?.userType !== 'aggregator' && (
+                  <div>
+                    <h4 className="font-semibold mb-4">Billing Information</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Auto-renewal:</span>
+                        <span>{formData.subscription.autoRenewal ? 'Enabled' : 'Disabled'}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="flex gap-4 mt-6 flex-wrap">
-                <Button
-                  className="bg-purple-600 text-white hover:bg-purple-700 flex-1"
-                  disabled={isUpgrading}
-                  onClick={() => navigate('/app/plan')}
-                >
-                  Upgrade Plan
-                </Button>
+                {user?.userType !== 'aggregator' && (
+                  <Button
+                    className="bg-purple-600 text-white hover:bg-purple-700 flex-1"
+                    disabled={isUpgrading}
+                    onClick={() => navigate('/app/plan')}
+                  >
+                    Upgrade Plan
+                  </Button>
+                )}
                 <Button
                   variant="outline"
-                  className="border-slate-600"
+                  className={`border-slate-600 ${user?.userType === 'aggregator' ? 'flex-1' : ''}`}
                   onClick={() => navigate('/app/settings?tab=billing')}
                 >
                   Manage Billing
@@ -1204,104 +1238,106 @@ const Profile = () => {
       </Card>
 
       {/* Available Plans Section */}
-      <Card className="border-slate-700">
-        <CardHeader>
-          <h2 className="text-2xl font-bold">Available Plans</h2>
-          <p className="text-muted-foreground">Choose the plan that best fits your needs</p>
-        </CardHeader>
-        <CardContent>
-          {allPlansLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader className="w-6 h-6 animate-spin text-purple-600" />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {allPlansData?.data?.map((plan) => (
-                <Card key={plan.planId} className="border-slate-700 p-6 relative">
-                  {plan.isPopular && (
-                    <div className="absolute top-0 right-0 m-3 px-2 py-1 bg-purple-600 text-white text-xs font-semibold rounded-full">
-                      Popular
-                    </div>
-                  )}
-                  {plan.isBestValue && (
-                    <div className="absolute top-0 left-0 m-3 px-2 py-1 bg-green-600 text-white text-xs font-semibold rounded-full">
-                      Best Value
-                    </div>
-                  )}
-                  <CardHeader className="p-0 mb-4">
-                    <CardTitle className="text-xl font-semibold">{plan.name}</CardTitle>
-                    <p className="text-4xl font-bold text-purple-600">
-                      ₹{plan.price.current}
-                      <span className="text-base font-normal text-muted-foreground"> per {plan.interval}</span>
-                    </p>
-                    {(() => {
-                      const currentSub = currentSubData?.data?.subscription;
-                      const currentPlan = currentSubData?.data?.plan;
-                      if (
-                        currentSub?.planId &&
-                        currentSub.planId !== plan.planId &&
-                        currentSub.status === 'active' &&
-                        currentPlan?.price?.current &&
-                        plan.price.current > currentPlan.price.current
-                      ) {
-                        const daysRemaining = Math.max(0, Math.ceil((new Date(currentSub.validUntil) - new Date()) / (1000 * 60 * 60 * 24)));
-                        const totalDays = 90;
-                        const credit = Math.round((currentPlan.price.current / totalDays) * daysRemaining);
-                        const youPay = Math.max(1, plan.price.current - credit);
-                        return (
-                          <p className="text-sm text-green-500 mt-1">
-                            Today you pay ₹{youPay} <span className="text-muted-foreground">(₹{credit} credit applied)</span>
-                          </p>
-                        );
-                      }
-                      return null;
-                    })()}
-                  </CardHeader>
-                  <CardContent className="p-0 space-y-2">
-                    <ul className="space-y-2">
-                      {Object.entries(plan.features || {})
-                        .filter(([key, value]) => !!value)
-                        .slice(0, 5)
-                        .map(([key, value], index) => (
-                          <li key={index} className="flex items-center gap-2 text-sm">
-                            <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-                            {getFeatureLabel(key, value)}
-                          </li>
-                        ))}
-                    </ul>
-                    {(() => {
-                      const currentPlanId = currentSubData?.data?.subscription?.planId;
-                      const currentPrice = currentSubData?.data?.plan?.price?.current ?? 0;
-                      const isCurrent = currentPlanId === plan.planId;
-                      const isDowngrade = !isCurrent && plan.price.current <= currentPrice && !!currentPlanId;
+      {user?.userType !== 'aggregator' && (
+        <Card className="border-slate-700">
+          <CardHeader>
+            <h2 className="text-2xl font-bold">Available Plans</h2>
+            <p className="text-muted-foreground">Choose the plan that best fits your needs</p>
+          </CardHeader>
+          <CardContent>
+            {allPlansLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader className="w-6 h-6 animate-spin text-purple-600" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {allPlansData?.data?.map((plan) => (
+                  <Card key={plan.planId} className="border-slate-700 p-6 relative">
+                    {plan.isPopular && (
+                      <div className="absolute top-0 right-0 m-3 px-2 py-1 bg-purple-600 text-white text-xs font-semibold rounded-full">
+                        Popular
+                      </div>
+                    )}
+                    {plan.isBestValue && (
+                      <div className="absolute top-0 left-0 m-3 px-2 py-1 bg-green-600 text-white text-xs font-semibold rounded-full">
+                        Best Value
+                      </div>
+                    )}
+                    <CardHeader className="p-0 mb-4">
+                      <CardTitle className="text-xl font-semibold">{plan.name}</CardTitle>
+                      <p className="text-4xl font-bold text-purple-600">
+                        ₹{plan.price.current}
+                        <span className="text-base font-normal text-muted-foreground"> per {plan.interval}</span>
+                      </p>
+                      {(() => {
+                        const currentSub = currentSubData?.data?.subscription;
+                        const currentPlan = currentSubData?.data?.plan;
+                        if (
+                          currentSub?.planId &&
+                          currentSub.planId !== plan.planId &&
+                          currentSub.status === 'active' &&
+                          currentPlan?.price?.current &&
+                          plan.price.current > currentPlan.price.current
+                        ) {
+                          const daysRemaining = Math.max(0, Math.ceil((new Date(currentSub.validUntil) - new Date()) / (1000 * 60 * 60 * 24)));
+                          const totalDays = 90;
+                          const credit = Math.round((currentPlan.price.current / totalDays) * daysRemaining);
+                          const youPay = Math.max(1, plan.price.current - credit);
+                          return (
+                            <p className="text-sm text-green-500 mt-1">
+                              Today you pay ₹{youPay} <span className="text-muted-foreground">(₹{credit} credit applied)</span>
+                            </p>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </CardHeader>
+                    <CardContent className="p-0 space-y-2">
+                      <ul className="space-y-2">
+                        {Object.entries(plan.features || {})
+                          .filter(([key, value]) => !!value)
+                          .slice(0, 5)
+                          .map(([key, value], index) => (
+                            <li key={index} className="flex items-center gap-2 text-sm">
+                              <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                              {getFeatureLabel(key, value)}
+                            </li>
+                          ))}
+                      </ul>
+                      {(() => {
+                        const currentPlanId = currentSubData?.data?.subscription?.planId;
+                        const currentPrice = currentSubData?.data?.plan?.price?.current ?? 0;
+                        const isCurrent = currentPlanId === plan.planId;
+                        const isDowngrade = !isCurrent && plan.price.current <= currentPrice && !!currentPlanId;
 
-                      if (isCurrent) {
+                        if (isCurrent) {
+                          return (
+                            <Button className="w-full mt-4 bg-slate-800 cursor-not-allowed text-white" disabled>
+                              Current Plan
+                            </Button>
+                          );
+                        }
+                        if (isDowngrade) {
+                          return null;
+                        }
                         return (
-                          <Button className="w-full mt-4 bg-slate-800 cursor-not-allowed text-white" disabled>
-                            Current Plan
+                          <Button
+                            className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white"
+                            disabled={isUpgrading}
+                            onClick={() => handleUpgrade(plan.planId)}
+                          >
+                            {isUpgrading ? 'Processing...' : 'Upgrade'}
                           </Button>
                         );
-                      }
-                      if (isDowngrade) {
-                        return null;
-                      }
-                      return (
-                        <Button
-                          className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white"
-                          disabled={isUpgrading}
-                          onClick={() => handleUpgrade(plan.planId)}
-                        >
-                          {isUpgrading ? 'Processing...' : 'Upgrade'}
-                        </Button>
-                      );
-                    })()}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                      })()}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

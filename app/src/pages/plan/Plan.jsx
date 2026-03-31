@@ -211,6 +211,14 @@ const Plan = () => {
                     <span>{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</span>
                   </div>
                 )}
+                {aggSub?.notes && (
+                  <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-slate-700/50">
+                    <p className="text-xs font-semibold text-purple-400 mb-1 flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" /> Admin Note
+                    </p>
+                    <p className="text-gray-300 italic">"{aggSub.notes}"</p>
+                  </div>
+                )}
               </>
             ) : (
               <p className="text-muted-foreground">No active subscription. Please contact your account manager.</p>

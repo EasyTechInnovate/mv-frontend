@@ -426,7 +426,7 @@ export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark'
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <p className="text-xs text-gray-500 mb-1">Notes (optional)</p>
+                    <p className="text-xs text-gray-500 mb-1">Notes For Aggregator (optional)</p>
                     <Input
                       value={aggSub.notes}
                       onChange={(e) => setAggSub(p => ({ ...p, notes: e.target.value }))}

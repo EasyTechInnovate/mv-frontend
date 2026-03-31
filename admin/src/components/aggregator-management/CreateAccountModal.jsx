@@ -42,10 +42,20 @@ export default function CreateAccountModal({
       onSuccess();
       onClose();
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Failed to create account."
-      );
-      console.error(error);
+      console.error("Error creating account:", error);
+      let errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to create account.";
+
+      // Check for detailed validation errors
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const detailMessages = error.response.data.errors.map(err => err.message);
+        if (detailMessages.length > 0) {
+          errorMessage = detailMessages.join(" | ");
+        }
+      }
+      toast.error(`Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }

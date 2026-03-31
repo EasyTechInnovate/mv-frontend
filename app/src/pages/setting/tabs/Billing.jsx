@@ -83,6 +83,12 @@ const Billing = () => {
                 <Badge className={sub.aggregatorSubscription.isActive ? 'bg-green-600 text-white' : 'bg-slate-600 text-white'}>
                   {sub.aggregatorSubscription.isActive ? 'Active' : 'Inactive'}
                 </Badge>
+                {sub.aggregatorSubscription.notes && (
+                  <div className="mt-2 p-3 rounded bg-muted/30 border border-slate-700/30">
+                    <p className="text-[10px] uppercase tracking-wider text-purple-400 font-bold mb-1 opacity-80">Admin Notes</p>
+                    <p className="text-muted-foreground italic text-xs leading-relaxed">"{sub.aggregatorSubscription.notes}"</p>
+                  </div>
+                )}
               </>
             ) : (
               <div className="flex items-center gap-2 text-yellow-500">

@@ -138,6 +138,7 @@ const FormPage = () => {
         briefInfo: formData.companyInfo,
         additionalServices: formData.services.map(s => serviceMapping[s] || s),
         howDidYouKnow: howKnowUsMapping[formData.howKnowUs] || "social_media",
+        howDidYouKnowOther: formData.howKnowUs === "Others" ? formData.otherClient : undefined,
         agreeToTerms: formData.acceptTerms,
       };
 
@@ -183,12 +184,19 @@ const FormPage = () => {
     } catch (error) {
       console.error("Error submitting application:", error);
       
-      const errorMessage = error.response?.data?.message || error.message || "Failed to submit application";
-      
+      let errorMessage = error.response?.data?.message || error.message || "Failed to submit application";
+
+      // Check for detailed validation errors
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const detailMessages = error.response.data.errors.map(err => err.message);
+        if (detailMessages.length > 0) {
+          errorMessage = detailMessages.join(" | ");
+        }
+      }
+
       toast.error(`Error: ${errorMessage}`, {
-        duration: 4000,
+        duration: 5000,
         position: "top-center",
-       
       });
     } finally {
       setLoading(false);
@@ -510,16 +518,19 @@ const FormPage = () => {
         </div>
 
         
-        <div>
-          <label>If Choose Other/our existing client <span className="text-[#652CD6]">*</span> </label>
-          <input
-            type="text"
-            name="otherClient"
-            value={formData.otherClient}
-            onChange={handleChange}
-            className="w-full bg-transparent border border-gray-500 rounded px-3 py-2"
-          />
-        </div>
+        {formData.howKnowUs === "Others" && (
+          <div>
+            <label>If Choose Other <span className="text-[#652CD6]">*</span> </label>
+            <input
+              type="text"
+              name="otherClient"
+              value={formData.otherClient}
+              onChange={handleChange}
+              placeholder="Please specify how you know about us..."
+              className="w-full bg-transparent border border-gray-500 rounded px-3 py-2 mt-2"
+            />
+          </div>
+        )}
 
         
         <div className="flex items-center gap-3">
