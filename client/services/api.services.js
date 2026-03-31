@@ -187,3 +187,16 @@ export const getNewsItems = async () => {
     return response.data;
 };
 
+// ============= Fan Link APIs =============
+
+/**
+ * Get fan link by custom URL
+ * @param {string} customUrl - The custom URL of the fan link
+ * @returns {Promise} Response with fan link data
+ */
+export const getPublicFanLink = async (customUrl) => {
+    const response = await servicesAxiosInstance.get(`/v1/fan-links/link/${customUrl}`)
+    return response.data
+}
+
+

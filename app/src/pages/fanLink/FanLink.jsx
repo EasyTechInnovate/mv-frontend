@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch'
 import toast from 'react-hot-toast'
 import { getMyFanLinks, checkFanLinkAvailability, createFanLink, updateFanLink } from '@/services/api.services'
 import { Card } from '@/components/ui/card'
+import { useAuthStore } from '@/store/authStore'
 
 const PLATFORMS = [
   { id: 'spotify', name: 'Spotify', icon: Music },
@@ -21,6 +22,7 @@ const PLATFORMS = [
 
 export default function FanLinksBuilder() {
   const queryClient = useQueryClient()
+  const { user } = useAuthStore()
   
   // Form States
   const [title, setTitle] = useState('Your Track Title')
@@ -488,11 +490,21 @@ const handleDeletePlatform = (platformId, isCustom) => {
                   previewMode === 'mobile' ? 'w-[320px]' : 'w-full max-w-[600px]'
                 }`}
               >
-                {/* Music Icon */}
+                {/* User Image / Music Icon */}
                 <div className="flex justify-center mb-6">
-                  <div className="w-24 h-24 rounded-full bg-purple-600/20 flex items-center justify-center">
-                    <Music className="w-12 h-12 text-purple-500" />
-                  </div>
+                  {user?.profile?.photo ? (
+                    <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-purple-500/30 shadow-xl shadow-purple-500/10">
+                      <img 
+                        src={user.profile.photo} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-purple-600/20 flex items-center justify-center">
+                      <Music className="w-12 h-12 text-purple-500" />
+                    </div>
+                  )}
                 </div>
 
                 {/* Title & Description */}
@@ -511,10 +523,17 @@ const handleDeletePlatform = (platformId, isCustom) => {
                       return (
                         <button
                           key={link.platform}
-                          className="w-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-600/50 rounded-lg py-3 px-4 flex items-center justify-center gap-3 transition-colors"
+                          className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg py-3 px-4 flex items-center justify-between group transition-all"
                         >
-                          <Music className="w-5 h-5" />
-                          <span>{platform?.name}</span>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded bg-purple-600/20 flex items-center justify-center">
+                              <Music className="w-4 h-4 text-white" />
+                            </div>
+                            <span className="font-medium">{link.name}</span>
+                          </div>
+                          <div className="text-xs text-white/40 group-hover:text-white/60 transition-colors">
+                            Play
+                          </div>
                         </button>
                       )
                     })
