@@ -10,7 +10,7 @@ const UploadRelease = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-white text-3xl font-semibold mb-2">Upload Release</h1>
+          <h1 className="text-3xl font-semibold mb-2">Upload Release</h1>
           <p className="text-slate-400 text-sm">Upload your music and distribute it to all major platforms</p>
         </div>
 
@@ -25,7 +25,7 @@ const UploadRelease = () => {
               <div className="mb-6">
                 <Plus className="w-12 h-12 text-slate-400 group-hover:text-slate-300 transition-colors" />
               </div>
-              <h3 className="text-white text-xl font-medium mb-2">Basic release builder</h3>
+              <h3 className=" text-xl font-medium mb-2">Basic release builder</h3>
             </div>
           </div>
 
@@ -38,7 +38,7 @@ const UploadRelease = () => {
               <div className="mb-6">
                 <Plus className="w-12 h-12 text-slate-400 group-hover:text-slate-300 transition-colors" />
               </div>
-              <h3 className="text-white text-xl font-medium mb-2">Advanced release builder</h3>
+              <h3 className=" text-xl font-medium mb-2">Advanced release builder</h3>
             </div>
           </div>
         </div>

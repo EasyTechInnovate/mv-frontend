@@ -55,7 +55,6 @@ import {
 import { 
   getMyWallet, 
   getMyWalletDetails, 
-  getMyPayoutRequests, 
   cancelPayoutRequest, 
   getMyWalletTransactions,
   getProfile,
@@ -135,19 +134,37 @@ export default function FinanceWallet() {
   const handleDownloadStatement = async () => {
     setIsDownloadingStatement(true);
     try {
-      const response = await getMyPayoutRequests({ year: selectedYear, month: selectedMonth, limit: 10000 });
-      if (response.success && response.data.requests.length > 0) {
+      const response = await getMyWalletTransactions({ 
+        year: selectedYear, 
+        month: selectedMonth, 
+        limit: 10000 
+      });
+      if (response.success && response.data.transactions.length > 0) {
         const headers = [
-          { key: 'requestId', label: 'Request ID' },
+          { key: 'formattedDate', label: 'Date' },
+          { key: 'type', label: 'Transaction Type' },
+          { key: 'description', label: 'Details' },
+          { key: 'direction', label: 'Direction' },
           { key: 'amount', label: 'Amount' },
-          { key: 'payoutMethod', label: 'Method' },
+          { key: 'streams', label: 'Streams' },
           { key: 'status', label: 'Status' },
-          { key: 'requestedAt', label: 'Date' },
+          { key: 'requestId', label: 'Request ID' },
+          { key: 'transactionReference', label: 'Payment Ref' },
         ];
-        const csvString = jsonToCsv(response.data.requests, headers);
-        exportToCsv(`payout-statement-${selectedYear}-${selectedMonth}.csv`, csvString);
+        const formattedData = response.data.transactions.map(t => ({
+          ...t,
+          formattedDate: new Date(t.date).toLocaleString(),
+          type: t.type?.replace(/_/g, ' '),
+          direction: t.direction?.toUpperCase(),
+          streams: t.streams || '-',
+          status: t.status || 'Completed',
+          requestId: t.requestId || '-',
+          transactionReference: t.transactionReference || '-',
+        }));
+        const csvString = jsonToCsv(formattedData, headers);
+        exportToCsv(`wallet-statement-${selectedYear}-${selectedMonth}.csv`, csvString);
         showToast.success("Statement downloaded successfully.");
-      } else if (response.success && response.data.requests.length === 0) {
+      } else if (response.success && response.data.transactions.length === 0) {
         showToast.info("No data available for the selected period.");
       }
       else {
@@ -689,8 +706,8 @@ export default function FinanceWallet() {
             <h2 className="text-xl font-bold mb-4">Download Reports</h2>
             <Card>
                 <CardHeader>
-                    <CardTitle>Download Monthly Payout Statements</CardTitle>
-                    <CardDescription>Select a year and month to download your payout history CSV statement.</CardDescription>
+                    <CardTitle>Download Monthly Statements</CardTitle>
+                    <CardDescription>Select a year and month to download your complete transaction history (royalties, MCN earnings, adjustments & payouts) as a CSV.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex gap-4">
