@@ -539,22 +539,27 @@ export default function MerchStoreManagement({ theme }) {
           />
         </div>
         <div className="flex items-center gap-3">
-          <select 
-            className={`${inputBg} text-sm rounded-lg px-3 py-2`}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="design_pending">Design Pending</option>
-            <option value="design_submitted">Design Submitted</option>
-            <option value="design_approved">Live</option>
-          </select>
-          <button className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2">
+          {activeTab === 'requests' && (
+            <select 
+              className={`${inputBg} text-sm rounded-lg px-3 py-2`}
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPagination(p => ({...p, page: 1}));
+              }}
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="design_pending">Design Pending</option>
+              <option value="design_submitted">Design Submitted</option>
+              <option value="design_approved">Live</option>
+            </select>
+          )}
+          {/* <button className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2">
             <Download size={14} /> Export
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -563,7 +568,11 @@ export default function MerchStoreManagement({ theme }) {
         {["requests", "listed"].map((tab) => (
           <button
             key={tab}
-            onClick={() => { setActiveTab(tab); setPagination(p => ({...p, page: 1})); }}
+            onClick={() => { 
+              setActiveTab(tab); 
+              setPagination(p => ({...p, page: 1})); 
+              setStatusFilter(""); 
+            }}
             className={`px-4 py-2 text-sm font-medium ${activeTab === tab ? "border-b-2 border-purple-500 text-purple-500" : "text-gray-400"}`}
           >
             {tab === "requests" ? "Requests" : "Listed Products"}

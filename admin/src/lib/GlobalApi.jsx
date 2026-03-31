@@ -176,6 +176,10 @@ const getPendingMcnRequests = () => axiosClient.get('/v1/mcn/admin/requests/pend
 
 const reviewMcnRequest = (requestId, data) => axiosClient.post(`/v1/mcn/admin/requests/${requestId}/review`, data)
 
+const deleteMcnRequest = (requestId) => axiosClient.delete(`/v1/mcn/admin/requests/${requestId}`)
+
+const bulkDeleteMcnRequests = (payload) => axiosClient.post(`/v1/mcn/admin/requests/bulk-delete`, payload)
+
 const createMcnChannel = (requestId, data) => axiosClient.post(`/v1/mcn/admin/requests/${requestId}/create-channel`, data)
 
 const getMcnChannels = (params) => axiosClient.get(`/v1/mcn/admin/channels`, { params })
@@ -557,6 +561,8 @@ export default {
     getMcnRequests,
     getPendingMcnRequests,
     reviewMcnRequest,
+    deleteMcnRequest,
+    bulkDeleteMcnRequests,
     createMcnChannel,
     getMcnChannels,
     updateMcnChannelStatus,

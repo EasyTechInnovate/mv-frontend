@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Upload, Download, Search, Info, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Upload, Download, Search, Info, ChevronLeft, ChevronRight, Loader2, Trash2, CheckSquare, ListChecks } from "lucide-react";
 import ActiveChannelTable from "../../components/mcn-management/MCNActiveChannel";
 import { motion, AnimatePresence } from "framer-motion";
 import MCNInfoForm from "../../components/mcn-management/MCNUserForm";
@@ -208,6 +208,10 @@ export default function MCNManagement({ theme = "dark" }) {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [newChannel, setNewChannel] = useState(null);
   
+  // Bulk actions state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkMode, setBulkMode] = useState(false);
+  
   // State for stats cards
   const [stats, setStats] = useState(null);
   // Debounce search term
@@ -286,6 +290,11 @@ export default function MCNManagement({ theme = "dark" }) {
     }
   }, [activeTab, currentPage, debouncedSearch, status]);
 
+  // Clear selection when filters or tab change (preserve across pages)
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [activeTab, debouncedSearch, status]);
+
   // Effect to reset filters and fetch stats on tab change
   useEffect(() => {
     setCurrentPage(1);
@@ -294,7 +303,61 @@ export default function MCNManagement({ theme = "dark" }) {
     setPagination(null);
     setRows([]);
     fetchStats();
+    setBulkMode(false);
   }, [activeTab]);
+
+  const toggleSelection = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const deletableRows = activeTab === "request" ? rows.filter(row => !row.isChannelCreated) : [];
+  const isAllSelected = deletableRows.length > 0 && deletableRows.every(r => selectedIds.includes(r._id));
+
+  const toggleAll = () => {
+    if (isAllSelected) {
+      const idsOnPage = deletableRows.map((r) => r._id);
+      setSelectedIds((prev) => prev.filter((id) => !idsOnPage.includes(id)));
+    } else {
+      setSelectedIds((prev) => {
+        const newSelected = [...prev];
+        deletableRows.forEach((r) => {
+          if (!newSelected.includes(r._id)) newSelected.push(r._id);
+        });
+        return newSelected;
+      });
+    }
+  };
+
+  const handleDelete = async (requestId) => {
+    if (!window.confirm("Are you sure you want to permanently delete this request?")) return;
+    try {
+      await GlobalApi.deleteMcnRequest(requestId);
+      toast.success("Request deleted successfully");
+      fetchRequests();
+      fetchStats();
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast.error(err?.response?.data?.message || "Failed to delete request");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!selectedIds.length) return;
+    if (!window.confirm(`Are you sure you want to permanently delete these ${selectedIds.length} requests?`)) return;
+    try {
+      const res = await GlobalApi.bulkDeleteMcnRequests({ requestIds: selectedIds });
+      toast.success(res?.data?.message || "Requests deleted successfully");
+      setSelectedIds([]);
+      setBulkMode(false);
+      fetchRequests();
+      fetchStats();
+    } catch (err) {
+      console.error("Bulk delete error:", err);
+      toast.error(err?.response?.data?.message || "Failed to perform bulk delete");
+    }
+  };
 
   // Effect to handle new channel creation
   useEffect(() => {
@@ -511,12 +574,33 @@ export default function MCNManagement({ theme = "dark" }) {
                 )}
               </select>
 
-              <select className={`text-sm px-3 py-2 rounded-md border ${inputBg}`} defaultValue="">
-                <option value="">Bulk Action</option>
-                <option value="approve">Approve Selected</option>
-                <option value="reject">Reject Selected</option>
-                <option value="export">Export Selected</option>
-              </select>
+              {activeTab === "request" && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setBulkMode(!bulkMode);
+                      setSelectedIds([]);
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-md transition border ${
+                      bulkMode 
+                        ? "bg-red-500/10 text-red-500 border-red-500/50" 
+                        : `${isDark ? "bg-[#151F28] border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"} `
+                    }`}
+                  >
+                    <ListChecks className="w-4 h-4" />
+                    {bulkMode ? "Exit Bulk Mode" : "Bulk Actions"}
+                  </button>
+
+                  {bulkMode && selectedIds.length > 0 && (
+                    <button
+                      onClick={handleBulkDelete}
+                      className="flex items-center gap-1.5 px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md transition shadow-sm"
+                    >
+                      <Trash2 className="w-4 h-4" /> Delete ({selectedIds.length})
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -603,23 +687,29 @@ export default function MCNManagement({ theme = "dark" }) {
                   <table className="min-w-[1000px] w-full text-sm table-auto border-collapse">
                     <thead className="text-gray-500">
                       <tr>
+                        {bulkMode && (
+                          <th className="px-4 py-3 w-12">
+                            <input
+                              type="checkbox"
+                              checked={isAllSelected}
+                              onChange={toggleAll}
+                              className="w-4 h-4 cursor-pointer accent-purple-600 rounded border-gray-400"
+                            />
+                          </th>
+                        )}
                         {[
-                          "YouTube Channel Name",
-                          "Account ID",
-                          "Account Name",
-                          "Subscribers",
-                          "Submitted On",
-                          "Total Views (28d)",
-                          // "AdSense Enabled?",
-                          // "Copyright Strikes?",
-                          // "100% Original",
-                          // "Another MCN?",
-                          // "Last Month Revenue",
+                          "Channel Name",
+                          "Account Id",
+                          "Name",
+                          "Subscriber",
+                          "Applied Date",
+                          "Views (28d)",
                           "Monetization Eligibility",
+                          "Channel Status",
                           "Status",
                           "Actions",
                         ].map((th, idx) => (
-                          <th key={idx} className="text-left px-4 py-3 whitespace-nowrap">
+                          <th key={idx} className={`text-left px-4 py-3 whitespace-nowrap ${th.includes("Views") || th.includes("Eligibility") ? "text-center" : ""}`}>
                             {th}
                           </th>
                         ))}
@@ -628,75 +718,110 @@ export default function MCNManagement({ theme = "dark" }) {
                     <tbody>
                       {rows.length > 0 ? rows.map((r) => {
                         const fullName = r.userId ? `${r.userId.firstName} ${r.userId.lastName}`.trim() : "-";
+                        const isDisabled = r.isChannelCreated;
+
                         return (
-                        <tr key={r._id} className={`border-t ${borderColor} ${rowHover}`}>
-                          <td className="px-4 py-3">{r.youtubeChannelName}</td>
-                          <td className="px-4 py-3">{r.userAccountId || "-"}</td>
-                          <td className="px-4 py-3">{fullName}</td>
-                          <td className="px-4 py-3">{r.subscriberCount?.toLocaleString("en-IN")}</td>
-                          <td className="px-4 py-3">{new Date(r.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</td>
-                          <td className="px-4 py-3 text-center">{r.totalViewsCountsIn28Days?.toLocaleString("en-IN")}</td>
-                          {/* <td className="px-4 py-3 text-center">{r.isAdSenseEnabled ? "Yes" : "No"}</td> */}
-                          {/* <td className="px-4 py-3 text-center">{r.hasCopyrightStrikes ? "Yes" : "No"}</td> */}
-                          {/* <td className="px-4 py-3 text-center">{r.isContentOriginal ? "Yes" : "No"}</td> */}
-                          {/* <td className="px-4 py-3 text-center">{r.isPartOfAnotherMCN ? "Yes" : "No"}</td> */}
-                          {/* <td className="px-4 py-3 text-center">{r.channelRevenueLastMonth?.toLocaleString("en-IN")}</td> */}
-                          <td className="px-4 py-3 text-center">
-                            <span
-                              className={`inline-block px-3 py-1 rounded-full text-xs ${r.monetizationEligibility
-                                ? "bg-emerald-700/20 text-emerald-400"
-                                : "bg-gray-300 text-gray-700"
+                          <tr 
+                            key={r._id} 
+                            className={`border-t ${borderColor} ${rowHover} ${selectedIds.includes(r._id) ? (isDark ? "bg-purple-900/10" : "bg-purple-50") : ""}`}
+                          >
+                            {bulkMode && (
+                              <td className="px-4 py-3">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedIds.includes(r._id)}
+                                  onChange={() => toggleSelection(r._id)}
+                                  disabled={isDisabled}
+                                  title={isDisabled ? "Cannot select request with existing channel" : ""}
+                                  className={`w-4 h-4 cursor-pointer accent-purple-600 rounded border-gray-400 ${isDisabled ? "opacity-30 cursor-not-allowed" : ""}`}
+                                />
+                              </td>
+                            )}
+                            <td className="px-4 py-3 font-medium">{r.youtubeChannelName}</td>
+                            <td className="px-4 py-3">{r.userAccountId || "-"}</td>
+                            <td className="px-4 py-3">{fullName}</td>
+                            <td className="px-4 py-3">{r.subscriberCount?.toLocaleString("en-IN")}</td>
+                            <td className="px-4 py-3 text-sm">{new Date(r.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</td>
+                            <td className="px-4 py-3 text-center">{r.totalViewsCountsIn28Days?.toLocaleString("en-IN")}</td>
+                            <td className="px-4 py-3 text-center">
+                              <span
+                                className={`inline-block px-3 py-1 rounded-full text-xs ${r.monetizationEligibility
+                                  ? "bg-emerald-500/20 text-emerald-500"
+                                  : "bg-gray-500/20 text-gray-500"
+                                  }`}
+                              >
+                                {r.monetizationEligibility ? "Eligible" : "Not Eligible"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <span
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ${
+                                  r.isChannelCreated 
+                                    ? "bg-purple-500/10 text-purple-500 border border-purple-500/20" 
+                                    : "bg-gray-500/10 text-gray-500 border border-gray-500/20"
                                 }`}
-                            >
-                              {r.monetizationEligibility ? "Eligible" : "Not Eligible"}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <StatusBadge status={r.status} />
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <div className="flex items-center gap-2">
-                              {r.status === "pending" ? (
-                                <>
+                              >
+                                <div className={`w-1.5 h-1.5 rounded-full ${r.isChannelCreated ? "bg-purple-500" : "bg-gray-500"}`} />
+                                {r.isChannelCreated ? "Created" : "Not Created"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <StatusBadge status={r.status} />
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                {r.status === "pending" ? (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      className="bg-emerald-700 hover:bg-emerald-800 text-white"
+                                      onClick={() => {
+                                        setViewData({ ...r, mode: "approve" });
+                                        setIsViewOpen(true);
+                                      }}
+                                    >
+                                      Approve
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      className="bg-red-700 hover:bg-red-800 text-white"
+                                      onClick={() => {
+                                        setViewData({ ...r, mode: "reject" });
+                                        setIsViewOpen(true);
+                                      }}
+                                    >
+                                      Reject
+                                    </Button>
+                                  </>
+                                ) : (
                                   <Button
                                     size="sm"
-                                    className="bg-emerald-700 text-white"
+                                    variant="outline"
+                                    className={`${isDark ? "border-gray-700 hover:bg-gray-800" : ""}`}
                                     onClick={() => {
-                                      setViewData({ ...r, mode: "approve" });
+                                      setViewData(r);
                                       setIsViewOpen(true);
                                     }}
                                   >
-                                    Approve
+                                    View
                                   </Button>
-                                  <Button
-                                    size="sm"
-                                    className="bg-red-700 text-white"
-                                    onClick={() => {
-                                      setViewData({ ...r, mode: "reject" });
-                                      setIsViewOpen(true);
-                                    }}
+                                )}
+                                {!r.isChannelCreated && (
+                                  <button
+                                    onClick={() => handleDelete(r._id)}
+                                    className={`p-2 rounded-md transition ${isDark ? "text-red-400 hover:bg-red-400/10" : "text-red-600 hover:bg-red-50"}`}
+                                    title="Permanently Delete Request"
                                   >
-                                    Reject
-                                  </Button>
-                                </>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setViewData(r);
-                                    setIsViewOpen(true);
-                                  }}
-                                >
-                                  View
-                                </Button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}) : (
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      }) : (
                         <tr>
-                            <td colSpan={14} className="text-center py-10 text-gray-400">No requests found.</td>
+                          <td colSpan={14} className="text-center py-10 text-gray-400">No requests found.</td>
                         </tr>
                       )}
                     </tbody>
@@ -772,6 +897,15 @@ export default function MCNManagement({ theme = "dark" }) {
                 { label: "Account ID", key: "userAccountId" },
                 { label: "Account Name", key: "accountName" },
                 { label: "Subscribers", key: "subscriberCount" },
+                { label: "Total Views (28d)", key: "totalViews28d" },
+                { label: "Monetization Eligibility", key: "monetizationEligibility" },
+                { label: "AdSense Enabled", key: "isAdSenseEnabled" },
+                { label: "Copyright Strikes", key: "hasCopyrightStrikes" },
+                { label: "Original Content", key: "isContentOriginal" },
+                { label: "Part of Another MCN", key: "isPartOfAnotherMCN" },
+                { label: "Last Month Revenue", key: "channelRevenueLastMonth" },
+                { label: "Analytics Screenshot", key: "analyticsScreenshot" },
+                { label: "Revenue Screenshot", key: "revenueScreenshot" },
                 { label: "Submitted On", key: "createdAt" },
                 { label: "Status", key: "status" },
               ]
@@ -780,9 +914,15 @@ export default function MCNManagement({ theme = "dark" }) {
                 { label: "Channel Name", key: "channelName" },
                 { label: "Account ID", key: "userAccountId" },
                 { label: "Account Name", key: "accountName" },
+                { label: "Channel Link", key: "channelLink" },
+                { label: "Channel ID", key: "youtubeChannelId" },
                 { label: "Revenue Share", key: "revenueShare" },
+                { label: "Channel Manager", key: "channelManager" },
+                { label: "Monthly Revenue", key: "monthlyRevenue" },
+                { label: "Total Revenue", key: "totalRevenue" },
                 { label: "Joined Date", key: "joinedDate" },
                 { label: "Status", key: "status" },
+                { label: "Notes", key: "notes" },
               ]
         }
         fetchData={async (page, limit) => {
@@ -803,6 +943,15 @@ export default function MCNManagement({ theme = "dark" }) {
                   userAccountId: row.userAccountId,
                   accountName: accountName,
                   subscriberCount: row.subscriberCount,
+                  totalViews28d: row.totalViewsCountsIn28Days || 0,
+                  monetizationEligibility: row.monetizationEligibility ? "Eligible" : "Not Eligible",
+                  isAdSenseEnabled: row.isAdSenseEnabled ? "Yes" : "No",
+                  hasCopyrightStrikes: row.hasCopyrightStrikes ? "Yes" : "No",
+                  isContentOriginal: row.isContentOriginal ? "Yes" : "No",
+                  isPartOfAnotherMCN: row.isPartOfAnotherMCN ? "Yes" : "No",
+                  channelRevenueLastMonth: row.channelRevenueLastMonth || 0,
+                  analyticsScreenshot: row.analyticsScreenshotUrl || "-",
+                  revenueScreenshot: row.revenueScreenshotUrl || "-",
                   createdAt: new Date(row.createdAt).toLocaleDateString(),
                   status: row.status,
                 }
@@ -811,9 +960,15 @@ export default function MCNManagement({ theme = "dark" }) {
                   channelName: row.channelName,
                   userAccountId: row.userAccountId,
                   accountName: accountName,
+                  channelLink: row.channelLink,
+                  youtubeChannelId: row.youtubeChannelId,
                   revenueShare: `${row.revenueShare}%`,
+                  channelManager: row.channelManager,
+                  monthlyRevenue: row.monthlyRevenue || 0,
+                  totalRevenue: row.totalRevenue || 0,
                   joinedDate: new Date(row.joinedDate).toLocaleDateString(),
                   status: row.status,
+                  notes: row.notes || "",
                 }
               }
             });

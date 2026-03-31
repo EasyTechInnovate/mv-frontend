@@ -16,6 +16,7 @@ export default function UpdateMCNChannelModal({ isOpen, onClose, channel, theme 
     if (channel) {
       setFormData({
         channelName: channel.channelName || "",
+        youtubeChannelId: channel.youtubeChannelId || "",
         channelLink: channel.channelLink || "",
         revenueShare: channel.revenueShare || 0,
         channelManager: channel.channelManager || "",
@@ -75,6 +76,15 @@ export default function UpdateMCNChannelModal({ isOpen, onClose, channel, theme 
             <Input
               name="channelName"
               value={formData.channelName}
+              onChange={handleChange}
+              className={inputBg}
+            />
+          </div>
+          <div>
+            <label className={`block text-sm ${textMuted} mb-2`}>Channel ID</label>
+            <Input
+              name="youtubeChannelId"
+              value={formData.youtubeChannelId || ""}
               onChange={handleChange}
               className={inputBg}
             />
