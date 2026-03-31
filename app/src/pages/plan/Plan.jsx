@@ -195,7 +195,7 @@ const Plan = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            {aggSub?.startDate ? (
+            {aggSub?.startDate && (
               <>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Calendar className="w-4 h-4" />
@@ -205,23 +205,27 @@ const Plan = () => {
                   <Calendar className="w-4 h-4" />
                   <span>Expires: {formatDate(aggSub.endDate)}</span>
                 </div>
-                {isActive && (
-                  <div className="flex items-center gap-2 text-green-500">
-                    <Clock className="w-4 h-4" />
-                    <span>{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</span>
-                  </div>
-                )}
-                {aggSub?.notes && (
-                  <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-slate-700/50">
-                    <p className="text-xs font-semibold text-purple-400 mb-1 flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3" /> Admin Note
-                    </p>
-                    <p className="text-gray-300 italic">"{aggSub.notes}"</p>
-                  </div>
-                )}
               </>
+            )}
+
+            {isActive ? (
+              <div className="flex items-center gap-2 text-green-500">
+                <Clock className="w-4 h-4" />
+                <span>{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</span>
+              </div>
             ) : (
-              <p className="text-muted-foreground">No active subscription. Please contact your account manager.</p>
+              <p className="text-muted-foreground pt-2">
+                No active subscription. Please contact support: <a href="mailto:support@maheshwarivisuals.com" className="text-purple-400 hover:underline">support@maheshwarivisuals.com</a>
+              </p>
+            )}
+
+            {aggSub?.notes && (
+              <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-slate-700/50">
+                <p className="text-xs font-semibold text-purple-400 mb-1 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" /> Admin Note
+                </p>
+                <p className="text-gray-300 italic">"{aggSub.notes}"</p>
+              </div>
             )}
           </CardContent>
         </Card>

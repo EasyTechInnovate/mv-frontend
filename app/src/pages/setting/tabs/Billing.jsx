@@ -63,37 +63,45 @@ const Billing = () => {
             <ShieldCheck className="w-5 h-5 text-purple-500" />
             <CardTitle>Aggregator Subscription</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            {sub?.aggregatorSubscription?.startDate ? (
-              <>
+          <CardContent className="space-y-4 text-sm">
+            {sub?.aggregatorSubscription?.startDate && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Calendar className="w-4 h-4" />
-                  <span>Start: {formatDate(sub.aggregatorSubscription.startDate)}</span>
+                  <span>Start Date: {formatDate(sub.aggregatorSubscription.startDate)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Calendar className="w-4 h-4" />
-                  <span>Expires: {formatDate(sub.aggregatorSubscription.endDate)}</span>
+                  <span>Expiry Date: {formatDate(sub.aggregatorSubscription.endDate)}</span>
                 </div>
-                {sub.aggregatorSubscription.isActive && sub.aggregatorSubscription.daysRemaining != null && (
-                  <div className="flex items-center gap-2 text-green-500">
-                    <Clock className="w-4 h-4" />
-                    <span>{sub.aggregatorSubscription.daysRemaining} days remaining</span>
-                  </div>
-                )}
-                <Badge className={sub.aggregatorSubscription.isActive ? 'bg-green-600 text-white' : 'bg-slate-600 text-white'}>
-                  {sub.aggregatorSubscription.isActive ? 'Active' : 'Inactive'}
-                </Badge>
-                {sub.aggregatorSubscription.notes && (
-                  <div className="mt-2 p-3 rounded bg-muted/30 border border-slate-700/30">
-                    <p className="text-[10px] uppercase tracking-wider text-purple-400 font-bold mb-1 opacity-80">Admin Notes</p>
-                    <p className="text-muted-foreground italic text-xs leading-relaxed">"{sub.aggregatorSubscription.notes}"</p>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="flex items-center gap-2 text-yellow-500">
-                <AlertCircle className="w-4 h-4" />
-                <span>No active subscription. Contact your account manager.</span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 flex-wrap">
+              <Badge className={sub?.aggregatorSubscription?.isActive ? 'bg-green-600 text-white' : 'bg-slate-600 text-white'}>
+                {sub?.aggregatorSubscription?.isActive ? 'Active' : 'Inactive'}
+              </Badge>
+              {sub?.aggregatorSubscription?.isActive && sub?.aggregatorSubscription?.daysRemaining != null && (
+                <div className="flex items-center gap-2 text-green-500">
+                  <Clock className="w-4 h-4" />
+                  <span>{sub.aggregatorSubscription.daysRemaining} days remaining</span>
+                </div>
+              )}
+            </div>
+
+            {!sub?.aggregatorSubscription?.isActive && (
+              <div className="flex items-start gap-2 text-muted-foreground bg-muted/20 p-3 rounded-lg border border-slate-700/50">
+                <AlertCircle className="w-4 h-4 mt-0.5 text-yellow-500 shrink-0" />
+                <span>
+                  No active subscription. Please contact support: <a href="mailto:support@maheshwarivisuals.com" className="text-purple-400 hover:underline font-medium">support@maheshwarivisuals.com</a>
+                </span>
+              </div>
+            )}
+
+            {sub?.aggregatorSubscription?.notes && (
+              <div className="p-3 rounded bg-muted/30 border border-slate-700/30">
+                <p className="text-[10px] uppercase tracking-wider text-purple-400 font-bold mb-1 opacity-80">Admin Note</p>
+                <p className="text-muted-foreground italic text-xs leading-relaxed">"{sub.aggregatorSubscription.notes}"</p>
               </div>
             )}
           </CardContent>

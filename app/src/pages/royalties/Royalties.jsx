@@ -9,7 +9,7 @@ import { Download, DollarSign, TrendingUp, BarChart3, Calendar, Music, FileDown,
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { showToast } from '@/utils/toast';
-import { getRoyaltyDashboard, getActiveMonthsByType, exportUserRoyaltyData } from '@/services/api.services';
+import { getRoyaltyDashboard, getActiveMonthsByType, exportUserRoyaltyData, getMCNDashboard } from '@/services/api.services';
 
 // Platform Colors Mapping - YouTube: Red, Spotify: Green, Meta: Blue, Others: Random
 const PLATFORM_COLORS = {
@@ -150,6 +150,14 @@ export default function Royalties() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Fetch MCN data
+  const { data: mcnData, isLoading: mcnLoading } = useQuery({
+    queryKey: ['mcn-dashboard', timeframe],
+    queryFn: () => getMCNDashboard({ timeframe }),
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Timeframe Mapping
   const timeframeMap = {
     'last_7_days': '7days',
@@ -245,23 +253,44 @@ export default function Royalties() {
       return `Month ${fallbackIndex + 1}`;
     };
 
-    // 1. Overview & Trends
-    const regularTrends = data.trends?.monthlyRoyaltyTrends?.map((item, index) => ({
+    // Helper: Get month number from name
+    const getMonthNumber = (monthStr) => {
+      const monthMap = { 'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12 };
+      const m = String(monthStr).substring(0, 3);
+      return monthMap[m] || parseInt(monthStr, 10) || 0;
+    };
+
+    // Helper: Sort trends chronologically and take last N months
+    const sortAndLimitTrends = (trendsArr, limit = 4) => {
+      if (!trendsArr || trendsArr.length === 0) return [];
+      const sorted = [...trendsArr].sort((a, b) => {
+        const yearA = a.period?.year || 0;
+        const yearB = b.period?.year || 0;
+        if (yearA !== yearB) return yearA - yearB;
+        return getMonthNumber(a.period?.month) - getMonthNumber(b.period?.month);
+      });
+      return sorted.slice(-limit);
+    };
+
+    // 1. Overview & Trends - sorted chronologically, last 4 months only
+    const sortedRegularTrends = sortAndLimitTrends(data.trends?.monthlyRoyaltyTrends, 4);
+    const regularTrends = sortedRegularTrends.map((item, index) => ({
       month: formatPeriod(item.period, index), 
       regular: item.regularRoyalty || 0,
       total: item.totalEarnings || 0,
-      streaming: item.regularRoyalty || 0, // Fallback for composition
+      streaming: item.regularRoyalty || 0,
       mechanical: 0,
       sync: 0
-    })) || [];
+    }));
 
-    const bonusTrends = data.trends?.monthlyBonusRoyaltyTrends?.map((item, index) => ({
+    const sortedBonusTrends = sortAndLimitTrends(data.trends?.monthlyBonusRoyaltyTrends, 4);
+    const bonusTrends = sortedBonusTrends.map((item, index) => ({
       month: formatPeriod(item.period, index),
       bonus: item.bonusRoyalty || 0,
       streaming: item.bonusRoyalty || 0, 
       mechanical: 0,
       sync: 0
-    })) || [];
+    }));
 
     // 2. Platform Breakdown
     const regularPlatforms = processPlatformData(data.platforms?.regular?.performance);
@@ -286,6 +315,7 @@ export default function Royalties() {
       overview: data.overview || {},
       performance: data.performance || {},
       trends: { regular: regularTrends, bonus: bonusTrends },
+      hasBonusData: bonusTrends.length > 0,
       platforms: { regular: regularPlatforms, bonus: bonusPlatforms },
       tracks: { regular: regularTracks, bonus: bonusTracks },
       // Using Mock Data for Payments Tab as requested
@@ -298,10 +328,34 @@ export default function Royalties() {
     };
   }, [royaltyData]);
 
+  // Process MCN data
+  const mcnProcessed = useMemo(() => {
+    if (!mcnData?.data) return null;
+    const { data } = mcnData;
+
+    // Process trends — sort chronologically, take last 5 months
+    const trends = (data.trends || [])
+      .sort((a, b) => {
+        const [mA, yA] = a.month.split('-');
+        const [mB, yB] = b.month.split('-');
+        if (parseInt(yA) !== parseInt(yB)) return parseInt(yA) - parseInt(yB);
+        const monthOrder = { 'January': 1, 'February': 2, 'March': 3, 'April': 4, 'May': 5, 'June': 6, 'July': 7, 'August': 8, 'September': 9, 'October': 10, 'November': 11, 'December': 12 };
+        return (monthOrder[mA] || 0) - (monthOrder[mB] || 0);
+      })
+      .slice(-5);
+
+    return {
+      overview: data.overview || {},
+      trends,
+      topChannels: data.topChannels || [],
+      hasMCNData: trends.length > 0 || (data.topChannels && data.topChannels.length > 0)
+    };
+  }, [mcnData]);
+
   if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading Royalties...</div>;
   if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">Error loading data</div>;
 
-  const { overview, trends, platforms, tracks, performance, paymentHistory } = processedData;
+  const { overview, trends, platforms, tracks, performance, paymentHistory, hasBonusData } = processedData;
 
   // Filter Logic for Payment Tables
   const filteredPayments = paymentHistory.filter(payment => {
@@ -350,7 +404,7 @@ export default function Royalties() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(overview.totalEarnings)}</div>
+            <div className="text-2xl font-bold">{formatCurrency((overview.totalEarnings || 0) + (mcnProcessed?.overview?.totalPayoutInr || 0))}</div>
             <div className={`flex items-center text-sm ${overview.growthPercent >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               <span>{overview.growthPercent > 0 ? '+' : ''}{overview.growthPercent}% from last period</span>
             </div>
@@ -385,13 +439,15 @@ export default function Royalties() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 ">
-            <CardTitle className="text-sm font-medium">Pending Payout</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">MCN Royalty</CardTitle>
+            <Music className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
+            <div className="text-2xl font-bold">
+              {mcnLoading ? '...' : formatCurrency(mcnProcessed?.overview?.totalPayoutInr || 0)}
+            </div>
             <div className="flex items-center text-sm text-muted-foreground">
-              <span>Calculated at month end</span>
+              <span>YouTube MCN earnings</span>
             </div>
           </CardContent>
         </Card>
@@ -498,6 +554,9 @@ export default function Royalties() {
               </Card> */}
             </div>
           </div>
+
+          {/* Bonus Royalties - only shown when data exists */}
+          {hasBonusData && (
           <div className="space-y-6">
             <h3 className="text-xl font-semibold">Bonus Royalties</h3>
             
@@ -538,40 +597,95 @@ export default function Royalties() {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-              {/* <Card>
-                <CardHeader>
-                  <CardTitle>Bonus Performance Metrics</CardTitle>
-                  <CardDescription>Key performance indicators for bonuses</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between bg-muted-foreground/10 p-4 rounded-lg">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Average Monthly</p>
-                        <p className="text-xl font-bold">{formatCurrency(performance.bonus?.averageMonthly)}</p>
-                      </div>
-                      <TrendingUp className="h-6 w-6 text-green-500" />
-                    </div>
-                    <div className="flex items-center justify-between bg-muted-foreground/10 p-4 rounded-lg">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Best Month</p>
-                        <p className="text-xl font-bold">{performance.bonus?.bestMonth?.month || 'N/A'}</p>
-                        <p className="text-xs text-muted-foreground">{formatCurrency(performance.bonus?.bestMonth?.amount)}</p>
-                      </div>
-                      <BarChart3 className="h-6 w-6 text-blue-500" />
-                    </div>
-                     <div className="flex items-center justify-between bg-muted-foreground/10 p-4 rounded-lg">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Growth Rate</p>
-                        <p className="text-xl font-bold text-green-500">{performance.bonus?.growthRate || 0}%</p>
-                      </div>
-                      <TrendingUp className="h-6 w-6 text-green-500" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card> */}
             </div>
           </div>
+          )}
+
+          {/* MCN Royalty Table - only shown when data exists */}
+          {mcnProcessed?.hasMCNData && (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold">MCN Royalty</h3>
+            <Card>
+              <CardHeader>
+                <CardTitle>MCN Revenue Summary</CardTitle>
+                <CardDescription>YouTube channel earnings from MCN network (Last 5 months)</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Month</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">YouTube Payout (USD)</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">MV Commission</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Revenue (USD)</th>
+                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Payout Revenue (INR)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mcnProcessed.trends.map((trend, i) => (
+                        <tr key={i} className="border-b hover:bg-accent/50 transition-colors">
+                          <td className="py-3 px-4 font-medium">{trend.month}</td>
+                          <td className="py-3 px-4">${(trend.revenueUsd + trend.mvCommission).toFixed(2)}</td>
+                          <td className="py-3 px-4">${trend.mvCommission.toFixed(2)}</td>
+                          <td className="py-3 px-4">${trend.revenueUsd.toFixed(2)}</td>
+                          <td className="py-3 px-4 text-right font-semibold">₹{trend.payoutInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        </tr>
+                      ))}
+                      {mcnProcessed.trends.length === 0 && (
+                        <tr><td colSpan={5} className="text-center py-6 text-muted-foreground">No MCN royalty data available</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Top Channels Table */}
+            {mcnProcessed.topChannels.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Top YouTube Channels</CardTitle>
+                <CardDescription>Channel-wise performance breakdown</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">YouTube Channel Name</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">YouTube Payout (USD)</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">MV Commission</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Revenue (USD)</th>
+                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Payout Revenue (INR)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mcnProcessed.topChannels.map((channel, i) => (
+                        <tr key={i} className="border-b hover:bg-accent/50 transition-colors">
+                          <td className="py-3 px-4 font-medium">{channel.channelName || 'Unknown Channel'}</td>
+                          <td className="py-3 px-4">${(channel.totalRevenueUsd + channel.mvCommission).toFixed(2)}</td>
+                          <td className="py-3 px-4">${channel.mvCommission.toFixed(2)}</td>
+                          <td className="py-3 px-4">${channel.totalRevenueUsd.toFixed(2)}</td>
+                          <td className="py-3 px-4 text-right font-semibold">₹{channel.totalPayoutInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+            )}
+          </div>
+          )}
+
+          {/* MCN Loading State */}
+          {mcnLoading && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground mr-2" />
+              <span className="text-muted-foreground">Loading MCN data...</span>
+            </div>
+          )}
         </TabsContent>
 
         {/* 2. BREAKDOWN TAB */}
@@ -666,6 +780,8 @@ export default function Royalties() {
               </CardContent>
             </Card> */}
           </div>
+          {/* Bonus Breakdown - only shown when data exists */}
+          {hasBonusData && platforms.bonus.list.length > 0 && (
           <div className="space-y-6">
             <h3 className="text-xl font-semibold">Bonus Breakdown</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -705,10 +821,7 @@ export default function Royalties() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4 max-h-[400px]  overflow-y-auto pr-2 custom-scroll">
-                    {platforms.bonus.list.length === 0 ? (
-                        <div className="text-center text-muted-foreground py-4">No bonus platform data</div>
-                    ) : (
-                        platforms.bonus.list.map((platform) => (
+                    {platforms.bonus.list.map((platform) => (
                         <div key={platform.name} className="flex items-center justify-between p-3 border rounded-lg">
                             <div className="flex items-center space-x-3">
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: platform.color }}></div>
@@ -722,44 +835,13 @@ export default function Royalties() {
                             <p className="text-sm text-muted-foreground">{formatNumber(platform.units)} units</p>
                             </div>
                         </div>
-                        ))
-                    )}
+                    ))}
                   </div>
                 </CardContent>
               </Card>
             </div>
-            {/* <Card>
-              <CardHeader>
-                <CardTitle>Top Earning Tracks for Bonuses</CardTitle>
-                <CardDescription>Tracks generating the highest bonuses</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {tracks.bonus.length === 0 ? (
-                      <div className="text-center text-muted-foreground py-8">No bonus track data available yet</div>
-                  ) : (
-                      tracks.bonus.map((track) => (
-                        <div key={track.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-4">
-                            <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                            <Music className="w-4 h-4" />
-                            </div>
-                            <div>
-                            <h3 className="font-semibold">{track.name}</h3>
-                            <p className="text-sm text-muted-foreground">{track.artist}</p>
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <p className="font-semibold">{track.earnings}</p>
-                            <p className="text-sm text-muted-foreground">{track.streams} streams</p>
-                        </div>
-                        </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card> */}
           </div>
+          )}
         </TabsContent>
 
         {/* 3. PAYMENTS TAB - SEPARATE LISTS */}

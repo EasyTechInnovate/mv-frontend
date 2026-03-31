@@ -203,7 +203,7 @@ export default function FinanceWallet() {
   }, []);
 
   const statCards = useMemo(() => [
-    { title: "Total Earnings (Gross)", value: wallet?.totalEarnings || 0, icon: TrendingUp, color: "text-emerald-400" },
+    // { title: "Total Earnings (Gross)", value: wallet?.totalEarnings || 0, icon: TrendingUp, color: "text-emerald-400" },
     { title: "Net Earnings", value: wallet?.availableBalance || 0, icon: TrendingUp, color: "text-emerald-500" },
     { title: "Total Withdrawn", value: wallet?.totalPaidOut || 0, icon: ArrowDownLeft, color: "text-red-400" },
     { title: "Pending Payout", value: wallet?.pendingPayout || 0, icon: Clock, color: "text-yellow-500" },
@@ -329,7 +329,7 @@ export default function FinanceWallet() {
       </div>
 
       {/* Stat cards */}
-      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
         {loadingWallet ? (
           Array.from({ length: 4 }).map((_, index) => (
             <Card key={index} className='animate-pulse bg-muted/50'>

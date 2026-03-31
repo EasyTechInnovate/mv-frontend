@@ -399,6 +399,14 @@ export const exportUserRoyaltyData = async (monthId, exportType) => {
     return response.data
 }
 
+export const getMCNDashboard = async (params) => {
+    const { timeframe = 'last_year' } = params
+    const queryParams = new URLSearchParams({ timeframe })
+
+    const response = await servicesAxiosInstance.get(`/v1/reports/mcn/dashboard?${queryParams.toString()}`)
+    return response.data
+}
+
 // Merch Store APIs
 export const createMerchStore = async (data) => {
     const response = await servicesAxiosInstance.post('/v1/merch-store', data)

@@ -341,6 +341,8 @@ const Profile = () => {
             price: 'N/A',
             period: 'N/A',
             status: aggSub.isActive ? 'Active' : 'Inactive',
+            isActive: aggSub.isActive,
+            daysRemaining: aggSub.daysRemaining || 0,
             startDate: formatDate(aggSub.startDate),
             endDate: formatDate(aggSub.endDate),
             autoRenewal: false,
@@ -1171,9 +1173,18 @@ const Profile = () => {
                 </div>
                 <div className="flex items-center gap-4 text-sm flex-wrap">
                   {formData.subscription.startDate !== 'N/A' && <span>Started: {formData.subscription.startDate}</span>}
-                  {formData.subscription.endDate !== 'N/A' && <span>Ends: {formData.subscription.endDate}</span>}
-                  <Badge className={formData.subscription.status === 'Active' ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'}>{formData.subscription.status}</Badge>
+                  {formData.subscription.endDate !== 'N/A' && <span>Expires: {formData.subscription.endDate}</span>}
+                  <Badge className={formData.subscription.isActive ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'}>
+                    {formData.subscription.status}
+                  </Badge>
                 </div>
+
+                {!formData.subscription.isActive && user?.userType === 'aggregator' && (
+                   <p className="mt-4 text-sm text-slate-300">
+                    No active subscription. Please contact support: <a href="mailto:support@maheshwarivisuals.com" className="text-purple-400 hover:underline">support@maheshwarivisuals.com</a>
+                  </p>
+                )}
+
                 {user?.userType === 'aggregator' && formData.subscription.notes && (
                   <div className="mt-4 pt-4 border-t border-slate-600/50">
                     <p className="text-xs font-semibold text-purple-400 mb-1 flex items-center gap-1 uppercase tracking-wider">

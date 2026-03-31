@@ -275,7 +275,7 @@ export default function Analytics() {
               </CardContent>
             </Card>
 
-            <Card>
+            {/* <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 ">
                 <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                 <IndianRupee className="h-4 w-4 text-[#711CE9]" />
@@ -286,7 +286,7 @@ export default function Analytics() {
                 </div>
                 
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 ">
