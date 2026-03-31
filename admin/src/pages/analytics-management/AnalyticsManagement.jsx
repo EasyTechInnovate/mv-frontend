@@ -13,6 +13,7 @@ const iconMap = {
   totalMonths: Calendar,
   activeMonths: BarChart,
   totalReports: FileText,
+  totalRecords: BarChart,
   totalRevenue: DollarSign,
 };
 
@@ -161,11 +162,14 @@ export default function AnalyticsManagement({ theme = "dark" }) {
     );
   }
 
+  // Extract analytics-specific stats from byType array
+  const typeStats = stats?.byType?.find((t) => t._id === "analytics");
+
   const statCards = [
-    { key: "totalMonths", label: "Total Analytics Months", value: stats?.overview?.totalMonths ?? "..." },
-    { key: "activeMonths", label: "Active Months", value: stats?.overview?.activeMonths ?? "..." },
-    { key: "totalReports", label: "Total Reports", value: stats?.overview?.totalReports ?? "..." },
-    { key: "totalRevenue", label: "Total Revenue (INR)", value: `₹${(stats?.overview?.totalRevenue || 0).toLocaleString()}` ?? "..." },
+    { key: "totalMonths", label: "Total Analytics Months", value: months.length || "..." },
+    { key: "activeMonths", label: "Active Months", value: months.filter((m) => m.isActive).length || "..." },
+    { key: "totalReports", label: "Total Reports", value: typeStats?.total ?? "..." },
+    { key: "totalRecords", label: "Total Records", value: (typeStats?.totalRecords || 0).toLocaleString() },
   ];
 
   return (

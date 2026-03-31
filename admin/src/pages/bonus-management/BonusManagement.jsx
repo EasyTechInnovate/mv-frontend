@@ -161,11 +161,14 @@ export default function BonusManagement({ theme = "dark" }) {
     );
   }
 
+  // Extract bonus_royalty-specific stats from byType array
+  const typeStats = stats?.byType?.find((t) => t._id === "bonus_royalty");
+
   const statCards = [
-    { key: "totalMonths", label: "Total Bonus Months", value: stats?.overview?.totalMonths ?? "..." },
-    { key: "activeMonths", label: "Active Months", value: stats?.overview?.activeMonths ?? "..." },
-    { key: "totalReports", label: "Total Reports", value: stats?.overview?.totalReports ?? "..." },
-    { key: "totalRevenue", label: "Total Revenue (INR)", value: `₹${(stats?.overview?.totalRevenue || 0).toLocaleString()}` ?? "..." },
+    { key: "totalMonths", label: "Total Bonus Months", value: months.length || "..." },
+    { key: "activeMonths", label: "Active Months", value: months.filter((m) => m.isActive).length || "..." },
+    { key: "totalReports", label: "Total Reports", value: typeStats?.total ?? "..." },
+    { key: "totalRevenue", label: "Total Revenue (INR)", value: `₹${(typeStats?.totalRevenue || 0).toLocaleString()}` },
   ];
 
   return (
