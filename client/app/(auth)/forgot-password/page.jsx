@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react'
+import React, { useState , useEffect} from 'react'
 import { useRouter } from 'next/navigation'
 import herobg from "@/public/images/mvadvertisement/herobg.png";
 import Image from "next/image";
@@ -14,6 +14,19 @@ const ForgotPasswordPage = () => {
   const [emailAddress, setEmailAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false)
   const [isSent, setIsSent] = useState(false)
+  const [timer, setTimer] = useState(0)
+
+  useEffect(() => {
+    let interval;
+    if (isSent && timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (timer === 0) {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isSent, timer]);
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -23,10 +36,28 @@ const ForgotPasswordPage = () => {
       if (response.success) {
         toast.success(response.message || 'Reset link sent to your email!')
         setIsSent(true)
+        setTimer(60)
       }
     } catch (error) {
       console.error('Forgot password error:', error)
       toast.error(error.response?.data?.message || 'An error occurred. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  };
+
+  const handleResend = async () => {
+    if (timer > 0 || isLoading) return;
+    setIsLoading(true)
+    try {
+      const response = await forgotPassword({ emailAddress })
+      if (response.success) {
+        toast.success(response.message || 'Reset link resent successfully!')
+        setTimer(60)
+      }
+    } catch (error) {
+      console.error('Resend error:', error)
+      toast.error(error.response?.data?.message || 'Failed to resend link.')
     } finally {
       setIsLoading(false)
     }
@@ -56,7 +87,7 @@ const ForgotPasswordPage = () => {
           {!isSent ? (
             <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
               <p className="mb-4 text-gray-300">
-                Enter your email address and we'll send you a link to reset your password.
+                Enter your email address and we'll send you a link to reset your password. If you don't see it in your inbox, please check your spam folder.
               </p>
               <label htmlFor="email">Email</label>
               <input
@@ -88,8 +119,25 @@ const ForgotPasswordPage = () => {
                 Reset link has been sent!
               </p>
               <p className="text-gray-300">
-                Please check your email for the password reset link. It will expire in 1 hour.
+                Please check your email for the password reset link. It will expire in 1 hour. If you don't see it, please check your spam folder.
               </p>
+
+              <div className="mt-2 text-sm">
+                {timer > 0 ? (
+                  <p className="text-gray-400">
+                    Didn't receive the email? You can resend it in <span className="text-[#652CD6] font-semibold">{timer}s</span>
+                  </p>
+                ) : (
+                  <button 
+                    onClick={handleResend}
+                    disabled={isLoading}
+                    className="text-[#652CD6] font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer disabled:opacity-50"
+                  >
+                    {isLoading ? 'Resending...' : "Didn't receive the email? Resend Link"}
+                  </button>
+                )}
+              </div>
+
               <Link href="/signin" className="bg-[#652CD6] mt-6 cursor-pointer hover:scale-[1.04] hover:bg-[#652CD6] rounded-full text-white py-3 px-12 font-semibold transition-all w-fit text-center">
                 Back to Login
               </Link>
