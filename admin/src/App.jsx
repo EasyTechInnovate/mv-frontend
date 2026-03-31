@@ -128,8 +128,8 @@ function AppContent() {
             <Route path="/" element={<Navigate to="/admin/login" replace />} />
             <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
 
-            {/* Dashboard — always accessible to logged-in admins/team members */}
-            <Route path="/admin/dashboard" element={<Dashboard theme={theme} />} />
+            {/* Dashboard — accessible to all logged-in admins/team members */}
+            <Route path="/admin/dashboard" element={<P><Dashboard theme={theme} /></P>} />
 
             {/* User & Release Management */}
             <Route path="/admin/user-management" element={<P module={M.USER_MGMT}><UserManagement theme={theme} /></P>} />

@@ -7,6 +7,8 @@ import {
   FileWarning,
   Database,
   Activity,
+  ShieldCheck,
+  LayoutGrid
 } from "lucide-react";
 import {
   BarChart,
@@ -19,6 +21,7 @@ import {
   Line,
 } from "recharts";
 import GlobalApi from "@/lib/GlobalApi";
+import { useAuth } from "@/context/AuthContext";
 
 const cardIcons = {
   totalUsers: Users,
@@ -38,10 +41,16 @@ const getThemeClasses = (theme, dark, light) =>
   theme === "dark" ? dark : light;
 
 export default function Dashboard({ theme }) {
+  const { isAdmin, user } = useAuth();
   const [data, setData] = useState(null);
   const [showAllActivities, setShowAllActivities] = useState(false);
 
 useEffect(() => {
+  // If not admin, do not fetch dashboard stats
+  if (!isAdmin) {
+      return;
+  }
+
   const loadData = async () => {
     try {
       const mockDashboardRes = await fetchDashboardData();
@@ -146,8 +155,65 @@ useEffect(() => {
   };
 
   loadData();
-}, []);
+}, [isAdmin]);
 
+  // If the user is a team member, show a nice welcome card instead of stat cards
+  if (!isAdmin) {
+    return (
+      <div
+        className={
+          getThemeClasses(theme, "bg-[#111A22] text-white", "bg-gray-100 text-black") +
+          " min-h-[85vh] p-4 sm:p-6 flex items-center justify-center rounded-2xl"
+        }
+      >
+        <div 
+          className={
+            getThemeClasses(theme, "bg-[#151F28] border-gray-700", "bg-white border-gray-200") +
+            " max-w-2xl w-full p-8 sm:p-12 rounded-3xl border shadow-2xl text-center transform transition-all duration-500 hover:scale-[1.02]"
+          }
+        >
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full blur opacity-75 animate-pulse"></div>
+              <div className={getThemeClasses(theme, "bg-gray-900", "bg-gray-100") + " relative p-5 rounded-full"}>
+                <ShieldCheck size={48} className="text-indigo-400" />
+              </div>
+            </div>
+          </div>
+          
+          <h1 className="text-3xl sm:text-4xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-gray-400">
+            Welcome, {user?.firstName || "Team Member"}!
+          </h1>
+          
+          <p className={getThemeClasses(theme, "text-gray-400", "text-gray-600") + " text-lg mb-8 max-w-md mx-auto"}>
+            You are logged in as a <span className="text-indigo-400 font-semibold">{user?.teamRole || "Team Member"}</span>. 
+            You now have access to your assigned modules and tools.
+          </p>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+            <div className={getThemeClasses(theme, "bg-gray-800/50", "bg-gray-50") + " p-4 rounded-xl border border-gray-700/50"}>
+              <div className="flex items-center gap-3 mb-2">
+                <LayoutGrid size={18} className="text-indigo-400" />
+                <span className="font-semibold text-sm">Modular Access</span>
+              </div>
+              <p className="text-xs text-gray-500">Explore your assigned modules from the sidebar menu.</p>
+            </div>
+            <div className={getThemeClasses(theme, "bg-gray-800/50", "bg-gray-50") + " p-4 rounded-xl border border-gray-700/50"}>
+              <div className="flex items-center gap-3 mb-2">
+                <Activity size={18} className="text-green-400" />
+                <span className="font-semibold text-sm">System Ready</span>
+              </div>
+              <p className="text-xs text-gray-500">Platform is operational and synchronized with your permissions.</p>
+            </div>
+          </div>
+
+          <p className="mt-10 text-xs text-gray-500 italic">
+            "Maheshwari Visuals — Empowering our team members with professional tools."
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!data)
     return (

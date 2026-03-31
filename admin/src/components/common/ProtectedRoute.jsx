@@ -40,7 +40,8 @@ export default function ProtectedRoute({ requiredModule, theme, children }) {
   // Not logged in → redirect handled by App, just block render
   if (!user) return null;
 
-  if (!hasAccess(requiredModule)) {
+  // Check Module access
+  if (requiredModule && !hasAccess(requiredModule)) {
     return <AccessDenied moduleName={requiredModule} theme={theme} />;
   }
 
