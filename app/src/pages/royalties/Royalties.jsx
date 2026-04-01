@@ -282,6 +282,7 @@ export default function Royalties() {
       mechanical: 0,
       sync: 0
     }));
+    
 
     const sortedBonusTrends = sortAndLimitTrends(data.trends?.monthlyBonusRoyaltyTrends, 4);
     const bonusTrends = sortedBonusTrends.map((item, index) => ({
