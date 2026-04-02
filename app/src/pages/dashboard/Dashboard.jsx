@@ -1,12 +1,17 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { ArrowRight, BarChart3, DollarSign, IndianRupee, Megaphone, Music, Play, Upload, Video } from 'lucide-react';
+import { ArrowRight, BarChart3, Building2, DollarSign, IndianRupee, Megaphone, Music, Play, Upload, User, Video } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
 import {earningsData ,streamsData ,videoTutorials ,recentReleases ,quickActions ,performanceMetrics} from './Dashboard.config'
 import React, { useEffect, useState } from 'react';
-import { getUserDashboard, getYoutubeLinks } from '@/services/api.services';
+import { getUserDashboard, getYoutubeLinks, resendVerificationEmail, verifyEmail } from '@/services/api.services';
+import { getUserProfile } from '@/services/auth.services';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { AlertCircle, CheckCircle2, Loader2, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const { user } = useAuthStore();
@@ -15,6 +20,13 @@ const Dashboard = () => {
   const [showAllVideos, setShowAllVideos] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Email Verification States
+  const [isVerifyingModalOpen, setIsVerifyingModalOpen] = useState(false);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [isResending, setIsResending] = useState(false);
+  const [isSubmittingOtp, setIsSubmittingOtp] = useState(false);
+  const otpInputRefs = React.useRef([]);
 
   const getYouTubeVideoId = (url) => {
     if (!url) return null;
@@ -42,6 +54,61 @@ const Dashboard = () => {
     };
     fetchDashboard();
   }, []);
+
+  const handleResendEmail = async () => {
+    setIsResending(true);
+    try {
+      await resendVerificationEmail({ emailAddress: user?.emailAddress });
+      toast.success('Verification code sent to your email!');
+      setIsVerifyingModalOpen(true);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to resend verification email.');
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const handleOtpChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
+    setOtp(newOtp);
+    if (value && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    const otpStr = otp.join('');
+    if (otpStr.length !== 6) {
+      toast.error('Please enter the 6-digit code');
+      return;
+    }
+
+    setIsSubmittingOtp(true);
+    try {
+      await verifyEmail({ emailAddress: user?.emailAddress, code: otpStr });
+      toast.success('Email verified successfully!');
+      setIsVerifyingModalOpen(false);
+      
+      // Refresh user profile to update verified status
+      const profileRes = await getUserProfile();
+      if (profileRes?.data?.user) {
+        useAuthStore.getState().setUser(profileRes.data.user);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Verification failed. Please check the code.');
+    } finally {
+      setIsSubmittingOtp(false);
+    }
+  };
 
   if (loading || !dashboardData) {
     return <div className="flex h-screen items-center justify-center">Loading Dashboard...</div>;
@@ -80,6 +147,102 @@ const Dashboard = () => {
                 </p>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Artist Account Banner */}
+        {user?.userType === 'artist' && (
+          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-700 rounded-2xl p-8 shadow-xl text-white mb-8 border border-white/10 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
+              <Music size={160} />
+            </div>
+            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+            
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+              <Avatar className="w-24 h-24 border-4 border-white/20 shadow-2xl">
+                <AvatarImage src={user?.profile?.photo || user?.profileImage} alt={user?.firstName} />
+                <AvatarFallback className="bg-white/20 text-white text-3xl backdrop-blur-md">
+                  <User size={40} />
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="text-center md:text-left space-y-2">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                  <Badge className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-md px-3 py-1 text-xs uppercase tracking-wider font-bold">
+                    Artist Account
+                  </Badge>
+                  {/* <span className="text-indigo-200 text-sm font-medium">Verified Creator</span> */}
+                </div>
+                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+                  Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-200">{user?.artistData?.artistName || user?.firstName || 'Artist'}!</span>
+                </h2>
+                <p className="text-indigo-100/80 text-lg max-w-2xl font-medium">
+                  Your stage is set. Manage your releases, track your growth, and connect with your fans all in one place.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Label Account Banner */}
+        {user?.userType === 'label' && (
+          <div className="bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-950 rounded-2xl p-8 shadow-xl text-white mb-8 border border-blue-500/20 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
+              <Building2 size={160} />
+            </div>
+            <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
+            
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+              <Avatar className="w-24 h-24 border-4 border-blue-400/20 shadow-2xl">
+                <AvatarImage src={user?.profile?.photo || user?.profileImage} alt={user?.firstName} />
+                <AvatarFallback className="bg-blue-900/40 text-white text-3xl backdrop-blur-md border border-white/10">
+                  <Building2 size={40} />
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="text-center md:text-left space-y-2">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                  <Badge className="bg-blue-500/20 hover:bg-blue-500/30 text-white border border-blue-400/30 backdrop-blur-md px-4 py-1 text-xs uppercase tracking-wider font-bold">
+                    Label Account
+                  </Badge>
+                  {/* <span className="text-blue-300 text-sm font-medium flex items-center gap-1">
+                    Professional Suite
+                  </span> */}
+                </div>
+                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+                  Good day, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">{user?.firstName || 'Label Owner'}!</span>
+                </h2>
+                <p className="text-blue-100/80 text-lg max-w-2xl font-medium">
+                  Oversee your entire catalog, monitor performance across all artists, and drive your label's success.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Email Verification Alert */}
+        {!user?.isEmailVerified && (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-sm shadow-sm">
+            <div className="flex items-center gap-3 text-left">
+              <div className="bg-amber-500/20 p-2 rounded-full flex-shrink-0">
+                <AlertCircle className="w-5 h-5 text-amber-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-amber-500">Email Not Verified</h3>
+                <p className="text-sm text-amber-600/90 font-medium">Please verify your email address to ensure your account security and unlock all features.</p>
+              </div>
+            </div>
+            <Button 
+              onClick={handleResendEmail} 
+              disabled={isResending}
+              className="bg-amber-500 hover:bg-amber-600 text-white border-none min-w-[140px] shadow-sm font-semibold"
+            >
+              {isResending ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</>
+              ) : (
+                'Verify Now'
+              )}
+            </Button>
           </div>
         )}
 
@@ -363,6 +526,72 @@ const Dashboard = () => {
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* OTP Verification Modal */}
+        <Dialog open={isVerifyingModalOpen} onOpenChange={setIsVerifyingModalOpen}>
+          <DialogContent className="sm:max-w-md bg-[#0f1117] border-slate-800 p-8">
+            <DialogTitle className="text-2xl font-bold text-center text-white mb-2">
+              Verify Your Email
+            </DialogTitle>
+            <DialogDescription className="text-center text-slate-400 mb-6">
+              We've sent a 6-digit code to <span className="text-purple-400 font-medium">{user?.emailAddress}</span>. Enter it below to verify your account.
+            </DialogDescription>
+
+            <form onSubmit={handleVerifyOtp} className="space-y-8">
+              <div className="flex justify-center gap-2">
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => (otpInputRefs.current[index] = el)}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    className="w-12 h-14 text-center text-xl font-bold bg-slate-900 border border-slate-700 text-white rounded-lg focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-mono"
+                  />
+                ))}
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Button 
+                  type="submit" 
+                  disabled={isSubmittingOtp || otp.join('').length !== 6}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 text-lg font-semibold"
+                >
+                  {isSubmittingOtp ? (
+                    <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Verifying...</>
+                  ) : (
+                    'Verify Email'
+                  )}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  type="button"
+                  onClick={() => setIsVerifyingModalOpen(false)}
+                  className="w-full text-slate-400 hover:text-white"
+                >
+                  Cancel
+                </Button>
+              </div>
+
+              <div className="text-center">
+                <p className="text-sm text-slate-500">
+                  Didn't receive the code?{' '}
+                  <button 
+                    type="button"
+                    onClick={handleResendEmail}
+                    disabled={isResending}
+                    className="text-purple-400 hover:text-purple-300 font-medium disabled:opacity-50"
+                  >
+                    Resend Code
+                  </button>
+                </p>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

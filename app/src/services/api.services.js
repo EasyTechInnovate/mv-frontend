@@ -10,6 +10,16 @@ export const getUserDashboard = async () => {
     return response.data
 }
 
+export const verifyEmail = async (data) => {
+    const response = await servicesAxiosInstance.post('/v1/auth/verify-email', data)
+    return response.data
+}
+
+export const resendVerificationEmail = async (data) => {
+    const response = await servicesAxiosInstance.post('/v1/auth/resend-verification', data)
+    return response.data
+}
+
 export const getDashboardData = async () => {
     const response = await servicesAxiosInstance.get('/v1/dashboard/user')
     return response.data
