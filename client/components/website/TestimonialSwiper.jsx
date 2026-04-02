@@ -52,6 +52,18 @@ export default function TestimonialSwiper() {
                     swiper.params.navigation.prevEl = navigationPrevRef.current;
                     swiper.params.navigation.nextEl = navigationNextRef.current;
                 }}
+                onSwiper={(swiper) => {
+                    // Update navigation after swiper is initialized and refs are set
+                    setTimeout(() => {
+                        if (swiper.params) {
+                            swiper.params.navigation.prevEl = navigationPrevRef.current;
+                            swiper.params.navigation.nextEl = navigationNextRef.current;
+                            swiper.navigation.destroy();
+                            swiper.navigation.init();
+                            swiper.navigation.update();
+                        }
+                    });
+                }}
                 modules={[Pagination, Navigation, Autoplay]}
                 className="mt-8">
                 <style>
@@ -59,7 +71,7 @@ export default function TestimonialSwiper() {
                     .swiper-button-next,
                     .swiper-button-prev {
                     
-                        color: white; 
+                        color: white !important; 
                         background: #652CD6; 
                         width: 70px; 
                         height: 70px; 
@@ -71,8 +83,14 @@ export default function TestimonialSwiper() {
                         justify-content: center; 
                         position: absolute;
                         top: 50%;
-                        z-index: 10;
+                        z-index: 20;
                         cursor: pointer;
+                    }
+
+                    /* Hide default swiper icons */
+                    .swiper-button-next::after,
+                    .swiper-button-prev::after {
+                        display: none;
                     }
                     
                     .swiper-button-prev {
@@ -98,10 +116,9 @@ export default function TestimonialSwiper() {
                     .swiper-button-next.swiper-button-disabled,
                     .swiper-button-prev.swiper-button-disabled {
                         background-color: #f0f0f0; 
-                        color: #652CD6; 
+                        color: #652CD6 !important; 
                         cursor: not-allowed; 
                         opacity: 0.5; 
-                        
                     }
 
                     .swiper-pagination-bullet {

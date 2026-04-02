@@ -65,7 +65,7 @@ const Page = () => {
   return (
     <div
       style={{ backgroundImage: `url(${herobg.src})` }}
-      className="w-screen h-screen max-md:h-fit bg-cover bg-center overflow-hidden p-20 flex justify-center items-center gap-10 max-md:flex-col"
+      className="w-screen bg-[#151A27] h-screen max-md:h-fit bg-cover bg-center overflow-hidden p-20 flex justify-center items-center gap-10 max-md:flex-col"
     >
       {/* Left Side - Form */}
       <div className="w-[55%] max-md:w-full h-full max-md:h-fit p-8 rounded-lg text-white flex flex-col gap-6 ">
