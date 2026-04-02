@@ -539,9 +539,20 @@ const FormPage = () => {
             name="acceptTerms"
             checked={formData.acceptTerms}
             onChange={handleChange}
-            className="h-5 w-5 accent-purple-500"
+            className="h-5 w-5 accent-purple-500 cursor-pointer"
+            id="acceptTerms"
           />
-          <label>I accept the terms and conditions</label>
+          <label htmlFor="acceptTerms" className="cursor-pointer">
+            I accept the{" "}
+            <a 
+              href="/legal/terms-conditions" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-purple-500 hover:text-purple-400 font-medium hover:underline transition-colors"
+            >
+              terms and conditions
+            </a>
+          </label>
         </div>
 
         

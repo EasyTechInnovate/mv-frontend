@@ -142,7 +142,7 @@ export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark'
               Complete profile and administrative information for {user.firstName}
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 mr-6">
             <Button 
                 variant="outline" 
                 size="sm"
@@ -151,12 +151,12 @@ export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark'
             >
                 Export as CSV
             </Button>
-            <button 
+            {/* <button 
               onClick={onClose} 
               className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-gray-800 text-gray-100" : "hover:bg-gray-100 text-gray-900"}`}
             >
               <X size={20} />
-            </button>
+            </button> */}
           </div>
         </div>
 

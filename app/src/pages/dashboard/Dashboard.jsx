@@ -129,6 +129,40 @@ const Dashboard = () => {
   return (
     <div className=''>
       <main className="p-2 md:p-2 space-y-8">
+        {/* Aggregator Account Banner */}
+        {user?.userType === 'aggregator' && (
+          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-700 rounded-2xl p-8 shadow-xl text-white mb-8 border border-white/10 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
+              <BarChart3 size={160} />
+            </div>
+            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+            
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+              <Avatar className="w-24 h-24 border-4 border-white/20 shadow-2xl">
+                <AvatarImage src={user?.profile?.photo || user?.profileImage} alt={user?.firstName} />
+                <AvatarFallback className="bg-white/20 text-white text-3xl backdrop-blur-md">
+                  <User size={40} />
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="text-center md:text-left space-y-2">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                  <Badge className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-md px-3 py-1 text-xs uppercase tracking-wider font-bold">
+                    Aggregator Account
+                  </Badge>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+                  Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-200">{user?.firstName || 'Aggregator'}!</span>
+                </h2>
+                <p className="text-indigo-100/80 text-lg max-w-2xl font-medium">
+                  Manage your distribution network, track multi-artist performance, and scale your music business efficiently.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Aggregator Admin Banner */}
         {user?.userType === 'aggregator' && (user?.aggregatorBanner?.heading || user?.aggregatorBanner?.description) && (
           <div className="bg-gradient-to-r from-purple-900 to-purple-600 rounded-xl p-6 shadow-lg text-white mb-6 border border-purple-400/30 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10">

@@ -70,8 +70,9 @@ const [newPlatformUrl, setNewPlatformUrl] = useState('')
         toast.error(data.data.message || 'URL is not available')
       }
     },
-    onError: () => {
-      toast.error('Failed to check URL availability')
+    onError: (error) => {
+      const errorMessage = error.response?.data?.message || 'Failed to check URL availability'
+      toast.error(errorMessage)
     }
   })
 
@@ -82,8 +83,15 @@ const [newPlatformUrl, setNewPlatformUrl] = useState('')
       queryClient.invalidateQueries(['fanLinks'])
       toast.success('Fan link created successfully')
     },
-    onError: () => {
-      toast.error('Failed to create fan link')
+    onError: (error) => {
+      let errorMessage = error.response?.data?.message || 'Failed to create fan link'
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const detailMessages = error.response.data.errors.map(err => err.message)
+        if (detailMessages.length > 0) {
+          errorMessage = detailMessages.join(" | ")
+        }
+      }
+      toast.error(errorMessage)
     }
   })
 
@@ -94,8 +102,15 @@ const [newPlatformUrl, setNewPlatformUrl] = useState('')
       queryClient.invalidateQueries(['fanLinks'])
       toast.success('Fan link updated successfully')
     },
-    onError: () => {
-      toast.error('Failed to update fan link')
+    onError: (error) => {
+      let errorMessage = error.response?.data?.message || 'Failed to update fan link'
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const detailMessages = error.response.data.errors.map(err => err.message)
+        if (detailMessages.length > 0) {
+          errorMessage = detailMessages.join(" | ")
+        }
+      }
+      toast.error(errorMessage)
     }
   })
 
@@ -272,7 +287,7 @@ const handleDeletePlatform = (platformId, isCustom) => {
             </div>
 
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Description *</Label>
               <Textarea
                 id="description"
                 value={description}

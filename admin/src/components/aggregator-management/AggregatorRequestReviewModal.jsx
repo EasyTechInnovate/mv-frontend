@@ -84,16 +84,68 @@ export default function AggregatorRequestReviewModal({
     }
   };
 
+  const handleExportCSV = () => {
+    if (!application) return;
+
+    const headers = [
+      "NO.", "Name", "Email", "Phone", "Company", "Application Status", "Submission Date", 
+      "Website", "YouTube", "Instagram", "Facebook", "Brief Info", "Additional Services", 
+      "How Did You Know?", "Admin Notes"
+    ];
+
+    const dataRow = [
+      1, 
+      `${application.firstName || ""} ${application.lastName || ""}`,
+      application.emailAddress || "",
+      application.phoneNumber || "",
+      application.companyName || "",
+      application.applicationStatus || "",
+      application.createdAt ? new Date(application.createdAt).toLocaleDateString() : "",
+      application.websiteLink || "",
+      application.youtubeLink || "",
+      application.instagramUrl || "",
+      application.facebookUrl || "",
+      application.briefInfo || "",
+      Array.isArray(application.additionalServices) ? application.additionalServices.join("; ") : "",
+      application.howDidYouKnow || "",
+      application.adminNotes || adminNotes || ""
+    ];
+
+    const csvContent = [
+      headers.join(","),
+      dataRow.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `aggregator_application_${applicationId}.csv`;
+    link.click();
+    toast.success("Application details exported!");
+  };
+
   const isPending = application?.applicationStatus === "pending";
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl bg-[#111A22] border-gray-800 text-white">
-        <DialogHeader>
-          <DialogTitle>Aggregator Application Review</DialogTitle>
-          <DialogDescription>
-            Review the details of the aggregator application below.
-          </DialogDescription>
+        <DialogHeader className="flex flex-row items-center justify-between border-b border-gray-800 pb-4 mb-4">
+          <div className="flex-1">
+            <DialogTitle>Aggregator Application Review</DialogTitle>
+            <DialogDescription>
+              Review the details of the aggregator application below.
+            </DialogDescription>
+          </div>
+          {application && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              className="mr-6 border-gray-700 hover:bg-gray-800 text-gray-200 transition-all h-9"
+            >
+              Export as CSV
+            </Button>
+          )}
         </DialogHeader>
 
         {loading ? (
