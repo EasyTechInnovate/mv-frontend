@@ -154,9 +154,26 @@ export default function AggregatorManagement({ theme }) {
     { label: "S.No.", key: "sno" },
     { label: "Name", key: "name" },
     { label: "Email", key: "emailAddress" },
+    { label: "Phone", key: "phoneNumber" },
     { label: "Company", key: "companyName" },
+    { label: "Website", key: "websiteLink" },
+    { label: "Instagram", key: "instagramUrl" },
+    { label: "Facebook", key: "facebookUrl" },
+    { label: "LinkedIn", key: "linkedinUrl" },
+    { label: "YouTube", key: "youtubeLink" },
+    { label: "Total Releases", key: "totalReleases" },
+    { label: "Release Frequency", key: "releaseFrequency" },
+    { label: "Monthly Plans", key: "monthlyReleasePlans" },
+    { label: "Additional Services", key: "formattedServices" },
+    { label: "How Did You Know", key: "howDidYouKnow" },
+    { label: "Brief Info", key: "briefInfo" },
     { label: "Status", key: "applicationStatus" },
+    { label: "Account Created", key: "isAccountCreated" },
+    { label: "Admin Notes", key: "adminNotes" },
     { label: "Submitted Date", key: "createdAt" },
+    { label: "Popular Release Links", key: "formattedReleaseLinks" },
+    { label: "Popular Artist Links", key: "formattedArtistLinks" },
+    { label: "Associated Labels", key: "formattedLabels" },
   ];
 
   const fetchDataForExport = async (exportPage, exportLimit) => {
@@ -174,7 +191,12 @@ export default function AggregatorManagement({ theme }) {
       return data.map((app) => ({
         ...app,
         name: `${app.firstName} ${app.lastName}`,
-        createdAt: new Date(app.createdAt).toLocaleDateString(),
+        isAccountCreated: app.isAccountCreated ? "Yes" : "No",
+        formattedServices: (app.additionalServices || []).join(", "),
+        formattedReleaseLinks: (app.popularReleaseLinks || []).join(", "),
+        formattedArtistLinks: (app.popularArtistLinks || []).join(", "),
+        formattedLabels: (app.associatedLabels || []).join(", "),
+        createdAt: new Date(app.createdAt).toLocaleString(),
       }));
     } catch (err) {
       toast.error("Failed to fetch data for export.");
