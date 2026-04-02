@@ -79,7 +79,7 @@ const HomePage = () => {
                                 <Link href="/signup">Start Free Now</Link>
                             </Button>
                         </div>
-                        <div className="w-full flex px-12 items-center justify-center mt-20 relative z-10">
+                        <div className="w-full flex px-4 md:px-12 items-center justify-center mt-20 relative z-10">
                             <div className="relative w-full rounded-4xl overflow-hidden py-8 px-10  bg-[#1D202F]/70   backdrop-blur-md ">
                                 <div className={`text-center text-gray-300 text-lg  mb-4 tracking-widest `}>OUR DISTRIBUTION NETWORK</div>
                                 <div className="w-full relative overflow-hidden ">
@@ -111,8 +111,8 @@ const HomePage = () => {
                                             ))}
                                         </motion.div>
                                     </div>
-                                    <div className="absolute w-[300px] h-[50px]  top-4 left-0 bg-gradient-to-r from-[rgb(29,32,47)] to-90% to-transparent"></div>
-                                    <div className="absolute w-[300px] h-[50px]  top-4 right-0 bg-gradient-to-r from-transparent to-90% to-[#1D202F]"></div>
+                                    <div className="absolute w-[300px] max-md:w-[100px] h-[50px]  top-4 left-0 bg-gradient-to-r from-[rgb(29,32,47)] to-90% to-transparent"></div>
+                                    <div className="absolute w-[300px] max-md:w-[100px] h-[50px]  top-4 right-0 bg-gradient-to-r from-transparent to-90% to-[#1D202F]"></div>
                                 </div>
                             </div>
                         </div>
@@ -123,7 +123,7 @@ const HomePage = () => {
             <div
                 style={{ backgroundImage: `url(${ourMissionBg.src})` }}
                 className="w-screen relative h-fit bg-cover bg-center mt-[100px] text-white">
-                <div className="flex max-lg:flex-col flex-wrap p-20 max-lg:gap-20 py-30 ">
+                <div className="flex max-lg:flex-col flex-wrap p-8 md:p-20 max-lg:gap-20 py-30 ">
                     <div className="w-full lg:w-[60%] sm:pr-5">
                         <h1 className={`text-2xl ${anton.className} text-[#652CD6] uppercase mb-4`}>Our Mission</h1>
                         <HeadingText text="Empowering Independent Artists  & labels to Rule the Global Stage" />
@@ -161,7 +161,7 @@ const HomePage = () => {
                     </div>
                 </div>
             </div>
-            <div className="flex max-lg:flex-col  p-20 gap-20  justify-between  ">
+            <div className="flex max-lg:flex-col p-8 sm:p-20 gap-20  justify-between  ">
                 <div className="w-full lg:w-[40%] relative ">
                     <div className="absolute z-[9] bg-radial w-[50px] h-[50px] rounded-full from-[rgb(208,116,195)]/10 right-40 top-60 to-transparent backdrop-blur-3xl shadow-[0_0px_305px_304px_rgb(208,116,195,0.1)]  "></div>
 
@@ -180,11 +180,11 @@ const HomePage = () => {
                         within 24 hours. Simple. Fast. Artist-first.
                     </p>
                     <div className="flex flex-wrap mb-8 gap-2 relative z-10 text-white">
-                        <h1 className="text-center text-xl">🚀 Faster Music Delivery</h1>
-                        <div className="h-[20px] w-1 bg-[#652CD6]"></div>
-                        <h1 className="text-center text-xl">🛡️ Keep your 100% Rights</h1>
-                        <div className="h-[20px] w-1 bg-[rgb(101,44,214)]"></div>
-                        <h1 className="text-center text-xl">📞 Real Human Support</h1>
+                        <h1 className="text-center text-lg md:text-xl">🚀 Faster Music Delivery</h1>
+                        <div className="h-[20px] w-1 max-sm:hidden bg-[#652CD6]"></div>
+                        <h1 className="text-center text-lg md:text-xl">🛡️ Keep your 100% Rights</h1>
+                        <div className="h-[20px] w-1 max-sm:hidden bg-[rgb(101,44,214)]"></div>
+                        <h1 className="text-center text-lg md:text-xl">📞 Real Human Support</h1>
                     </div>
                     <Button
                         variant="blue"
@@ -194,7 +194,7 @@ const HomePage = () => {
                 </div>
             </div>
             <div
-                className="p-20 bg-center bg-cover "
+                className="p-20 max-sm:p-8 bg-center bg-cover "
                 style={{ backgroundImage: `url(${allessentialsbg.src})` }}>
                 <h1 className={`text-2xl ${anton.className} text-[#652CD6] uppercase  text-center mb-10`}>Features</h1>
                 <HeadingText
@@ -252,7 +252,7 @@ const HomePage = () => {
                 className="bg-cover bg-center p-12 py-20 flex flex-col justify-center items-center text-white">
                 <HeadingText text="Our Services" />
                 <h1 className="text-gray-300">Everything You Need to Take Your Music Further.</h1>
-                <div className="grid grid-cols-3 max-md:grid-cols-1 py-10 justify-items-center w-full ">
+                <div className="grid grid-cols-3 max-md:grid-cols-1 gap-4 py-10 justify-items-center w-full ">
                     <motion.div
                         whileHover={{ scale: 1.02 }}
                         style={{ backgroundImage: `url(${ourservices1.src})` }}

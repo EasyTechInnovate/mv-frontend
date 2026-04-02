@@ -179,14 +179,14 @@ const PageEveryone = () => {
                     />
                 </div>
 
-                <div className='relative flex items-center justify-center w-full mt-10 gap-5 text-white'>
-                    <Button variant="blue" className='w-[200px]'>
+                <div className='relative flex flex-col sm:flex-row items-center justify-center w-full mt-10 gap-4 sm:gap-5 text-white px-6'>
+                    <Button variant="blue" className='w-full sm:w-[200px]'>
                         <Link href='/pricing/everyone'>Plans for Everyone</Link>
                     </Button>
-                    <Button variant="ghost" className='w-[200px]'>
+                    <Button variant="ghost" className='w-full sm:w-[200px] border border-[#ffffff2d] sm:border-none'>
                         <Link href='/pricing/for-artists'>Plans for Artists</Link>
                     </Button>
-                    <Button variant="ghost" className='w-[200px]'>
+                    <Button variant="ghost" className='w-full sm:w-[200px] border border-[#ffffff2d] sm:border-none'>
                         <Link href='/pricing/for-labels'>Plans for Labels</Link>
                     </Button>
                 </div>
@@ -239,10 +239,12 @@ const PageEveryone = () => {
 
                 {/* Compare Plan Section */}
                 {plansList.length > 1 && (
-                    <div className="flex flex-col items-center justify-center w-full mt-40 mb-20">
-                        <h1 className={`text-6xl ${anton.className} text-white uppercase mb-4`}>Compare Plan</h1>
+                    <div className="flex flex-col items-center justify-center w-full mt-40 mb-20 px-4">
+                        <h1 className={`text-4xl md:text-6xl ${anton.className} text-white uppercase mb-4 text-center`}>Compare Plan</h1>
 
-                        <div className="w-full max-w-5xl bg-[#1A1E2B] rounded-xl p-8 mt-20">
+                       <div className="w-full max-w-5xl bg-[#1A1E2B] rounded-xl p-4 sm:p-8 mt-10 md:mt-20 overflow-hidden">
+                            <div className="overflow-x-auto w-full">
+                                <div className="min-w-[800px]">
                             {/* Table Header */}
                             <div className={`grid gap-4 pb-8 text-gray-300 font-semibold text-lg`} style={{ gridTemplateColumns: `repeat(${plansList.length + 1}, 1fr)` }}>
                                 <div></div> {/* Empty cell for alignment */}
@@ -251,37 +253,39 @@ const PageEveryone = () => {
                                 ))}
                             </div>
 
-                            {/* Table Rows */}
-                            {comparisonFeatures.map((fKey, index) => (
-                                <div
-                                    key={fKey}
-                                    className={`grid gap-4 py-4 border-b border-gray-800 last:border-b-0`}
-                                    style={{ gridTemplateColumns: `repeat(${plansList.length + 1}, 1fr)` }}>
-                                    <div className="text-gray-300 text-sm">{FEATURE_LABELS[fKey] || fKey}</div>
-                                    {plansList.map(plan => {
-                                        const val = plan.features?.[fKey];
-                                        return (
-                                            <div key={plan.planId} className="text-center text-gray-400 text-sm">
-                                                {typeof val === 'boolean' ? (
-                                                    val ? (
-                                                        <MdOutlineDone className={`inline-block w-5 h-5 ${plan.isBestValue ? 'text-[#FFC727]' : plan.isPopular ? 'text-[#652CD6]' : 'text-[#0099FF]'}`} />
-                                                    ) : (
-                                                        '-'
-                                                    )
-                                                ) : fKey === 'revenueShare' ? (
-                                                    val?.percentage ? `${val.percentage}%` : '-'
-                                                ) : fKey === 'supportHours' ? (
-                                                    SUPPORT_HOURS_LABELS[val] || val || '-'
-                                                ) : fKey === 'liveSupportTime' ? (
-                                                    LIVE_PROCESS_LABELS[val] || val || '-'
-                                                ) : (
-                                                    (typeof val === 'string' ? val : '-') || '-'
-                                                )}
-                                            </div>
-                                        )
-                                    })}
+                                    {/* Table Rows */}
+                                    {comparisonFeatures.map((fKey, index) => (
+                                        <div
+                                            key={fKey}
+                                            className={`grid gap-4 py-4 border-b border-gray-800 last:border-b-0`}
+                                            style={{ gridTemplateColumns: `repeat(${plansList.length + 1}, 1fr)` }}>
+                                            <div className="text-gray-300 text-sm">{FEATURE_LABELS[fKey] || fKey}</div>
+                                            {plansList.map(plan => {
+                                                const val = plan.features?.[fKey];
+                                                return (
+                                                    <div key={plan.planId} className="text-center text-gray-400 text-sm">
+                                                        {typeof val === 'boolean' ? (
+                                                            val ? (
+                                                                <MdOutlineDone className={`inline-block w-5 h-5 ${plan.isBestValue ? 'text-[#FFC727]' : plan.isPopular ? 'text-[#652CD6]' : 'text-[#0099FF]'}`} />
+                                                            ) : (
+                                                                '-'
+                                                            )
+                                                        ) : fKey === 'revenueShare' ? (
+                                                            val?.percentage ? `${val.percentage}%` : '-'
+                                                        ) : fKey === 'supportHours' ? (
+                                                            SUPPORT_HOURS_LABELS[val] || val || '-'
+                                                        ) : fKey === 'liveSupportTime' ? (
+                                                            LIVE_PROCESS_LABELS[val] || val || '-'
+                                                        ) : (
+                                                            (typeof val === 'string' ? val : '-') || '-'
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            </div>
                         </div>
                     </div>
                 )}

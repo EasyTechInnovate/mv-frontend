@@ -368,7 +368,7 @@ const App = () => {
 
             <form
                 onSubmit={handleSubmit}
-                className="bg-[#191E2A] border border-gray-400 rounded-xl p-8 md:p-20 mt-10 w-full max-w-6xl text-white space-y-6">
+                className="bg-[#191E2A] border border-gray-400 rounded-xl p-8 max-sm:px-4 md:p-20 mt-10 w-full max-sm:w-[95%] sm:max-w-6xl text-white space-y-6">
                 
                 {/* User Type Selector at the Top */}
                 <div className="mb-8">

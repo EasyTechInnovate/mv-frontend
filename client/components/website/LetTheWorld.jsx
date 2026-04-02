@@ -7,8 +7,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 const LetTheWorld = () => {
   return (
-    <div style={{ backgroundImage: `url(${letTheWorldbg.src})` }} className='p-10 md:p-20  bg-top bg-cover  '>
-      <div className='w-full p-8 h-[450px] rounded-4xl bg-[rgba(0,0,0,0.2)] backdrop-blur-lg border-[1px] border-[#ffffff2d] flex max-lg:flex-col max-lg:h-fit gap-10 '>
+    <div style={{ backgroundImage: `url(${letTheWorldbg.src})` }} className='p-8 sm:p-10 md:p-20  bg-top bg-cover  '>
+      <div className='w-full p-8  h-[450px] rounded-4xl bg-[rgba(0,0,0,0.2)] backdrop-blur-lg border-[1px] border-[#ffffff2d] flex max-lg:flex-col max-lg:h-fit gap-10 '>
         <div className='flex flex-col justify-center w-[100%] lg:w-[50%] '>
             <div className='flex items-end'>
             <HeadingText text="Let The World Hear You" />

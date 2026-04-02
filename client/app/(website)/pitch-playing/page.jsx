@@ -30,8 +30,8 @@ const page = () => {
                 className="bg-cover bg-center min-h-[80vh] w-full flex flex-col justify-center items-center pt-[150px]">
               
                 <MainHeadingText text=' PLAYLIST PITCHING' />
-                <div className="flex flex-wrap items-center  mb-8 gap-2 mt-0 relative z-10 text-white">
-                    <h1 className="text-center text-xl">Your track deserves more than a listen—it deserves a spot where it belongs</h1>
+                <div className="flex flex-wrap items-center justify-center mb-8 gap-2 mt-0 relative z-10 text-white px-4">
+                    <h1 className="text-center text-lg md:text-xl">Your track deserves more than a listen—it deserves a spot where it belongs</h1>
                 </div>
                 <Button
                     variant="blue"
@@ -89,23 +89,23 @@ const page = () => {
             />
            
 
-            <div className="w-full p-20 flex justify-center items-top gap-[50px] max-md:flex-col max-md:gap-8 ">
+            <div className="w-full p-8 md:p-20 flex justify-center items-top">
                 <motion.div
-                    initial={{ x: -200, opacity: 0 }}
-                    whileInView={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, delay: 0.05 }}
+                    initial={{ y: 100, opacity: 0 }}
+                    whileInView={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
                     viewport={{ once: true }}
-                    className="w-[50%] h-auto shadow-custom bg-gradient-to-b from-[#1d2334] bg-[#151A27]  rounded-t-3xl px-14 py-10 text-white space-y-6">
+                    className="w-full md:w-[70%] lg:w-[50%] h-auto shadow-custom bg-gradient-to-b from-[#1d2334] bg-[#151A27] rounded-3xl px-8 sm:px-14 py-10 text-white space-y-6">
                     <div
-                        style={{ boxShadow: `0 0 30px 0px [#632BDF] `, backgroundColor: '#632BDF' }}
-                        className={`w-[60px] h-[60px] p-2   rounded-xl `}>
+                        style={{ boxShadow: `0 0 30px 0px #632BDF`, backgroundColor: '#632BDF' }}
+                        className={`w-[60px] h-[60px] p-2 rounded-xl`}>
                         <Image
                             src={post}
                             alt="Post-Placement Promotion"
                             className="w-full h-full"
                         />
                     </div>
-                    <h1 className={`${anton.className} text-4xl`}>Post-Placement Promotion</h1>
+                    <h1 className={`${anton.className} text-3xl md:text-4xl`}>Post-Placement Promotion</h1>
                     {[
                         'Share playlist placements on social media and tag curators',
                         'Leverage playlist followers for cross-promotion',
@@ -116,9 +116,7 @@ const page = () => {
                             className="flex items-top mb-2">
                             <div className="mx-1 mt-1"> • </div>
                             <h1
-                                key={index}
-                                className="text-gray-300 text-sm mx-3 my-1">
-                                {' '}
+                                className="text-gray-300 text-sm md:text-base mx-3">
                                 {item}
                             </h1>
                         </div>
@@ -126,37 +124,37 @@ const page = () => {
                 </motion.div>
             </div>
 
-             <div className="w-full px-20 py-10 mb-10">
-                <h2 className={`${anton.className} text-center text-5xl mb-10 text-white`}>TYPES OF PLAYLISTS YOU CAN PITCH TO</h2>
+             <div className="w-full px-4 md:px-20 py-10 mb-10">
+                <h2 className={`${anton.className} text-center text-3xl md:text-5xl mb-10 text-white`}>TYPES OF PLAYLISTS YOU CAN PITCH TO</h2>
                 <div className="overflow-x-auto rounded-lg border-2 border-gray-300">
-                    <table className="min-w-full text-left text-sm font-light text-white  ">
+                    <table className="min-w-full text-left text-sm font-light text-white">
                         <thead className="border-b-2 border-gray-300 bg-[#1D2334] font-medium dark:border-neutral-500">
                             <tr>
-                                <th scope="col" className="px-8 py-8 text-3xl border-r-2 border-gray-300">Playlist Type</th>
-                                <th scope="col" className="px-8 py-8 text-3xl border-r-2 border-gray-300">Curated By</th>
-                                <th scope="col" className="px-8 py-8 text-3xl">Example</th>
+                                <th scope="col" className="px-4 py-4 md:px-8 md:py-8 text-xl md:text-3xl border-r-2 border-gray-300">Playlist Type</th>
+                                <th scope="col" className="px-4 py-4 md:px-8 md:py-8 text-xl md:text-3xl border-r-2 border-gray-300">Curated By</th>
+                                <th scope="col" className="px-4 py-4 md:px-8 md:py-8 text-xl md:text-3xl">Example</th>
                             </tr>
                         </thead>
-                        <tbody className="text-base ">
+                        <tbody className="text-sm md:text-base">
                             <tr className="border-b-2 border-gray-300 dark:border-neutral-500">
-                                <td className="whitespace-nowrap px-8 py-6 border-r-2 border-gray-300">Editorial</td>
-                                <td className="whitespace-nowrap px-8 py-6 border-r-2 border-gray-300">DSPs (Spotify, Apple)</td>
-                                <td className="whitespace-nowrap px-8 py-6">New music friday, RapCaviar</td>
+                                <td className="whitespace-nowrap px-4 py-4 md:px-8 md:py-6 border-r-2 border-gray-300">Editorial</td>
+                                <td className="whitespace-nowrap px-4 py-4 md:px-8 md:py-6 border-r-2 border-gray-300">DSPs (Spotify, Apple)</td>
+                                <td className="whitespace-nowrap px-4 py-4 md:px-8 md:py-6">New music friday, RapCaviar</td>
                             </tr>
                             <tr className="border-b-2 border-gray-300 dark:border-neutral-500">
-                                <td className="whitespace-nowrap px-8 py-6 border-r-2 border-gray-300">Algorithmic</td>
-                                <td className="whitespace-nowrap px-8 py-6 border-r-2 border-gray-300">DSP Algorithms</td>
-                                <td className="whitespace-nowrap px-8 py-6">Discover weekly, Release radar</td>
+                                <td className="whitespace-nowrap px-4 py-4 md:px-8 md:py-6 border-r-2 border-gray-300">Algorithmic</td>
+                                <td className="whitespace-nowrap px-4 py-4 md:px-8 md:py-6 border-r-2 border-gray-300">DSP Algorithms</td>
+                                <td className="whitespace-nowrap px-4 py-4 md:px-8 md:py-6">Discover weekly, Release radar</td>
                             </tr>
                             <tr className="border-b-2 border-gray-300 dark:border-neutral-500">
-                                <td className="whitespace-nowrap px-8 py-6 border-r-2 border-gray-300">Independent Curators</td>
-                                <td className="whitespace-nowrap px-8 py-6 border-r-2 border-gray-300">Blogs, Influencers</td>
-                                <td className="whitespace-nowrap px-8 py-6">Indie Chill, Desi hip-hop gems</td>
+                                <td className="whitespace-nowrap px-4 py-4 md:px-8 md:py-6 border-r-2 border-gray-300">Independent Curators</td>
+                                <td className="whitespace-nowrap px-4 py-4 md:px-8 md:py-6 border-r-2 border-gray-300">Blogs, Influencers</td>
+                                <td className="whitespace-nowrap px-4 py-4 md:px-8 md:py-6">Indie Chill, Desi hip-hop gems</td>
                             </tr>
                             <tr>
-                                <td className="whitespace-nowrap px-8 py-6 border-r-2 border-gray-300">Brand/Label Playlists</td>
-                                <td className="whitespace-nowrap px-8 py-6 border-r-2 border-gray-300">Labels or collectives</td>
-                                <td className="whitespace-nowrap px-8 py-6">T-series, Mixtape, Majestic Casual</td>
+                                <td className="whitespace-nowrap px-4 py-4 md:px-8 md:py-6 border-r-2 border-gray-300">Brand/Label Playlists</td>
+                                <td className="whitespace-nowrap px-4 py-4 md:px-8 md:py-6 border-r-2 border-gray-300">Labels or collectives</td>
+                                <td className="whitespace-nowrap px-4 py-4 md:px-8 md:py-6">T-series, Mixtape, Majestic Casual</td>
                             </tr>
                         </tbody>
                     </table>

@@ -69,7 +69,7 @@ const Footer = () => {
              <Image src={logo} alt='Logo'/>
             </div>
 
-            <div className="p-6 bg-[#212533] rounded-lg w-[80%]">
+            <div className="p-6 bg-[#212533] rounded-lg w-[80%] max-sm:w-full">
               <h3 className="text-base font-semibold mb-3">Subscribe to our newsletter for updates</h3>
               <form action="https://mail.app.maheshwarivisuals.com/api/subscribe/submit" method="post" className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                 <input type="hidden" name="token" value="7e4bffae1f4c" />
@@ -85,7 +85,7 @@ const Footer = () => {
               </form>
             </div>
 
-            <div className="space-y-4 w-[80%]">
+            <div className="space-y-4 w-[80%] max-sm:w-full">
               <p className="text-sm text-gray-400">
                 Welcome To Maheshwari Visuals, A Leading Music Distribution Platform!
               </p>

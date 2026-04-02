@@ -1433,7 +1433,7 @@ const AdvancedReleaseBuilder = () => {
           </div>
         </div>
 
-        <Card className="flex flex-row items-center justify-between px-10 mb-8 py-3 space-x-4">
+        <Card className="flex flex-row items-center justify-between px-10 mb-8 py-3 sm:space-x-4">
           {[
             { icon: Upload, label: 'Cover Details', step: 0 },
             { icon: Music, label: 'Track Details', step: 1 },
@@ -1447,7 +1447,7 @@ const AdvancedReleaseBuilder = () => {
                 </div>
                 <span className="font-medium hidden md:inline">{label}</span>
               </div>
-              {step < 2 && <div className="w-12 h-px bg-muted mx-2"></div>}
+              {step < 2 && <div className="max-sm:w-0 w-12 h-px bg-muted mx-2"></div>}
             </div>
           ))}
         </Card>

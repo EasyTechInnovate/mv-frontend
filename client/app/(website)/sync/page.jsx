@@ -30,19 +30,19 @@ const page = () => {
                 className="bg-cover bg-center min-h-[80vh] w-full flex flex-col justify-center items-center pt-[150px]">
                 <div>
                     <h1
-                        className={`${anton.className}  text-[80px] mb-4 sm:text-[100px] w-fit leading-[1.1] text-center uppercase text-transparent bg-clip-text `}
+                        className={`${anton.className}  text-[80px] max-sm:text-[40px] mb-4 sm:text-[100px] w-fit leading-[1.1] text-center uppercase text-transparent bg-clip-text `}
                         style={{
                             backgroundImage: `radial-gradient(circle at center -20%  , rgba(249, 244, 237, 1) 40% ,rgba(234,228,255,0.6) 70%`
                         }}>
                         SYNCHRONIZATION
                     </h1>
                 </div>
-                <div className="flex flex-wrap items-center  mb-8 gap-2 mt-0 relative z-10 text-white">
-                    <h1 className="text-center text-xl">Connecting Your Sound To Cinema</h1>
-                    <div className="h-[20px] w-1 bg-[#652CD6]"></div>
-                    <h1 className="text-center text-xl">Brands</h1>
-                    <div className="h-[20px] w-1 bg-[#652CD6]"></div>
-                    <h1 className="text-center text-xl">Beyond—One Sync At a Time</h1>
+                <div className="flex flex-wrap justify-center items-center mb-8 gap-4 mt-0 relative z-10 text-white px-4">
+                    <h1 className="text-center text-lg md:text-xl">Connecting Your Sound To Cinema</h1>
+                    <div className="hidden md:block h-[20px] w-1 bg-[#652CD6]"></div>
+                    <h1 className="text-center text-lg md:text-xl">Brands</h1>
+                    <div className="hidden md:block h-[20px] w-1 bg-[#652CD6]"></div>
+                    <h1 className="text-center text-lg md:text-xl">Beyond—One Sync At a Time</h1>
                 </div>
                 <Button
                     variant="blue"
@@ -101,23 +101,23 @@ const page = () => {
 
           
 
-            <div className="w-full p-20 flex justify-center items-top gap-[50px] max-md:flex-col max-md:gap-8 ">
+            <div className="w-full p-8 md:p-20 flex justify-center items-top">
                 <motion.div
-                    initial={{ x: -200, opacity: 0 }}
-                    whileInView={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, delay: 0.05 }}
+                    initial={{ y: 100, opacity: 0 }}
+                    whileInView={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
                     viewport={{ once: true }}
-                    className="w-[50%] h-auto shadow-custom bg-gradient-to-b from-[#1d2334] bg-[#151A27]  rounded-t-3xl px-14 py-10 text-white space-y-6">
+                    className="w-full md:w-[70%] lg:w-[50%] h-auto shadow-custom bg-gradient-to-b from-[#1d2334] bg-[#151A27] rounded-3xl px-8 sm:px-14 py-10 text-white space-y-6">
                     <div
-                        style={{ boxShadow: `0 0 30px 0px [#632BDF] `, backgroundColor: '#632BDF' }}
-                        className={`w-[60px] h-[60px] p-2   rounded-xl `}>
+                        style={{ boxShadow: `0 0 30px 0px #632BDF`, backgroundColor: '#632BDF' }}
+                        className={`w-[60px] h-[60px] p-2 rounded-xl`}>
                         <Image
                             src={creative}
                             alt="Creative & Legal Support"
                             className="w-full h-full"
                         />
                     </div>
-                    <h1 className={`${anton.className} text-4xl`}>Creative & Legal Support</h1>
+                    <h1 className={`${anton.className} text-3xl md:text-4xl`}>Creative & Legal Support</h1>
                     {[
                         'Help artists understand sync terms, usage rights, and revenue splits',
                         'Provide legal templates for sync deals, exclusivity clauses, and clearances',
@@ -128,9 +128,7 @@ const page = () => {
                             className="flex items-top mb-2">
                             <div className="mx-1 mt-1"> • </div>
                             <h1
-                                key={index}
-                                className="text-gray-300 text-sm mx-3 my-1">
-                                {' '}
+                                className="text-gray-300 text-sm md:text-base mx-3">
                                 {item}
                             </h1>
                         </div>

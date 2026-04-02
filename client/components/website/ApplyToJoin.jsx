@@ -7,7 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 const ApplyToJoin = () => {
   return (
-    <div style={{ backgroundImage: `url(${letTheWorldbg.src})` }} className='p-12  bg-top bg-cover  '>
+    <div style={{ backgroundImage: `url(${letTheWorldbg.src})` }} className='p-12 max-sm:p-6  bg-top bg-cover  '>
       <div className='w-full p-8 h-[400px] rounded-4xl bg-[rgba(0,0,0,0.2)] backdrop-blur-lg border-[1px] border-[#ffffff2d] flex max-md:flex-col max-md:h-fit gap-10 '>
         <div className='flex flex-col justify-center w-[100%] md:w-[50%] '>
             <div className='flex items-end'>

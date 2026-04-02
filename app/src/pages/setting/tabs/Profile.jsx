@@ -188,7 +188,7 @@ const Profile = () => {
     profileImage: '',
     firstName: '',
     lastName: '',
-    artistName: '',
+    accountName: '',
     phoneNumber: '',
     emailAddress: '',
     accountId: '',
@@ -272,8 +272,15 @@ const Profile = () => {
         lastName: user.lastName || '',
         emailAddress: user.emailAddress || '',
         accountId: user.accountId || '',
-        // artistName is nested under artistData
-        artistName: user.artistData?.artistName || user.artistName || '',
+        // Dynamic accountName based on userType
+        accountName: 
+          user.userType === 'artist' 
+            ? user.artistData?.artistName || '' 
+            : user.userType === 'label' 
+            ? user.labelData?.labelName || '' 
+            : user.userType === 'aggregator' 
+            ? user.aggregatorData?.companyName || '' 
+            : '',
         phoneNumber: user.phoneNumber?.internationalNumber || '',
         // bio, primaryGenre, location are nested under profile
         bio: user.profile?.bio || '',
@@ -458,10 +465,10 @@ const Profile = () => {
             photo: formData.profileImage
           })
         },
-        ...(formData.artistName && {
-          artistData: {
-            artistName: formData.artistName
-          }
+        ...(formData.accountName && {
+          ...(user.userType === 'artist' && { artistData: { artistName: formData.accountName } }),
+          ...(user.userType === 'label' && { labelData: { labelName: formData.accountName } }),
+          ...(user.userType === 'aggregator' && { aggregatorData: { companyName: formData.accountName } }),
         })
       };
       
@@ -729,11 +736,11 @@ const Profile = () => {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Stage/Artist Name</label>
+              <label className="text-sm font-medium">Account Name</label>
               <Input
-                value={formData.artistName}
-                onChange={(e) => handleInputChange('artistName', e.target.value)}
-                placeholder="Artist Name"
+                value={formData.accountName}
+                onChange={(e) => handleInputChange('accountName', e.target.value)}
+                placeholder="Account Name"
                 className="border-slate-700"
               />
             </div>

@@ -363,8 +363,8 @@ export default function UserManagement({ theme }) {
                   <tr>
                     {[
                       "User ID",
+                      "User Name",
                       "Account Name",
-                      "Stage Name",
                       "Account Type",
                       "Status",
                       "Membership",
@@ -661,7 +661,7 @@ setIsResetPasswordOpen(true);
           { label: "State", key: "state" },
           { label: "Country", key: "country" },
           { label: "User Type", key: "userType" },
-          { label: "Artist Name/Company", key: "artistName" },
+          { label: "Account Name", key: "artistName" },
           { label: "Youtube Url", key: "youtube" },
           { label: "Facebook Url", key: "facebook" },
           { label: "Instagram Url", key: "instagram" },

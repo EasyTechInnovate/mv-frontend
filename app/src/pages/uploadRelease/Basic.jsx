@@ -1145,11 +1145,11 @@ const BasicReleaseBuilder = () => {
 
         {/* Step Navigation */}
         {releaseType && (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+          <div className="sm:flex items-center justify-between">
+            <div className="flex items-center space-x-0 sm:space-x-4 max-sm:mb-6">
               {[0, 1, 2].map((step) => (
                 <div key={step} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${
                     step === currentStep 
                       ? 'bg-primary text-primary-foreground' 
                       : step < currentStep 
@@ -1158,7 +1158,7 @@ const BasicReleaseBuilder = () => {
                   }`}>
                     {step + 1}
                   </div>
-                  <span className={`ml-2 text-sm ${
+                  <span className={`ml-2 text-xs sm:text-sm ${
                     step === currentStep ? 'text-primary font-medium' : 'text-muted-foreground'
                   }`}>
                     Step {step + 1}

@@ -113,6 +113,27 @@ export default function TestimonialSwiper() {
                         box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); 
                     }
 
+                    @media (max-width: 640px) {
+                        .swiper-button-next,
+                        .swiper-button-prev {
+                            width: 44px !important;
+                            height: 44px !important;
+                            top: 50%;
+                        }
+                        .swiper-button-prev {
+                            left: 8px !important;
+                            transform: translate(0, -50%) !important;
+                        }
+                        .swiper-button-next {
+                            right: 8px !important;
+                            transform: translate(0, -50%) !important;
+                        }
+                        .swiper-button-next:hover,
+                        .swiper-button-prev:hover {
+                            transform: translate(0, -50%) scale(1.05) !important;
+                        }
+                    }
+
                     .swiper-button-next.swiper-button-disabled,
                     .swiper-button-prev.swiper-button-disabled {
                         background-color: #f0f0f0; 
@@ -138,8 +159,8 @@ export default function TestimonialSwiper() {
                 {testimonials.map((testimonial) => (
                     <SwiperSlide
                         key={testimonial._id}
-                        className="px-[5vw] ">
-                        <div className="w-full mb-12  rounded-xl overflow-hidden bg-[#fff]/10 backdrop-blur-lg flex flex-col items-center justify-center p-8 py-12 gap-4 border border-gray-500">
+                        className="px-[5vw] max-sm:px-4 ">
+                        <div className="w-full mb-12  rounded-xl overflow-hidden bg-[#fff]/10 backdrop-blur-lg flex flex-col items-center justify-center p-8 max-sm:px-4 py-12 gap-4 max-sm:gap-2 border border-gray-500">
                             <div className="w-[90px] h-[90px] rounded-full border-2 mb-8">
                                 <Image src={testimonial.profileImageUrl || '/images/home/testimonial1.png'} alt={testimonial.customerName} width={90} height={90} className='w-full h-full' />
                             </div>
@@ -148,7 +169,7 @@ export default function TestimonialSwiper() {
 
                             {testimonial.rating && Example(testimonial.rating)}
 
-                            <h1 className='text-gray-300 text-center text-xl w-[60%]'>{testimonial.testimonialContent}</h1>
+                            <h1 className='text-gray-300 text-center text-xl w-[60%] max-sm:w-[100%]'>{testimonial.testimonialContent}</h1>
 
                         </div>
                     </SwiperSlide>

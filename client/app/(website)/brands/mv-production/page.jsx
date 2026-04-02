@@ -54,7 +54,7 @@ const page = () => {
                 className="bg-cover bg-center min-h-[80vh] w-full flex flex-col justify-center items-center pt-[150px]">
              
                 <MainHeadingText text='Music Production' />
-                <h1 className="text-center text-xl text-white">Crafting Visuals That Amplify Your Sound</h1>
+                <h1 className="text-center text-lg md:text-xl text-white px-4">Crafting Visuals That Amplify Your Sound</h1>
 
                 <Button
                     variant="blue"
@@ -134,23 +134,23 @@ const page = () => {
                 }}
             />
 
-            <div className="w-full p-20 flex justify-center items-top gap-[50px] max-md:flex-col max-md:gap-8 ">
+            <div className="w-full p-8 md:p-20 flex justify-center items-top">
                 <motion.div
-                    initial={{ x: -200, opacity: 0 }}
-                    whileInView={{ x: 0, opacity: 1 }}
+                    initial={{ y: 100, opacity: 0 }}
+                    whileInView={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.4, delay: 0.05 }}
                     viewport={{ once: true }}
-                    className="w-[50%] h-auto shadow-custom bg-gradient-to-b from-[#1d2334] bg-[#151A27]  rounded-t-3xl px-14 py-10 text-white space-y-6">
+                    className="w-full md:w-[70%] lg:w-[50%] h-auto shadow-custom bg-gradient-to-b from-[#1d2334] bg-[#151A27] rounded-3xl px-8 sm:px-14 py-10 text-white space-y-6">
                     <div
-                        style={{ boxShadow: `0 0 30px 0px [#632BDF] `, backgroundColor: '#632BDF' }}
-                        className={`w-[60px] h-[60px] p-2   rounded-xl `}>
+                        style={{ boxShadow: `0 0 30px 0px #632BDF`, backgroundColor: '#632BDF' }}
+                        className={`w-[60px] h-[60px] p-2 rounded-xl`}>
                         <Image
                             src={creative}
                             alt="Creative ROI Guidance"
                             className="w-full h-full"
                         />
                     </div>
-                    <h1 className={`${anton.className} text-4xl`}>Creative ROI Guidance</h1>
+                    <h1 className={`${anton.className} text-3xl md:text-4xl`}>Creative ROI Guidance</h1>
                     {[
                         'Help artists understand how to get the most value from their video',
                         'Suggest ways to repurpose footage for reels, ads, or lyric videos',
@@ -161,9 +161,7 @@ const page = () => {
                             className="flex items-top mb-2">
                             <div className="mx-1 mt-1">•</div>
                             <h1
-                                key={index}
-                                className="text-gray-300 text-sm mx-3 my-1">
-                                {' '}
+                                className="text-gray-300 text-sm md:text-base mx-3">
                                 {item}
                             </h1>
                         </div>

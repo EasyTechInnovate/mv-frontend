@@ -69,7 +69,7 @@ export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark'
 
     const headers = [
       "NO.", "First Name", "Last Name", "Account_id", "User Email", "Mobile Number", "Address", "Pincode", "State", "Country", 
-      "User Type", "Artist Name", "Youtube", "Facebook", "Instagram", "Spotify", "Apple", "Saavn", "Amazon", "How Did You Know", 
+      "User Type", "Account Name", "Youtube", "Facebook", "Instagram", "Spotify", "Apple", "Saavn", "Amazon", "How Did You Know", 
       "LinkedIn", "TikTok", "Twitter", "Website", "Label Name", "Label YT", "Label IG", "Label FB", "Label Website", "Label Popular Links", 
       "Label Freq", "Monthly Plans", "Label Info", "Bank Holder", "Bank Name", "Account Number", "IFSC", "Paypal Email", "Join Date", 
       "KYC Status", "KYC Residency", "Aadhaar No", "PAN No", "GST No", "Passport No", "VAT No", "UPI ID", "UPI Holder", 

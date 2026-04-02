@@ -61,11 +61,10 @@ const page = () => {
                 className="bg-cover bg-center min-h-[80vh] w-full flex flex-col justify-center items-center pt-[150px]">
               
                 <MainHeadingText text='Music Marketing'/>
-                <div className="flex flex-wrap items-center  mb-8 gap-2 mt-0 relative z-10 text-white">
-                    <h1 className="text-center text-xl">🚀 Campaigns That Connect</h1>
-                    <div className="h-[20px] w-1 bg-[#652CD6]"></div>
-                    <h1 className="text-center text-xl">🛡️ Results That Resonate</h1>
-                   
+                <div className="flex flex-wrap justify-center items-center mb-8 gap-4 mt-0 relative z-10 text-white px-4">
+                    <h1 className="text-center text-lg md:text-xl">🚀 Campaigns That Connect</h1>
+                    <div className="hidden sm:block h-[20px] w-1 bg-[#652CD6]"></div>
+                    <h1 className="text-center text-lg md:text-xl">🛡️ Results That Resonate</h1>
                 </div>
                 <Button
                     variant="blue"
@@ -147,23 +146,23 @@ const page = () => {
 
            
 
-            <div className="w-full p-20 flex justify-center items-top gap-[50px] max-md:flex-col max-md:gap-8 ">
+            <div className="w-full p-8 md:p-20 flex justify-center items-top">
                 <motion.div
-                    initial={{ x: -200, opacity: 0 }}
-                    whileInView={{ x: 0, opacity: 1 }}
+                    initial={{ y: 100, opacity: 0 }}
+                    whileInView={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.4, delay: 0.05 }}
                     viewport={{ once: true }}
-                    className="w-[50%] h-auto shadow-custom bg-gradient-to-b from-[#1d2334] bg-[#151A27]  rounded-t-3xl px-14 py-10 text-white space-y-6">
+                    className="w-full md:w-[70%] lg:w-[50%] h-auto shadow-custom bg-gradient-to-b from-[#1d2334] bg-[#151A27] rounded-3xl px-8 sm:px-14 py-10 text-white space-y-6">
                     <div
-                        style={{ boxShadow: `0 0 30px 0px [#632BDF] `, backgroundColor: '#632BDF' }}
-                        className={`w-[60px] h-[60px] p-2   rounded-xl `}>
+                        style={{ boxShadow: `0 0 30px 0px #632BDF`, backgroundColor: '#632BDF' }}
+                        className={`w-[60px] h-[60px] p-2 rounded-xl`}>
                         <Image
                             src={aipowered}
                             alt="AI-Powered Campaign Suggestions"
                             className="w-full h-full"
                         />
                     </div>
-                    <h1 className={`${anton.className} text-4xl`}>AI-Powered Campaign Suggestions</h1>
+                    <h1 className={`${anton.className} text-3xl md:text-4xl`}>AI-Powered Campaign Suggestions</h1>
                     {[
                         'Smart recommendations based on genre, past performance, and audience behavior',
                         'Auto-budgeting and scheduling for optimal ad spend',
@@ -174,9 +173,7 @@ const page = () => {
                             className="flex items-top mb-2">
                             <div className="mx-1 mt-1">•</div>
                             <h1
-                                key={index}
-                                className="text-gray-300 text-sm mx-3 my-1">
-                                {' '}
+                                className="text-gray-300 text-sm md:text-base mx-3">
                                 {item}
                             </h1>
                         </div>

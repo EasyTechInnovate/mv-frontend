@@ -173,10 +173,10 @@ export default function WebsiteHeader() {
                 </div>
 
                 <div className="flex items-center space-x-4">
-                    <Link href='/signin' className="px-6 py-2 bg-violet-700 text-white rounded-lg font-semibold hover:bg-violet-600 transition-colors duration-200 shadow-lg cursor-pointer">
+                    <Link href='/signin' className="max-sm:text-xs max-sm:px-3 max-sm:rounded-sm px-6 py-2 bg-violet-700 text-white rounded-lg font-semibold hover:bg-violet-600 transition-colors duration-200 shadow-lg cursor-pointer">
                         Login
                     </Link>
-                    <Link href='/signup' className="px-6 py-2 border border-white text-white rounded-lg font-semibold hover:text-white cursor-pointer transition-colors duration-200">
+                    <Link href='/signup' className="max-sm:text-xs max-sm:px-3 max-sm:rounded-sm px-6 py-2 border border-white text-white rounded-lg font-semibold hover:text-white cursor-pointer transition-colors duration-200">
                         Free Sign Up
                     </Link>
                 </div>

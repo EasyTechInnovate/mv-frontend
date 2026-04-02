@@ -132,17 +132,16 @@ const page = () => {
             />
 
             <motion.div
-                initial={{ y: 200, opacity: 0 }}
+                initial={{ y: 100, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.05 }}
                 viewport={{ once: true }}
-                className="w-full px-40 py-20 flex justify-between items-top gap-[50px] max-md:flex-col max-md:gap-8 ">
-                <div className="w-full h-auto  bg-[#1A1E2B]  rounded-3xl px-14 py-10 text-white space-y-6 flex justify-between gap-4 ">
-                    <div className="w-[50%] space-y-6">
-                        <h1 className={`${anton.className} text-4xl`}>Go Viral Faster — MV Advertisment for Your Tracks</h1>
+                className="w-full p-8 md:p-20 flex justify-between items-top gap-[50px]">
+                <div className="w-full h-auto bg-[#1A1E2B] rounded-3xl px-8 sm:px-14 py-10 text-white space-y-6 flex flex-col md:flex-row justify-between gap-8 ">
+                    <div className="w-full md:w-[50%] space-y-6">
+                        <h1 className={`${anton.className} text-3xl md:text-4xl`}>Go Viral Faster — MV Advertisement for Your Tracks</h1>
 
-                        <h1 className="text-gray-300 text-sm  my-1 mr-2">
-                            {' '}
+                        <h1 className="text-gray-300 text-sm md:text-base my-1">
                             Get your music in front of the right audience without the guesswork. With built-in analytics and targeted reach, Express
                             Ads helps you grow streams, followers, and engagement all from one dashboard.
                         </h1>
@@ -150,16 +149,14 @@ const page = () => {
                         <Button
                             variant="blue"
                             className="mt-4">
-                            {' '}
-                            <Link href={'#'}> Create a campaing </Link>{' '}
+                            <Link href={'#'}> Create a campaign </Link>
                         </Button>
                     </div>
-                    <div className="w-[40%] h-[250px] flex items-center justify-center">
+                    <div className="w-full md:w-[40%] h-[200px] md:h-[250px] flex items-center justify-center">
                         <Image
                             src={goviral}
                             alt="go-viral"
-                            style={{ boxShadow: '0 0 10px 0 #BB9BFF' }}
-                            className="w-[90%] h-full  rounded-xl"
+                            className="w-full h-full object-cover rounded-xl shadow-[0_0_15px_rgba(187,155,255,0.4)]"
                         />
                     </div>
                 </div>

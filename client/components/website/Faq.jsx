@@ -30,7 +30,7 @@ const Faq = () => {
 
 
     return (
-        <div className='max-w-full max-auto bg-[#151A27]  sm:flex justify-center items-center max-sm:gap-10 p-20 py-20 text-white'>
+        <div className='max-w-full max-auto bg-[#151A27]  sm:flex justify-center items-center max-sm:gap-10 p-20 py-20 max-sm:px-8 text-white'>
             <div className=' w-full md:w-[40%]'>
                 <HeadingText text="Frequently Asked Questions" />
                 <Image src={faqImage} alt="FAQ" className='w-[80%] object-contain object-left'/>
