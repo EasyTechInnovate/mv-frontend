@@ -74,9 +74,9 @@ const AuthProvider = ({ children }) => {
     if (!localStorage.getItem('accessToken') && !publicPaths.includes(location.pathname)) {
       setLoading(false);
       setAuthenticated(false);
-      navigate('/signin');
+      window.location.href = '/signin';
     }
-  }, [setLoading, setAuthenticated, navigate, location.pathname]);
+  }, [setLoading, setAuthenticated, location.pathname]);
 
   if (isLoading) {
     return (
@@ -99,9 +99,10 @@ const AuthProvider = ({ children }) => {
 // Protected routes wrapper
 const ProtectedRoutes = () => {
   const { isAuthenticated, isLoading , user } = useAuthStore();
-  if (!isAuthenticated && !isLoading && user.role !== 'user' ) {
+  if (!isAuthenticated && !isLoading) {
     // Redirect to login if not authenticated
-    return <Navigate to="/signin" replace />;
+    window.location.href = '/signin';
+    return null;
   }
 
   return (

@@ -74,7 +74,7 @@ servicesAxiosInstance.interceptors.response.use(
                 // No refresh token available, clear storage and reject
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
-                window.location.href = '/login';
+                window.location.href = '/signin';
                 return Promise.reject(error);
             }
 
@@ -103,7 +103,7 @@ servicesAxiosInstance.interceptors.response.use(
                 processQueue(refreshError, null);
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
-                window.location.href = '/app/login';
+                window.location.href = '/signin';
                 return Promise.reject(refreshError);
             } finally {
                 isRefreshing = false;

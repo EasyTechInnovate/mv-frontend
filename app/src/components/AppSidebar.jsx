@@ -70,7 +70,7 @@ const AppSidebar = () => {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       clearAuth();
-      navigate('/signin');
+      window.location.href = '/signin';
     }
   };
 
