@@ -424,6 +424,12 @@ const reviewAggregatorApplication = (applicationId, payload) =>
 const createAggregatorAccount = (applicationId, payload) =>
     axiosClient.post(`/v1/admin/aggregator/applications/${applicationId}/create-account`, payload)
 
+const deleteAggregatorApplication = (applicationId) =>
+    axiosClient.delete(`/v1/admin/aggregator/applications/${applicationId}`)
+
+const bulkDeleteAggregatorApplications = (payload) =>
+    axiosClient.post(`/v1/admin/aggregator/applications/bulk-delete`, payload)
+
 const getUserById = (userId) => axiosClient.get(`/v1/admin/users/${userId}`)
 
 const applyForAggregator = (payload) => axiosClient.post(`/v1/aggregator/apply`, payload)
@@ -661,7 +667,8 @@ export default {
     getAggregatorApplicationById,
     reviewAggregatorApplication,
     createAggregatorAccount,
-    applyForAggregator,
+    deleteAggregatorApplication,
+    bulkDeleteAggregatorApplications,
     getKycUsers,
     getAdminPayoutRequests,
     getAdminPendingPayoutRequests,

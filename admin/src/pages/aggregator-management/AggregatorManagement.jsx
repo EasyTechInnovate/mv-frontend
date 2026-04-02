@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Plus, Search } from "lucide-react";
+import { Download, Plus, Search, Trash2, ListChecks } from "lucide-react";
 import GlobalApi from "@/lib/GlobalApi";
 import { toast } from "sonner";
 import AggregatorRequestReviewModal from "@/components/aggregator-management/AggregatorRequestReviewModal";
@@ -38,6 +38,8 @@ export default function AggregatorManagement({ theme }) {
   const [isCreateAccountModalOpen, setIsCreateAccountModalOpen] = useState(false);
   const [selectedAppIdForCreation, setSelectedAppIdForCreation] = useState(null);
   const [isAddNewAggregatorModalOpen, setIsAddNewAggregatorModalOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkMode, setBulkMode] = useState(false);
 
 
   const fetchApplications = async () => {
@@ -54,7 +56,11 @@ export default function AggregatorManagement({ theme }) {
       const res = await GlobalApi.getAllAggregatorApplications(params);
       const data = res.data.data;
       setApplications(data.applications || []);
-      setPagination(data.pagination || { totalPages: 1, totalItems: 0 });
+      setPagination({
+        totalPages: data.pagination?.totalPages || 1,
+        totalItems: data.pagination?.totalApplications || data.pagination?.totalCount || data.pagination?.totalItems || 0,
+      });
+      // setSelectedIds([]); // Removed to allow selection across pages
     } catch (err) {
       console.error("Failed to load applications:", err);
       toast.error("Failed to load aggregator applications.");
@@ -96,6 +102,51 @@ export default function AggregatorManagement({ theme }) {
 
   const handleApplicationCreated = () => {
     fetchApplications();
+  };
+
+  const handleSelectAll = (e) => {
+    // Only select/deselect icons that are on the current page and NOT restricted (account created)
+    const deletableOnPage = applications
+      .filter(app => !app.isAccountCreated)
+      .map(app => app._id);
+
+    if (e.target.checked) {
+      setSelectedIds(prev => [...new Set([...prev, ...deletableOnPage])]);
+    } else {
+      setSelectedIds(prev => prev.filter(id => !deletableOnPage.includes(id)));
+    }
+  };
+
+  const handleSelectRow = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to permanently delete this application?")) {
+      try {
+        await GlobalApi.deleteAggregatorApplication(id);
+        toast.success("Application deleted successfully");
+        setSelectedIds(prev => prev.filter(i => i !== id)); // Remove from selection
+        fetchApplications();
+      } catch (err) {
+        toast.error("Failed to delete application");
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (window.confirm(`Are you sure you want to permanently delete ${selectedIds.length} applications?`)) {
+      try {
+        await GlobalApi.bulkDeleteAggregatorApplications({ applicationIds: selectedIds });
+        toast.success("Applications deleted successfully");
+        setSelectedIds([]); // Clear all selections
+        fetchApplications();
+      } catch (err) {
+        toast.error("Failed to delete applications");
+      }
+    }
   };
 
 
@@ -166,15 +217,18 @@ export default function AggregatorManagement({ theme }) {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <Input
-          placeholder="Search by name, email, company..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className={`w-full md:w-1/3 ${
-            isDark ? "bg-[#151F28] border-gray-700 text-gray-200" : "bg-white"
-          }`}
-        />
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="relative flex-1 md:max-w-md">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 opacity-70" />
+          <Input
+            placeholder="Search by name, email, company..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className={`pl-9 ${
+              isDark ? "bg-[#151F28] border-gray-700 text-gray-200" : "bg-white"
+            }`}
+          />
+        </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -189,6 +243,33 @@ export default function AggregatorManagement({ theme }) {
           <option value="approved">Approved</option>
           <option value="rejected">Rejected</option>
         </select>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant={isDark ? "outline" : "secondary"}
+            onClick={() => {
+              setBulkMode(!bulkMode);
+              if (bulkMode) setSelectedIds([]);
+            }}
+            className={`flex items-center gap-2 rounded-lg ${
+              bulkMode ? "bg-red-500/10 text-red-500 border-red-500/50" : ""
+            }`}
+          >
+            <ListChecks className="h-4 w-4" />
+            {bulkMode ? "Exit Bulk Actions" : "Bulk Actions"}
+          </Button>
+
+          {bulkMode && selectedIds.length > 0 && (
+            <Button
+              variant="destructive"
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white rounded-lg animate-in fade-in slide-in-from-left-2"
+              onClick={handleBulkDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete ({selectedIds.length})
+            </Button>
+          )}
+        </div>
       </div>
 
       <div
@@ -207,6 +288,20 @@ export default function AggregatorManagement({ theme }) {
                 } text-left`}
               >
                 <tr>
+                  {bulkMode && (
+                    <th className="px-4 py-3 w-12 text-center">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-400 accent-red-600 cursor-pointer"
+                        onChange={handleSelectAll}
+                        checked={
+                          applications.length > 0 &&
+                          applications.every(app => app.isAccountCreated || selectedIds.includes(app._id)) &&
+                          applications.some(app => !app.isAccountCreated && selectedIds.includes(app._id))
+                        }
+                      />
+                    </th>
+                  )}
                   {["Name", "Email", "Company", "Status", "Account Created", "Submitted", "Actions"].map(
                     (header) => (
                       <th key={header} className="px-4 py-3 font-medium">
@@ -217,41 +312,72 @@ export default function AggregatorManagement({ theme }) {
                 </tr>
               </thead>
               <tbody>
-                {applications.length > 0 ? (
-                  applications.map((app) => (
+                  {applications.length === 0 && (
+                    <tr>
+                      <td colSpan={bulkMode ? 8 : 7} className="text-center py-10 opacity-60">
+                        No applications found matching your criteria.
+                      </td>
+                    </tr>
+                  )}
+                {applications.length > 0 && applications.map((app) => (
                     <tr
                       key={app._id}
                       className={`border-t ${
-                        isDark ? "border-gray-700" : "border-gray-200"
-                      }`}
+                        isDark ? "border-gray-700" : "border-gray-200 border-b"
+                      } ${selectedIds.includes(app._id) ? (isDark ? 'bg-red-500/5' : 'bg-red-50/50') : 'hover:bg-gray-800/40'}`}
                     >
-                      <td className="px-4 py-3">{`${app.firstName} ${app.lastName}`}</td>
-                      <td className="px-4 py-3">{app.emailAddress}</td>
+                      {bulkMode && (
+                        <td className="px-4 py-3 text-center">
+                          {!app.isAccountCreated ? (
+                            <input
+                              type="checkbox"
+                              className="w-4 h-4 rounded border-gray-400 accent-red-600 cursor-pointer"
+                              checked={selectedIds.includes(app._id)}
+                              onChange={() => handleSelectRow(app._id)}
+                            />
+                          ) : (
+                            <div className="w-4 h-4 mx-auto opacity-20 bg-gray-400/20 rounded" />
+                          )}
+                        </td>
+                      )}
+                      <td className="px-4 py-3 font-medium">{`${app.firstName} ${app.lastName}`}</td>
+                      <td className="px-4 py-3 text-gray-500">{app.emailAddress}</td>
                       <td className="px-4 py-3">{app.companyName}</td>
                       <td className="px-4 py-3">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs capitalize ${
+                          className={`px-2 py-0.5 rounded-full text-[11px] font-medium uppercase tracking-wider ${
                             app.applicationStatus === "pending"
-                              ? "bg-yellow-500/20 text-yellow-400"
+                              ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
                               : app.applicationStatus === "approved"
-                              ? "bg-green-500/20 text-green-400"
-                              : "bg-red-500/20 text-red-400"
+                              ? "bg-green-500/10 text-green-500 border border-green-500/20"
+                              : "bg-red-500/10 text-red-500 border border-red-500/20"
                           }`}
                         >
                           {app.applicationStatus}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        {app.isAccountCreated ? "Created" : "Not Created"}
+                        {app.isAccountCreated ? (
+                          <span className="flex items-center gap-1.5 text-xs text-green-500 font-medium">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                            Created
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-500 opacity-60">Not Created</span>
+                        )}
                       </td>
-                      <td className="px-4 py-3">
-                        {new Date(app.createdAt).toLocaleDateString()}
+                      <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+                        {new Date(app.createdAt).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
                       </td>
                       <td className="px-4 py-3 flex items-center gap-2">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="rounded-full"
+                          className={`rounded-full h-8 px-4 ${isDark ? "bg-[#1E293B] hover:bg-[#334155] border-gray-600 text-gray-100" : ""}`}
                           onClick={() => handleView(app._id)}
                         >
                           View
@@ -259,22 +385,25 @@ export default function AggregatorManagement({ theme }) {
                         {app.applicationStatus === 'approved' && !app.isAccountCreated && (
                           <Button
                             size="sm"
-                            className="ml-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full"
+                            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full h-8 px-4"
                             onClick={() => handleOpenCreateAccount(app._id)}
                           >
                             Create Account
                           </Button>
                         )}
+                        {!app.isAccountCreated && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-full w-8 h-8 p-0"
+                            onClick={() => handleDelete(app._id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="text-center py-6 text-gray-400">
-                      No applications found.
-                    </td>
-                  </tr>
-                )}
+                  ))}
               </tbody>
             </table>
           </div>

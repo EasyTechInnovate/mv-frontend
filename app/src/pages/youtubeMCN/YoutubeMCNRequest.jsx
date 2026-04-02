@@ -226,7 +226,7 @@ export default function YouTubeMCNRequest() {
           <div>
             <label className="block text-sm mb-1 ">YouTube Channel ID or Link</label>
             <input
-              type="url"
+              type="text"
               name="youtubeChannelId"
               value={formData.youtubeChannelId}
               onChange={handleChange}
