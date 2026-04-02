@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { subscriptionStats } from "./SubscriptionPlansData";
+import { subscriptionPlans } from "./SubscriptionPlansData";
 import SubscriptionCard from "@/components/subscription-plans/SubscriptionCard";
 import SubscriberTable from "@/components/subscription-plans/SubscriberTable";
 import CreateSubscriptionPlanModal from "../../components/subscription-plans/SubscriptionPlanModal";
@@ -14,10 +14,17 @@ export default function SubscriptionPlans({ theme }) {
   const [activeTab, setActiveTab] = useState("Everyone");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [stats, setStats] = useState([
+    { label: "Total Revenue", value: "₹0", icon: "💰" },
+    { label: "Total Subscribers", value: "0", icon: "👥" },
+    { label: "Active Plans", value: "0", icon: "📈" },
+    { label: "Avg. Revenue Per User", value: "₹0", icon: "🏆" },
+  ]);
 
   
   useEffect(() => {
     fetchPlans(activeTab);
+    fetchStats();
   }, [activeTab]);
 
   const TAB_TARGET_TYPE = {
@@ -37,10 +44,45 @@ export default function SubscriptionPlans({ theme }) {
           id: p.id ?? p._id,
         }));
         setPlans(normalized);
+        
+        // Update active plans count in stats
+        setStats(prev => prev.map(s => 
+          s.label === "Active Plans" ? { ...s, value: normalized.filter(p => p.isActive).length.toString() } : s
+        ));
       }
     } catch (err) {
       console.error("Failed to fetch plans:", err);
       toast.error("Failed to load subscription plans");
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const [revRes, userStatsRes] = await Promise.all([
+        GlobalApi.getRevenueSummary(),
+        GlobalApi.getUserStats()
+      ]);
+
+      const revData = revRes.data?.data?.total || { totalAmount: 0 };
+      const userData = userStatsRes.data?.data || { activeSubscribers: 0 };
+
+      setStats(prev => prev.map(s => {
+        if (s.label === "Total Revenue") {
+          return { ...s, value: `₹${revData.totalAmount.toLocaleString('en-IN')}` };
+        }
+        if (s.label === "Total Subscribers") {
+          return { ...s, value: userData.activeSubscribers.toLocaleString('en-IN') };
+        }
+        if (s.label === "Avg. Revenue Per User") {
+          const avg = userData.activeSubscribers > 0 
+            ? (revData.totalAmount / userData.activeSubscribers).toFixed(2) 
+            : "0";
+          return { ...s, value: `₹${avg}` };
+        }
+        return s;
+      }));
+    } catch (err) {
+      console.error("Failed to fetch dashboard stats:", err);
     }
   };
 
@@ -128,24 +170,15 @@ export default function SubscriptionPlans({ theme }) {
 
      
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {subscriptionStats.map((stat, i) => (
+        {stats.map((stat, i) => (
           <div
             key={i}
             className={`rounded-lg p-4 shadow-md ${
               isDark ? "bg-[#151F28]" : "bg-white"
             }`}
           >
-            <p className="text-sm">{stat.label}</p>
-            <p className="text-2xl font-semibold">{stat.value}</p>
-            <p
-              className={`text-xs mt-1 ${
-                stat.subtext.includes("+")
-                  ? "text-green-400"
-                  : "text-red-400"
-              }`}
-            >
-              {stat.subtext}
-            </p>
+            <p className="text-sm font-medium opacity-80">{stat.label}</p>
+            <p className="text-2xl font-bold mt-1">{stat.value}</p>
           </div>
         ))}
       </div>

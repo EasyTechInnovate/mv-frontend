@@ -56,8 +56,11 @@ axiosClient.interceptors.response.use(
 // ---------------------- Health ----------------------
 const getHealth = () => axiosClient.get('/v1/health')
 
-// ---------------------- Dashboard ----------------------
+// ---------------------- Dashboard & Analytics ----------------------
 const getDashboardData = () => axiosClient.get('/v1/dashboard/admin')
+const getRevenueSummary = (params) => axiosClient.get('/v1/admin/revenue/summary', { params })
+const getUserStats = () => axiosClient.get('/v1/admin/users/stats')
+const getSubscriptionStats = () => axiosClient.get('/v1/admin/subscriptions/stats')
 
 // ---------------------- Wallet Adjustment ----------------------
 export const getUserWallet = (userId) => axiosClient.get(`/v1/admin/wallets/${userId}`)
@@ -521,6 +524,9 @@ export default {
 
     getHealth,
     getDashboardData,
+    getRevenueSummary,
+    getUserStats,
+    getSubscriptionStats,
     getUserWallet,
     adjustUserWallet,
     getUserWalletTransactions,

@@ -273,23 +273,18 @@ export default function SubscriptionCard({
       </div>
 
       
-      <div className="mt-4 border-t border-gray-700/50 pt-3 text-sm text-gray-400 space-y-1">
+      {/* Metric Section: Only showing Active Subscribers for now */}
+      <div className="mt-4 border-t border-gray-700/50 pt-3 text-sm text-gray-400">
         {plan.trial?.enabled && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-2">
             <Clock className="h-4 w-4 text-yellow-400" />
             <span>Trial: {plan.trial.days} days</span>
           </div>
         )}
-
-        <div className="flex justify-between items-center mt-2">
-          <div>
-            <p className="text-xs">Subscribers</p>
-            <p className="font-medium text-white">{plan.subscribers ?? 0}</p>
-          </div>
-          <div>
-            <p className="text-xs">Monthly Revenue</p>
-            <p className="font-medium text-white">₹{plan.revenue ?? 0}</p>
-          </div>
+ 
+        <div className="bg-gray-800/20 rounded-lg p-2 text-center">
+          <p className="text-[10px] uppercase tracking-wider opacity-60">Active Subscribers</p>
+          <p className="text-lg font-bold text-white tabular-nums">{plan.subscriberCount ?? 0}</p>
         </div>
       </div>
 

@@ -113,6 +113,7 @@ export default function Sidebar({ isCollapsed = false, theme }) {
         { label: "Trending Labels", icon: <Package className="w-4 h-4" />, module: M.CONTENT },
         { label: "FAQ Management", icon: <FileText className="w-4 h-4" />, module: M.CONTENT },
         { label: "Press Management", icon: <Globe className="w-4 h-4" />, module: M.NEWS },
+        // { label: "Blog Management", icon: <Globe className="w-4 h-4" />, module: M.BLOG },
       ],
     },
     {

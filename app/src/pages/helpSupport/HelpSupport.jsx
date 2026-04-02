@@ -1012,9 +1012,11 @@ const HelpSupport = () => {
                   </div>
                   <h3 className="text-xl font-semibold mb-2">User Guides</h3>
                   <p className="mb-4">Step-by-step tutorials and documentation</p>
-                  <Button className="w-full">
-                    View Guides
-                  </Button>
+                  <a href="/blog">
+                    <Button className="w-full">
+                      View Guides
+                    </Button>
+                  </a>
                 </CardContent>
               </Card>
 
@@ -1025,9 +1027,11 @@ const HelpSupport = () => {
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Quick Start</h3>
                   <p className="mb-4">Get started with your first release in minutes</p>
-                  <Button className="w-full">
-                    Get Started
-                  </Button>
+                  <a href="/blog">
+                    <Button className="w-full">
+                      Get Started
+                    </Button>
+                  </a>
                 </CardContent>
               </Card>
 
@@ -1038,15 +1042,17 @@ const HelpSupport = () => {
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Community</h3>
                   <p className="mb-4">Connect with other artists and creators</p>
-                  <Button className="w-full">
-                    Join Community
-                  </Button>
+                  <a href="/blog">
+                    <Button className="w-full">
+                      Join Community
+                    </Button>
+                  </a>
                 </CardContent>
               </Card>
             </div>
 
             {/* Popular Resources */}
-            <Card className=" border-slate-700">
+            {/* <Card className=" border-slate-700">
               <CardHeader>
                 <CardTitle>Popular Resources</CardTitle>
               </CardHeader>
@@ -1068,7 +1074,7 @@ const HelpSupport = () => {
                   </div>
                 ))}
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Video Tutorials Section */}
             <Card className="rounded-lg border bg-card p-6 shadow-sm border-slate-700">

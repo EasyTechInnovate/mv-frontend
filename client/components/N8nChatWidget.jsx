@@ -40,49 +40,138 @@ export default function N8nChatWidget() {
 
         /* Header */
         --chat--header-height: auto;
-        --chat--header--padding: var(--chat--spacing);
-        --chat--header--background: linear-gradient(135deg, #9333ea, #3b82f6);
+        --chat--header--padding: 1.25rem;
+        --chat--header--background: linear-gradient(135deg, #711CE9, #4f46e5);
         --chat--header--color: #ffffff;
-        --chat--heading--font-size: 1.1em;
+        --chat--heading--font-size: 1.15rem;
         --chat--subtitle--line-height: 1.6;
+        --chat--subtitle--font-size: 0.85rem;
+        --chat--subtitle--color: rgba(255, 255, 255, 0.85);
 
         /* Messages */
         --chat--message--font-size: 0.95rem;
-        --chat--message--padding: 0.7rem 1rem;
-        --chat--message--border-radius: 1rem;
-        --chat--message-line-height: 1.5;
-        --chat--message--bot--background: #1f2937; /* dark gray bubble */
+        --chat--message--padding: 0.75rem 1.1rem;
+        --chat--message--border-radius: 1.25rem;
+        --chat--message-line-height: 1.6;
+        --chat--message--bot--background: #1f2937;
         --chat--message--bot--color: #f9fafb;
-        --chat--message--user--background: linear-gradient(135deg, #9333ea, #3b82f6);
+        --chat--message--user--background: linear-gradient(135deg, #711CE9, #4f46e5);
         --chat--message--user--color: #ffffff;
 
         /* Toggle button */
-        --chat--toggle--background: linear-gradient(135deg, #9333ea, #3b82f6);
-        --chat--toggle--hover--background: #7e22ce;
-        --chat--toggle--active--background: #6b21a8;
+        --chat--toggle--background: linear-gradient(135deg, #711CE9, #4f46e5);
+        --chat--toggle--hover--background: #5a16ba;
+        --chat--toggle--active--background: #4a129a;
         --chat--toggle--color: #ffffff;
-        --chat--toggle--size: 56px;
+        --chat--toggle--size: 60px;
       }
 
-      /* Extra custom overrides for cooler look */
-      .chat__header {
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        border-bottom: none;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      /* High Specificity Selectors for n8n Chat Widget */
+      .chat-window .chat-header {
+        font-weight: 700 !important;
+        letter-spacing: 0.3px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+        padding-left: 4.5rem !important;
+        position: relative !important;
+        min-height: 70px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        gap: 2px !important;
+        background: linear-gradient(135deg, #711CE9, #4f46e5) !important;
       }
 
-      .chat__message--bot {
-        border: 1px solid #374151;
+      /* Avatar Injection */
+      .chat-window .chat-header::before {
+        content: "" !important;
+        position: absolute !important;
+        left: 1.25rem !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        border-radius: 50% !important;
+        background-image: url('/MahiAI.jpeg') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        border: 2px solid rgba(255, 255, 255, 0.4) !important;
+        box-shadow: 0 0 15px rgba(113, 28, 233, 0.4) !important;
+        z-index: 1000 !important;
+        display: block !important;
       }
 
-      .chat__message--user {
-        font-weight: 500;
-        box-shadow: 0 2px 8px rgba(147, 51, 234, 0.5);
+      .chat-window .chat-header h1 {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 1.25rem !important;
+        color: #ffffff !important;
       }
 
+      /* Online Status Dot in Subtitle */
+      .chat-window .chat-header p {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        opacity: 1 !important;
+        font-weight: 500 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-size: 0.8rem !important;
+        line-height: 1 !important;
+      }
+
+      .chat-window .chat-header p::before {
+        content: "" !important;
+        display: inline-block !important;
+        width: 8px !important;
+        height: 8px !important;
+        background-color: #10b981 !important; /* emerald-500 */
+        border-radius: 50% !important;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.9) !important;
+        animation: status-pulse 2s infinite !important;
+        flex-shrink: 0 !important;
+      }
+
+      @keyframes status-pulse {
+        0% { transform: scale(0.9); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.7; }
+        100% { transform: scale(0.9); opacity: 1; }
+      }
+
+      /* Message Bubbles Styling */
+      .chat-message.chat-message-from-bot {
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-bottom-left-radius: 4px !important;
+        background-color: #1f2937 !important;
+        color: #ffffff !important;
+      }
+
+      .chat-message.chat-message-from-user {
+        box-shadow: 0 4px 12px rgba(113, 28, 233, 0.3) !important;
+        border-bottom-right-radius: 4px !important;
+        background: linear-gradient(135deg, #711CE9, #4f46e5) !important;
+        color: #ffffff !important;
+      }
+
+      .chat-window-toggle {
+        box-shadow: 0 8px 24px rgba(113, 28, 233, 0.5) !important;
+        transition: all 0.3s ease !important;
+      }
+
+      .chat-window-toggle:hover {
+        transform: scale(1.1) translateY(-2px) !important;
+      }
+ 
       .chat__toggle {
-        box-shadow: 0 4px 12px rgba(147, 51, 234, 0.6);
+        box-shadow: 0 8px 24px rgba(113, 28, 233, 0.5);
+        transition: all 0.3s ease !important;
+      }
+
+      .chat__toggle:hover {
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 12px 30px rgba(113, 28, 233, 0.6);
       }
 
       .chat__textarea {
@@ -132,7 +221,7 @@ export default function N8nChatWidget() {
         i18n: {
           en: {
             title: 'Mahi AI',
-            subtitle: " ",
+            subtitle: 'Online • Responds instantly',
             inputPlaceholder: 'Type your question..',
           },
         }
