@@ -30,10 +30,10 @@ const EditBasicReleaseBuilder = () => {
     queryFn: getUserSublabels,
   })
   const sublabelsRaw = sublabelsData?.data?.sublabels || []
-  // Always ensure "Maheshwari Visual" is present as default
-  const sublabels = sublabelsRaw.some(sl => sl.name === 'Maheshwari Visual')
+  // Always ensure "Maheshwari Visuals" is present as default
+  const sublabels = sublabelsRaw.some(sl => sl.name === 'Maheshwari Visuals')
     ? sublabelsRaw
-    : [{ id: 'default_mv', name: 'Maheshwari Visual', isDefault: true }, ...sublabelsRaw]
+    : [{ id: 'default_mv', name: 'Maheshwari Visuals', isDefault: true }, ...sublabelsRaw]
   const [currentStep, setCurrentStep] = useState(0);
   const [releaseType, setReleaseType] = useState('');
   const [releaseId, setReleaseId] = useState('');

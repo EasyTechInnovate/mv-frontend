@@ -185,6 +185,10 @@ export default function EditProfileModal({ isOpen, onClose, user, theme, onSucce
           totalReleases: Number(formData.aggregatorData.totalReleases),
           monthlyReleasePlans: Number(formData.aggregatorData.monthlyReleasePlans)
         };
+      } else if (user?.userType === 'artist') {
+        payload.artistData = {
+          ...formData.artistData
+        };
       }
 
       await GlobalApi.updateUserProfile(user._id, payload);

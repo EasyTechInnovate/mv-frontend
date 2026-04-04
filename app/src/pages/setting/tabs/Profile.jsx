@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Camera, Link, Shield, CreditCard, Loader, IndianRupee, Wallet, ArrowUp, Tag } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useAuthStore } from '@/store/authStore';
-import { getMySubscription, getAllSubscriptionPlans, updateProfile, updateSocialMedia, verifyKYC, createPaymentIntent, verifyPayment } from '@/services/api.services';
+import { getMySubscription, getAllSubscriptionPlans, updateProfile, updateSocialMedia, verifyKYC, updatePayoutMethods, createPaymentIntent, verifyPayment } from '@/services/api.services';
 import { showToast } from '@/utils/toast';
 import { uploadToImageKit } from '@/utils/imagekitUploader';
 import { useNavigate } from 'react-router-dom';
@@ -526,6 +526,14 @@ const Profile = () => {
         showToast.error('Please enter a valid PAN Number (e.g., ABCDE1234F)');
         return;
       }
+      if (details.gstUdhyamNumber) {
+        const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+        const udhyamRegex = /^UDYAM-[A-Z]{2}-[0-9]{2}-[0-9]{7,10}$/i;
+        if (!gstRegex.test(details.gstUdhyamNumber) && !udhyamRegex.test(details.gstUdhyamNumber)) {
+          showToast.error('Please enter a valid GST (15 digits) or Udhyam (e.g., UDYAM-XX-00-1234567) Number');
+          return;
+        }
+      }
     } else {
       if (!details.passportNumber || details.passportNumber.length < 6) {
         showToast.error('Please enter a valid Passport Number (min 6 characters)');
@@ -575,9 +583,15 @@ const Profile = () => {
         showToast.error('Please enter a valid Bank Account Number (9-18 digits)');
         return;
       }
-      if (ifscSwiftCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscSwiftCode.toUpperCase())) {
-        showToast.error('Please enter a valid 11-character IFSC/SWIFT Code');
-        return;
+      if (ifscSwiftCode) {
+        const code = ifscSwiftCode.toUpperCase();
+        const isIfsc = /^[A-Z]{4}0[A-Z0-9]{6}$/.test(code);
+        const isSwift = /^[A-Z]{4,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3})?$/.test(code) || /^[A-Z0-9]{8,11}$/.test(code); // Simplified check to be more inclusive while still providing some structure
+        
+        if (!isIfsc && !isSwift) {
+          showToast.error('Please enter a valid 11-character IFSC or 8/11-character SWIFT Code');
+          return;
+        }
       }
     } else if (method === 'upi') {
       const { upiId } = formData.payoutMethods.upi;
