@@ -53,7 +53,7 @@ export default function Sidebar({ isCollapsed = false, theme }) {
         </span>
       ),
       links: [
-        { label: "Month Management", icon: <CalendarDays className="w-4 h-4" />, module: M.ANALYTICS },
+        { label: "Month Management", icon: <CalendarDays className="w-4 h-4" />, module: M.FINANCIAL },
         { label: "Analytics Management", icon: <ChartColumnIncreasing className="w-4 h-4" />, module: M.ANALYTICS },
         { label: "Bonus Management", icon: <DollarSign className="w-4 h-4" />, module: M.ROYALTY },
         { label: "Royalty Management", icon: <DollarSign className="w-4 h-4" />, module: M.ROYALTY },
@@ -96,7 +96,7 @@ export default function Sidebar({ isCollapsed = false, theme }) {
         </span>
       ),
       links: [
-        { label: "Notifications", icon: <Bell className="w-4 h-4" />, module: null },
+        { label: "Notifications", icon: <Bell className="w-4 h-4" />, module: M.USER_MGMT },
         { label: "Help & Support", icon: <Headset className="w-4 h-4" />, module: M.SUPPORT },
       ],
     },
