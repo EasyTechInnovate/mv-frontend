@@ -152,10 +152,8 @@ const AppHeader = () => {
           <div className="hidden md:flex items-center space-x-4">
             <div className="h-6 w-px bg-border" />
             <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 bg-purple-600 rounded-md flex items-center justify-center">
-                <Music className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-xl font-bold">Maheshwari Visuals</span>
+              <img src="/app/shortlogo.png" alt="Logo" className="w-6 h-6 object-contain" />
+              <span className="text-xl font-bold tracking-tight">MV Distribution</span>
             </div>
           </div>
         </div>

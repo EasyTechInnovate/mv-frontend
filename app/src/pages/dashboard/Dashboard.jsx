@@ -152,7 +152,7 @@ const Dashboard = () => {
                   </Badge>
                 </div>
                 <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                  Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-200">{user?.firstName || 'Aggregator'}!</span>
+                  Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-200">{user?.aggregatorData?.companyName ||user?.firstName || 'Aggregator'}!</span>
                 </h2>
                 <p className="text-indigo-100/80 text-lg max-w-2xl font-medium">
                   Manage your distribution network, track multi-artist performance, and scale your music business efficiently.
@@ -244,7 +244,7 @@ const Dashboard = () => {
                   </span> */}
                 </div>
                 <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                  Good day, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">{user?.firstName || 'Label Owner'}!</span>
+                  Good day, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">{user?.labelData?.labelName || user?.firstName || 'Label Owner'}!</span>
                 </h2>
                 <p className="text-blue-100/80 text-lg max-w-2xl font-medium">
                   Oversee your entire catalog, monitor performance across all artists, and drive your label's success.

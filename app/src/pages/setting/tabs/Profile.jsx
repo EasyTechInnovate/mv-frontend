@@ -756,6 +756,7 @@ const Profile = () => {
                 onChange={(e) => handleInputChange('accountName', e.target.value)}
                 placeholder="Account Name"
                 className="border-slate-700"
+                disabled
               />
             </div>
             <div className="space-y-2">

@@ -64,6 +64,7 @@ export default function UserManagement({ theme }) {
   const [isAssignedLabelsOpen, setIsAssignedLabelsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({ totalPages: 1, totalItems: 0 });
+  const [apiStats, setApiStats] = useState({ totalUsers: 0, aggregators: 0, artists: 0, labels: 0 });
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   
@@ -123,6 +124,9 @@ export default function UserManagement({ theme }) {
         totalPages: apiPagination?.totalPages || 1,
         totalItems: apiPagination?.totalCount || 0,
       });
+      if (res.data.data.stats) {
+        setApiStats(res.data.data.stats);
+      }
     } catch (err) {
       console.error(err);
       toast.error("Failed to load users");
@@ -167,18 +171,11 @@ export default function UserManagement({ theme }) {
     }
   };
 
-  // Stats are now less accurate as they only reflect the current page of users.
-  // Consider fetching these stats from a separate API endpoint if accuracy is needed.
-  const totalUsers = users.length;
-  const aggregators = users.filter((u) => u.userType === "aggregator").length;
-  const artists = users.filter((u) => u.userType === "artist").length;
-  const labels = users.filter((u) => u.userType === "label").length;
-
   const stats = [
-    { label: "Total Users", value: pagination.totalItems },
-    { label: "Aggregators", value: users.filter((u) => u.userType === "aggregator").length },
-    { label: "Artists", value: users.filter((u) => u.userType === "artist").length },
-    { label: "Labels", value: users.filter((u) => u.userType === "label").length },
+    { label: "Total Users", value: apiStats.totalUsers },
+    { label: "Aggregators", value: apiStats.aggregators },
+    { label: "Artists", value: apiStats.artists },
+    { label: "Labels", value: apiStats.labels },
   ];
 
   return (

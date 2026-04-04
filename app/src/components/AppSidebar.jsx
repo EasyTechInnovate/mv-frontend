@@ -77,13 +77,13 @@ const AppSidebar = () => {
   return (
     <Sidebar className="border-r">
       <SidebarHeader className="p-4">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-top space-x-3">
           <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
             <Music className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold">Maheshwari</h1>
-            <span className="text-sm text-muted-foreground">Visuals</span>
+            <h1 className="text-lg font-semibold leading-none">Maheshwari</h1>
+            <h1 className="text-lg font-semibold">Visuals</h1>
           </div>
         </div>
       </SidebarHeader>
