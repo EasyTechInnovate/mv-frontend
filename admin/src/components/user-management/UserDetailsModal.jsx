@@ -73,7 +73,7 @@ export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark'
       "LinkedIn", "TikTok", "Twitter", "Website", "Label Name", "Label YT", "Label IG", "Label FB", "Label Website", "Label Popular Links", 
       "Label Freq", "Monthly Plans", "Label Info", "Bank Holder", "Bank Name", "Account Number", "IFSC", "Paypal Email", "Join Date", 
       "KYC Status", "KYC Residency", "Aadhaar No", "PAN No", "GST No", "Passport No", "VAT No", "UPI ID", "UPI Holder", 
-      "Services", "Associated Labels", "Email Verified", "Bank Verified", "Account Status", "Plan", "Membership Status", "Start Date", "End Date"
+      "Services", "Associated Labels", "Email Verified", "Bank Verified", "Account Status", "Plan", "Membership Status", "Start Date", "End Date", "Net Revenue Share"
     ];
 
     const dataRow = [
@@ -92,7 +92,8 @@ export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark'
       user.kyc?.details?.vatNumber || "", user.payoutMethods?.upi?.upiId || "", user.payoutMethods?.upi?.accountHolderName || "", 
       joinArr(user.aggregatorData?.additionalServices), joinArr(user.aggregatorData?.associatedLabels), formatBool(user.isEmailVerified), 
       formatBool(user.payoutMethods?.bank?.verified), user.isActive ? "Active" : "Inactive", user.subscription?.planId || "Free", 
-      user.subscription?.status || "Inactive", formatDate(user.subscription?.validFrom), formatDate(user.subscription?.validUntil)
+      user.subscription?.status || "Inactive", formatDate(user.subscription?.validFrom), formatDate(user.subscription?.validUntil),
+      user.subscription?.netRevenueShare !== undefined ? `${user.subscription.netRevenueShare}%` : "0%"
     ];
 
     const csvContent = [headers.join(","), dataRow.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")].join("\n");
@@ -381,6 +382,7 @@ export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark'
                 <DetailItem label="Status" value={user.subscription?.status} isBadge badgeVariant={subscriptionStatusVariant[user.subscription?.status]}/>
                 <DetailItem label="Valid Until" value={user.subscription?.validUntil ? new Date(user.subscription.validUntil).toLocaleDateString() : 'N/A'} />
                 <DetailItem label="Auto-Renewal" value={user.subscription?.autoRenewal ? 'Enabled' : 'Disabled'} />
+                <DetailItem label="Net Revenue Share" value={user.subscription?.netRevenueShare ? `${user.subscription.netRevenueShare}%` : '0%'} />
               </Section>
             )}
 

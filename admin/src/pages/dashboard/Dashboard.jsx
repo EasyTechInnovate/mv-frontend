@@ -131,8 +131,8 @@ useEffect(() => {
           ...mockDashboardRes.pendingKYC,
           count: realData.pendingKYC?.total || 0,
           breakdown: {
-            urgent: realData.pendingKYC?.urgent || 0,
-            standard: realData.pendingKYC?.standard || 0,
+            unverified: realData.pendingKYC?.unverified || 0,
+            pending: realData.pendingKYC?.pending || 0,
           }
         },
         totalCatalog: {
@@ -144,7 +144,7 @@ useEffect(() => {
             percentage: "0%",
         },
         platformUsage24h: realData.charts?.platformUsage24h || mockDashboardRes.platformUsage24h,
-        revenueGrowth: realData.charts?.revenueGrowth || mockDashboardRes.revenueGrowth,
+        revenueGrowth: (realData.charts?.revenueGrowth || mockDashboardRes.revenueGrowth).slice(-5),
         userTypeDistribution: userTypeChartData,
         recentActivities: realData.recentSystemActivities?.length > 0 ? realData.recentSystemActivities : mockDashboardRes.recentActivities,
         systemHealth: systemHealthTransformed,

@@ -711,7 +711,7 @@ const Profile = () => {
               </label>
             </div>
             <div className="space-y-2">
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={() => fileInputRef.current.click()} className="border-slate-600">
                   Upload New Photo
                 </Button>

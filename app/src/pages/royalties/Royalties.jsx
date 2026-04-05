@@ -514,9 +514,7 @@ export default function Royalties() {
                       <XAxis dataKey="month" className="text-muted-foreground" />
                       <YAxis className="text-muted-foreground" />
                       <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151' }} itemStyle={{ color: '#fff' }} />
-                      <Bar dataKey="streaming" stackId="a" fill="#8B5CF6" name="Total Regular" />
-                      <Bar dataKey="mechanical" stackId="a" fill="#10B981" name="Mechanical" />
-                      <Bar dataKey="sync" stackId="a" fill="#F59E0B" name="Sync" />
+                      <Bar dataKey="streaming" fill="#8B5CF6" name="Total Regular" />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -591,9 +589,7 @@ export default function Royalties() {
                       <XAxis dataKey="month" className="text-muted-foreground" />
                       <YAxis className="text-muted-foreground" />
                       <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151' }} itemStyle={{ color: '#fff' }} />
-                      <Bar dataKey="streaming" stackId="b" fill="#8B5CF6" name="Total Bonus" />
-                      <Bar dataKey="mechanical" stackId="b" fill="#10B981" name="Mechanical" />
-                      <Bar dataKey="sync" stackId="b" fill="#F59E0B" name="Sync" />
+                      <Bar dataKey="streaming" fill="#8B5CF6" name="Total Bonus" />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>

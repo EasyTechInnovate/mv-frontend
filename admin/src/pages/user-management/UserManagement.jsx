@@ -708,7 +708,8 @@ setIsResetPasswordOpen(true);
           { label: "Membership Plan", key: "mem_plan" },
           { label: "Membership Status", key: "mem_status" },
           { label: "Membership Start Date", key: "mem_start" },
-          { label: "Membership End Date", key: "mem_end" }
+          { label: "Membership End Date", key: "mem_end" },
+          { label: "Net Revenue Share", key: "net_revenue_share" }
         ]}
         fetchData={async (page, limit) => {
           try {
@@ -801,7 +802,8 @@ setIsResetPasswordOpen(true);
                 mem_plan: u.subscription?.planId || "Free",
                 mem_status: u.subscription?.status || "Inactive",
                 mem_start: formatDate(u.subscription?.validFrom || u.aggregatorSubscription?.startDate),
-                mem_end: formatDate(u.subscription?.validUntil || u.aggregatorSubscription?.endDate)
+                mem_end: formatDate(u.subscription?.validUntil || u.aggregatorSubscription?.endDate),
+                net_revenue_share: u.subscription?.netRevenueShare !== undefined ? `${u.subscription.netRevenueShare}%` : "0%"
               };
             });
           } catch (err) {
