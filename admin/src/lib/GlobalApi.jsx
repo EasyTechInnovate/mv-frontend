@@ -675,6 +675,7 @@ export default {
     createAggregatorAccount,
     deleteAggregatorApplication,
     bulkDeleteAggregatorApplications,
+    applyForAggregator,
     getKycUsers,
     getAdminPayoutRequests,
     getAdminPendingPayoutRequests,

@@ -28,7 +28,7 @@ const Footer = () => {
   const moreLinks = [
     { title: 'About', href: '/about-us' },
     { title: 'Press', href: '/press' },
-    { title: 'Contact', href: '/contact-us' },
+    { title: 'Contact', href: '/contact' },
     { title: 'Blog', href: '/blog' },
     { title: 'Newsletter', href: '/newsletter' },
     { title: 'Sign up', href: '/signin' },

@@ -73,7 +73,7 @@ const DistributionAgreement = () => {
             </CardHeader>
             <CardContent className="text-muted-foreground leading-relaxed">
               <p>
-                The user owns Property To Be Licensed ("Property"). In accordance with this Agreement, User grants Firm an exclusive license to Use or Sell Highlight The Terms That Apply the Property. The user retains title and Ownership of the Property. Firm will own all rights to materials, products or other works (the Work) created by Firm in connection with this license. This grant of license applies only to the following described geographical area:
+                The user owns Property To Be Licensed ("Property"). In accordance with this Agreement, User grants Firm an exclusive license to Use or Sell Highlight The Terms That Apply the Property. The user retains title and Copyright Ownership of the Property. Firm will own all rights to materials, products or other works (the Work) created by Firm in connection with this license. This grant of license applies only to the following described geographical area:
               </p>
             </CardContent>
           </Card>
@@ -85,7 +85,7 @@ const DistributionAgreement = () => {
             </CardHeader>
             <CardContent className="text-muted-foreground leading-relaxed">
               <p>
-                Firm shall be the sole owner of the Work and all proprietary rights in and to the Work; however, such ownership shall not include ownership of the copyright in and to the Property or any other rights to the Property not specifically granted in this Agreement.
+                Firm shall be the sole User of the Work and all proprietary rights in and to the Work; however, such Ownership shall not include Ownership of the copyright in and to the Property or any other rights to the Property not specifically granted in this Agreement.
               </p>
             </CardContent>
           </Card>
@@ -95,109 +95,41 @@ const DistributionAgreement = () => {
             <CardHeader className="flex flex-row items-center gap-4">
               <CardTitle className="text-xl font-bold uppercase tracking-tight">3. PAYMENT.</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-8 text-muted-foreground pl-6">
-              <p className="font-bold  p-2 rounded inline-block">3.1 Firm agrees to pay User a royalty which shall be calculated as follows:</p>
-
-              <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <div className="space-y-6">
-                  {/* Distribution Services Table */}
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-700/50">
-                        <th className="text-left font-bold text-foreground pb-2">Plan Name</th>
-                        <th className="text-right font-bold text-foreground pb-2">Royalty (%)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-700/50">
-                      <tr>
-                        <td className="py-3">One Song Distribution Service</td>
-                        <td className="py-3 text-right">90%</td>
-                      </tr>
-                      <tr>
-                        <td className="py-3">One Album Distribution Service</td>
-                        <td className="py-3 text-right">90%</td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                  {/* Artist Plan Table */}
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-700/50">
-                        <th className="text-left font-bold text-foreground pb-2">Artist Plan</th>
-                        <th className="text-right font-bold text-foreground pb-2">Royalty (%)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-700/50">
-                      <tr>
-                        <td className="py-3">1 Month Starter Plan</td>
-                        <td className="py-3 text-right">70%</td>
-                      </tr>
-                      <tr>
-                        <td className="py-3">6 Months Advance Plan</td>
-                        <td className="py-3 text-right">80%</td>
-                      </tr>
-                      <tr>
-                        <td className="py-3">1 Year Pro Plan</td>
-                        <td className="py-3 text-right">90%</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Label Plan Table */}
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-700/50">
-                        <th className="text-left font-bold text-foreground pb-2">Label Plan</th>
-                        <th className="text-right font-bold text-foreground pb-2">Royalty (%)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-700/50">
-                      <tr>
-                        <td className="py-3">1 Months Starter Plan</td>
-                        <td className="py-3 text-right">70%</td>
-                      </tr>
-                      <tr>
-                        <td className="py-3">6 Months Advance Plan</td>
-                        <td className="py-3 text-right">80%</td>
-                      </tr>
-                      <tr>
-                        <td className="py-3">1 Year Pro Plan</td>
-                        <td className="py-3 text-right">90%</td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                  <div className="pt-2 flex justify-between gap-4">
-                     <span className="font-bold text-foreground w-1/2">For Aggregators</span>
-                     <span className="w-1/2 text-sm text-right">There is a custom agreement with custom terms and conditions. Fill the apply now aggregator form. Our dedicated team will coordinate you.</span>
-                  </div>
+            <CardContent className="space-y-6 text-muted-foreground pl-6 pt-4">
+              <div className="space-y-4">
+                <p className="text-foreground p-2 rounded inline-block font-medium leading-relaxed">
+                  3.1 The User shall be entitled to receive royalties based on the revenue share percentage applicable to the subscription plan selected by the User at the time of purchase. Such royalty shall be calculated on the net revenue received from distribution platforms, in accordance with the terms of the applicable subscription plan. The Firm reserves the absolute right to modify, revise, or discontinue any subscription plan, including the applicable royalty percentages, pricing, and features, at its sole discretion. Any such changes shall apply prospectively and shall not affect royalties accrued prior to the effective date of such modification. Continued use of the services after such changes shall constitute acceptance of the revised terms.
+                </p>
+                
+                <div className="pt-4 flex justify-between gap-4 border-t border-slate-700/50 mt-4 max-w-4xl">
+                  <span className="font-bold text-foreground w-1/2">For Aggregators</span>
+                  <span className="w-1/2 text-sm text-right leading-relaxed">
+                    There is a custom agreement with custom terms and conditions. Fill the apply now aggregator form. Our dedicated team will coordinate you.
+                  </span>
                 </div>
               </div>
 
               <div className="space-y-4 pt-4">
-                <p className=" p-2 rounded text-foreground inline-block">
-                  3.2 We will pay you a share of the net revenue received from different distribution platform/s and networks or otherwise, after deduction of content IPR Users payment or any such 3rd party payment if any, that we might have to give by law enforced on us.
+                <p className="text-foreground p-2 rounded inline-block leading-relaxed">
+                  3.2 The User shall receive their applicable revenue share from the gross revenue received from digital distribution platforms, after deduction of only statutory taxes as required by applicable law. No additional platform fees, DSP charges, or operational deductions shall be applied beyond the agreed subscription plan and revenue share.
                 </p>
-                <p className=" p-2 rounded text-foreground inline-block">
+                <p className="text-foreground p-2 rounded inline-block leading-relaxed">
                   3.3 The User will be liable to pay separately for marketing/promotion/playlist pitching/advertisement services. The consideration towards such services shall be decided upon mutual agreement between the Parties.
                 </p>
-                <p className=" p-2 rounded text-foreground inline-block">
-                  3.4 In the event, the User wants to take down the Property, they shall be liable to pay Rs. 500/- as take-down fees.
+                <p className="text-foreground p-2 rounded inline-block leading-relaxed">
+                  3.4 In the event the User requests a manual take-down of the Property within the first thirty (30) days of its initial release, a one-time take-down fee of Rs. 500/release- shall apply. After this initial thirty (30) day period has passed, the User may request a take-down of the Property at any time without incurring any fees, penalties, or deductions whatsoever.
                 </p>
-                <p className=" p-2 rounded text-foreground inline-block">
-                  3.5 In the event of any infringement notice or claims, the User shall be liable to pay Rs. 5000/- as take-down fees.
+                <p className="text-foreground p-2 rounded inline-block leading-relaxed">
+                  3.5 In the event the Firm receives a third-party copyright infringement notice or claim regarding the Property, the Firm must immediately notify the User in writing. The User shall be granted a period of 24 - 48 business hours to provide documentation demonstrating valid copyright Ownership or a legal counter-notice. The User shall only be liable to pay the Penalty of Rs. 5000/- if the User fails to provide such proof of Ownership within the stipulated time and it is determined that the Property must be removed due to actual, proven copyright infringement. No penalties or fees shall be levied against the User for baseless or unverified claims.
                 </p>
-                <p className=" p-2 rounded text-foreground inline-block">
+                <p className="text-foreground p-2 rounded inline-block leading-relaxed">
                   3.6 In the event, the User wants to release the Property on Metadata or update it or re-release it, they shall be liable to pay Rs. 100/- per release.
                 </p>
-                <p className=" p-2 rounded text-foreground inline-block">
+                <p className="text-foreground p-2 rounded inline-block leading-relaxed">
                   3.7 The User will receive the analytical report post release of the Property, and they shall be given after every 90 days.
                 </p>
-                <p className=" p-2 rounded text-foreground inline-block">
-                  3.8 The User will be liable to pay DSP Fees, taxes, claims and deductions, and the same shall be deducted from the Royalty fees.
+                <p className="text-foreground p-2 rounded inline-block leading-relaxed">
+                  3.8 The subscription fee paid by the User shall be deemed inclusive of all distribution, platform, and operational costs incurred by the Firm. No additional deductions, fees, or charges shall be applied to the User's royalty earnings except for statutory taxes mandated by law.
                 </p>
               </div>
             </CardContent>
@@ -297,11 +229,14 @@ const DistributionAgreement = () => {
               <CardTitle className="text-xl font-bold uppercase tracking-tight">11. TERM</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-muted-foreground leading-relaxed">
-              <p className=" p-2 rounded text-foreground inline-block font-medium">
-                This Agreement shall come in force from the signup date date ("Effective Date") for all the purposes of this Agreement.
+              <p className="p-2 rounded text-foreground inline-block font-medium">
+                This Agreement shall come into force on the date the User subscribes to and purchases any active subscription plan offered by the Firm (the "Effective Date"). This Agreement shall remain valid for the duration of the active subscription period selected by the user. The Agreement shall automatically renew upon each successful renewal of the subscription plan, unless terminated by either Party in accordance with the terms of this Agreement.
               </p>
               <p>
-                This Agreement shall be in place for a period of 1 Year and the same shall auto-renew unless terminated by either of the Parties, as per the terms and conditions of this Agreement.
+                The User shall remain obligated to provide any and all documents, information, or verification materials as may be reasonably requested by the Firm at any time during the Term and until the complete removal or takedown of all distributed content from all platforms. The Firm shall remain obligated to account for and pay all royalties accrued from the exploitation of the content in accordance with this Agreement, including any royalties generated prior to termination, until such time as all dues are fully settled.
+              </p>
+              <p>
+                Failure by the User to maintain an active subscription may result in suspension of services, without affecting the Firm's rights or the User's obligations under this Agreement.
               </p>
             </CardContent>
           </Card>
@@ -316,7 +251,7 @@ const DistributionAgreement = () => {
                 This Agreement may be terminated by either party by providing 90 days written notice to the other party. This Agreement shall terminate automatically on Termination Date.
               </p>
               <p>
-                i. Upon termination or expiration of this Agreement, Licensee Firm shall cease reproducing, advertising, marketing and distributing the Work as soon as is commercially feasible. Licensee shall have the right to fill existing orders and to sell off existing copies of the Work then in stock. Users will have the right to verify the existence and validity of the existing orders and existing copies of the Work then in stock upon reasonable notice to Licensee.
+                i. Upon termination, the Firm shall cease distribution of the content and initiate takedown from all platforms within a commercially reasonable time.
               </p>
               <p>
                 ii. Termination or expiration of this Agreement shall not extinguish any of Licensee's or Copyright User's obligations under this Agreement including, but not limited to, the obligation to pay royalties which by their terms continue after the date of termination or expiration.

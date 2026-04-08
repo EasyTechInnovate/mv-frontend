@@ -176,12 +176,17 @@ const Profile = () => {
 
   const userTargetType = user?.userType === 'label' ? 'label' : user?.userType === 'artist' ? 'artist' : 'everyone';
 
-  // Fetch all subscription plans filtered by user type
-  const { data: allPlansData, isLoading: allPlansLoading } = useQuery({
-    queryKey: ['allSubscriptionPlans', userTargetType],
-    queryFn: () => getAllSubscriptionPlans(userTargetType),
+  // Fetch all subscription plans and filter by user type to ensure everyone plans are included
+  const { data: allPlansDataRaw, isLoading: allPlansLoading } = useQuery({
+    queryKey: ['allSubscriptionPlans', 'all'],
+    queryFn: () => getAllSubscriptionPlans(null),
     staleTime: 5 * 60 * 1000,
   });
+
+  const allPlansData = React.useMemo(() => ({
+    ...allPlansDataRaw,
+    data: allPlansDataRaw?.data?.filter(p => p.targetType === 'everyone' || p.targetType === user?.userType) || []
+  }), [allPlansDataRaw, user?.userType]);
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -1294,6 +1299,11 @@ const Profile = () => {
                     {plan.isBestValue && (
                       <div className="absolute top-0 left-0 m-3 px-2 py-1 bg-green-600 text-white text-xs font-semibold rounded-full">
                         Best Value
+                      </div>
+                    )}
+                    {plan.targetType === 'everyone' && (
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 m-3 px-2 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full whitespace-nowrap">
+                        For Everyone
                       </div>
                     )}
                     <CardHeader className="p-0 mb-4">

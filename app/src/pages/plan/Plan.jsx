@@ -66,13 +66,19 @@ const Plan = () => {
     staleTime: 5 * 60 * 1000,
   })
 
-  // Fetch plans filtered by user type
-  const { data: allPlansData, isLoading: allPlansLoading } = useQuery({
-    queryKey: ['subscriptionPlans', userType],
-    queryFn: () => getAllSubscriptionPlans(userType === 'artist' ? 'artist' : userType === 'label' ? 'label' : null),
+  // Fetch all plans and filter locally to ensure 'everyone' plans are included
+  const { data: allPlansDataRaw, isLoading: allPlansLoading } = useQuery({
+    queryKey: ['subscriptionPlans', 'all'],
+    queryFn: () => getAllSubscriptionPlans(null),
     staleTime: 5 * 60 * 1000,
     enabled: userType !== 'aggregator',
   })
+
+  // Derive final plans array here
+  const allPlansData = React.useMemo(() => ({
+    ...allPlansDataRaw,
+    data: allPlansDataRaw?.data?.filter(p => p.targetType === 'everyone' || p.targetType === userType) || [],
+  }), [allPlansDataRaw, userType])
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
@@ -347,6 +353,11 @@ const Plan = () => {
                   plan.isPopular ? 'border-2 border-purple-600 shadow-lg' : 'border border-slate-200 dark:border-slate-700'
                 } ${isCurrent ? 'ring-2 ring-green-500' : ''}`}
               >
+                {plan.targetType === 'everyone' && (
+                  <div className="absolute -top-3 left-4">
+                    <Badge className="bg-blue-600 hover:bg-blue-600 text-white border-none px-3">For Everyone</Badge>
+                  </div>
+                )}
                 {plan.isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <Badge className="bg-purple-600 text-white px-3">Most Popular</Badge>

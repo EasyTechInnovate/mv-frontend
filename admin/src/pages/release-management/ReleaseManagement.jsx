@@ -154,6 +154,33 @@ export default function ReleaseManagement({ theme }) {
     setSelectedReleases(prev => [...prev, release]);
   };
 
+  const referenceStatus = selectedReleases.length > 0 ? selectedReleases[0].releaseStatus : null;
+  const selectableReleasesRefStatus = referenceStatus || (releases.length > 0 ? releases[0].releaseStatus : null);
+  const selectableReleases = releases.filter(r => r.releaseStatus === selectableReleasesRefStatus);
+  const isAllSelected = selectableReleases.length > 0 && selectableReleases.every(rel => 
+    selectedReleases.some(r => r.releaseId === rel.releaseId)
+  );
+
+  const handleToggleAll = () => {
+    if (isAllSelected) {
+      const idsOnPage = selectableReleases.map(r => r.releaseId);
+      setSelectedReleases(prev => prev.filter(r => !idsOnPage.includes(r.releaseId)));
+    } else {
+      setSelectedReleases(prev => {
+        const newSelected = [...prev];
+        selectableReleases.forEach(rel => {
+          if (!newSelected.some(r => r.releaseId === rel.releaseId)) {
+            newSelected.push(rel);
+          }
+        });
+        return newSelected;
+      });
+      if (selectableReleases.length < releases.length) {
+         toast.info(`Selected ${selectableReleases.length} releases with status: ${selectableReleasesRefStatus === 'submitted' ? 'Pending' : selectableReleasesRefStatus.replace(/_/g, ' ')}`);
+      }
+    }
+  };
+
   const handleBulkActionClick = (action) => {
     setBulkAction(action);
     setIsBulkModalOpen(true);
@@ -613,7 +640,11 @@ export default function ReleaseManagement({ theme }) {
               <tr>
                 {isBulkMode && (
                     <th className="px-4 py-3 w-[50px]">
-                        <span className="sr-only">Select</span>
+                        <Checkbox 
+                            checked={isAllSelected}
+                            onCheckedChange={handleToggleAll}
+                            className={isDark ? "border-gray-500 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600" : ""}
+                        />
                     </th>
                 )}
                 {[

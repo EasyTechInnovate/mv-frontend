@@ -213,6 +213,11 @@ const SubscriptionsPage = () => {
                             {plan.isBestValue && (
                                 <PiCrownFill className='text-yellow-300 absolute right-[-20px] top-[-20px] rotate-35 text-[60px]' />
                             )}
+                            {plan.targetType === 'everyone' && (
+                                <div className="absolute top-[-12px] left-4 bg-blue-600 text-white px-4 py-1 rounded-full text-sm">
+                                    For Everyone
+                                </div>
+                            )}
                             {plan.isPopular && !plan.isBestValue && (
                                 <div className="absolute top-[-12px] right-4 bg-[#652CD6] text-white px-4 py-1 rounded-full text-sm">
                                     Popular

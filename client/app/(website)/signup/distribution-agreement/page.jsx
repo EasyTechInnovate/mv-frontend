@@ -171,11 +171,27 @@ const DistributionAgreementPage = () => {
 
   return (
     <div className="bg-[#151A27] min-h-screen flex flex-col w-full overflow-hidden items-center justify-center py-10 pt-[100px]">
-      <HeadingText text="Distribution Agreement" />
+      <HeadingText text="Distribution Agreement" className='text-center' />
+
+      <div className="mt-6 mb-2 flex justify-center w-full z-10">
+        <button
+          onClick={() => {
+            const el = document.getElementById('consent-section');
+            if (el) {
+              const y = el.getBoundingClientRect().top + window.scrollY - 80;
+              window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+          }}
+          className="flex items-center gap-2 px-6 py-2.5 bg-[#711CE9]/20 hover:bg-[#711CE9]/30 text-[#A26CFF] border border-[#711CE9]/50 rounded-full font-medium transition-all duration-300 shadow-[0_0_15px_rgba(113,28,233,0.3)] cursor-pointer"
+        >
+          Scroll to Accept Agreement
+          <svg className="w-4 h-4 mt-0.5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+        </button>
+      </div>
 
       <DistributionAgreementContent />
 
-      <div className="max-w-6xl w-full mx-auto px-4 space-y-8 text-gray-300">
+      <div id="consent-section" className="max-w-6xl w-full mx-auto px-4 space-y-8 text-gray-300">
         {/* Consent Checkboxes */}
         <div className="mt-12 p-6 bg-[#1A1F2E] rounded-lg border border-gray-600 space-y-4">
           <h3 className="text-xl font-semibold text-white mb-4">Your Consent</h3>
