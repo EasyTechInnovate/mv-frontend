@@ -590,7 +590,7 @@ export default function MVProduction() {
                 {/* Location Preference Tick Boxes */}
                 <div className="mt-6">
                     <Label className="text-sm font-medium">Location Preference</Label>
-                    <div className="flex items-center space-x-6 mt-3">
+                    <div className="flex flex-wrap items-center space-x-6 mt-3">
                         <div className="flex items-center space-x-2">
                             <Checkbox
                                 id="indoor_studio"

@@ -69,7 +69,7 @@ const HomePage = () => {
                     style={{ backgroundImage: `url(${herobg.src})` }}
                     className={`w-screen h-screen  bg-cover bg-top relative text-white`}>
                     <div className="w-full h-full absolute  bg-[#000000ba]"></div>
-                    <div className="absolute z-[2] right-10 top-[50%] flex items-center justify-center gap-6">
+                    <div className="max-sm:hidden absolute z-[2] right-10 top-[50%] flex items-center justify-center gap-6">
                         <div className="flex ">
                             <motion.div
                                 initial={{ opacity: 0, x: 20 }}
@@ -310,7 +310,7 @@ const HomePage = () => {
                     <motion.div
                         whileHover={{ scale: 1.02 }}
                         style={{ backgroundImage: `url(${ourservices1.src})` }}
-                        className="h-[500px] w-[400px] rounded-2xl bg-cover bg-center flex flex-col justify-end p-4">
+                        className="h-[500px] w-[300px] sm:w-[400px] rounded-2xl bg-cover bg-center flex flex-col justify-end p-4">
                         <h1 className={`text-2xl ${anton.className}  uppercase mb-4`}>Music distribution</h1>
                         <p className="text-gray-300 ">
                             Distribute your music to 100+ platforms like Spotify, Apple Music, and more — fast and with full rights.
@@ -319,7 +319,7 @@ const HomePage = () => {
                     <motion.div
                         whileHover={{ scale: 1.02 }}
                         style={{ backgroundImage: `url(${ourservices2.src})` }}
-                        className="h-[500px] w-[400px] rounded-2xl bg-cover bg-center flex flex-col justify-end p-4">
+                        className="h-[500px] w-[300px] sm:w-[400px] rounded-2xl bg-cover bg-center flex flex-col justify-end p-4">
                         <h1 className={`text-2xl ${anton.className}  uppercase mb-4`}>Music Marketing</h1>
                         <p className="text-gray-300 ">
                             Promote your music with smart tools, playlist pitching, social campaigns, and branding support.
@@ -328,7 +328,7 @@ const HomePage = () => {
                     <motion.div
                         whileHover={{ scale: 1.02 }}
                         style={{ backgroundImage: `url(${ourservices3.src})` }}
-                        className="h-[500px] w-[400px] rounded-2xl bg-cover bg-center flex flex-col justify-end p-4">
+                        className="h-[500px] w-[300px] sm:w-[400px] rounded-2xl bg-cover bg-center flex flex-col justify-end p-4">
                         <h1 className={`text-2xl ${anton.className}  uppercase mb-4`}>Content Managment System</h1>
                         <p className="text-gray-300 ">
                             manage your releases, earnings, and data easily with all-in-one CMS Dashboard. Connect Your YT and we help your channel

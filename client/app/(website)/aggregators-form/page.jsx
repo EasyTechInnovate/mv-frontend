@@ -6,6 +6,7 @@ import { MainHeadingText } from "@/components/FixedUiComponents";
 import { Button } from "@/components/ui/button";
 import { submitAggregatorApplication } from "@/services/api.services";
 import { Trash2 } from "lucide-react";
+import { PHONE_CODES } from "@/lib/constants";
 
 const FormPage = () => {
   const [formData, setFormData] = useState({
@@ -243,11 +244,11 @@ const FormPage = () => {
   return (
     <div className="bg-[#151A27] min-h-screen flex flex-col w-full overflow-hidden items-center justify-center py-10 pt-[150px] ">
       <Toaster />
-      <MainHeadingText text="Apply form now for" text2="Aggregators" />
+      <MainHeadingText text="Apply form now for" text2="Aggregators" className="max-sm:text-[60px]" />
 
       <form
         onSubmit={handleSubmit}
-        className="bg-[#191E2A] border border-gray-400 rounded-xl  p-20 mt-20 w-full max-w-6xl text-white space-y-6"
+        className="bg-[#191E2A] border border-gray-400 rounded-xl  p-20 max-sm:p-6 mt-20 max-sm:mt-10 max-sm:mx-4 sm:w-full max-w-6xl text-white space-y-6"
       >
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -294,9 +295,11 @@ const FormPage = () => {
             onChange={handleChange}
             className="bg-[#151A27] border border-gray-500 rounded px-3 py-2"
           >
-            <option value="+91">+91</option>
-            <option value="+1">+1</option>
-            <option value="+44">+44</option>
+            {PHONE_CODES.map((item) => (
+              <option key={item.code} value={item.code}>
+                {item.code}
+              </option>
+            ))}
           </select>
           <input
             type="tel"

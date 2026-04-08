@@ -141,12 +141,12 @@ export default function ContactPage() {
                 </div>
             </section>
 
-            <section className="max-w-7xl mx-auto px-6 mt-12">
-                <div className="rounded-3xl border border-gray-400 bg-[#1A1E2B] p-6">
-                    <div className="rounded-2xl p-6 bg-transparent">
+            <section className="max-w-7xl mx-auto px-3 md:px-6 mt-12">
+                <div className="rounded-3xl border border-gray-400 bg-[#1A1E2B] p-3 md:p-6">
+                    <div className="rounded-2xl p-3 md:p-6 bg-transparent">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-6">
-                                <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400 ">
+                                <div className="rounded-xl p-3 md:p-6 bg-[#1E212E] border border-gray-400 ">
                                     <h3 className="text-2xl font-semibold mb-4"> General Inquiries</h3>
                                     <p className=" text-sm">For questions about our services, or platform:</p>
                                     {contact?.primaryEmail && (
@@ -171,7 +171,7 @@ export default function ContactPage() {
                                     )}
                                 </div>
 
-                                <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400 ">
+                                <div className="rounded-xl p-3 md:p-6 bg-[#1E212E] border border-gray-400 ">
                                     <h3 className="text-2xl font-semibold mb-4">Head Office</h3>
                                     {contact?.physicalAddress && (
                                         <p className=" text-sm leading-relaxed">
@@ -188,7 +188,7 @@ export default function ContactPage() {
                                     )}
                                 </div>
 
-                                <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400 ">
+                                <div className="rounded-xl p-3 md:p-6 bg-[#1E212E] border border-gray-400 ">
                                     <h3 className="text-2xl font-semibold mb-4">Artist and label Support</h3>
                                     <p className=" text-sm leading-relaxed">
                                         Having trouble with your release, royalties, or dashboard?
@@ -214,7 +214,7 @@ export default function ContactPage() {
                                     </div>
                                 </div>
 
-                                <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400 ">
+                                <div className="rounded-xl p-3 md:p-6 bg-[#1E212E] border border-gray-400 ">
                                     <h3 className="text-xl font-semibold">© Infringements</h3>
                                      {contact?.legalEmail && (
                                             <div>
@@ -230,7 +230,7 @@ export default function ContactPage() {
                             </div>
 
                             <div className="space-y-6 flex flex-col">
-                                <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400 ">
+                                <div className="rounded-xl p-3 md:p-6 bg-[#1E212E] border border-gray-400 ">
                                     <h3 className="text-2xl font-semibold mb-4">Partnerships & Media</h3>
                                     <p className=" text-sm">For collaborations and press:</p>
                                     
@@ -247,7 +247,7 @@ export default function ContactPage() {
                                     
                                 </div>
 
-                                <div className="rounded-xl p-6 bg-[#1E212E] border border-gray-400  flex-1 flex flex-col justify-between">
+                                <div className="rounded-xl p-3 md:p-6 bg-[#1E212E] border border-gray-400  flex-1 flex flex-col justify-between">
                                     <div>
                                         <h3 className="text-2xl font-semibold mb-4">Fast and easy connect</h3>
                                         <p className=" text-sm mb-4">Scan the QR and Chat Now</p>

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Trash2 } from 'lucide-react';
@@ -22,6 +22,13 @@ const MetaManualClaimForm = ({ onSubmit, isLoading, user }) => {
     const [claims, setClaims] = useState([
         { metaVideoLink: '', officialVideoLink: '', isrc: '', startTime: '', endTime: '' }
     ]);
+    const isSubmitting = useRef(false);
+
+    useEffect(() => {
+        if (!isLoading) {
+            isSubmitting.current = false;
+        }
+    }, [isLoading]);
 
     const handleClaimChange = (index, field, value) => {
         const newClaims = [...claims];
@@ -44,6 +51,7 @@ const MetaManualClaimForm = ({ onSubmit, isLoading, user }) => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
+        if (isLoading || isSubmitting.current) return;
         
         // Basic Validation
         if (!fullName || !email || !mobile) {
@@ -70,6 +78,7 @@ const MetaManualClaimForm = ({ onSubmit, isLoading, user }) => {
             claims,
             confirmation,
         };
+        isSubmitting.current = true;
         onSubmit(details);
     };
 

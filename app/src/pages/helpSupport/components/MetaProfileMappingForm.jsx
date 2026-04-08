@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -24,6 +24,13 @@ const MetaProfileMappingForm = ({ onSubmit, isLoading, user }) => {
     const [instagramProfileUrl, setInstagramProfileUrl] = useState('');
     const [isrcs, setIsrcs] = useState(['']);
     const [confirmation, setConfirmation] = useState(false);
+    const isSubmitting = useRef(false);
+
+    useEffect(() => {
+        if (!isLoading) {
+            isSubmitting.current = false;
+        }
+    }, [isLoading]);
 
     const handleIsrcChange = (index, value) => {
         const newIsrcs = [...isrcs];
@@ -46,6 +53,8 @@ const MetaProfileMappingForm = ({ onSubmit, isLoading, user }) => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
+
+        if (isLoading || isSubmitting.current) return;
 
         if (!fullName || !email || !mobile || !mapType) {
             toast.error('Please fill out all personal and mapping details.');
@@ -75,6 +84,7 @@ const MetaProfileMappingForm = ({ onSubmit, isLoading, user }) => {
             isrcs,
             confirmation,
         };
+        isSubmitting.current = true;
         onSubmit(details);
     };
 

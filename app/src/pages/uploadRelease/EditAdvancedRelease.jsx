@@ -878,7 +878,7 @@ const EditAdvancedReleaseBuilder = () => {
                   <Label className="text-foreground">Release pricing tier</Label>
                   <Select value={formData.releasePricingTier} onValueChange={(value) => setFormData(prev => ({...prev, releasePricingTier: value}))}>
                     <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Front" />
+                      <SelectValue placeholder="Select tier" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="front">Front</SelectItem>
@@ -1006,9 +1006,9 @@ const EditAdvancedReleaseBuilder = () => {
                   <div>
                     <Label className="text-foreground mb-2 block">Contributors to Sound Recording</Label>
                     {track.contributorsToSound.map((contributor, idx) => (
-                      <div key={contributor.id} className="flex items-center gap-2 mb-2">
+                      <div key={contributor.id} className="flex flex-wrap items-center gap-2 mb-2">
                         <Select value={contributor.profession} onValueChange={(value) => updateDynamicField('contributorsToSound', contributor.id, value, track.id, 'profession')}>
-                          <SelectTrigger className="w-48">
+                          <SelectTrigger className="w-full sm:w-48">
                             <SelectValue placeholder="Select profession" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1034,9 +1034,9 @@ const EditAdvancedReleaseBuilder = () => {
                   <div>
                     <Label className="text-foreground mb-2 block">Contributors to Musical Work</Label>
                     {track.contributorsToMusical.map((contributor, idx) => (
-                      <div key={contributor.id} className="flex items-center gap-2 mb-2">
+                      <div key={contributor.id} className="flex flex-wrap items-center gap-2 mb-2">
                         <Select value={contributor.profession} onValueChange={(value) => updateDynamicField('contributorsToMusical', contributor.id, value, track.id, 'profession')}>
-                          <SelectTrigger className="w-48">
+                          <SelectTrigger className="w-full sm:w-48">
                             <SelectValue placeholder="Select profession" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1241,7 +1241,7 @@ const EditAdvancedReleaseBuilder = () => {
             {worldWideRelease === 'no' && (
               <Card className="p-6 border border-muted bg-background rounded-lg">
                 <Label className="text-foreground font-medium">Select The Territories, Where you own the rights</Label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 max-h-60 overflow-y-auto custom-scroll">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4 max-h-60 overflow-y-auto custom-scroll">
                   {territoryOptions.map((territory) => (
                     <div key={territory} className="flex items-center space-x-2">
                       <Checkbox 
@@ -1281,7 +1281,7 @@ const EditAdvancedReleaseBuilder = () => {
                 {category === "internationalStores" && "International Stores"}
               </Label>
 
-              <div className="grid grid-cols-3 max-h-60 overflow-y-auto custom-scroll gap-4 mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-h-60 overflow-y-auto custom-scroll gap-4 mt-4">
                 {list.map((partner) => (
                   <div key={partner} className="flex items-center space-x-2">
                     <Checkbox
@@ -1530,30 +1530,30 @@ const EditAdvancedReleaseBuilder = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-foreground text-3xl font-semibold">Edit Release</h1>
+              <h1 className="text-foreground text-xl sm:text-3xl font-semibold">Edit Release</h1>
               <p className="text-muted-foreground text-sm">Update your release details</p>
             </div>
           </div>
-          <div className="bg-primary/10 text-primary px-4 py-2 rounded-lg text-sm font-medium">
+          <div className="bg-primary/10 text-primary px-4 py-2 rounded-lg text-xs sm:text-sm font-medium">
             Step {currentStep + 1} of 3
           </div>
         </div>
 
-        <Card className="flex flex-row items-center justify-between px-10 mb-8 py-3 space-x-4">
+        <Card className="flex flex-row items-center justify-between px-2 md:px-10 mb-8 py-3 space-x-0 ms:space-x-4">
           {[
             { icon: Upload, label: 'Cover Details', step: 0 },
             { icon: Music, label: 'Track Details', step: 1 },
             { icon: Globe, label: 'Distribution', step: 2 }
           ].map(({icon: Icon, label, step}) => (
             <div key={step} className="flex items-center">
-              <div className={`flex items-center space-x-2 px-4 py-2  `}>
+              <div className={`flex flex-wrap items-center md:space-x-2 px-0 md:px-4 py-2  `}>
                 <div className={`p-2 rounded-full ${currentStep === step ? 'bg-[#711CE9] text-white' : 'bg-muted-foreground/10 text-muted-foreground'}`}>
                 <Icon className={`w-5 h-5  `} />
 
                 </div>
                 <span className="font-medium hidden md:inline">{label}</span>
               </div>
-              {step < 2 && <div className="w-12 h-px bg-muted mx-2"></div>}
+              {step < 2 && <div className="w-12 h-px max-md:hidden bg-muted mx-2"></div>}
             </div>
           ))}
         </Card>

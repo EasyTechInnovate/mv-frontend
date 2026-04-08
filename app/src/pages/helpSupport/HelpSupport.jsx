@@ -73,6 +73,7 @@ const HelpSupport = () => {
   const [faqSearchQuery, setFaqSearchQuery] = useState('');
   const [showAllVideos, setShowAllVideos] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [formKey, setFormKey] = useState(0);
 
   const getYouTubeVideoId = (url) => {
     if (!url) return null;
@@ -164,6 +165,7 @@ const HelpSupport = () => {
     queryClient.invalidateQueries(['myTickets']);
     queryClient.invalidateQueries({ queryKey: ['myTicketStats'] });
     setClaimModal({ open: false, type: null, title: '' });
+    setFormKey(prev => prev + 1); // Reset normal ticket form
   };
 
   const handleMutationError = (error) => {
@@ -331,6 +333,13 @@ const HelpSupport = () => {
           const chatContainerRef = useRef(null); // Ref for scrolling chat history
           const [replyMessage, setReplyMessage] = useState(''); // State for reply input
           const messagesEndRef = useRef(null); // Virtual ref at the end of messages
+          const isSubmitting = useRef(false);
+      
+          useEffect(() => {
+            if (!addResponseMutation.isLoading) {
+              isSubmitting.current = false;
+            }
+          }, [addResponseMutation.isLoading]);
       
           // Fetch ticket details specifically for this modal
           const { data: currentTicketDetails, isLoading: isLoadingCurrentTicketDetails } = useQuery({
@@ -361,10 +370,12 @@ const HelpSupport = () => {
       
           const handleReplySubmit = async (event) => {
             event.preventDefault();
+            if (addResponseMutation.isLoading || isSubmitting.current) return;
             if (!replyMessage.trim()) {
               toast.error('Reply message cannot be empty.');
               return;
             }
+            isSubmitting.current = true;
             addResponseMutation.mutate({
               ticketId: ticket.ticketId,
               responseData: { message: replyMessage },
@@ -432,15 +443,24 @@ const HelpSupport = () => {
           );
         };      const RatingModal = ({ ticket }) => {
     const [rating, setRating] = useState(0);
+    const isSubmitting = useRef(false);
+
+    useEffect(() => {
+      if (!addRatingMutation.isLoading) {
+        isSubmitting.current = false;
+      }
+    }, [addRatingMutation.isLoading]);
 
     const handleRatingSubmit = (event) => {
       event.preventDefault();
+      if (addRatingMutation.isLoading || isSubmitting.current) return;
       const formData = new FormData(event.target);
       const feedback = formData.get('feedback');
       if (rating === 0) {
         toast.error('Please select a rating.');
         return;
       }
+      isSubmitting.current = true;
       addRatingMutation.mutate({
         ticketId: ticket.ticketId,
         ratingData: { rating, feedback },
@@ -815,6 +835,7 @@ const HelpSupport = () => {
               </CardHeader>
               <CardContent>
                 <NormalTicketForm 
+                    key={formKey}
                     user={user}
                     isLoading={createTicketMutation.isLoading}
                     onSubmit={(ticketData) => {

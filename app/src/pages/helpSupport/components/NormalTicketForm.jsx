@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -46,9 +46,18 @@ const NormalTicketForm = ({ onSubmit, isLoading, user }) => {
     const [description, setDescription] = useState('');
     const [uploadedFile, setUploadedFile] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
+    const isSubmitting = useRef(false);
+
+    useEffect(() => {
+        if (!isLoading) {
+            isSubmitting.current = false;
+        }
+    }, [isLoading]);
 
     const handleSubmit = (event) => {
         event.preventDefault();
+
+        if (isLoading || isSubmitting.current) return;
         
         if (!subject || !category || !description) {
             toast.error('Please fill out Subject, Category, and Description.');
@@ -68,6 +77,7 @@ const NormalTicketForm = ({ onSubmit, isLoading, user }) => {
             details,
         };
         
+        isSubmitting.current = true;
         onSubmit(ticketData);
     };
 

@@ -323,7 +323,7 @@ export default function ChatSection() {
         </div>
 
         {/* Input area */}
-        <div className="p-4 border-t border-border bg-card/80 flex gap-3 items-center">
+        <div className="p-4 border-t border-border bg-card/80 flex flex-wrap gap-3 items-center">
           <input
             className="flex-1 px-4 py-3 rounded-md border border-input bg-background text-foreground outline-none focus:ring-1 focus:ring-[#711CE9] focus:border-[#711CE9] transition-all text-[0.95rem] placeholder:text-muted-foreground"
             placeholder="Ask ..."

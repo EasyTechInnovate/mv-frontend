@@ -1125,7 +1125,7 @@ const BasicReleaseBuilder = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-foreground text-3xl font-semibold">Upload Release</h1>
+              <h1 className="text-foreground text-xl sm:text-3xl font-semibold">Upload Release</h1>
               <p className="text-muted-foreground text-sm">Basic Release Builder</p>
             </div>
           </div>
@@ -1158,12 +1158,12 @@ const BasicReleaseBuilder = () => {
                   }`}>
                     {step + 1}
                   </div>
-                  <span className={`ml-2 text-xs sm:text-sm ${
+                  <span className={`ml-2 text-xs max-sm:hidden sm:text-sm ${
                     step === currentStep ? 'text-primary font-medium' : 'text-muted-foreground'
                   }`}>
                     Step {step + 1}
                   </span>
-                  {step < 2 && <div className="w-8 h-px bg-muted mx-4"></div>}
+                  {step < 2 && <div className="w-8 h-px  bg-muted mx-4"></div>}
                 </div>
               ))}
             </div>

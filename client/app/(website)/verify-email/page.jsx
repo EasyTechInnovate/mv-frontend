@@ -106,7 +106,7 @@ const VerifyEmailContent = () => {
     return (
         <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4">
             <div className="w-full max-w-md">
-                <div className="bg-[#111827] rounded-2xl p-8 border border-gray-800 shadow-xl space-y-6">
+                <div className="bg-[#111827] rounded-2xl p-4 sm:p-8 border border-gray-800 shadow-xl space-y-6">
                     {/* Header */}
                     <div className="text-center space-y-2">
                         <div className="text-4xl">📧</div>

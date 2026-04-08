@@ -78,9 +78,7 @@ const AppSidebar = () => {
     <Sidebar className="border-r">
       <SidebarHeader className="p-4">
         <div className="flex items-top space-x-3">
-          <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-            <Music className="w-5 h-5 text-white" />
-          </div>
+          <img src="/app/shortlogo.png" alt="Logo" className="w-8 h-8 object-contain" />
           <div>
             <h1 className="text-lg font-semibold leading-none">Maheshwari</h1>
             <h1 className="text-lg font-semibold">Visuals</h1>

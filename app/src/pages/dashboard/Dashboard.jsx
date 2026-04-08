@@ -563,7 +563,7 @@ const Dashboard = () => {
 
         {/* OTP Verification Modal */}
         <Dialog open={isVerifyingModalOpen} onOpenChange={setIsVerifyingModalOpen}>
-          <DialogContent className="sm:max-w-md bg-[#0f1117] border-slate-800 p-8">
+          <DialogContent className="w-full sm:max-w-md bg-[#0f1117] border-slate-800 p-4 sm:p-8">
             <DialogTitle className="text-2xl font-bold text-center text-white mb-2">
               Verify Your Email
             </DialogTitle>
@@ -583,7 +583,7 @@ const Dashboard = () => {
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className="w-12 h-14 text-center text-xl font-bold bg-slate-900 border border-slate-700 text-white rounded-lg focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-mono"
+                    className="w-10 sm:w-12 h-10 sm:h-14 text-center text-xl font-bold bg-slate-900 border border-slate-700 text-white rounded-lg focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-mono"
                   />
                 ))}
               </div>

@@ -5,6 +5,7 @@ import { Country, State } from 'country-state-city'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
+import { PHONE_CODES } from '@/lib/constants'
 
 const App = () => {
     const router = useRouter()
@@ -12,7 +13,7 @@ const App = () => {
         firstName: '',
         lastName: '',
         email: '',
-        phoneCode: '91',
+        phoneCode: '+91',
         phoneNumber: '',
         address: '',
         pincode: '',
@@ -380,7 +381,7 @@ const App = () => {
                             <button
                                 type="button"
                                 onClick={() => handleChange({ target: { name: 'userType', value: 'artist' }})}
-                                className={`px-8 py-3 rounded-xl font-medium transition-all duration-300 ${
+                                className={` max-sm:px-4 px-8 py-3 rounded-xl font-medium transition-all duration-300 ${
                                     isArtist 
                                     ? 'bg-gradient-to-r from-[#652CD6] to-[#0466C7] text-white shadow-lg shadow-blue-500/25' 
                                     : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -393,7 +394,7 @@ const App = () => {
                             <button
                                 type="button"
                                 onClick={() => handleChange({ target: { name: 'userType', value: 'label' }})}
-                                className={`px-8 py-3 rounded-xl font-medium transition-all duration-300 ${
+                                className={` max-sm:px-4 px-8 py-3 rounded-xl font-medium transition-all duration-300 ${
                                     isLabel 
                                     ? 'bg-gradient-to-r from-[#652CD6] to-[#0466C7] text-white shadow-lg shadow-blue-500/25' 
                                     : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -460,9 +461,11 @@ const App = () => {
                         value={formData.phoneCode}
                         onChange={handleChange}
                         className="bg-[#151A27] border border-gray-500 rounded-md px-3 py-2">
-                        <option value="+91">91</option>
-                        <option value="+1">1</option>
-                        <option value="+44">44</option>
+                        {PHONE_CODES.map((item) => (
+                            <option key={item.code} value={item.code}>
+                                {item.code}
+                            </option>
+                        ))}
                     </select>
                     <input
                         type="tel"

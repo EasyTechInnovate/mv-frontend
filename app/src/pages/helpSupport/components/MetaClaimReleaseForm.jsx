@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Trash2 } from 'lucide-react';
@@ -22,6 +22,13 @@ const MetaClaimReleaseForm = ({ onSubmit, isLoading, user }) => {
     const [claims, setClaims] = useState([
         { metaVideoLink: '', metaAudioLink: '', isrc: '' }
     ]);
+    const isSubmitting = useRef(false);
+
+    useEffect(() => {
+        if (!isLoading) {
+            isSubmitting.current = false;
+        }
+    }, [isLoading]);
 
     const handleClaimChange = (index, field, value) => {
         const newClaims = [...claims];
@@ -44,6 +51,7 @@ const MetaClaimReleaseForm = ({ onSubmit, isLoading, user }) => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
+        if (isLoading || isSubmitting.current) return;
         
         if (!fullName || !email || !mobile) {
             toast.error('Please fill out your personal details.');
@@ -69,6 +77,7 @@ const MetaClaimReleaseForm = ({ onSubmit, isLoading, user }) => {
             claims,
             confirmation,
         };
+        isSubmitting.current = true;
         onSubmit(details);
     };
 
