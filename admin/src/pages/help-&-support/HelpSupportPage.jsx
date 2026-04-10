@@ -186,7 +186,12 @@ export default function HelpSupport({ theme = "dark" }) {
       
       // Fetch fresh stats
       const res = await GlobalApi.getSupportTicketStats("month");
-      setStats(res.data.data.overallStats);
+      const data = res.data.data;
+      const mediumEntry = data.priorityStats?.find(p => p._id === "medium");
+      setStats({
+        ...data.overallStats,
+        mediumPriorityTickets: mediumEntry?.count || 0,
+      });
     } catch (err) {
       console.error("Failed to bulk delete tickets:", err);
       toast.error(err.response?.data?.message || "Failed to delete tickets");
@@ -210,7 +215,12 @@ export default function HelpSupport({ theme = "dark" }) {
       
       // Fetch fresh stats
       const res = await GlobalApi.getSupportTicketStats("month");
-      setStats(res.data.data.overallStats);
+      const data = res.data.data;
+      const mediumEntry = data.priorityStats?.find(p => p._id === "medium");
+      setStats({
+        ...data.overallStats,
+        mediumPriorityTickets: mediumEntry?.count || 0,
+      });
     } catch (err) {
       console.error("Failed to delete ticket:", err);
       toast.error(err.response?.data?.message || "Failed to delete ticket");
@@ -224,7 +234,12 @@ export default function HelpSupport({ theme = "dark" }) {
     const fetchStats = async () => {
       try {
         const res = await GlobalApi.getSupportTicketStats("month");
-        setStats(res.data.data.overallStats);
+        const data = res.data.data;
+        const mediumEntry = data.priorityStats?.find(p => p._id === "medium");
+        setStats({
+          ...data.overallStats,
+          mediumPriorityTickets: mediumEntry?.count || 0,
+        });
       } catch (err) {
         console.error("Failed to fetch stats:", err);
       }
@@ -314,9 +329,9 @@ export default function HelpSupport({ theme = "dark" }) {
               </span>
             </div>
             <div className={`${cardClass} py-3`}>
-              Escalated:{" "}
+              Medium Priority:{" "}
               <span className="font-semibold text-orange-400">
-                {stats.escalatedTickets}
+                {stats.mediumPriorityTickets}
               </span>
             </div>
           </div>

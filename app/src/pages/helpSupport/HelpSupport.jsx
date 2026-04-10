@@ -667,7 +667,7 @@ const HelpSupport = () => {
                   {isLoadingStats ? <p>Loading...</p> : (
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm">In Progress</p>
+                        <p className="text-sm">Pending</p>
                         <p className="text-2xl font-bold">{ticketStats?.data?.overallStats?.pendingTickets || 0}</p>
                       </div>
                       <Clock className="w-8 h-8 text-yellow-500" />
