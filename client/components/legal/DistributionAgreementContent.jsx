@@ -147,12 +147,27 @@ const DistributionAgreementContent = () => {
       {/* Section 8: DAMAGES */}
       <div className="bg-[#1A1F2E] p-6 rounded-lg ">
         <h3 className="text-xl font-semibold text-white mb-4">8. DAMAGES</h3>
-        <div className="space-y-4">
-          <p className=" text-white p-2 rounded inline-block font-semibold">
-            In the event of any default on the part of the User of the terms and conditions of this Agreement, the User shall be liable for damages to a minimum amount of Rs. 10,000/-, except for the other damages and claims as applicable upon the User for default. The User shall also not be entitled to the Royalty fees for the term of this Agreement.
+        <div className="space-y-4 leading-relaxed">
+          <p>
+            For the purpose of this Agreement, a "Material Breach" shall mean a serious violation of the terms of this Agreement, including but not limited to:
           </p>
-          <p className="leading-relaxed">
-            In the event of multiple infringement claims against the Property, the Royalty fees shall be not payable. Firm can also impose penalties for the damages.
+          <ul className="space-y-2">
+            <li>(a) submission of content without valid ownership or rights,</li>
+            <li>(b) repeated copyright infringement,</li>
+            <li>(c) fraudulent activity, or</li>
+            <li>(d) failure to comply with legal obligations.</li>
+          </ul>
+          <p>
+            In the event of a Material Breach by the User, the Firm shall provide written notice specifying the breach, and the User shall have a period of 7 (seven) days to cure such breach.
+          </p>
+          <p>
+            If the Material Breach remains uncured after the notice period, the User shall be liable for reasonable and proportionate damages. A minimum penalty of up to Rs. 10,000/- may be imposed only in cases involving proven copyright infringement, fraud, or willful misconduct.
+          </p>
+          <p>
+            No penalty shall be imposed for minor or operational issues that do not materially affect the Agreement.
+          </p>
+          <p>
+            In the event of a proven or formally initiated copyright infringement claim concerning a specific Property, the Firm shall have the right to temporarily withhold the all royalties for the duration of the claim review, investigation, or dispute resolution process. Upon resolution of the claim, any undisputed and lawfully payable royalties shall be released to the User without undue delay.
           </p>
         </div>
       </div>
@@ -176,14 +191,20 @@ const DistributionAgreementContent = () => {
       {/* Section 11: TERM */}
       <div className="bg-[#1A1F2E] p-6 rounded-lg">
         <h3 className="text-xl font-semibold text-white mb-4">11. TERM</h3>
-        <div className="space-y-4">
-          <p className="text-white p-2 rounded inline-block font-medium leading-relaxed">
-            This Agreement shall come into force on the date the User subscribes to and purchases any active subscription plan offered by the Firm (the "Effective Date"). This Agreement shall remain valid for the duration of the active subscription period selected by the user. The Agreement shall automatically renew upon each successful renewal of the subscription plan, unless terminated by either Party in accordance with the terms of this Agreement.
+        <div className="space-y-4 leading-relaxed">
+          <p>
+            This Agreement shall come into force on the date the User subscribes to and purchases any active subscription plan offered by the Firm (the "Effective Date").
           </p>
-          <p className="leading-relaxed">
-            The User shall remain obligated to provide any and all documents, information, or verification materials as may be reasonably requested by the Firm at any time during the Term and until the complete removal or takedown of all distributed content from all platforms. The Firm shall remain obligated to account for and pay all royalties accrued from the exploitation of the content in accordance with this Agreement, including any royalties generated prior to termination, until such time as all dues are fully settled.
+          <p>
+            This Agreement shall remain valid for the duration of the active subscription period selected by the user. The Agreement shall automatically renew upon each successful renewal of the subscription plan, unless terminated by either Party in accordance with the terms of this Agreement.
           </p>
-          <p className="leading-relaxed">
+          <p>
+            The User shall remain obligated to provide any and all documents, information, or verification materials as may be reasonably requested by the Firm at any time during the Term and until the complete removal or takedown of all distributed content from all platforms.
+          </p>
+          <p>
+            The Firm shall remain obligated to account for and pay all royalties accrued from the exploitation of the content in accordance with this Agreement, including any royalties generated prior to termination, until such time as all dues are fully settled.
+          </p>
+          <p>
             Failure by the User to maintain an active subscription may result in suspension of services, without affecting the Firm's rights or the User's obligations under this Agreement.
           </p>
         </div>
@@ -220,10 +241,7 @@ const DistributionAgreementContent = () => {
       <div className="bg-[#1A1F2E] p-6 rounded-lg">
         <h3 className="text-xl font-semibold text-white mb-4">14. DISPUTE RESOLUTION</h3>
         <p className="leading-relaxed mb-4">
-          The Parties agree to first mediate any disputes or claims between them in good faith and resolve the disputes amicably and share the cost of mediation equally. In the event that mediation fails, any controversy or claim arising out of or relating to this Agreement or breach of any duties hereunder shall be settled by Arbitration in accordance with the Arbitration and Conciliation Act of India, 1996.
-        </p>
-        <p className="leading-relaxed bg-black/20 p-4 rounded border-l-2 border-gray-600">
-          All hearings shall be held at Uttar Pradesh, India and shall be conducted in English. The parties shall each appoint an arbitrator who shall then appoint a sole arbitrator to preside over the Arbitration proceedings. The Parties shall share the costs of arbitration equally, however, this does not affect the right of the Arbitrator to award costs to any one Party.
+          The Parties agree to first mediate any disputes or claims between them in good faith and resolve the disputes amicably and share the cost of mediation equally. In the event that mediation fails, any controversy or claim arising out of or relating to this Agreement or breach of any duties hereunder shall be settled by Arbitration in accordance with the Arbitration and Conciliation Act of India, 1996. All hearings shall be conducted virtually via video conferencing, or if physical presence is mutually deemed necessary, shall be held at a mutually decided location within India. All hearings shall be conducted in English. The parties shall each appoint an arbitrator who shall then appoint a sole arbitrator to preside over the Arbitration proceedings. The Parties shall share the costs of arbitration equally, however, this does not affect the right of the Arbitrator to award costs to any one Party.
         </p>
       </div>
 

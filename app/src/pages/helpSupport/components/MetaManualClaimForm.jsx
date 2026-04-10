@@ -30,6 +30,19 @@ const MetaManualClaimForm = ({ onSubmit, isLoading, user }) => {
         }
     }, [isLoading]);
 
+    const formatTiming = (value) => {
+        const digits = value.replace(/\D/g, '').slice(0, 6);
+        let formatted = '';
+        if (digits.length > 0) {
+            const parts = [];
+            for (let i = 0; i < digits.length; i += 2) {
+                parts.push(digits.slice(i, i + 2));
+            }
+            formatted = parts.join(':');
+        }
+        return formatted;
+    };
+
     const handleClaimChange = (index, field, value) => {
         const newClaims = [...claims];
         newClaims[index][field] = value;
@@ -149,20 +162,20 @@ const MetaManualClaimForm = ({ onSubmit, isLoading, user }) => {
                                 />
                             </FormField>
                             <div className="grid grid-cols-2 gap-4">
-                                <FormField label="Start Time (hh:mm)" required>
+                                <FormField label="Start Time (hh:mm:ss)" required>
                                     <Input
-                                        placeholder="01:23"
+                                        placeholder="00:01:23"
                                         className="border-slate-700"
                                         value={claim.startTime}
-                                        onChange={(e) => handleClaimChange(index, 'startTime', e.target.value)}
+                                        onChange={(e) => handleClaimChange(index, 'startTime', formatTiming(e.target.value))}
                                     />
                                 </FormField>
-                                <FormField label="End Time (hh:mm)" required>
+                                <FormField label="End Time (hh:mm:ss)" required>
                                     <Input
-                                        placeholder="02:45"
+                                        placeholder="00:02:45"
                                         className="border-slate-700"
                                         value={claim.endTime}
-                                        onChange={(e) => handleClaimChange(index, 'endTime', e.target.value)}
+                                        onChange={(e) => handleClaimChange(index, 'endTime', formatTiming(e.target.value))}
                                     />
                                 </FormField>
                             </div>

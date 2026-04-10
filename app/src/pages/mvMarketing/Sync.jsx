@@ -108,13 +108,13 @@ export default function Sync() {
         isrc: '',
         genres: 'alternative',
         mood: 'uplifting',
-        isVocalsPresent: false,
+        isVocalsPresent: 'false',
         language: '',
-        theme: 'journey & travel',
+        theme: 'journey_travel',
         tempoBPM: '',
         masterRightsOwner: 'artist',
         publishingRightsOwner: 'artist',
-        isFullyClearedForSync: true,
+        isFullyClearedForSync: 'true',
         proAffiliation: '',
         projectSuitability: {
             ad_campaigns: false,
@@ -154,7 +154,9 @@ export default function Sync() {
                 // We take the first genre from the array for display purposes.
                 genres: Array.isArray(item.genres) ? item.genres[0] : item.genres,
                 projectSuitability: projectSuitability,
-                trackLinks: item.trackLinks?.[0]?.url || ''
+                trackLinks: item.trackLinks?.[0]?.url || '',
+                isVocalsPresent: item.isVocalsPresent ? "true" : "false",
+                isFullyClearedForSync: String(item.isFullyClearedForSync)
             },
             isViewOnly: true
         })
@@ -182,9 +184,11 @@ export default function Sync() {
         const payload = {
             ...restOfFormData,
             genres: [formData.genres], // Already lowercase
-            proAffiliation: formData.proAffiliation.toLowerCase(),
+            ...(proAffiliation && { proAffiliation: proAffiliation.toLowerCase() }),
             ...(language && { language: language.toLowerCase() }),
-            theme: formData.theme.toLowerCase(),
+            theme: formData.theme,
+            isVocalsPresent: formData.isVocalsPresent === "true",
+            isFullyClearedForSync: formData.isFullyClearedForSync,
             projectSuitability: Object.keys(formData.projectSuitability).filter((key) => formData.projectSuitability[key]),
             trackLinks: [{ platform: 'Spotify', url: formData.trackLinks }] // Assuming Spotify for now
         }
@@ -196,7 +200,7 @@ export default function Sync() {
     const handleInputChange = (field, value) => {
         setViewState((prev) => {
             const newData = { ...prev.data, [field]: value }
-            if (field === 'isVocalsPresent' && value === false) {
+            if (field === 'isVocalsPresent' && value === 'false') {
                 newData.language = ''
             }
             return {
@@ -272,7 +276,7 @@ export default function Sync() {
                                 <InputWithLabel
                                     id="trackName"
                                     label="Track Name"
-                                    placeholder="Artist"
+                                    placeholder={isViewOnly ? "" : "Artist"}
                                     value={data.trackName}
                                     disabled={isViewOnly}
                                     onChange={(e) => handleInputChange('trackName', e.target.value)}
@@ -280,7 +284,7 @@ export default function Sync() {
                                 <InputWithLabel
                                     id="artistName"
                                     label="Artist Name"
-                                    placeholder="Name"
+                                    placeholder={isViewOnly ? "" : "Name"}
                                     value={data.artistName}
                                     disabled={isViewOnly}
                                     onChange={(e) => handleInputChange('artistName', e.target.value)}
@@ -288,7 +292,7 @@ export default function Sync() {
                                 <InputWithLabel
                                     id="labelName"
                                     label="Label Name"
-                                    placeholder="Label Name"
+                                    placeholder={isViewOnly ? "" : "Label Name"}
                                     value={data.labelName}
                                     disabled={isViewOnly}
                                     onChange={(e) => handleInputChange('labelName', e.target.value)}
@@ -296,7 +300,7 @@ export default function Sync() {
                                 <InputWithLabel
                                     id="isrc"
                                     label="ISRC of the Track (Optional)"
-                                    placeholder="9856674676476"
+                                    placeholder={isViewOnly ? "" : "9856674676476"}
                                     value={data.isrc}
                                     disabled={isViewOnly}
                                     onChange={(e) => handleInputChange('isrc', e.target.value)}
@@ -329,7 +333,7 @@ export default function Sync() {
                                     id="language"
                                     label="Language"
                                     value={data.language}
-                                    disabled={isViewOnly || !data.isVocalsPresent}
+                                    disabled={isViewOnly || data.isVocalsPresent === 'false'}
                                     onValueChange={(value) => handleInputChange('language', value)}
                                     options={languageOptions}
                                 />
@@ -346,7 +350,7 @@ export default function Sync() {
                                 <InputWithLabel
                                     id="tempoBPM"
                                     label="Tempo/BPM"
-                                    placeholder="Tempo/BPM"
+                                    placeholder={isViewOnly ? "" : "Tempo/BPM"}
                                     value={data.tempoBPM}
                                     disabled={isViewOnly}
                                     onChange={(e) => handleInputChange('tempoBPM', e.target.value)}
@@ -404,7 +408,7 @@ export default function Sync() {
                                 <InputWithLabel
                                     id="proAffiliation"
                                     label="PRO affiliation (e.g. BMI, IPRS, ASCAP) (Optional)"
-                                    placeholder="e.g. BMI, IPRS, ASCAP"
+                                    placeholder={isViewOnly ? "" : "e.g. BMI, IPRS, ASCAP"}
                                     value={data.proAffiliation}
                                     disabled={isViewOnly}
                                     onChange={(e) => handleInputChange('proAffiliation', e.target.value)}
@@ -437,12 +441,19 @@ export default function Sync() {
                             <InputWithLabel
                                 id="trackLinks"
                                 label="Track Link (Any Store) Please share the most streamed platform link."
-                                placeholder="Link"
+                                placeholder={isViewOnly ? "" : "Link"}
                                 value={data.trackLinks}
                                 disabled={isViewOnly}
                                 onChange={(e) => handleInputChange('trackLinks', e.target.value)}
                             />
                         </div>
+
+                        {isViewOnly && data.status === 'rejected' && data.rejectionReason && (
+                            <div className="mt-6 p-4 rounded-md border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800">
+                                <h3 className="text-red-800 dark:text-red-400 font-semibold mb-1">Rejection Reason</h3>
+                                <p className="text-sm text-red-700 dark:text-red-300">{data.rejectionReason}</p>
+                            </div>
+                        )}
 
                         {!isViewOnly && (
                             <div className="flex justify-center pt-4">

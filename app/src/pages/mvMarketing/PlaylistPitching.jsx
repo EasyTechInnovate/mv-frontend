@@ -89,9 +89,9 @@ export default function PlaylistPitching() {
         isrc: '',
         genres: 'alternative',
         mood: 'uplifting',
-        isVocalsPresent: false,
+        isVocalsPresent: 'false',
         language: '',
-        theme: 'journey & travel',
+        theme: 'journey_travel',
         selectedStore: '',
         trackLinks: [{ platform: '', url: '' }]
     }
@@ -112,7 +112,8 @@ export default function PlaylistPitching() {
                 // The API sends genres as an array, but the Select component expects a single value.
                 // We take the first genre from the array for display purposes.
                 genres: Array.isArray(item.genres) ? item.genres[0] : item.genres,
-                trackLinks: item.trackLinks || [{ platform: '', url: '' }]
+                trackLinks: item.trackLinks || [{ platform: '', url: '' }],
+                isVocalsPresent: item.isVocalsPresent ? "true" : "false"
             },
             isViewOnly: true
         })
@@ -141,7 +142,8 @@ export default function PlaylistPitching() {
             ...restOfFormData,
             genres: [formData.genres], // Already lowercase
             ...(language && { language: language.toLowerCase() }),
-            theme: formData.theme.toLowerCase(),
+            theme: formData.theme,
+            isVocalsPresent: formData.isVocalsPresent === "true",
             trackLinks: formData.trackLinks
         }
         pitchingMutation.mutate(payload)
@@ -166,16 +168,16 @@ export default function PlaylistPitching() {
     const handleInputChange = (field, value) => {
         setViewState((prev) => {
             const newData = { ...prev.data, [field]: value }
-            if (field === 'isVocalsPresent' && value === false) {
+            if (field === 'isVocalsPresent' && value === 'false') {
                 newData.language = ''
             }
             if (field === 'selectedStore') {
-                if (value === 'select_all') {
+                if (value === 'Select All') {
                     newData.trackLinks = [
                         { platform: 'Spotify', url: '' },
                         { platform: 'Apple Music', url: '' },
                         { platform: 'JioSaavn', url: '' },
-                        { platform: 'Amazon Music', url: '' }
+                        { platform: 'Amazon', url: '' }
                     ]
                 } else {
                     newData.trackLinks = [{ platform: value, url: '' }]
@@ -244,7 +246,7 @@ export default function PlaylistPitching() {
                                 <InputWithLabel
                                     id="trackName"
                                     label="Track Name"
-                                    placeholder="Artist"
+                                    placeholder={isViewOnly ? "" : "Artist"}
                                     value={data.trackName}
                                     disabled={isViewOnly}
                                     onChange={(e) => handleInputChange('trackName', e.target.value)}
@@ -252,7 +254,7 @@ export default function PlaylistPitching() {
                                 <InputWithLabel
                                     id="artistName"
                                     label="Artist Name"
-                                    placeholder="Name"
+                                    placeholder={isViewOnly ? "" : "Name"}
                                     value={data.artistName}
                                     disabled={isViewOnly}
                                     onChange={(e) => handleInputChange('artistName', e.target.value)}
@@ -260,7 +262,7 @@ export default function PlaylistPitching() {
                                 <InputWithLabel
                                     id="labelName"
                                     label="Label name"
-                                    placeholder="Label Name"
+                                    placeholder={isViewOnly ? "" : "Label Name"}
                                     value={data.labelName}
                                     disabled={isViewOnly}
                                     onChange={(e) => handleInputChange('labelName', e.target.value)}
@@ -268,7 +270,7 @@ export default function PlaylistPitching() {
                                 <InputWithLabel
                                     id="isrc"
                                     label="ISRC of the Track (Optional)"
-                                    placeholder="9856674676476"
+                                    placeholder={isViewOnly ? "" : "9856674676476"}
                                     value={data.isrc}
                                     disabled={isViewOnly}
                                     onChange={(e) => handleInputChange('isrc', e.target.value)}
@@ -301,7 +303,7 @@ export default function PlaylistPitching() {
                                     id="language"
                                     label="Language"
                                     value={data.language}
-                                    disabled={isViewOnly || !data.isVocalsPresent}
+                                    disabled={isViewOnly || data.isVocalsPresent === 'false'}
                                     onValueChange={(value) => handleInputChange('language', value)}
                                     options={languageOptions}
                                 />
@@ -322,14 +324,14 @@ export default function PlaylistPitching() {
                                     options={storeOptions}
                                 />
                                 <div className="md:col-span-2">
-                                    {data.selectedStore === 'select_all' ? (
+                                    {data.selectedStore === 'Select All' ? (
                                         <div className="space-y-4">
                                             {data.trackLinks.map((trackLink, index) => (
                                                 <InputWithLabel
                                                     key={index}
                                                     id={`trackLink-${index}`}
                                                     label={`Track Link for ${trackLink.platform}`}
-                                                    placeholder={`Link for ${trackLink.platform}`}
+                                                    placeholder={isViewOnly ? "" : `Link for ${trackLink.platform}`}
                                                     value={trackLink.url}
                                                     disabled={isViewOnly}
                                                     onChange={(e) => handleTrackLinkChange(index, e.target.value)}
@@ -340,7 +342,7 @@ export default function PlaylistPitching() {
                                         <InputWithLabel
                                             id="trackLink"
                                             label="Track Link"
-                                            placeholder="Link"
+                                            placeholder={isViewOnly ? "" : "Link"}
                                             value={data.trackLinks[0]?.url || ''}
                                             disabled={isViewOnly}
                                             onChange={(e) => handleTrackLinkChange(0, e.target.value)}
@@ -349,6 +351,14 @@ export default function PlaylistPitching() {
                                 </div>
                             </div>
                         </div>
+
+                        {isViewOnly && data.status === 'rejected' && data.rejectionReason && (
+                            <div className="mt-6 p-4 rounded-md border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800">
+                                <h3 className="text-red-800 dark:text-red-400 font-semibold mb-1">Rejection Reason</h3>
+                                <p className="text-sm text-red-700 dark:text-red-300">{data.rejectionReason}</p>
+                            </div>
+                        )}
+
                         {!isViewOnly && (
                             <div className="flex justify-center pt-4">
                                 <Button

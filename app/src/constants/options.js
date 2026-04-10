@@ -236,22 +236,22 @@ export const themeOptions = [
 ];
 
 export const vocalsPresentOptions = [
-  { value: true, label: 'Yes' },
-  { value: false, label: 'No' },
+  { value: "true", label: 'Yes' },
+  { value: "false", label: 'No' },
 ];
 
 export const syncClearedOptions = [
-  { value: true, label: 'Yes' },
-  { value: false, label: 'No' },
+  { value: "true", label: 'Yes' },
+  { value: "false", label: 'No' },
   { value: 'unsure', label: 'Unsure (Request assistance)' },
 ];
 
 export const storeOptions = [
-  { value: 'select_all', label: 'Select All' },
+  { value: 'Select All', label: 'Select All' },
   { value: 'Spotify', label: 'Spotify' },
   { value: 'Apple Music', label: 'Apple Music' },
   { value: 'JioSaavn', label: 'JioSaavn' },
-  { value: 'Amazon Music', label: 'Amazon Music' },
+  { value: 'Amazon', label: 'Amazon' },
 ];
 
 export const masterRightsOptions = [

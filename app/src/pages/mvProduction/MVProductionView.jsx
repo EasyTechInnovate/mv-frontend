@@ -154,7 +154,11 @@ export default function MVProductionView({ request, onBack }) {
               </div>
               <div className="md:col-span-2">
                 <p className="text-sm text-muted-foreground mb-1">Revenue Sharing Model</p>
-                <p className="font-medium capitalize">{request.budgetRequestAndOwnershipProposal.revenueSharingModelProposed.replace('_', ' ')}</p>
+                <p className="font-medium capitalize">
+                  {request.budgetRequestAndOwnershipProposal.revenueSharingModelProposed === 'hybrid_buyout_royalties' 
+                    ? 'Hybrid (Buyout + Royalties)' 
+                    : request.budgetRequestAndOwnershipProposal.revenueSharingModelProposed.replace('_', ' ')}
+                </p>
               </div>
             </div>
           </CardContent>

@@ -138,36 +138,36 @@ export default function BudgetRequestOwnership({
       <div>
         <p className={`text-sm ${labelText} mb-3`}>Revenue Sharing Model Proposed</p>
         <div className="flex flex-wrap items-center gap-10">
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className={`flex items-center gap-2 ${!editMode ? "cursor-not-allowed" : "cursor-pointer"}`}>
             <input
               type="radio"
               name="revenueSharingModel"
-              disabled={!editMode}
               checked={data.revenueSharingModelProposed === "flat_buyout"}
-              onChange={() => handleInputChange("revenueSharingModelProposed", "flat_buyout")}
-              className="w-4 h-4 accent-purple-500"
+              onChange={() => editMode && handleInputChange("revenueSharingModelProposed", "flat_buyout")}
+              onClick={(e) => !editMode && e.preventDefault()}
+              className={`w-4 h-4 accent-purple-500 ${!editMode ? "opacity-70 cursor-not-allowed pointer-events-none" : "cursor-pointer"}`}
             />
             <span className="text-sm">Flat Buyout</span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className={`flex items-center gap-2 ${!editMode ? "cursor-not-allowed" : "cursor-pointer"}`}>
             <input
               type="radio"
               name="revenueSharingModel"
-              disabled={!editMode}
               checked={data.revenueSharingModelProposed === "revenue_split"}
-              onChange={() => handleInputChange("revenueSharingModelProposed", "revenue_split")}
-              className="w-4 h-4 accent-purple-500"
+              onChange={() => editMode && handleInputChange("revenueSharingModelProposed", "revenue_split")}
+              onClick={(e) => !editMode && e.preventDefault()}
+              className={`w-4 h-4 accent-purple-500 ${!editMode ? "opacity-70 cursor-not-allowed pointer-events-none" : "cursor-pointer"}`}
             />
             <span className="text-sm">Revenue Split</span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className={`flex items-center gap-2 ${!editMode ? "cursor-not-allowed" : "cursor-pointer"}`}>
             <input
               type="radio"
               name="revenueSharingModel"
-              disabled={!editMode}
-              checked={data.revenueSharingModelProposed === "hybrid"}
-              onChange={() => handleInputChange("revenueSharingModelProposed", "hybrid")}
-              className="w-4 h-4 accent-purple-500"
+              checked={data.revenueSharingModelProposed === "hybrid" || data.revenueSharingModelProposed === "hybrid_buyout_royalties"}
+              onChange={() => editMode && handleInputChange("revenueSharingModelProposed", "hybrid")}
+              onClick={(e) => !editMode && e.preventDefault()}
+              className={`w-4 h-4 accent-purple-500 ${!editMode ? "opacity-70 cursor-not-allowed pointer-events-none" : "cursor-pointer"}`}
             />
             <span className="text-sm">Hybrid (Buyout + Royalties)</span>
           </label>

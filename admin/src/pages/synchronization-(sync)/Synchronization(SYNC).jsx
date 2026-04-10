@@ -688,6 +688,7 @@ export default function SyncManagement({ theme }) {
           { label: "Genre", key: "genres" },
           { label: "Mood", key: "mood" },
           { label: "Theme", key: "theme" },
+          { label: "Tempo/BPM", key: "tempoBPM" },
           { label: "Language", key: "language" },
           { label: "Vocals Present", key: "isVocalsPresent" },
           { label: "Fully Cleared for Sync", key: "isFullyClearedForSync" },
@@ -723,6 +724,7 @@ export default function SyncManagement({ theme }) {
               genres: toReadable(row.genres, "genres"),
               mood: toReadable(row.mood, "mood"),
               theme: toReadable(row.theme, "theme"),
+              tempoBPM: row.tempoBPM || "—",
               language: toReadable(row.language, "language"),
               isVocalsPresent: row.isVocalsPresent ? "Yes" : "No",
               isFullyClearedForSync: row.isFullyClearedForSync === true ? "Yes" : row.isFullyClearedForSync === "unsure" ? "Unsure" : "No",
@@ -731,7 +733,7 @@ export default function SyncManagement({ theme }) {
               proAffiliation: toReadable(row.proAffiliation, "proAffiliation"),
               projectSuitability: toReadable(row.projectSuitability, "projectSuitability"),
               trackLinksFormatted: Array.isArray(row.trackLinks) && row.trackLinks.length > 0
-                ? row.trackLinks.map(l => `${l.platform}: ${l.url}`).join(" | ")
+                ? row.trackLinks.map(l => l.url).join(" | ")
                 : "—",
               rejectionReason: row.rejectionReason || "—",
               adminNotes: row.adminNotes || "—",

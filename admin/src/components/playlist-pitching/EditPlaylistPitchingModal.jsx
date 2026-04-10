@@ -74,6 +74,7 @@ export default function EditPlaylistPitchingModal({ isOpen, onClose, data, refre
         genres: Array.isArray(data.genres) ? data.genres[0] : data.genres,
         trackLinks: data.trackLinks || [{ platform: "", url: "" }],
         selectedStore: data.selectedStore === "Select All" ? "select_all" : data.selectedStore,
+        isVocalsPresent: data.isVocalsPresent ? "true" : "false",
       });
     }
   }, [data]);
@@ -113,6 +114,7 @@ export default function EditPlaylistPitchingModal({ isOpen, onClose, data, refre
         ...formData,
         genres: [formData.genres],
         selectedStore: formData.selectedStore === "select_all" ? "Select All" : formData.selectedStore,
+        isVocalsPresent: formData.isVocalsPresent === "true",
     };
 
     try {
@@ -189,7 +191,7 @@ export default function EditPlaylistPitchingModal({ isOpen, onClose, data, refre
               id="language"
               label="Language"
               value={formData.language}
-              disabled={!formData.isVocalsPresent}
+              disabled={formData.isVocalsPresent === "false"}
               onValueChange={(value) => handleInputChange("language", value)}
               options={languageOptions}
               theme={theme}

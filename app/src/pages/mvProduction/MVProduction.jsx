@@ -784,7 +784,7 @@ export default function MVProduction() {
                     {[
                         { label: 'Flat Buyout', value: 'flat_buyout' },
                         { label: 'Revenue Split', value: 'revenue_split' },
-                        { label: 'Hybrid (Buyout + Royalties)', value: 'hybrid_buyout_royalties' }
+                        { label: 'Hybrid (Buyout + Royalties)', value: 'hybrid' }
                     ].map((option) => (
                         <div
                             key={option.value}

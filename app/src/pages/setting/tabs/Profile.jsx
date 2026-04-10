@@ -18,7 +18,8 @@ import { useNavigate } from 'react-router-dom';
 const FEATURE_LABELS = {
   unlimitedReleases: "Unlimited Release",
   unlimitedArtists: "Unlimited Artists",
-  singleLabel: "Single Label (100% Ownership)",
+  singleLabel: "Single Label",
+  ownership100: "100% Ownership",
   revenueShare: "Net Revenue Share",
   youtubeContentId: "YouTube Content ID",
   metaContentId: "Meta Content ID",

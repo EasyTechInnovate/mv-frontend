@@ -97,7 +97,7 @@ export default function MVProductionUserPage({
         miscellaneousContingency: defaultData.budgetRequestAndOwnershipProposal?.breakdown?.miscellaneousContingency || "",
         willContributePersonalFunds: defaultData.budgetRequestAndOwnershipProposal?.willContributePersonalFunds ? "yes" : "no",
         personalFundsAmount: defaultData.budgetRequestAndOwnershipProposal?.personalFundsAmount || "",
-        revenueSharingModelProposed: defaultData.budgetRequestAndOwnershipProposal?.revenueSharingModelProposed || "",
+        revenueSharingModelProposed: defaultData.budgetRequestAndOwnershipProposal?.revenueSharingModelProposed === 'hybrid_buyout_royalties' ? 'hybrid' : (defaultData.budgetRequestAndOwnershipProposal?.revenueSharingModelProposed || ""),
         // Marketing
         willBeReleasedViaMVDistribution: defaultData.marketingAndDistributionPlan?.willBeReleasedViaMVDistribution ? "yes" : "no",
         anyBrandOrMerchTieIns: defaultData.marketingAndDistributionPlan?.anyBrandOrMerchTieIns ? "yes" : "no",

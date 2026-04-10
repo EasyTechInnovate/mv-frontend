@@ -236,13 +236,13 @@ export const themeOptions = [
 ];
 
 export const vocalsPresentOptions = [
-  { value: true, label: 'Yes' },
-  { value: false, label: 'No' },
+  { value: "true", label: 'Yes' },
+  { value: "false", label: 'No' },
 ];
 
 export const syncClearedOptions = [
-  { value: true, label: 'Yes' },
-  { value: false, label: 'No' },
+  { value: "true", label: 'Yes' },
+  { value: "false", label: 'No' },
   { value: 'unsure', label: 'Unsure (Request assistance)' },
 ];
 

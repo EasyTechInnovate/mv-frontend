@@ -45,6 +45,13 @@ const Page = () => {
         }
         const response = await loginUser(credentials)
         if (response.success) {
+          const userRole = response.data?.user?.role;
+          if (userRole === 'admin' || userRole === 'team_member') {
+            toast.error('Admins and team members cannot login here. Please use the Admin portal.')
+            setIsLoading(false)
+            return;
+          }
+
           localStorage.setItem('accessToken', response.data.tokens.accessToken)
           localStorage.setItem('refreshToken', response.data.tokens.refreshToken)
           toast.success(response.message || 'Login successful!')

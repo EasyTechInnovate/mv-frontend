@@ -332,10 +332,11 @@ const App = () => {
                         value={formData.releaseFrequency}
                         onChange={handleChange}
                         className="w-full bg-[#151A27]  text-white border border-gray-500 rounded-md px-3 py-2">
-                        <option value="Daily">Daily</option>
-                        <option value="Weekly">Weekly</option>
-                        <option value="Monthly">Monthly</option>
-                        <option value="Occasionally">Occasionally</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="yearly">Yearly</option>
                     </select>
                 </div>
                 <div>

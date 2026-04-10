@@ -158,6 +158,7 @@ export default function SyncLicenseReviewModal({
             <Info label="Language" value={toReadable(data?.language)} />
             <Info label="Mood" value={toReadable(data?.mood)} />
             <Info label="Theme" value={toReadable(data?.theme)} />
+            <Info label="Tempo/BPM" value={data?.tempoBPM} />
             <Info label="Genres" value={toReadable(data?.genres)} />
             <Info label="Master Rights Owner" value={data?.masterRightsOwner} />
             <Info label="Publishing Rights Owner" value={data?.publishingRightsOwner} />
@@ -207,9 +208,9 @@ export default function SyncLicenseReviewModal({
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-400 underline hover:text-blue-500 transition-colors"
+                        className="text-blue-400 underline hover:text-blue-500 transition-colors break-all"
                       >
-                        {link.platform || `Link ${index + 1}`}
+                        {link.url}
                       </a>
                     ))}
                   </div>

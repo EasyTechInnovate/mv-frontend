@@ -85,6 +85,8 @@ export default function EditSyncLicenseModal({ isOpen, onClose, data, refreshLis
             genres: Array.isArray(data.genres) ? data.genres[0] : data.genres,
             trackLinks: data.trackLinks?.[0]?.url || '',
             projectSuitability,
+            isVocalsPresent: data.isVocalsPresent ? "true" : "false",
+            isFullyClearedForSync: String(data.isFullyClearedForSync)
         });
     }
   }, [data]);
@@ -104,9 +106,13 @@ export default function EditSyncLicenseModal({ isOpen, onClose, data, refreshLis
     if (!formData) return;
     setLoading(true);
 
+    const { proAffiliation, ...restFormData } = formData;
     const payload = {
-      ...formData,
+      ...restFormData,
+      ...(proAffiliation && { proAffiliation: proAffiliation.toLowerCase() }),
       genres: [formData.genres],
+      isVocalsPresent: formData.isVocalsPresent === "true",
+      isFullyClearedForSync: formData.isFullyClearedForSync,
       projectSuitability: Object.keys(formData.projectSuitability).filter(key => formData.projectSuitability[key]),
       trackLinks: [{ platform: "Spotify", url: formData.trackLinks }]
     };
@@ -142,7 +148,7 @@ export default function EditSyncLicenseModal({ isOpen, onClose, data, refreshLis
                     <SelectWithLabel id="genres" label="Genres" value={formData.genres} onValueChange={(value) => handleInputChange('genres', value)} options={genreOptions} theme={theme} />
                     <SelectWithLabel id="mood" label="Mood" value={formData.mood} onValueChange={(value) => handleInputChange('mood', value)} options={moodOptions} theme={theme} />
                     <SelectWithLabel id="isVocalsPresent" label="Is Vocals Present?" value={formData.isVocalsPresent} onValueChange={(value) => handleInputChange('isVocalsPresent', value)} options={vocalsPresentOptions} theme={theme} />
-                    <SelectWithLabel id="language" label="Language" value={formData.language} disabled={!formData.isVocalsPresent} onValueChange={(value) => handleInputChange('language', value)} options={languageOptions} theme={theme} />
+                    <SelectWithLabel id="language" label="Language" value={formData.language} disabled={formData.isVocalsPresent === "false"} onValueChange={(value) => handleInputChange('language', value)} options={languageOptions} theme={theme} />
                     <div className="md:col-span-2">
                         <SelectWithLabel id="theme" label="Theme" value={formData.theme} onValueChange={(value) => handleInputChange('theme', value)} options={themeOptions} theme={theme} />
                     </div>
