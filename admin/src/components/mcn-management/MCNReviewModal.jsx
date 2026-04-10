@@ -155,7 +155,7 @@ export default function MCNRequestViewModal({
         <div className="mt-5 space-y-4">
           <div>
             <label className={`block text-sm mb-1 ${mutedText}`}>
-              Admin Notes
+              Remark (Visible to user)
             </label>
             <Textarea
               value={adminNotes}

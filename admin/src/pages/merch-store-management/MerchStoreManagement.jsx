@@ -268,7 +268,7 @@ export default function MerchStoreManagement({ theme }) {
           <h2 className="text-2xl font-bold mb-6">Request Details</h2>
           
           <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 border-b border-gray-700/30 pb-4">
                <div>
                  <p className="text-xs text-gray-500 uppercase">Artist Name</p>
                  <p className="font-medium">{selectedStore.artistInfo?.artistName}</p>
@@ -278,42 +278,145 @@ export default function MerchStoreManagement({ theme }) {
                  <p className="font-medium">{selectedStore.userId?.firstName} {selectedStore.userId?.lastName}</p>
                </div>
                <div>
-                 <p className="text-xs text-gray-500 uppercase">Social Links</p>
-                 <div className="flex gap-2 mt-1">
-                    {/* Simplified view of links */}
-                    {selectedStore.artistInfo?.artistInstagramLink && <a href={selectedStore.artistInfo.artistInstagramLink} target="_blank" className="text-blue-400 text-xs hover:underline">Instagram</a>}
-                    {selectedStore.artistInfo?.spotifyProfileLink && <a href={selectedStore.artistInfo.spotifyProfileLink} target="_blank" className="text-green-400 text-xs hover:underline">Spotify</a>}
-                 </div>
-               </div>
-               <div>
                  <p className="text-xs text-gray-500 uppercase">Submit Date</p>
                  <p className="font-medium">{new Date(selectedStore.createdAt).toLocaleDateString()}</p>
                </div>
+               <div>
+                 <p className="text-xs text-gray-500 uppercase">Account ID</p>
+                 <p className="font-medium">{selectedStore.accountId || selectedStore.userId?.accountId || 'N/A'}</p>
+               </div>
             </div>
 
             <div className="bg-gray-500/5 p-4 rounded-lg">
-              <p className="text-xs text-gray-500 uppercase mb-2">Product Preferences</p>
+               <p className="text-xs text-gray-500 uppercase mb-4">Artist Profiles & Social Links</p>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {selectedStore.artistInfo?.instagramLink && (
+                     <div>
+                       <p className="text-xs text-gray-400 mb-1">Instagram</p>
+                       <a href={selectedStore.artistInfo.instagramLink} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 text-sm hover:underline truncate block">
+                         {selectedStore.artistInfo.instagramLink}
+                       </a>
+                     </div>
+                  )}
+                  {selectedStore.artistInfo?.facebookLink && (
+                     <div>
+                       <p className="text-xs text-gray-400 mb-1">Facebook</p>
+                       <a href={selectedStore.artistInfo.facebookLink} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 text-sm hover:underline truncate block">
+                         {selectedStore.artistInfo.facebookLink}
+                       </a>
+                     </div>
+                  )}
+                  {selectedStore.artistInfo?.spotifyProfileLink && (
+                     <div>
+                       <p className="text-xs text-gray-400 mb-1">Spotify</p>
+                       <a href={selectedStore.artistInfo.spotifyProfileLink} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 text-sm hover:underline truncate block">
+                         {selectedStore.artistInfo.spotifyProfileLink}
+                       </a>
+                     </div>
+                  )}
+                  {selectedStore.artistInfo?.appleMusicProfileLink && (
+                     <div>
+                       <p className="text-xs text-gray-400 mb-1">Apple Music</p>
+                       <a href={selectedStore.artistInfo.appleMusicProfileLink} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 text-sm hover:underline truncate block">
+                         {selectedStore.artistInfo.appleMusicProfileLink}
+                       </a>
+                     </div>
+                  )}
+                  {selectedStore.artistInfo?.youtubeMusicProfileLink && (
+                     <div>
+                       <p className="text-xs text-gray-400 mb-1">YouTube</p>
+                       <a href={selectedStore.artistInfo.youtubeMusicProfileLink} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 text-sm hover:underline truncate block">
+                         {selectedStore.artistInfo.youtubeMusicProfileLink}
+                       </a>
+                     </div>
+                  )}
+                  
+                  {(!selectedStore.artistInfo?.instagramLink && !selectedStore.artistInfo?.facebookLink && !selectedStore.artistInfo?.spotifyProfileLink && !selectedStore.artistInfo?.appleMusicProfileLink && !selectedStore.artistInfo?.youtubeMusicProfileLink) && (
+                     <span className="text-sm text-gray-500 italic md:col-span-2">No social links provided</span>
+                  )}
+               </div>
+            </div>
+
+            <div className="bg-gray-500/5 p-4 rounded-lg">
+              <p className="text-xs text-gray-500 uppercase mb-3">Product Preferences</p>
               <div className="flex flex-wrap gap-2">
-                 {selectedStore.productPreferences?.selectedProducts?.map(p => (
-                   <span key={p} className="bg-purple-500/10 text-purple-400 px-2 py-1 rounded text-xs capitalize">{p.replace('_', ' ')}</span>
-                 ))}
-                 {selectedStore.productPreferences?.otherProductDescription && <span className="text-xs text-gray-400 italic"> + {selectedStore.productPreferences.otherProductDescription}</span>}
+                 {selectedStore.productPreferences?.selectedProducts?.length > 0 ? (
+                   selectedStore.productPreferences.selectedProducts.map(p => (
+                     <span key={p} className="bg-purple-500/10 text-purple-400 px-2.5 py-1 rounded-md text-xs capitalize border border-purple-500/20">
+                       {p.replace(/_/g, ' ')}
+                     </span>
+                   ))
+                 ) : (
+                   <span className="text-sm text-gray-500 italic">No specific products selected</span>
+                 )}
               </div>
+              {selectedStore.productPreferences?.otherProductDescription && (
+                <div className="mt-3 bg-gray-500/10 p-3 rounded text-sm">
+                  <span className="font-medium text-gray-400 block mb-1">Other Products Description:</span>
+                  {selectedStore.productPreferences.otherProductDescription}
+                </div>
+              )}
             </div>
 
             <div className="bg-gray-500/5 p-4 rounded-lg">
-               <p className="text-xs text-gray-500 uppercase mb-2">Marketing Plan</p>
-               <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-500">Plan to Promote:</span> {selectedStore.marketingPlan?.planToPromote ? 'Yes' : 'No'}
+               <p className="text-xs text-gray-500 uppercase mb-3">Marketing Plan</p>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
+                  <div className="flex justify-between items-center bg-gray-500/10 p-2 rounded">
+                    <span className="text-gray-400">Plan to Promote:</span> 
+                    <span className={`font-semibold ${selectedStore.marketingPlan?.planToPromote ? 'text-green-400' : 'text-gray-400'}`}>
+                      {selectedStore.marketingPlan?.planToPromote ? 'Yes' : 'No'}
+                    </span>
                   </div>
-                  <div>
-                    <span className="text-gray-500">MMC Assistance:</span> {selectedStore.marketingPlan?.mmcMarketingAssistance ? 'Yes' : 'No'}
-                  </div>
-                  <div className="col-span-2">
-                     <span className="text-gray-500">Channels:</span> {selectedStore.marketingPlan?.promotionChannels?.join(', ')}
+                  <div className="flex justify-between items-center bg-gray-500/10 p-2 rounded">
+                    <span className="text-gray-400">MMC Assistance:</span> 
+                    <span className={`font-semibold ${selectedStore.marketingPlan?.mmcMarketingAssistance ? 'text-purple-400' : 'text-gray-400'}`}>
+                      {selectedStore.marketingPlan?.mmcMarketingAssistance ? 'Yes' : 'No'}
+                    </span>
                   </div>
                </div>
+               
+               <div className="text-sm">
+                 <span className="text-gray-400 block mb-2">Promotion Channels:</span>
+                 <div className="flex flex-wrap gap-2">
+                   {selectedStore.marketingPlan?.promotionChannels?.length > 0 ? (
+                     selectedStore.marketingPlan.promotionChannels.map(c => (
+                       <span key={c} className="bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs capitalize">
+                         {c.replace(/_/g, ' ')}
+                       </span>
+                     ))
+                   ) : (
+                     <span className="text-gray-500 italic">None selected</span>
+                   )}
+                 </div>
+               </div>
+               {selectedStore.marketingPlan?.otherChannelDescription && (
+                 <div className="mt-3 bg-gray-500/10 p-3 rounded text-sm">
+                   <span className="font-medium text-gray-400 block mb-1">Other Channels Description:</span>
+                   {selectedStore.marketingPlan.otherChannelDescription}
+                 </div>
+               )}
+            </div>
+
+            <div className="bg-gray-500/5 p-4 rounded-lg">
+               <p className="text-xs text-gray-500 uppercase mb-3">Legal Consents</p>
+               <ul className="space-y-2 text-sm text-gray-300">
+                  <li className="flex gap-2 items-start">
+                    <span className="text-green-400 mt-0.5">✓</span>
+                    <span>Agree to Review Process: <b>{selectedStore.legalConsents?.agreeToReviewProcess ? 'Yes' : 'No'}</b></span>
+                  </li>
+                  <li className="flex gap-2 items-start">
+                    <span className="text-green-400 mt-0.5">✓</span>
+                    <span>Understand Revision Rights: <b>{selectedStore.legalConsents?.understandRevisionRights ? 'Yes' : 'No'}</b></span>
+                  </li>
+                  <li className="flex gap-2 items-start">
+                    <span className="text-green-400 mt-0.5">✓</span>
+                    <span>Subscribed to Newsletter: <b>{selectedStore.legalConsents?.subscribeToNewsletter ? 'Yes' : 'No'}</b></span>
+                  </li>
+                  <li className="flex gap-2 items-start">
+                    <span className="text-green-400 mt-0.5">✓</span>
+                    <span>Consent to Showcase: <b>{selectedStore.legalConsents?.consentToShowcase ? 'Yes' : 'No'}</b></span>
+                  </li>
+               </ul>
             </div>
           </div>
         </div>
@@ -520,8 +623,8 @@ export default function MerchStoreManagement({ theme }) {
            </div>
            <div className={`${boxBg} p-4 rounded-2xl shadow relative`}>
              <CheckCircle className="absolute top-4 right-4 h-5 w-5 text-green-400" />
-             <p className="text-gray-400 text-sm">Live Stores</p>
-             <p className="text-2xl font-bold text-green-400">{stats.designApprovedStores}</p>
+             <p className="text-gray-400 text-sm">Approved Designs</p>
+             <p className="text-2xl font-bold text-green-400">{stats.totalApprovedDesigns || 0}</p>
            </div>
         </div>
       )}

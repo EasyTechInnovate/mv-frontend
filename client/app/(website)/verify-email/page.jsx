@@ -15,6 +15,7 @@ const VerifyEmailContent = () => {
     const [email, setEmail] = useState('')
     const [verified, setVerified] = useState(false)
     const inputRefs = useRef([])
+    const [timeLeft, setTimeLeft] = useState(120)
 
     useEffect(() => {
         const urlEmail = searchParams.get('email') || sessionStorage.getItem('verifyEmail') || ''
@@ -22,6 +23,20 @@ const VerifyEmailContent = () => {
         // Auto-focus first input
         setTimeout(() => inputRefs.current[0]?.focus(), 100)
     }, [searchParams])
+
+    useEffect(() => {
+        if (timeLeft <= 0) return;
+        const intervalId = setInterval(() => {
+            setTimeLeft(prev => prev - 1);
+        }, 1000);
+        return () => clearInterval(intervalId);
+    }, [timeLeft]);
+
+    const formatTime = (seconds) => {
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
 
     const handleCodeChange = (index, value) => {
         if (!/^\d*$/.test(value)) return
@@ -84,6 +99,7 @@ const VerifyEmailContent = () => {
         try {
             await resendVerificationEmail({ emailAddress: email })
             toast.success('Verification email resent! Check your inbox.')
+            setTimeLeft(120) // Reset the timer to 2 minutes
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to resend. Please try again.')
         } finally {
@@ -171,10 +187,10 @@ const VerifyEmailContent = () => {
                         <p className="text-gray-500 text-sm">Didn't receive the code?</p>
                         <button
                             onClick={handleResend}
-                            disabled={isResending}
+                            disabled={isResending || timeLeft > 0}
                             className="text-purple-400 hover:text-purple-300 text-sm font-medium disabled:opacity-50"
                         >
-                            {isResending ? 'Resending...' : 'Resend verification email'}
+                            {isResending ? 'Resending...' : (timeLeft > 0 ? `Resend code in ${formatTime(timeLeft)}` : 'Resend verification email')}
                         </button>
                     </div>
 

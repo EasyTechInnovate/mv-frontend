@@ -72,7 +72,7 @@ const RequestDetailsModal = ({ request, isOpen, onClose }) => {
           <DetailItem label="Understands Ownership" value={request.understandsOwnership ? "Yes" : "No"} />
           {request.consentsToContact && <DetailItem label="Consents To Contact" value={request.consentsToContact ? "Yes" : "No"} />}
           {request.rejectionReason && <DetailItem label="Rejection Reason" value={request.rejectionReason} />}
-          {request.adminNotes && <DetailItem label="Admin Notes" value={request.adminNotes} />}
+          {request.adminNotes && <DetailItem label="Remark" value={request.adminNotes} />}
           {(request.analyticsScreenshotUrl || request.revenueScreenshotUrl) && (
             <div className="md:col-span-2 lg:col-span-3 flex flex-wrap gap-4">
               {request.analyticsScreenshotUrl && (
@@ -142,7 +142,7 @@ const ChannelDetailsModal = ({ channel, isOpen, onClose }) => {
           <DetailItem label="Total Revenue" value={`$${channel.totalRevenue}`} />
           <DetailItem label="Last Revenue Update" value={channel.lastRevenueUpdate ? new Date(channel.lastRevenueUpdate).toLocaleDateString() : "N/A"} />
           <DetailItem label="Joined Date" value={new Date(channel.joinedDate).toLocaleDateString()} />
-          {channel.notes && <DetailItem label="Notes" value={channel.notes} />}
+          {channel.notes && <DetailItem label="Remark" value={channel.notes} />}
           {channel.suspendedAt && <DetailItem label="Suspended At" value={new Date(channel.suspendedAt).toLocaleDateString()} />}
           {channel.suspensionReason && <DetailItem label="Suspension Reason" value={channel.suspensionReason} />}
           {channel.reactivatedAt && <DetailItem label="Reactivated At" value={new Date(channel.reactivatedAt).toLocaleDateString()} />}

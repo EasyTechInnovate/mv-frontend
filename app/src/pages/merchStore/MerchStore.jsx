@@ -303,7 +303,7 @@ const MerchStore = () => {
       legalTerms: {
         reviewProcess: rawData.legalConsents.agreeToReviewProcess,
         revisionsRight: rawData.legalConsents.understandRevisionRights,
-        emailNewsletter: false,
+        emailNewsletter: rawData.legalConsents.subscribeToNewsletter || false,
         showcasingConsent: rawData.legalConsents.consentToShowcase
       }
     });
@@ -366,7 +366,8 @@ const MerchStore = () => {
         legalConsents: {
           agreeToReviewProcess: formData.legalTerms.reviewProcess,
           understandRevisionRights: formData.legalTerms.revisionsRight,
-          consentToShowcase: formData.legalTerms.showcasingConsent
+          consentToShowcase: formData.legalTerms.showcasingConsent,
+          subscribeToNewsletter: formData.legalTerms.emailNewsletter
         }
       };
 

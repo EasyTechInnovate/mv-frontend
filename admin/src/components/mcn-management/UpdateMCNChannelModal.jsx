@@ -118,7 +118,7 @@ export default function UpdateMCNChannelModal({ isOpen, onClose, channel, theme 
             />
           </div>
           <div>
-            <label className={`block text-sm ${textMuted} mb-2`}>Notes</label>
+            <label className={`block text-sm ${textMuted} mb-2`}>Remark (Visible to user)</label>
             <Textarea
               name="notes"
               value={formData.notes}

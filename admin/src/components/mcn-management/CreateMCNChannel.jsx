@@ -276,7 +276,7 @@ export default function CreateMCNChannelModal({
 
 
           <div>
-            <label className={`block text-sm mb-1 font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>Notes</label>
+            <label className={`block text-sm mb-1 font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>Remark (Visible to user)</label>
             <Textarea
               placeholder="Channel setup details or notes"
               value={notes}

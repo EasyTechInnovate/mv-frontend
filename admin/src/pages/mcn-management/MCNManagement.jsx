@@ -170,7 +170,7 @@ const ChannelDetailsModal = ({ channel, open, onClose, theme }) => {
           <DetailItem label="Joined Date" value={channel?.joinedDate ? new Date(channel.joinedDate).toLocaleDateString() : 'N/A'} />
           
           {channel?.lastRevenueUpdate && <DetailItem label="Last Revenue Update" value={new Date(channel.lastRevenueUpdate).toLocaleDateString()} />}
-          {channel?.notes && <DetailItem label="Notes" value={channel.notes} />}
+          {channel?.notes && <DetailItem label="Remark (Visible to user)" value={channel.notes} />}
           {channel?.suspendedAt && <DetailItem label="Suspended At" value={new Date(channel.suspendedAt).toLocaleDateString()} />}
           {channel?.suspensionReason && <DetailItem label="Suspension Reason" value={channel.suspensionReason} />}
           {channel?.reactivatedAt && <DetailItem label="Reactivated At" value={new Date(channel.reactivatedAt).toLocaleDateString()} />}
@@ -429,10 +429,13 @@ export default function MCNManagement({ theme = "dark" }) {
     const totalChannels = s.revenue?.totalChannels ?? 0;
 
     if (activeTab === "active") {
+      const formattedAvgRevenueShare = avgRevenueShare !== null && avgRevenueShare !== undefined 
+          ? Number(avgRevenueShare).toFixed(2) 
+          : "-";
       return [
         { label: "Active Channels", value: countChannelsActive },
         { label: "Total Revenue", value: revenueChannelsActive, highlight: true },
-        { label: "Avg Revenue Share", value: `${avgRevenueShare !== null ? String(avgRevenueShare) : "-"}%` },
+        { label: "Avg Revenue Share", value: `${formattedAvgRevenueShare}%` },
         { label: "Total Channels", value: totalChannels },
       ];
     }
@@ -922,7 +925,7 @@ export default function MCNManagement({ theme = "dark" }) {
                 { label: "Total Revenue", key: "totalRevenue" },
                 { label: "Joined Date", key: "joinedDate" },
                 { label: "Status", key: "status" },
-                { label: "Notes", key: "notes" },
+                { label: "Remark (Visible to user)", key: "notes" },
               ]
         }
         fetchData={async (page, limit) => {

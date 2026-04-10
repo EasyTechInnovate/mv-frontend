@@ -26,6 +26,7 @@ const Dashboard = () => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isResending, setIsResending] = useState(false);
   const [isSubmittingOtp, setIsSubmittingOtp] = useState(false);
+  const [resendTimeLeft, setResendTimeLeft] = useState(0);
   const otpInputRefs = React.useRef([]);
 
   const getYouTubeVideoId = (url) => {
@@ -55,12 +56,27 @@ const Dashboard = () => {
     fetchDashboard();
   }, []);
 
+  useEffect(() => {
+    if (resendTimeLeft <= 0) return;
+    const intervalId = setInterval(() => {
+      setResendTimeLeft(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, [resendTimeLeft]);
+
+  const formatResendTime = (seconds) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
   const handleResendEmail = async () => {
     setIsResending(true);
     try {
       await resendVerificationEmail({ emailAddress: user?.emailAddress });
       toast.success('Verification code sent to your email!');
       setIsVerifyingModalOpen(true);
+      setResendTimeLeft(120);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to resend verification email.');
     } finally {
@@ -616,10 +632,10 @@ const Dashboard = () => {
                   <button 
                     type="button"
                     onClick={handleResendEmail}
-                    disabled={isResending}
+                    disabled={isResending || resendTimeLeft > 0}
                     className="text-purple-400 hover:text-purple-300 font-medium disabled:opacity-50"
                   >
-                    Resend Code
+                    {isResending ? 'Sending...' : (resendTimeLeft > 0 ? `Resend in ${formatResendTime(resendTimeLeft)}` : 'Resend Code')}
                   </button>
                 </p>
               </div>

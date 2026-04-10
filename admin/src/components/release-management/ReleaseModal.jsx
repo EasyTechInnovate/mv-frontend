@@ -335,9 +335,9 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                 }),
                 
                 // User Info
-                'User Name': release.userId ? `${release.userId.firstName || ''} ${release.userId.lastName || ''}`.trim() : '',
-                'User Email': release.userId?.emailAddress || '',
-                'Account ID': release.accountId || '',
+                'User Name': release.user?.name || (release.userId ? `${release.userId.firstName || ''} ${release.userId.lastName || ''}`.trim() : ''),
+                'User Email': release.user?.email || release.userId?.emailAddress || '',
+                'Account ID': release.user?.accountId || release.userId?.accountId || release.accountId || '',
                 
                 // Track Info
                 'Track Number': trackIndex + 1,

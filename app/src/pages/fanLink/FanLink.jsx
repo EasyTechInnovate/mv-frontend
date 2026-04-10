@@ -52,12 +52,31 @@ const [newPlatformUrl, setNewPlatformUrl] = useState('')
       setTitle(existingLink.title || 'Your Track Title')
       setDescription(existingLink.description || '')
       setCustomUrl(existingLink.customUrl || '')
-      setPlatformLinks(existingLink.platformLinks || [])
+      
+      const pLinks = existingLink.platformLinks || []
+      setPlatformLinks(pLinks)
+      
+      const customPlats = []
+      pLinks.forEach(link => {
+        const isDefault = PLATFORMS.some(p => p.id === link.platform)
+        if (!isDefault) {
+          const formattedName = link.platform
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ')
+          customPlats.push({
+            id: link.platform,
+            name: formattedName,
+            isCustom: true
+          })
+        }
+      })
+      setCustomPlatforms(customPlats)
+      
       setIsUrlChecked(true)
       setIsUrlAvailable(true)
     }
   }, [existingLink])
-
   // Check URL availability mutation
   const checkUrlMutation = useMutation({
     mutationFn: checkFanLinkAvailability,
