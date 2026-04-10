@@ -41,7 +41,7 @@ const MUSIC_GENRES = [
 const MUSIC_LANGUAGES = [
   'instrumental', 'afrikaans', 'albanian', 'amharic', 'arabic', 'aragonese',
   'armenian', 'asturian', 'azerbaijani', 'basque', 'belarusian', 'bengali',
-  'bosnian', 'breton', 'bulgarian', 'catalan', 'central_kurdish', 'chinese',
+  'bhojpuri', 'bosnian', 'breton', 'bulgarian', 'catalan', 'central_kurdish', 'chinese',
   'corsican', 'croatian', 'czech', 'danish', 'dutch', 'english',
   'english_australia', 'english_canada', 'english_india', 'english_us',
   'english_uk', 'english_new_zealand', 'english_south_africa', 'estenian',
@@ -51,13 +51,12 @@ const MUSIC_LANGUAGES = [
   'japanese', 'kannada', 'kazakh', 'khmer', 'koren', 'kurdish', 'kyrgyz',
   'lao', 'latin', 'latvian', 'lingala', 'lithuanian', 'macedonian',
   'malay', 'malayalam', 'maltese', 'marathi', 'mongolian', 'nagpuri',
-  'nepali', 'norwegian', 'occitan', 'oriya', 'oromo', 'pashto', 'persian',
+  'nepali', 'norwegian', 'occitan', 'odia', 'oromo', 'pashto', 'persian',
   'polish', 'portuguese', 'punjabi', 'quechua', 'romanian', 'russian',
   'sainthili', 'scottish', 'serbian', 'sindhi', 'shono', 'sinhala',
   'slovak', 'slovenian', 'somali', 'spanish', 'sundanese', 'swahili',
   'swedish', 'tajik', 'tamil', 'tatar', 'telugu', 'thai', 'tigrinya',
   'tongan', 'turkish', 'turkmen', 'twi', 'ukrainian', 'urdu', 'uyghur',
-  'uzbek', 'vietnamese', 'walloon', 'wetish', 'western_frisian', 'xhosa',
   'uzbek', 'vietnamese', 'walloon', 'wetish', 'western_frisian', 'xhosa',
   'yiddish', 'yoruba', 'zulu'
 ]
