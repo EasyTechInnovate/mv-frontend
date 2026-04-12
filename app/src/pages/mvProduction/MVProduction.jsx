@@ -51,7 +51,7 @@ export default function MVProduction() {
         theme: '',
         locationPreference: {
             indoor_studio: false,
-            outdoor_natural: false,
+            outdoor_and_natural: false,
             urban_and_street: false,
             other: false
         },
@@ -108,7 +108,14 @@ export default function MVProduction() {
             resetForm()
         },
         onError: (error) => {
-            toast.error(error.response?.data?.message || 'Failed to submit MV Production request.')
+            const data = error.response?.data
+            if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+                data.errors.forEach((err) => {
+                    toast.error(err.message || 'Validation error')
+                })
+            } else {
+                toast.error(data?.message || 'Failed to submit MV Production request.')
+            }
         }
     })
 
@@ -183,7 +190,7 @@ export default function MVProduction() {
             theme: '',
             locationPreference: {
                 indoor_studio: false,
-                outdoor_natural: false,
+                outdoor_and_natural: false,
                 urban_and_street: false,
                 other: false
             },
@@ -606,13 +613,13 @@ export default function MVProduction() {
                         </div>
                         <div className="flex items-center space-x-2">
                             <Checkbox
-                                id="outdoor_natural"
-                                checked={formData.locationPreference.outdoor_natural}
-                                onCheckedChange={(checked) => handleCheckboxChange('locationPreference', 'outdoor_natural', checked)}
+                                id="outdoor_and_natural"
+                                checked={formData.locationPreference.outdoor_and_natural}
+                                onCheckedChange={(checked) => handleCheckboxChange('locationPreference', 'outdoor_and_natural', checked)}
                                 disabled={showViewOnly}
                             />
                             <label
-                                htmlFor="outdoor_natural"
+                                htmlFor="outdoor_and_natural"
                                 className="text-sm">
                                 Outdoor / Natural
                             </label>

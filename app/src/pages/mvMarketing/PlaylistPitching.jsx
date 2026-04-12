@@ -87,11 +87,11 @@ export default function PlaylistPitching() {
         artistName: '',
         labelName: '',
         isrc: '',
-        genres: 'alternative',
-        mood: 'uplifting',
+        genres: '',
+        mood: '',
         isVocalsPresent: 'false',
         language: '',
-        theme: 'journey_travel',
+        theme: '',
         selectedStore: '',
         trackLinks: [{ platform: '', url: '' }]
     }
@@ -131,7 +131,14 @@ export default function PlaylistPitching() {
             handleBackToList()
         },
         onError: (error) => {
-            showToast.error(error.response?.data?.message || 'Failed to submit playlist pitch.')
+            const data = error.response?.data
+            if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+                data.errors.forEach((err) => {
+                    showToast.error(err.message || 'Validation error')
+                })
+            } else {
+                showToast.error(data?.message || 'Failed to submit playlist pitch.')
+            }
         }
     })
 
@@ -365,7 +372,7 @@ export default function PlaylistPitching() {
                                     onClick={handleFormSubmit}
                                     disabled={isSubmitting}
                                     className="bg-[#711CE9] hover:bg-[#6f14ef] text-white w-full md:w-auto px-10">
-                                    Submit Ticket
+                                    Submit
                                 </Button>
                             </div>
                         )}

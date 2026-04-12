@@ -106,11 +106,11 @@ export default function Sync() {
         artistName: '',
         labelName: '',
         isrc: '',
-        genres: 'alternative',
-        mood: 'uplifting',
+        genres: '',
+        mood: '',
         isVocalsPresent: 'false',
         language: '',
-        theme: 'journey_travel',
+        theme: '',
         tempoBPM: '',
         masterRightsOwner: 'artist',
         publishingRightsOwner: 'artist',
@@ -174,13 +174,20 @@ export default function Sync() {
             handleBackToList()
         },
         onError: (error) => {
-            showToast.error(error.response?.data?.message || 'Failed to submit sync request.')
+            const data = error.response?.data
+            if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+                data.errors.forEach((err) => {
+                    showToast.error(err.message || 'Validation error')
+                })
+            } else {
+                showToast.error(data?.message || 'Failed to submit sync request.')
+            }
         }
     })
 
     const handleFormSubmit = () => {
         const formData = viewState.data
-        const { language, ...restOfFormData } = formData
+        const { language, proAffiliation, ...restOfFormData } = formData
         const payload = {
             ...restOfFormData,
             genres: [formData.genres], // Already lowercase
@@ -188,7 +195,7 @@ export default function Sync() {
             ...(language && { language: language.toLowerCase() }),
             theme: formData.theme,
             isVocalsPresent: formData.isVocalsPresent === "true",
-            isFullyClearedForSync: formData.isFullyClearedForSync,
+            isFullyClearedForSync: formData.isFullyClearedForSync === "unsure" ? "unsure" : formData.isFullyClearedForSync === "true",
             projectSuitability: Object.keys(formData.projectSuitability).filter((key) => formData.projectSuitability[key]),
             trackLinks: [{ platform: 'Spotify', url: formData.trackLinks }] // Assuming Spotify for now
         }
@@ -461,7 +468,7 @@ export default function Sync() {
                                     onClick={handleFormSubmit}
                                     disabled={isSubmitting}
                                     className="bg-[#711CE9] hover:bg-[#6f14ef] text-white w-full md:w-auto px-10">
-                                    Submit Ticket
+                                    Submit
                                 </Button>
                             </div>
                         )}
