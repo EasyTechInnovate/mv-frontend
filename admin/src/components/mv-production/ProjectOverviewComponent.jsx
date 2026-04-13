@@ -18,7 +18,7 @@ import {
 
 const locationMap = {
   indoor_studio: "Indoor Studio",
-  outdoor_natural: "Outdoor / Natural",
+  outdoor_and_natural: "Outdoor / Natural",
   urban_and_street: "Urban / Street",
   other: "Other",
 };

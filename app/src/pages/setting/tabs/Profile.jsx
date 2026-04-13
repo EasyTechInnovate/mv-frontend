@@ -240,6 +240,12 @@ const Profile = () => {
     }
   });
 
+  const [editStates, setEditStates] = useState({
+    bank: false,
+    upi: false,
+    paypal: false
+  });
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
@@ -556,20 +562,23 @@ const Profile = () => {
       
       const response = await verifyKYC(payload);
       
-      if (response && response.data && response.data.kyc) {
-        setFormData(prev => ({
-          ...prev,
-          kyc: {
-            ...prev.kyc,
-            ...response.data.kyc
-          }
-        }));
-        if (user) {
-          useAuthStore.getState().setUser({
-            ...user,
-            kyc: response.data.kyc
-          });
-        }
+      // Update form status to 'pending' while keeping the submitted details intact
+      const updatedKyc = {
+        residencyType: formData.kyc.residencyType,
+        details: { ...formData.kyc.details },
+        status: response?.data?.kycStatus || 'pending',
+      };
+
+      setFormData(prev => ({
+        ...prev,
+        kyc: updatedKyc,
+      }));
+
+      if (user) {
+        useAuthStore.getState().setUser({
+          ...user,
+          kyc: updatedKyc,
+        });
       }
       
       showToast.success('KYC details submitted for review!');
@@ -620,6 +629,7 @@ const Profile = () => {
       
       if (response.success) {
         showToast.success(`${method.toUpperCase()} details updated!`);
+        setEditStates(prev => ({ ...prev, [method]: false }));
         // Refresh local user state if needed
       } else {
         showToast.error(response.message || 'Error updating payout details.');
@@ -1057,9 +1067,17 @@ const Profile = () => {
                     <CreditCard className="w-4 h-4 text-blue-500" /> Bank Transfer
                 </h3>
                 {formData.payoutMethods.bank.verified && <Badge className="bg-green-600 text-white">Verified</Badge>}
-                <Button onClick={() => handleSavePayouts('bank')} disabled={saving} size="sm" className="bg-purple-600 hover:bg-purple-700">
-                    Save Bank Details
-                </Button>
+                <div className="flex gap-2">
+                    {!editStates.bank ? (
+                        <Button onClick={() => setEditStates(prev => ({ ...prev, bank: true }))} size="sm" variant="outline" className="border-slate-600">
+                            Edit Bank Details
+                        </Button>
+                    ) : (
+                        <Button onClick={() => handleSavePayouts('bank')} disabled={saving} size="sm" className="bg-purple-600 hover:bg-purple-700">
+                            Save Bank Details
+                        </Button>
+                    )}
+                </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -1069,6 +1087,7 @@ const Profile = () => {
                         onChange={(e) => handlePayoutChange('bank', 'accountHolderName', e.target.value)}
                         placeholder="John Doe"
                         className="border-slate-700"
+                        readOnly={!editStates.bank}
                     />
                 </div>
                 <div className="space-y-2">
@@ -1078,6 +1097,7 @@ const Profile = () => {
                         onChange={(e) => handlePayoutChange('bank', 'bankName', e.target.value)}
                         placeholder="HDFC Bank"
                         className="border-slate-700"
+                        readOnly={!editStates.bank}
                     />
                 </div>
                 <div className="space-y-2">
@@ -1087,6 +1107,7 @@ const Profile = () => {
                         onChange={(e) => handlePayoutChange('bank', 'accountNumber', e.target.value)}
                         placeholder="1234567890"
                         className="border-slate-700"
+                        readOnly={!editStates.bank}
                     />
                 </div>
                 <div className="space-y-2">
@@ -1096,6 +1117,7 @@ const Profile = () => {
                         onChange={(e) => handlePayoutChange('bank', 'ifscSwiftCode', e.target.value)}
                         placeholder="HDFC0001234"
                         className="border-slate-700"
+                        readOnly={!editStates.bank}
                     />
                 </div>
             </div>
@@ -1108,9 +1130,17 @@ const Profile = () => {
                     <IndianRupee className="w-4 h-4 text-purple-500" /> UPI ID
                 </h3>
                 {formData.payoutMethods.upi.verified && <Badge className="bg-green-600 text-white">Verified</Badge>}
-                <Button onClick={() => handleSavePayouts('upi')} disabled={saving} size="sm" className="bg-purple-600 hover:bg-purple-700">
-                    Save UPI
-                </Button>
+                <div className="flex gap-2">
+                    {!editStates.upi ? (
+                        <Button onClick={() => setEditStates(prev => ({ ...prev, upi: true }))} size="sm" variant="outline" className="border-slate-600">
+                            Edit UPI
+                        </Button>
+                    ) : (
+                        <Button onClick={() => handleSavePayouts('upi')} disabled={saving} size="sm" className="bg-purple-600 hover:bg-purple-700">
+                            Save UPI
+                        </Button>
+                    )}
+                </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -1120,6 +1150,7 @@ const Profile = () => {
                         onChange={(e) => handlePayoutChange('upi', 'upiId', e.target.value)}
                         placeholder="artist@upi"
                         className="border-slate-700"
+                        readOnly={!editStates.upi}
                     />
                 </div>
                 <div className="space-y-2">
@@ -1129,6 +1160,7 @@ const Profile = () => {
                         onChange={(e) => handlePayoutChange('upi', 'accountHolderName', e.target.value)}
                         placeholder="John Doe"
                         className="border-slate-700"
+                        readOnly={!editStates.upi}
                     />
                 </div>
             </div>
@@ -1141,9 +1173,17 @@ const Profile = () => {
                     <Wallet className="w-4 h-4 text-blue-600" /> PayPal
                 </h3>
                 {formData.payoutMethods.paypal.verified && <Badge className="bg-green-600 text-white">Verified</Badge>}
-                <Button onClick={() => handleSavePayouts('paypal')} disabled={saving} size="sm" className="bg-purple-600 hover:bg-purple-700">
-                    Save PayPal
-                </Button>
+                <div className="flex gap-2">
+                    {!editStates.paypal ? (
+                        <Button onClick={() => setEditStates(prev => ({ ...prev, paypal: true }))} size="sm" variant="outline" className="border-slate-600">
+                            Edit PayPal
+                        </Button>
+                    ) : (
+                        <Button onClick={() => handleSavePayouts('paypal')} disabled={saving} size="sm" className="bg-purple-600 hover:bg-purple-700">
+                            Save PayPal
+                        </Button>
+                    )}
+                </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -1154,6 +1194,7 @@ const Profile = () => {
                         onChange={(e) => handlePayoutChange('paypal', 'paypalEmail', e.target.value)}
                         placeholder="artist@email.com"
                         className="border-slate-700"
+                        readOnly={!editStates.paypal}
                     />
                 </div>
                 <div className="space-y-2">
@@ -1163,6 +1204,7 @@ const Profile = () => {
                         onChange={(e) => handlePayoutChange('paypal', 'accountName', e.target.value)}
                         placeholder="John Doe"
                         className="border-slate-700"
+                        readOnly={!editStates.paypal}
                     />
                 </div>
             </div>

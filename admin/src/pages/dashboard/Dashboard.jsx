@@ -28,8 +28,6 @@ const cardIcons = {
   activeReleases: Music,
   monthlyRoyalty: IndianRupee,
   pendingKYC: FileWarning,
-  totalCatalog: Database,
-  platformUsage: Activity,
 };
 
 
@@ -118,6 +116,10 @@ useEffect(() => {
         activeReleases: {
           ...mockDashboardRes.activeReleases,
           count: realData.totalReleases,
+          breakdown: {
+            live: (realData.basicReleases?.live || 0) + (realData.basicReleases?.published || 0) + 
+                  (realData.advancedReleases?.live || 0) + (realData.advancedReleases?.published || 0),
+          }
         },
         monthlyRoyalty: {
           ...mockDashboardRes.monthlyRoyalty,
@@ -134,14 +136,6 @@ useEffect(() => {
             unverified: realData.pendingKYC?.unverified || 0,
             pending: realData.pendingKYC?.pending || 0,
           }
-        },
-        totalCatalog: {
-            ...mockDashboardRes.totalCatalog,
-            count: 0,
-        },
-        platformUsage: {
-            ...mockDashboardRes.platformUsage,
-            percentage: "0%",
         },
         platformUsage24h: realData.charts?.platformUsage24h || mockDashboardRes.platformUsage24h,
         revenueGrowth: (realData.charts?.revenueGrowth || mockDashboardRes.revenueGrowth).slice(-5),

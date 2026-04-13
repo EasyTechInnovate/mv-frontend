@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import GlobalApi from "@/lib/GlobalApi";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 export default function InternalNoteModal({
   isOpen,
@@ -12,6 +13,7 @@ export default function InternalNoteModal({
   onAdded
 }) {
   const isDark = theme === "dark";
+  const { user: currentUser } = useAuth();
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -33,6 +35,10 @@ export default function InternalNoteModal({
       const newNote = {
         note: note.trim(),
         createdAt: new Date().toISOString(),
+        addedBy: {
+            firstName: currentUser?.firstName || "Admin",
+            lastName: currentUser?.lastName || "User",
+        }
       };
 
       onAdded(newNote);   // ← tell parent to update UI
@@ -70,7 +76,7 @@ export default function InternalNoteModal({
               background: isDark ? "#0F1720" : "#F3F4F6",
             }}
           >
-            {existingNotes.map((n, i) => (
+            {[...existingNotes].reverse().map((n, i) => (
               <div
                 key={i}
                 className="text-xs p-2 rounded-md"
@@ -78,10 +84,15 @@ export default function InternalNoteModal({
                   background: isDark ? "#1E293B" : "#E5E7EB",
                 }}
               >
-                <div className="font-medium">{n.note}</div>
-                <div className="text-[10px] opacity-70">
-                  {new Date(n.createdAt).toLocaleString()}
+                <div className="flex justify-between items-start mb-1">
+                    <span className="font-semibold text-purple-600 dark:text-purple-400">
+                        {n.addedBy?.firstName} {n.addedBy?.lastName}
+                    </span>
+                    <span className="text-[10px] opacity-70">
+                        {new Date(n.createdAt).toLocaleString()}
+                    </span>
                 </div>
+                <div className="font-medium">{n.note}</div>
               </div>
             ))}
           </div>

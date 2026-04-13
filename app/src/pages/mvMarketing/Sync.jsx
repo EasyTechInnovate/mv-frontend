@@ -112,8 +112,8 @@ export default function Sync() {
         language: '',
         theme: '',
         tempoBPM: '',
-        masterRightsOwner: 'artist',
-        publishingRightsOwner: 'artist',
+        masterRightsOwner: '',
+        publishingRightsOwner: '',
         isFullyClearedForSync: 'true',
         proAffiliation: '',
         projectSuitability: {

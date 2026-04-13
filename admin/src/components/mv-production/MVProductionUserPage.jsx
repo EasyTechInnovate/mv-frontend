@@ -23,7 +23,7 @@ const initialFormData = {
     theme: "",
     locationPreference: {
       indoor_studio: false,
-      outdoor_natural: false,
+      outdoor_and_natural: false,
       urban_and_street: false,
       other: false
     },
@@ -83,7 +83,7 @@ export default function MVProductionUserPage({
         theme: defaultData.projectOverview?.theme || "",
         locationPreference: {
             indoor_studio: defaultData.projectOverview?.locationPreference?.includes('indoor_studio') || false,
-            outdoor_natural: defaultData.projectOverview?.locationPreference?.includes('outdoor_natural') || defaultData.projectOverview?.locationPreference?.includes('outdoor_and_natural') || false,
+            outdoor_and_natural: defaultData.projectOverview?.locationPreference?.includes('outdoor_and_natural') || false,
             urban_and_street: defaultData.projectOverview?.locationPreference?.includes('urban_and_street') || false,
             other: defaultData.projectOverview?.locationPreference?.includes('other') || false,
         },
