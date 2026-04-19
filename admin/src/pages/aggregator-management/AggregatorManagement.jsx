@@ -155,6 +155,10 @@ export default function AggregatorManagement({ theme }) {
     { label: "Name", key: "name" },
     { label: "Email", key: "emailAddress" },
     { label: "Phone", key: "phoneNumber" },
+    { label: "Address", key: "address" },
+    { label: "Pincode", key: "pincode" },
+    { label: "State", key: "state" },
+    { label: "Country", key: "country" },
     { label: "Company", key: "companyName" },
     { label: "Website", key: "websiteLink" },
     { label: "Instagram", key: "instagramUrl" },
@@ -174,6 +178,10 @@ export default function AggregatorManagement({ theme }) {
     { label: "Popular Release Links", key: "formattedReleaseLinks" },
     { label: "Popular Artist Links", key: "formattedArtistLinks" },
     { label: "Associated Labels", key: "formattedLabels" },
+    { label: "Other Source", key: "howDidYouKnowOther" },
+    { label: "Reviewed Date", key: "reviewedAt" },
+    { label: "Reviewed By", key: "reviewedByName" },
+    { label: "Updated Date", key: "updatedAt" },
   ];
 
   const fetchDataForExport = async (exportPage, exportLimit) => {
@@ -194,9 +202,12 @@ export default function AggregatorManagement({ theme }) {
         isAccountCreated: app.isAccountCreated ? "Yes" : "No",
         formattedServices: (app.additionalServices || []).join(", "),
         formattedReleaseLinks: (app.popularReleaseLinks || []).join(", "),
-        formattedArtistLinks: (app.popularArtistLinks || []).join(", "),
-        formattedLabels: (app.associatedLabels || []).join(", "),
+        formattedArtistLinks: (app.popularArtistLinks || [])?.join(", "),
+        formattedLabels: (app.associatedLabels || [])?.join(", "),
         createdAt: new Date(app.createdAt).toLocaleString(),
+        reviewedAt: app.reviewedAt ? new Date(app.reviewedAt).toLocaleString() : "",
+        updatedAt: app.updatedAt ? new Date(app.updatedAt).toLocaleString() : "",
+        reviewedByName: app.reviewedBy ? `${app.reviewedBy.firstName || ""} ${app.reviewedBy.lastName || ""}` : "",
       }));
     } catch (err) {
       toast.error("Failed to fetch data for export.");

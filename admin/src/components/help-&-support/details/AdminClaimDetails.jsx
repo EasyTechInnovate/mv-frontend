@@ -1,4 +1,5 @@
 import React from 'react';
+import { ETicketType } from '@/config/constants';
 
 const DetailItem = ({ label, value, isLink = false }) => (
     <div>
@@ -17,12 +18,13 @@ const AdminClaimDetailsCard = ({ claims, type }) => {
 
     const getLinkFields = () => {
         switch (type) {
-            case 'META_MANUAL_CLAIM':
-            case 'META_CLAIM_RELEASE':
-                return { link1: 'Meta Video Link', link2: 'Meta Audio Link' };
-            case 'YOUTUBE_MANUAL_CLAIM':
-            case 'YOUTUBE_CLAIM_RELEASE':
-                return { link1: 'YouTube Video Link', link2: 'Official Video Link' };
+            case ETicketType.META_MANUAL_CLAIM:
+                return { link1: 'Meta Video Link', link2: 'Official Video Link (Optional)' };
+            case ETicketType.META_CLAIM_RELEASE:
+                return { link1: 'Facebook / Instagram Video Link', link2: 'Meta Audio Link' };
+            case ETicketType.YOUTUBE_MANUAL_CLAIM:
+            case ETicketType.YOUTUBE_CLAIM_RELEASE:
+                return { link1: 'YouTube Video Link', link2: 'Official Video Link (Optional)' };
             default:
                 return { link1: 'Link 1', link2: 'Link 2' };
         }

@@ -20,7 +20,7 @@ const DetailItem = ({ label, value, isBadge = false, badgeVariant = "secondary" 
     {isBadge ? (
       <Badge variant={badgeVariant} className="w-fit text-white border-none">{value}</Badge>
     ) : (
-      <p className="text-base text-gray-100">{value || "N/A"}</p>
+      <p className="text-base text-gray-100">{value !== undefined && value !== null && value !== "" ? value : "N/A"}</p>
     )}
   </div>
 );
@@ -73,24 +73,24 @@ export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark'
       "LinkedIn", "TikTok", "Twitter", "Website", "Label Name", "Label YT", "Label IG", "Label FB", "Label Website", "Label Popular Links", 
       "Label Freq", "Monthly Plans", "Label Info", "Bank Holder", "Bank Name", "Account Number", "IFSC", "Paypal Email", "Join Date", 
       "KYC Status", "KYC Residency", "Aadhaar No", "PAN No", "GST No", "Passport No", "VAT No", "UPI ID", "UPI Holder", 
-      "Services", "Associated Labels", "Email Verified", "Bank Verified", "Account Status", "Plan", "Membership Status", "Start Date", "End Date", "Net Revenue Share"
+      "Services", "Associated Labels", "Agg Release Links", "Agg Artist Links", "Email Verified", "Bank Verified", "Account Status", "Plan", "Membership Status", "Start Date", "End Date", "Net Revenue Share"
     ];
 
     const dataRow = [
       1, user.firstName || "", user.lastName || "", user.accountId || "", user.emailAddress || "", user.phoneNumber?.internationalNumber || "", 
       user.address?.street || "", user.address?.pinCode || "", user.address?.state || "", user.address?.country || "", 
-      user.userType || "", stageName, user.socialMedia?.youtube || user.artistData?.youtubeLink || "", user.socialMedia?.facebook || "", 
-      user.socialMedia?.instagram || "", user.socialMedia?.spotify || "", user.socialMedia?.appleMusic || "", user.socialMedia?.saavn || "", 
-      user.socialMedia?.amazon || "", user.aggregatorData?.howDidYouKnow || "", user.aggregatorData?.linkedinUrl || user.socialMedia?.linkedin || "", 
-      user.socialMedia?.tiktok || "", user.socialMedia?.twitter || "", user.socialMedia?.website || "", user.labelData?.labelName || "", 
+      user.userType || "", stageName, user.socialMedia?.youtube || user.artistData?.youtubeLink || user.labelData?.youtubeLink || user.aggregatorData?.youtubeLink || "", user.socialMedia?.facebook || user.artistData?.facebookLink || user.labelData?.facebookLink || user.aggregatorData?.facebookUrl || "", 
+      user.socialMedia?.instagram || user.artistData?.instagramLink || user.labelData?.instagramLink || user.aggregatorData?.instagramUrl || "", user.socialMedia?.spotify || "", user.socialMedia?.appleMusic || "", user.socialMedia?.saavn || "", 
+      user.socialMedia?.amazon || "", user.aggregatorData?.howDidYouKnow ? `${user.aggregatorData.howDidYouKnow}${user.aggregatorData.howDidYouKnowOther ? ` (${user.aggregatorData.howDidYouKnowOther})` : ""}` : (user.howDidYouKnow || ""), user.aggregatorData?.linkedinUrl || user.socialMedia?.linkedin || "", 
+      user.socialMedia?.tiktok || "", user.socialMedia?.twitter || "", user.labelData?.websiteLink || user.aggregatorData?.websiteLink || user.socialMedia?.website || "", user.labelData?.labelName || "", 
       user.labelData?.youtubeLink || "", user.labelData?.instagramLink || "", user.labelData?.facebookLink || "", user.labelData?.websiteLink || "", 
-      joinArr(user.labelData?.popularArtistLinks), user.labelData?.releaseFrequency || "", user.labelData?.monthlyReleasePlans || "", 
-      user.labelData?.briefInfo || "", user.payoutMethods?.bank?.accountHolderName || "", user.payoutMethods?.bank?.bankName || "", 
+      joinArr(user.labelData?.popularArtistLinks), user.labelData?.releaseFrequency || user.aggregatorData?.releaseFrequency || "", user.labelData?.monthlyReleasePlans || user.aggregatorData?.monthlyReleasePlans || "", 
+      user.labelData?.briefInfo || user.aggregatorData?.briefInfo || "", user.payoutMethods?.bank?.accountHolderName || "", user.payoutMethods?.bank?.bankName || "", 
       user.payoutMethods?.bank?.accountNumber || "", user.payoutMethods?.bank?.ifscSwiftCode || "", user.payoutMethods?.paypal?.paypalEmail || "", 
       formatDate(user.createdAt), user.kyc?.status || "unverified", user.kyc?.residencyType || "", user.kyc?.details?.aadhaarNumber || "", 
       user.kyc?.details?.panNumber || "", user.kyc?.details?.gstUdhyamNumber || "", user.kyc?.details?.passportNumber || "", 
       user.kyc?.details?.vatNumber || "", user.payoutMethods?.upi?.upiId || "", user.payoutMethods?.upi?.accountHolderName || "", 
-      joinArr(user.aggregatorData?.additionalServices), joinArr(user.aggregatorData?.associatedLabels), formatBool(user.isEmailVerified), 
+      joinArr(user.aggregatorData?.additionalServices), joinArr(user.aggregatorData?.associatedLabels), joinArr(user.aggregatorData?.popularReleaseLinks), joinArr(user.aggregatorData?.popularArtistLinks), formatBool(user.isEmailVerified), 
       formatBool(user.payoutMethods?.bank?.verified), user.isActive ? "Active" : "Inactive", user.subscription?.planId || "Free", 
       user.subscription?.status || "Inactive", formatDate(user.subscription?.validFrom), formatDate(user.subscription?.validUntil),
       user.subscription?.netRevenueShare !== undefined ? `${user.subscription.netRevenueShare}%` : "0%"
@@ -224,6 +224,12 @@ export default function UserDetailsModal({ isOpen, onClose, user, theme = 'dark'
                 <DetailItem label="Release Frequency" value={user.aggregatorData.releaseFrequency} />
                 <DetailItem label="Monthly Plans" value={user.aggregatorData.monthlyReleasePlans} />
                 
+                <SocialLink label="Website" link={user.aggregatorData.websiteLink} />
+                <SocialLink label="YouTube" link={user.aggregatorData.youtubeLink} />
+                <SocialLink label="Instagram" link={user.aggregatorData.instagramUrl} />
+                <SocialLink label="Facebook" link={user.aggregatorData.facebookUrl} />
+                <SocialLink label="LinkedIn" link={user.aggregatorData.linkedinUrl} />
+
                 <div className="col-span-full space-y-3">
                    <div>
                      <p className="text-sm text-gray-400 mb-1">Associated Labels</p>

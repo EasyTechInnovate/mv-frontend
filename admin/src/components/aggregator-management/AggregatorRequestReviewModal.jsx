@@ -88,9 +88,10 @@ export default function AggregatorRequestReviewModal({
     if (!application) return;
 
     const headers = [
-      "NO.", "Name", "Email", "Phone", "Company", "Application Status", "Submission Date", 
-      "Website", "YouTube", "Instagram", "Facebook", "Brief Info", "Additional Services", 
-      "How Did You Know?", "Admin Notes"
+      "NO.", "Name", "Email", "Phone", "Address", "Pincode", "State", "Country", "Company", "Application Status", "Submission Date", 
+      "Website", "YouTube", "Instagram", "Facebook", "LinkedIn", "Total Releases", "Release Frequency", "Monthly Plans", "Popular Release Links", "Popular Artist Links", "Associated Labels",
+      "Brief Info", "Additional Services", 
+      "How Did You Know?", "Other Source", "Admin Notes", "Reviewed At", "Reviewed By", "Account Created"
     ];
 
     const dataRow = [
@@ -98,6 +99,10 @@ export default function AggregatorRequestReviewModal({
       `${application.firstName || ""} ${application.lastName || ""}`,
       application.emailAddress || "",
       application.phoneNumber || "",
+      application.address || "",
+      application.pincode || "",
+      application.state || "",
+      application.country || "",
       application.companyName || "",
       application.applicationStatus || "",
       application.createdAt ? new Date(application.createdAt).toLocaleDateString() : "",
@@ -105,10 +110,21 @@ export default function AggregatorRequestReviewModal({
       application.youtubeLink || "",
       application.instagramUrl || "",
       application.facebookUrl || "",
+      application.linkedinUrl || "",
+      application.totalReleases || "",
+      application.releaseFrequency || "",
+      application.monthlyReleasePlans || "",
+      Array.isArray(application.popularReleaseLinks) ? application.popularReleaseLinks.join("; ") : "",
+      Array.isArray(application.popularArtistLinks) ? application.popularArtistLinks.join("; ") : "",
+      Array.isArray(application.associatedLabels) ? application.associatedLabels.join("; ") : "",
       application.briefInfo || "",
       Array.isArray(application.additionalServices) ? application.additionalServices.join("; ") : "",
       application.howDidYouKnow || "",
-      application.adminNotes || adminNotes || ""
+      application.howDidYouKnowOther || "",
+      application.adminNotes || adminNotes || "",
+      application.reviewedAt ? new Date(application.reviewedAt).toLocaleDateString() : "",
+      application.reviewedBy ? `${application.reviewedBy.firstName || ""} ${application.reviewedBy.lastName || ""}` : "",
+      application.isAccountCreated ? "Yes" : "No"
     ];
 
     const csvContent = [
@@ -173,13 +189,35 @@ export default function AggregatorRequestReviewModal({
                 value={new Date(application.createdAt).toLocaleDateString()}
               />
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+              <DetailItem label="Address" value={application.address} />
+              <DetailItem label="Pincode" value={application.pincode} />
+              <DetailItem label="State" value={application.state} />
+              <DetailItem label="Country" value={application.country} />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <DetailItem label="Website" value={application.websiteLink} />
               <DetailItem label="YouTube" value={application.youtubeLink} />
               <DetailItem label="Instagram" value={application.instagramUrl} />
               <DetailItem label="Facebook" value={application.facebookUrl} />
+              <DetailItem label="LinkedIn" value={application.linkedinUrl} />
+              <DetailItem label="Total Releases" value={application.totalReleases} />
+              <DetailItem label="Release Frequency" value={application.releaseFrequency} />
+              <DetailItem label="Monthly Plans" value={application.monthlyReleasePlans} />
             </div>
             <div className="space-y-4 mb-6">
+              <DetailItem
+                label="Popular Release Links"
+                value={application.popularReleaseLinks?.join(", ")}
+              />
+              <DetailItem
+                label="Popular Artist Links"
+                value={application.popularArtistLinks?.join(", ")}
+              />
+              <DetailItem
+                label="Associated Labels"
+                value={application.associatedLabels?.join(", ")}
+              />
               <DetailItem
                 label="Brief Info"
                 value={application.briefInfo}
@@ -192,7 +230,25 @@ export default function AggregatorRequestReviewModal({
                 label="How did you know about us?"
                 value={application.howDidYouKnow}
               />
+              {application.howDidYouKnow === "other" && (
+                <DetailItem
+                  label="Other Source"
+                  value={application.howDidYouKnowOther}
+                />
+              )}
             </div>
+
+            {(application.reviewedAt || application.reviewedBy || application.isAccountCreated) && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 pt-4 border-t border-gray-800">
+                <DetailItem label="Account Created" value={application.isAccountCreated ? "Yes" : "No"} />
+                {application.reviewedAt && (
+                  <DetailItem label="Reviewed Date" value={new Date(application.reviewedAt).toLocaleDateString()} />
+                )}
+                {application.reviewedBy && (
+                  <DetailItem label="Reviewed By" value={`${application.reviewedBy.firstName || ""} ${application.reviewedBy.lastName || ""}`} />
+                )}
+              </div>
+            )}
 
             {isPending && (
               <div className="space-y-2">

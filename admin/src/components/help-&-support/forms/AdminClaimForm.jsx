@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2 } from "lucide-react";
+import { ETicketType } from '@/config/constants';
 
 const FormRow = ({ label, children }) => (
     <div>
@@ -54,12 +55,13 @@ const AdminClaimForm = ({ initialDetails, onDetailsChange, type }) => {
     
     const getLinkFields = () => {
         switch (type) {
-            case 'META_MANUAL_CLAIM':
-            case 'META_CLAIM_RELEASE':
-                return { link1: 'Meta Video Link', link2: 'Meta Audio Link' };
-            case 'YOUTUBE_MANUAL_CLAIM':
-            case 'YOUTUBE_CLAIM_RELEASE':
-                return { link1: 'YouTube Video Link', link2: 'Official Video Link' };
+            case ETicketType.META_MANUAL_CLAIM:
+                return { link1: 'Meta Video Link', link2: 'Official Video Link (Optional)' };
+            case ETicketType.META_CLAIM_RELEASE:
+                return { link1: 'Facebook / Instagram Video Link', link2: 'Meta Audio Link' };
+            case ETicketType.YOUTUBE_MANUAL_CLAIM:
+            case ETicketType.YOUTUBE_CLAIM_RELEASE:
+                return { link1: 'YouTube Video Link', link2: 'Official Video Link (Optional)' };
             default:
                 return { link1: 'Link 1', link2: 'Link 2' };
         }
@@ -78,8 +80,8 @@ const AdminClaimForm = ({ initialDetails, onDetailsChange, type }) => {
             {details.claims.map((claim, index) => (
                 <div key={index} className="p-3 rounded-lg border relative" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
                      <div className="grid grid-cols-2 gap-4">
-                        <FormRow label={getLinkFields().link1}><InputField value={claim.metaVideoLink || claim.youtubeVideoLink} onChange={(e) => handleClaimChange(index, type.includes('META') ? 'metaVideoLink' : 'youtubeVideoLink', e.target.value)} /></FormRow>
-                        <FormRow label={getLinkFields().link2}><InputField value={claim.metaAudioLink || claim.officialVideoLink} onChange={(e) => handleClaimChange(index, type.includes('META') ? 'metaAudioLink' : 'officialVideoLink', e.target.value)} /></FormRow>
+                        <FormRow label={getLinkFields().link1}><InputField value={claim.metaVideoLink || claim.youtubeVideoLink} onChange={(e) => handleClaimChange(index, type.includes('Meta') ? 'metaVideoLink' : 'youtubeVideoLink', e.target.value)} /></FormRow>
+                        <FormRow label={getLinkFields().link2}><InputField value={claim.metaAudioLink || claim.officialVideoLink} onChange={(e) => handleClaimChange(index, type === ETicketType.META_CLAIM_RELEASE ? 'metaAudioLink' : 'officialVideoLink', e.target.value)} /></FormRow>
                         <FormRow label="ISRC"><InputField value={claim.isrc} onChange={(e) => handleClaimChange(index, 'isrc', e.target.value)} /></FormRow>
                         {hasTimestamps && (
                             <div className="grid grid-cols-2 gap-4">

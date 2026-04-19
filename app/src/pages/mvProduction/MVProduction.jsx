@@ -1114,14 +1114,16 @@ export default function MVProduction() {
                                                                     <Eye className="h-4 w-4" />
                                                                     View
                                                                 </Button>
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    onClick={() => handleDelete(request._id)}
-                                                                    className="flex items-center gap-2 text-destructive hover:text-destructive">
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                    Delete
-                                                                </Button>
+                                                                {request.status === 'pending' && (
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        onClick={() => handleDelete(request._id)}
+                                                                        className="flex items-center gap-2 text-destructive hover:text-destructive">
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Delete
+                                                                    </Button>
+                                                                )}
                                                             </div>
                                                         </td>
                                                     </tr>
