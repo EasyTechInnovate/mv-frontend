@@ -29,6 +29,15 @@ const handleDownload = async (url, filename, setDownloadingUrl) => {
     }
 }
 
+const formatDuration = (seconds) => {
+    if (!seconds || isNaN(seconds)) return '-';
+    const secs = parseInt(seconds, 10);
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = Math.floor(secs % 60);
+    return [h, m, s].map(v => v < 10 ? '0' + v : v).join(':');
+};
+
 const STATUS_CONFIG = {
     draft: {
         label: 'Draft',
@@ -309,88 +318,115 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
         const rows = []
         
         tracks.forEach((track, trackIndex) => {
-            const row = {
-                // Release Info
-                'Release ID': release.releaseId || '',
-                'Release Name': releaseInfo.releaseName || '',
-                'Release Type': release.releaseType || releaseInfo.releaseType || '',
-                'Release Status': release.releaseStatus === 'submitted' ? 'Pending' : (release.releaseStatus || ''),
-                'Primary Artists': Array.isArray(releaseInfo.primaryArtists) ? releaseInfo.primaryArtists.join(', ') : '',
-                'Featuring Artists': Array.isArray(releaseInfo.featuringArtists) ? releaseInfo.featuringArtists.join(', ') : '',
-                'Various Artists': Array.isArray(releaseInfo.variousArtists) ? releaseInfo.variousArtists.join(', ') : '',
-                'Label Name': releaseInfo.labelName?.name || releaseInfo.labelName || '',
-                'Primary Genre': releaseInfo.primaryGenre || release.genre || '',
-                'Secondary Genre': releaseInfo.secondaryGenre || '',
-                'Singer Name': release.step1?.coverArt?.singerName?.join(', ') || '',
-                'UPC': releaseInfo.upcCode || releaseInfo.adminProvidedUPC || '',
-                'Cover Art URL': releaseInfo.coverArt?.imageUrl || release.step1?.coverArt?.imageUrl || '',
-                
-                // Advanced Release Specific
-                ...(isAdvanced && {
-                    'Release Version': releaseInfo.releaseVersion || '',
-                    'Catalog': releaseInfo.catalog || '',
-                    'C-Line': releaseInfo.cLine ? `© ${releaseInfo.cLine.year} ${releaseInfo.cLine.text}` : '',
-                    'P-Line': releaseInfo.pLine ? `℗ ${releaseInfo.pLine.year} ${releaseInfo.pLine.text}` : '',
-                    'Pricing Tier': releaseInfo.releasePricingTier || '',
-                }),
-                
-                // User Info
-                'User Name': release.user?.name || (release.userId ? `${release.userId.firstName || ''} ${release.userId.lastName || ''}`.trim() : ''),
-                'User Email': release.user?.email || release.userId?.emailAddress || '',
-                'Account ID': release.user?.accountId || release.userId?.accountId || release.accountId || '',
-                
-                // Track Info
-                'Track Number': trackIndex + 1,
-                'Track Name': track.trackName || '',
-                'Track Primary Artists': Array.isArray(track.primaryArtists) ? track.primaryArtists.join(', ') : '',
-                'Track Featuring Artists': Array.isArray(track.featuringArtists) ? track.featuringArtists.join(', ') : '',
-                'ISRC': track.isrcCode || track.adminProvidedISRC || track.isrc || '',
-                'Track Genre': track.primaryGenre || track.genre || '',
-                'Track Secondary Genre': track.secondaryGenre || '',
-                'Preview Timing': track.previewStartTiming || '',
-                
-                // Advanced Track Specific
-                ...(isAdvanced && {
-                    'Mix Version': track.mixVersion || '',
+            let row = {};
+
+            if (isAdvanced) {
+                row = {
+                    'S.No.': trackIndex + 1,
+                    'Account ID': release.user?.accountId || release.userId?.accountId || release.accountId || '-',
+                    'User Name': release.user?.name || (release.userId ? `${release.userId.firstName || ''} ${release.userId.lastName || ''}`.trim() : '-'),
+                    'User Email': release.user?.email || release.userId?.emailAddress || '-',
+                    'Release ID': release.releaseId || '-',
+                    'Release Name': releaseInfo.releaseName || '-',
+                    'Release Version': releaseInfo.releaseVersion || '-',
+                    'Release Type': release.releaseType || releaseInfo.releaseType || '-',
+                    'Catalog': releaseInfo.catalog || '-',
+                    'UPC': releaseInfo.upcCode || releaseInfo.upc || releaseInfo.adminProvidedUPC ? `\t${releaseInfo.upcCode || releaseInfo.upc || releaseInfo.adminProvidedUPC}` : '-',
+                    'Release Status': release.releaseStatus === 'submitted' ? 'Pending' : (release.releaseStatus || '-'),
+                    'Label Name': typeof releaseInfo.labelName === 'object' ? (releaseInfo.labelName?.name || '-') : (releaseInfo.labelName || '-'),
+                    'Primary Genre': releaseInfo.primaryGenre || release.genre || '-',
+                    'Secondary Genre': releaseInfo.secondaryGenre || '-',
+                    'Pricing Tier': releaseInfo.releasePricingTier || '-',
+                    'C-Line': releaseInfo.cLine ? `© ${releaseInfo.cLine.year || ''} ${releaseInfo.cLine.text || ''}`.trim() : '-',
+                    'P-Line': releaseInfo.pLine ? `℗ ${releaseInfo.pLine.year || ''} ${releaseInfo.pLine.text || ''}`.trim() : '-',
+                    'Cover Art URL': releaseInfo.coverArt?.imageUrl || release.step1?.coverArt?.imageUrl || '-',
+                    
+                    'Track Number': trackIndex + 1,
+                    'Track Name': track.trackName || '-',
+                    'Primary Artists': Array.isArray(track.primaryArtists) ? track.primaryArtists.join(', ') : '-',
+                    'Featuring Artists': Array.isArray(track.featuringArtists) ? track.featuringArtists.join(', ') : '-',
+                    'ISRC': track.adminProvidedISRC || track.isrcCode || track.isrc ? `\t${track.adminProvidedISRC || track.isrcCode || track.isrc}` : '-',
+                    'Track Genre': track.primaryGenre || track.genre || '-',
+                    'Track Secondary Genre': track.secondaryGenre || '-',
+                    'Mix Version': track.mixVersion || '-',
                     'Has Human Vocals': track.hasHumanVocals ? 'Yes' : 'No',
                     'Available for Download': track.isAvailableForDownload ? 'Yes' : 'No',
-                    'Sound Recording Contributors': (track.contributorsToSoundRecording || track.contributorsToSound)?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '',
-                    'Musical Work Contributors': track.contributorsToMusicalWork?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '',
-                }),
-                
-                // Basic Track Specific
-                ...(!isAdvanced && {
-                    'Track Singer': track.singerName || '',
-                    'Composer': track.composerName || '',
-                    'Lyricist': track.lyricistName || '',
-                    'Producer': track.producerName || '',
-                    'Music Language': track.musicLanguage || '',
-                    'Parental Advisory': track.parentalAdvisory || '',
-                }),
-                
-                // Audio Files
-                'Audio File URL': track.trackLink || track.audioFiles?.[0]?.fileUrl || '',
-                'Audio Format': track.audioFiles?.[0]?.format || (track.audioFiles?.map(f => f.format).join(', ')) || '',
-                'File Size (MB)': track.audioFiles?.[0]?.fileSize ? (track.audioFiles[0].fileSize / (1024 * 1024)).toFixed(2) : '',
-                'Duration (Sec)': track.audioFiles?.[0]?.duration || '',
-                
-                // Distribution
-                'Release Date': step3.releaseDate || step3.deliveryDetails?.forFutureRelease || '',
-                'Territories': (step3.territorialRights?.territories || step3.territorialRights?.selectedTerritories || [])
-                    .map(t => t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))
-                    .join(', '),
-                'Distribution Partners': step3.distributionPartners?.join(', ') || step3.partnerSelection?.partners?.join(', ') || '',
-                'Owns Copyright': step3.copyrightOptions?.ownsCopyrights ? 'Yes' : 'No',
-                
-                // Timestamps
-                'Submitted At': release.submittedAt ? new Date(release.submittedAt).toLocaleString() : '',
-                'Published At': release.publishedAt ? new Date(release.publishedAt).toLocaleString() : '',
-                'Live At': release.liveAt ? new Date(release.liveAt).toLocaleString() : '',
-                
-                // Audio Footprinting
-                'Footprint Match': release.audioFootprinting?.find(fp => fp.trackId?.toString() === track._id?.toString())?.matchPercentage || '',
-                'Footprint Title': release.audioFootprinting?.find(fp => fp.trackId?.toString() === track._id?.toString())?.title || '',
-                'Footprint Artists': release.audioFootprinting?.find(fp => fp.trackId?.toString() === track._id?.toString())?.artists?.join(', ') || '',
+                    'Sound Recording Contributors': (track.contributorsToSoundRecording || track.contributorsToSound)?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '-',
+                    'Musical Work Contributors': (track.contributorsToMusicalWork || track.contributorsToMusical)?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '-',
+                    'Music Language': track.language || track.musicLanguage || '-',
+                    'Parental Advisory': track.explicitStatus || track.parentalAdvisory ? 'Explicit' : 'Clean',
+                    'Audio Format': track.audioFiles?.[0]?.format || '-',
+                    'Audio File URL': track.trackLink || track.fileUrl || track.audioFiles?.[0]?.fileUrl || '-',
+                    'Duration': track.audioFiles?.[0]?.duration ? formatDuration(track.audioFiles[0].duration) : '-',
+                    'File Size (MB)': track.audioFiles?.[0]?.fileSize ? (track.audioFiles[0].fileSize / (1024 * 1024)).toFixed(2) : '-',
+                    'Preview Timing': track.previewStartTiming || '-',
+                    
+                    'Release Date': step3.releaseDate || step3.deliveryDetails?.releaseDate || step3.deliveryDetails?.forFutureRelease ? new Date(step3.releaseDate || step3.deliveryDetails?.releaseDate || step3.deliveryDetails?.forFutureRelease).toLocaleDateString() : '-',
+                    'Territories': (step3.territorialRights?.territories || step3.territorialRights?.selectedTerritories || []).map(t => t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(', ') || '-',
+                    'Distribution Partners': step3.distributionPartners?.join(', ') || step3.partnerSelection?.partners?.join(', ') || '-',
+                    'Exclusive': step3.territorialRights?.isExclusive ? 'Yes' : 'No',
+                    'Owns Copyright': step3.copyrightOptions?.ownsCopyrights ? 'Yes' : 'No',
+                    
+                    'Submitted At': release.submittedAt ? new Date(release.submittedAt).toLocaleDateString() : '-',
+                    'Published At': release.publishedAt ? new Date(release.publishedAt).toLocaleDateString() : '-',
+                    'Live At': release.liveAt ? new Date(release.liveAt).toLocaleDateString() : '-',
+                    
+                    'Release Primary Artists': Array.isArray(releaseInfo.primaryArtists) ? releaseInfo.primaryArtists.join(', ') : '-',
+                    'Release Featuring Artists': Array.isArray(releaseInfo.featuringArtists) ? releaseInfo.featuringArtists.join(', ') : '-',
+                    'Release Various Artists': Array.isArray(releaseInfo.variousArtists) ? releaseInfo.variousArtists.join(', ') : '-',
+                    'Footprint Match': release.audioFootprinting?.find(fp => fp.trackId?.toString() === track._id?.toString())?.matchPercentage || '-',
+                    'Footprint Title': release.audioFootprinting?.find(fp => fp.trackId?.toString() === track._id?.toString())?.title || '-',
+                    'Footprint Artists': release.audioFootprinting?.find(fp => fp.trackId?.toString() === track._id?.toString())?.artists?.join(', ') || '-',
+                };
+            } else {
+                row = {
+                    'S.No.': trackIndex + 1,
+                    'Account ID': release.user?.accountId || release.userId?.accountId || release.accountId || '-',
+                    'User Name': release.user?.name || (release.userId ? `${release.userId.firstName || ''} ${release.userId.lastName || ''}`.trim() : '-'),
+                    'User Email': release.user?.email || release.userId?.emailAddress || '-',
+                    'Release ID': release.releaseId || '-',
+                    'Release Name': releaseInfo.releaseName || release.releaseTitle || '-',
+                    'Release Type': release.releaseType || releaseInfo.releaseType || 'Basic',
+                    'Track Type': release.trackType || '-',
+                    'Release Status': release.releaseStatus === 'submitted' ? 'Pending' : (release.releaseStatus || '-'),
+                    'Label Name': typeof releaseInfo.labelName === 'object' ? (releaseInfo.labelName?.name || '-') : (releaseInfo.labelName || '-'),
+                    'Primary Genre': releaseInfo.primaryGenre || releaseInfo.genre || release.genre || '-',
+                    'UPC': releaseInfo.upcCode || releaseInfo.upc || releaseInfo.adminProvidedUPC ? `\t${releaseInfo.upcCode || releaseInfo.upc || releaseInfo.adminProvidedUPC}` : '-',
+                    'Cover Art URL': releaseInfo.coverArt?.imageUrl || release.step1?.coverArt?.imageUrl || '-',
+                    
+                    'Track Number': trackIndex + 1,
+                    'Track Name': track.trackName || '-',
+                    'ISRC': track.adminProvidedISRC || track.isrcCode || track.isrc ? `\t${track.adminProvidedISRC || track.isrcCode || track.isrc}` : '-',
+                    'Track Genre': track.primaryGenre || track.genre || '-',
+                    'Track Singer': track.singerName || '-',
+                    'Composer': track.composerName || '-',
+                    'Lyricist': track.lyricistName || '-',
+                    'Producer': track.producerName || '-',
+                    'Music Language': track.language || track.musicLanguage || '-',
+                    'Parental Advisory': track.parentalAdvisory || '-',
+                    'Audio Format': track.audioFiles?.[0]?.format || '-',
+                    'Audio File URL': track.trackLink || track.fileUrl || track.audioFiles?.[0]?.fileUrl || '-',
+                    'Duration': track.audioFiles?.[0]?.duration ? formatDuration(track.audioFiles[0].duration) : '-',
+                    'File Size (MB)': track.audioFiles?.[0]?.fileSize ? (track.audioFiles[0].fileSize / (1024 * 1024)).toFixed(2) : '-',
+                    'Preview Timing': track.previewStartTiming || '-',
+                    
+                    'Release Date': step3.releaseDate || step3.deliveryDetails?.releaseDate || step3.deliveryDetails?.forFutureRelease ? new Date(step3.releaseDate || step3.deliveryDetails?.releaseDate || step3.deliveryDetails?.forFutureRelease).toLocaleDateString() : '-',
+                    'Territories': (step3.territorialRights?.territories || step3.territorialRights?.selectedTerritories || []).map(t => t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(', ') || '-',
+                    'Distribution Partners': (step3.distributionPartners || step3.partnerSelection?.partners || []).map(p => typeof p === 'string' ? p.replace(/_/g, ' ') : p).join(', ') || '-',
+                    'Owns Copyright': step3.copyrightOptions?.ownsCopyrights || step3.copyrights?.ownsCopyright ? 'Yes' : 'No',
+                    
+                    'Submitted At': release.submittedAt ? new Date(release.submittedAt).toLocaleDateString() : '-',
+                    'Published At': release.publishedAt ? new Date(release.publishedAt).toLocaleDateString() : '-',
+                    'Live At': release.liveAt ? new Date(release.liveAt).toLocaleDateString() : '-',
+                    
+                    'Primary Artists': Array.isArray(releaseInfo.primaryArtists) ? releaseInfo.primaryArtists.join(', ') : '-',
+                    'Featuring Artists': Array.isArray(releaseInfo.featuringArtists) ? releaseInfo.featuringArtists.join(', ') : '-',
+                    'Various Artists': Array.isArray(releaseInfo.variousArtists) ? releaseInfo.variousArtists.join(', ') : '-',
+                    'Secondary Genre': releaseInfo.secondaryGenre || '-',
+                    'Footprint Match': release.audioFootprinting?.find(fp => fp.trackId?.toString() === track._id?.toString())?.matchPercentage || '-',
+                    'Footprint Title': release.audioFootprinting?.find(fp => fp.trackId?.toString() === track._id?.toString())?.title || '-',
+                    'Footprint Artists': release.audioFootprinting?.find(fp => fp.trackId?.toString() === track._id?.toString())?.artists?.join(', ') || '-',
+                };
             }
             rows.push(row)
         })
@@ -1195,6 +1231,10 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                                 label="Preview Timing"
                                 value={track.previewStartTiming}
                             />
+                            <InfoField
+                                label="Duration"
+                                value={formatDuration(track.audioFiles?.[0]?.duration)}
+                            />
                             <InfoField label="ISRC" />
                             <div className="col-span-2">
                                 {track.adminProvidedISRC ? (
@@ -1301,6 +1341,10 @@ function TrackCard({ track, index, isAdvanced, isDark, release, onUpdate, releas
                             <InfoField
                                 label="Preview Timing"
                                 value={track.previewStartTiming}
+                            />
+                            <InfoField
+                                label="Duration"
+                                value={formatDuration(track.audioFiles?.[0]?.duration)}
                             />
                         </>
                     )}

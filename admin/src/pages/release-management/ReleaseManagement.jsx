@@ -63,6 +63,14 @@ const useDebounce = (value, delay) => {
   return debouncedValue;
 };
 
+const formatDuration = (seconds) => {
+  if (!seconds || isNaN(seconds)) return '-';
+  const secs = parseInt(seconds, 10);
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = Math.floor(secs % 60);
+  return [h, m, s].map(v => v < 10 ? '0' + v : v).join(':');
+};
 
 export default function ReleaseManagement({ theme }) {
   const isDark = theme === "dark";
@@ -780,100 +788,100 @@ export default function ReleaseManagement({ theme }) {
         theme={theme}
         totalItems={pagination.totalItems}
         headers={releaseCategory === 'advanced' ? [
-          { label: "S.No.", key: "sno" },
-          { label: "Account ID", key: "accountId" },
-          { label: "Release ID", key: "releaseId" },
-          { label: "Release Name", key: "releaseName" },
-          { label: "Release Version", key: "releaseVersion" },
-          { label: "Release Type", key: "releaseType" },
-          { label: "Catalog #", key: "catalog" },
-          { label: "UPC", key: "upc" },
-          { label: "Grid Code", key: "gridCode" },
-          { label: "Status", key: "releaseStatus" },
-          { label: "User Name", key: "userName" },
-          { label: "User Email", key: "userEmail" },
-          { label: "Label Name", key: "labelName" },
-          { label: "Primary Genre", key: "primaryGenre" },
-          { label: "Secondary Genre", key: "secondaryGenre" },
-          { label: "C-Line", key: "cLine" },
-          { label: "P-Line", key: "pLine" },
-          { label: "Production Year", key: "productionYear" },
-          { label: "Cover Art URL", key: "coverArtUrl" },
-          { label: "Submitted At", key: "submittedAt" },
-          { label: "Published At", key: "publishedAt" },
-          { label: "Live At", key: "liveAt" },
-          // Track Details
-          { label: "Track No.", key: "trackNumber" },
-          { label: "Track Name", key: "trackName" },
-          { label: "Display Name", key: "trackDisplayName" },
-          { label: "Version", key: "trackVersion" },
-          { label: "ISRC", key: "isrc" },
-          { label: "Length", key: "trackLength" },
-          { label: "Primary Genre", key: "trackPrimaryGenre" },
-          { label: "Secondary Genre", key: "trackSecondaryGenre" },
-          { label: "Instrumental", key: "isInstrumental" },
-          { label: "Explicit", key: "isExplicit" },
-          { label: "Language", key: "trackLanguage" },
-          { label: "Audio File", key: "audioFileUrl" },
-          { label: "Audio Format", key: "audioFormat" },
-          { label: "File Size (MB)", key: "fileSize" },
-          { label: "Preview Timing", key: "previewStartTiming" },
-          { label: "Lyrics", key: "lyrics" },
-          // Contributors
-          { label: "Primary Artists", key: "primaryArtists" },
-          { label: "Featuring Artists", key: "featuringArtists" },
-          { label: "Sound Recording Contributors", key: "soundRecordingContributors" },
-          { label: "Musical Work Contributors", key: "musicalWorkContributors" },
-          // Delivery & Rights
-          { label: "Original Release Date", key: "originalReleaseDate" },
-          { label: "Sales Start Date", key: "salesStartDate" },
-          { label: "Pre-Order Date", key: "preOrderDate" },
-          { label: "Territories", key: "territories" },
-          { label: "Exclusive", key: "isExclusive" },
-          { label: "Price Tier", key: "priceTier" }
+            { label: "S.No.", key: "sno" },
+            { label: "Account ID", key: "accountId" },
+            { label: "User Name", key: "userName" },
+            { label: "User Email", key: "userEmail" },
+            { label: "Release ID", key: "releaseId" },
+            { label: "Release Name", key: "releaseName" },
+            { label: "Release Version", key: "releaseVersion" },
+            { label: "Release Type", key: "releaseType" },
+            { label: "Catalog", key: "catalog" },
+            { label: "UPC", key: "upc" },
+            { label: "Release Status", key: "releaseStatus" },
+            { label: "Label Name", key: "labelName" },
+            { label: "Primary Genre", key: "primaryGenre" },
+            { label: "Secondary Genre", key: "secondaryGenre" },
+            { label: "Pricing Tier", key: "pricingTier" },
+            { label: "C-Line", key: "cLine" },
+            { label: "P-Line", key: "pLine" },
+            { label: "Cover Art URL", key: "coverArtUrl" },
+            { label: "Track Number", key: "trackNumber" },
+            { label: "Track Name", key: "trackName" },
+            { label: "Primary Artists", key: "trackPrimaryArtists" },
+            { label: "Featuring Artists", key: "trackFeaturingArtists" },
+            { label: "ISRC", key: "isrc" },
+            { label: "Track Genre", key: "trackGenre" },
+            { label: "Track Secondary Genre", key: "trackSecondaryGenre" },
+            { label: "Mix Version", key: "mixVersion" },
+            { label: "Has Human Vocals", key: "hasHumanVocals" },
+            { label: "Available for Download", key: "availableForDownload" },
+            { label: "Sound Recording Contributors", key: "soundRecordingContributors" },
+            { label: "Musical Work Contributors", key: "musicalWorkContributors" },
+            { label: "Music Language", key: "musicLanguage" },
+            { label: "Parental Advisory", key: "parentalAdvisory" },
+            { label: "Audio Format", key: "audioFormat" },
+            { label: "Audio File URL", key: "audioFileUrl" },
+            { label: "Duration", key: "duration" },
+            { label: "File Size (MB)", key: "fileSize" },
+            { label: "Preview Timing", key: "previewTiming" },
+            { label: "Release Date", key: "releaseDate" },
+            { label: "Territories", key: "territories" },
+            { label: "Distribution Partners", key: "distributionPartners" },
+            { label: "Exclusive", key: "exclusive" },
+            { label: "Owns Copyright", key: "ownsCopyright" },
+            { label: "Submitted At", key: "submittedAt" },
+            { label: "Published At", key: "publishedAt" },
+            { label: "Live At", key: "liveAt" },
+            { label: "Grid Code", key: "gridCode" },
+            { label: "Production Year", key: "productionYear" },
+            { label: "Display Name (Track)", key: "trackDisplayName" },
+            { label: "Original Release Date", key: "originalReleaseDate" },
+            { label: "Sales Start Date", key: "salesStartDate" },
+            { label: "Pre-Order Date", key: "preOrderDate" },
+            { label: "Instrumental", key: "instrumental" },
+            { label: "Lyrics", key: "lyrics" }
         ] : [
-          { label: "S.No.", key: "sno" },
-          { label: "Account ID", key: "accountId" },
-          { label: "Release ID", key: "releaseId" },
-          { label: "Release Name", key: "releaseName" },
-          { label: "Release Type", key: "releaseType" },
-          { label: "Track Type", key: "trackType" },
-          { label: "Artist Name", key: "artistName" },
-          { label: "Artist Email", key: "email" },
-          { label: "Status", key: "releaseStatus" },
-          { label: "Request Status", key: "requestStatus" },
-          { label: "Label", key: "labelName" },
-          { label: "Singer Name", key: "singerName" },
-          { label: "Genre", key: "genre" },
-          { label: "UPC", key: "upc" },
-          { label: "Cover Art URL", key: "coverArtUrl" },
-          { label: "Submitted At", key: "submittedAt" },
-          { label: "Published At", key: "publishedAt" },
-          { label: "Live At", key: "liveAt" },
-          { label: "Processed By", key: "adminProcessedBy" },
-          // Track Details
-          { label: "Track No.", key: "trackNumber" },
-          { label: "Track Name", key: "trackName" },
-          { label: "ISRC", key: "isrc" },
-          { label: "Track Genre", key: "trackGenre" },
-          { label: "Composer", key: "trackComposer" },
-          { label: "Lyricist", key: "trackLyricist" },
-          { label: "Track Singer", key: "trackSinger" },
-          { label: "Language", key: "trackLanguage" },
-          { label: "Producer", key: "trackProducer" },
-          { label: "Audio Format", key: "audioFormat" },
-          { label: "Audio File URL", key: "audioFileUrl" },
-          { label: "Duration", key: "duration" },
-          { label: "File Size (MB)", key: "fileSize" },
-          { label: "Preview Timing", key: "previewStartTiming" },
-          // Step 3 Details (Moved to End)
-          { label: "Release Date", key: "releaseDate" },
-          { label: "Has Rights", key: "hasRights" },
-          { label: "Territories", key: "territories" },
-          { label: "Has Partners", key: "hasPartners" },
-          { label: "Partners", key: "partners" },
-          { label: "Owns Copyright", key: "ownsCopyright" },
-          { label: "Copyright Documents", key: "copyrightDocuments"}
+            { label: "S.No.", key: "sno" },
+            { label: "Account ID", key: "accountId" },
+            { label: "User Name", key: "userName" },
+            { label: "User Email", key: "userEmail" },
+            { label: "Release ID", key: "releaseId" },
+            { label: "Release Name", key: "releaseName" },
+            { label: "Release Type", key: "releaseType" },
+            { label: "Track Type", key: "trackType" },
+            { label: "Release Status", key: "releaseStatus" },
+            { label: "Label Name", key: "labelName" },
+            { label: "Primary Genre", key: "primaryGenre" },
+            { label: "UPC", key: "upc" },
+            { label: "Cover Art URL", key: "coverArtUrl" },
+            { label: "Track Number", key: "trackNumber" },
+            { label: "Track Name", key: "trackName" },
+            { label: "ISRC", key: "isrc" },
+            { label: "Track Genre", key: "trackGenre" },
+            { label: "Track Singer", key: "trackSinger" },
+            { label: "Composer", key: "composer" },
+            { label: "Lyricist", key: "lyricist" },
+            { label: "Producer", key: "producer" },
+            { label: "Music Language", key: "musicLanguage" },
+            { label: "Parental Advisory", key: "parentalAdvisory" },
+            { label: "Audio Format", key: "audioFormat" },
+            { label: "Audio File URL", key: "audioFileUrl" },
+            { label: "Duration", key: "duration" },
+            { label: "File Size (MB)", key: "fileSize" },
+            { label: "Preview Timing", key: "previewTiming" },
+            { label: "Release Date", key: "releaseDate" },
+            { label: "Territories", key: "territories" },
+            { label: "Distribution Partners", key: "distributionPartners" },
+            { label: "Owns Copyright", key: "ownsCopyright" },
+            { label: "Submitted At", key: "submittedAt" },
+            { label: "Published At", key: "publishedAt" },
+            { label: "Live At", key: "liveAt" },
+            { label: "Request Status", key: "requestStatus" },
+            { label: "Has Rights", key: "hasRights" },
+            { label: "Has Partners", key: "hasPartners" },
+            { label: "Copyright Documents", key: "copyrightDocuments" },
+            { label: "Processed By", key: "processedBy" }
         ]}
         fetchData={async (exportPage, exportLimit) => {
           try {
@@ -907,31 +915,39 @@ export default function ReleaseManagement({ theme }) {
                     const step3 = rel.step3 || {};
                     
                     const releaseInfo = {
-                        releaseId: rel.releaseId,
                         accountId: rel.userId?.accountId || '-',
+                        userName: rel.userId?.firstName ? `${rel.userId.firstName} ${rel.userId.lastName}`.trim() : '-',
+                        userEmail: rel.userId?.emailAddress || '-',
+                        releaseId: rel.releaseId || '-',
                         releaseName: step1.releaseName || '-',
                         releaseVersion: step1.releaseVersion || '-',
                         releaseType: step1.releaseType || rel.releaseType || '-',
                         catalog: step1.catalog || '-',
-                        upc: step1.upcCode ? `\t${step1.upcCode}` : '-',
-                        gridCode: step1.gridCode || '-',
-                        releaseStatus: rel.releaseStatus === 'submitted' ? 'Pending' : rel.releaseStatus,
-                        userName: rel.userId?.firstName ? `${rel.userId.firstName} ${rel.userId.lastName}` : '-',
-                        userEmail: rel.userId?.emailAddress || '-',
-                        labelName: step1.labelName?.name || step1.labelName || '-', // labelName is populated as object
+                        upc: step1.upcCode || step1.upc || step1.adminProvidedUPC ? `\t${step1.upcCode || step1.upc || step1.adminProvidedUPC}` : '-',
+                        releaseStatus: rel.releaseStatus === 'submitted' ? 'Pending' : (rel.releaseStatus || '-'),
+                        labelName: typeof step1.labelName === 'object' ? (step1.labelName?.name || '-') : (step1.labelName || '-'),
                         primaryGenre: step1.primaryGenre || '-',
                         secondaryGenre: step1.secondaryGenre || '-',
-                        cLine: step1.cLine || '-',
-                        pLine: step1.pLine || '-',
-                        productionYear: step1.productionYear || '-',
+                        pricingTier: step1.releasePricingTier || '-',
+                        cLine: step1.cLine ? `© ${step1.cLine.year || ''} ${step1.cLine.text || ''}`.trim() : '-',
+                        pLine: step1.pLine ? `℗ ${step1.pLine.year || ''} ${step1.pLine.text || ''}`.trim() : '-',
                         coverArtUrl: rel.step1?.coverArt?.imageUrl || '-',
+                        
+                        releaseDate: (step3.deliveryDetails?.releaseDate || step3.deliveryDetails?.forFutureRelease) ? new Date(step3.deliveryDetails.releaseDate || step3.deliveryDetails.forFutureRelease).toLocaleDateString() : '-',
+                        territories: (step3.territorialRights?.territories || step3.territorialRights?.selectedTerritories || []).map(t => t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(", ") || '-',
+                        distributionPartners: step3.distributionPartners?.map(p => p.replace(/_/g, ' ')).join(', ') || step3.partnerSelection?.partners?.map(p => p.replace(/_/g, ' ')).join(', ') || '-',
+                        exclusive: step3.territorialRights?.isExclusive ? "Yes" : "No",
+                        ownsCopyright: step3.copyrightOptions?.ownsCopyrights ? "Yes" : "No",
+                        
                         submittedAt: rel.submittedAt ? new Date(rel.submittedAt).toLocaleDateString() : '-',
                         publishedAt: rel.publishedAt ? new Date(rel.publishedAt).toLocaleDateString() : '-',
                         liveAt: rel.liveAt ? new Date(rel.liveAt).toLocaleDateString() : '-',
-                        releaseDate: (step3.deliveryDetails?.releaseDate || step3.deliveryDetails?.forFutureRelease) ? new Date(step3.deliveryDetails.releaseDate || step3.deliveryDetails.forFutureRelease).toLocaleDateString() : '-',
-                        territories: step3.territorialRights?.isWorldwide ? "Worldwide" : (step3.territorialRights?.selectedTerritories?.join(", ") || '-'),
-                        isExclusive: step3.territorialRights?.isExclusive ? "Yes" : "No",
-                        priceTier: step1.releasePricingTier || '-'
+                        
+                        gridCode: step1.gridCode || '-',
+                        productionYear: step1.productionYear || '-',
+                        originalReleaseDate: step3.deliveryDetails?.originalReleaseDate ? new Date(step3.deliveryDetails.originalReleaseDate).toLocaleDateString() : '-',
+                        salesStartDate: step3.deliveryDetails?.salesStartDate ? new Date(step3.deliveryDetails.salesStartDate).toLocaleDateString() : '-',
+                        preOrderDate: step3.deliveryDetails?.preOrderDate ? new Date(step3.deliveryDetails.preOrderDate).toLocaleDateString() : '-',
                     };
 
                     const tracks = rel.step2?.tracks || [];
@@ -942,33 +958,33 @@ export default function ReleaseManagement({ theme }) {
                                 ...releaseInfo,
                                 trackNumber: index + 1,
                                 trackName: track.trackName || '-',
-                                trackDisplayName: track.displayName || '-',
-                                trackVersion: track.version || '-',
-                                isrc: track.adminProvidedISRC || track.isrcCode ? `\t${track.adminProvidedISRC || track.isrcCode}` : '-',
-                                trackLength: track.audioFiles?.[0]?.duration ? `${Math.floor(track.audioFiles[0].duration)}s` : '-',
-                                trackPrimaryGenre: track.primaryGenre || '-',
+                                trackPrimaryArtists: track.primaryArtists?.join(', ') || '-',
+                                trackFeaturingArtists: track.featuringArtists?.join(', ') || '-',
+                                isrc: track.adminProvidedISRC || track.isrcCode || track.isrc ? `\t${track.adminProvidedISRC || track.isrcCode || track.isrc}` : '-',
+                                trackGenre: track.primaryGenre || track.genre || '-',
                                 trackSecondaryGenre: track.secondaryGenre || '-',
-                                isInstrumental: track.isInstrumental ? "Yes" : "No",
-                                isExplicit: track.parentalAdvisory ? "Yes" : "No",
-                                trackLanguage: track.language || '-',
-                                audioFileUrl: track.trackLink || track.audioFiles?.[0]?.fileUrl || '-',
+                                mixVersion: track.mixVersion || '-',
+                                hasHumanVocals: track.hasHumanVocals ? 'Yes' : 'No',
+                                availableForDownload: track.isAvailableForDownload ? 'Yes' : 'No',
+                                soundRecordingContributors: (track.contributorsToSoundRecording || track.contributorsToSound)?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '-',
+                                musicalWorkContributors: (track.contributorsToMusicalWork || track.contributorsToMusical)?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '-',
+                                musicLanguage: track.language || track.musicLanguage || '-',
+                                parentalAdvisory: track.explicitStatus || track.parentalAdvisory ? 'Explicit' : 'Clean',
                                 audioFormat: track.audioFiles?.[0]?.format || '-',
+                                audioFileUrl: track.trackLink || track.fileUrl || track.audioFiles?.[0]?.fileUrl || '-',
+                                duration: track.audioFiles?.[0]?.duration ? formatDuration(track.audioFiles[0].duration) : '-',
                                 fileSize: track.audioFiles?.[0]?.fileSize ? (track.audioFiles[0].fileSize / (1024 * 1024)).toFixed(2) : '-',
-                                previewStartTiming: track.previewStartTiming || '-',
-                                lyrics: track.lyrics ? "Yes" : "No",
-                                primaryArtists: track.primaryArtists?.join(", ") || step1.primaryArtists?.join(", ") || '-',
-                                featuringArtists: track.featuringArtists?.join(", ") || '-',
-                                soundRecordingContributors: track.contributorsToSoundRecording?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '-',
-                                musicalWorkContributors: track.contributorsToMusicalWork?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '-'
+                                previewTiming: track.previewStartTiming || '-',
+                                
+                                trackDisplayName: track.displayName || track.trackName || '-',
+                                instrumental: track.isInstrumental ? "Yes" : "No",
+                                lyrics: track.lyrics ? "Yes" : "No"
                             });
                         });
                     } else {
                          flattenedData.push({
                             sno: flattenedData.length + 1,
                             ...releaseInfo,
-                            trackNumber: '-',
-                            trackName: '-',
-                            // ... other fields empty
                          });
                     }
                 });
@@ -979,79 +995,67 @@ export default function ReleaseManagement({ theme }) {
                 const res = await GlobalApi.getAllReleases(params);
                 releasesToExport = res.data.data.releases || [];
 
-                // Flatten data: One row per track
                 const flattenedData = [];
 
                 releasesToExport.forEach(rel => {
-                  // Common Release Level Data
                   const releaseInfo = {
-                    releaseId: rel.releaseId,
-                    accountId: rel.userId?.accountId || rel.user?.accountId || '-',
+                    accountId: rel.userId?.accountId || rel.user?.accountId || rel.accountId || '-',
+                    userName: rel.userId?.firstName ? `${rel.userId.firstName} ${rel.userId.lastName}`.trim() : (rel.user?.name || '-'),
+                    userEmail: rel.userId?.emailAddress || rel.user?.email || '-',
+                    releaseId: rel.releaseId || '-',
                     releaseName: rel.step1?.releaseInfo?.releaseName || rel.releaseTitle || '-',
-                    upc: rel.step1?.releaseInfo?.upc ? `\t${rel.step1.releaseInfo.upc}` : '-',
-                    labelName: rel.step1?.releaseInfo?.labelName || '-',
-                    singerName: rel.step1?.coverArt?.singerName?.join(', ') || '-',
-                    genre: rel.step1?.releaseInfo?.genre || '-',
                     releaseType: rel.releaseType || 'Basic',
-                    trackType: rel.trackType,
-                    releaseStatus: rel.releaseStatus === 'submitted' ? 'Pending' : rel.releaseStatus,
-                    requestStatus: (rel.requestStatus || rel.releaseStatus) === 'submitted' ? 'Pending' : (rel.requestStatus || rel.releaseStatus),
-                    artistName: rel.userId?.firstName ? `${rel.userId.firstName} ${rel.userId.lastName}` : (rel.user?.name || '-'),
-                    email: rel.userId?.emailAddress || rel.user?.email || '-',
+                    trackType: rel.trackType || '-',
+                    releaseStatus: rel.releaseStatus === 'submitted' ? 'Pending' : (rel.releaseStatus || '-'),
+                    labelName: typeof rel.step1?.releaseInfo?.labelName === 'object' ? (rel.step1.releaseInfo.labelName?.name || '-') : (rel.step1?.releaseInfo?.labelName || '-'),
+                    primaryGenre: rel.step1?.releaseInfo?.genre || rel.genre || '-',
+                    upc: rel.step1?.releaseInfo?.upc ? `\t${rel.step1.releaseInfo.upc}` : '-',
                     coverArtUrl: rel.step1?.coverArt?.imageUrl || '-',
-                    releaseDate: rel.step3?.releaseDate ? new Date(rel.step3.releaseDate).toLocaleDateString() : '-',
-                    hasRights: rel.step3?.territorialRights?.hasRights ? "Yes" : "No",
-                    territories: rel.step3?.territorialRights?.territories?.join(", ") || '-',
-                    hasPartners: rel.step3?.partnerSelection?.hasPartners ? "Yes" : "No",
-                    partners: rel.step3?.partnerSelection?.partners?.join(", ") || '-',
-                    ownsCopyright: rel.step3?.copyrights?.ownsCopyright ? "Yes" : "No",
-                    copyrightDocuments: rel.step3?.copyrights?.copyrightDocuments?.map(doc => doc.url).join(", ") || '-',
+                    
+                    releaseDate: rel.step3?.releaseDate || rel.step3?.deliveryDetails?.releaseDate ? new Date(rel.step3.releaseDate || rel.step3.deliveryDetails.releaseDate).toLocaleDateString() : '-',
+                    territories: (rel.step3?.territorialRights?.territories || rel.step3?.territorialRights?.selectedTerritories || []).map(t => t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(', ') || '-',
+                    distributionPartners: (rel.step3?.distributionPartners || rel.step3?.partnerSelection?.partners || []).map(p => p.replace(/_/g, ' ')).join(', ') || '-',
+                    ownsCopyright: rel.step3?.copyrights?.ownsCopyright || rel.step3?.copyrightOptions?.ownsCopyrights ? 'Yes' : 'No',
+                    
                     submittedAt: rel.submittedAt ? new Date(rel.submittedAt).toLocaleDateString() : '-',
                     publishedAt: rel.publishedAt ? new Date(rel.publishedAt).toLocaleDateString() : '-',
                     liveAt: rel.liveAt ? new Date(rel.liveAt).toLocaleDateString() : '-',
-                    adminProcessedBy: rel.adminReview?.reviewedBy?.firstName || '-'
+                    
+                    requestStatus: (rel.requestStatus || rel.releaseStatus) === 'submitted' ? 'Pending' : (rel.requestStatus || rel.releaseStatus || '-'),
+                    hasRights: rel.step3?.territorialRights?.hasRights ? 'Yes' : 'No',
+                    hasPartners: rel.step3?.partnerSelection?.hasPartners ? 'Yes' : 'No',
+                    copyrightDocuments: rel.step3?.copyrights?.copyrightDocuments?.map(doc => doc.url).join(", ") || '-',
+                    processedBy: rel.adminReview?.reviewedBy?.firstName ? `${rel.adminReview.reviewedBy.firstName} ${rel.adminReview.reviewedBy.lastName || ''}`.trim() : '-'
                   };
 
-                  const tracks = rel.step2?.tracks || [];
+                  const tracks = rel.step2?.tracks || rel.tracks || [];
 
                   if (tracks.length > 0) {
                     tracks.forEach((track, index) => {
                       flattenedData.push({
-                        sno: flattenedData.length + 1, // Will be overridden by dialog but good for debugging
+                        sno: flattenedData.length + 1,
                         ...releaseInfo,
                         trackNumber: index + 1,
                         trackName: track.trackName || '-',
                         isrc: track.isrc ? `\t${track.isrc}` : '-',
-                        trackGenre: track.genre || '-',
-                        trackComposer: track.composerName || '-',
-                        trackLyricist: track.lyricistName || '-',
+                        trackGenre: track.genre || track.primaryGenre || '-',
                         trackSinger: track.singerName || '-',
-                        trackLanguage: track.language || '-',
-                        trackProducer: track.producerName || '-',
+                        composer: track.composerName || '-',
+                        lyricist: track.lyricistName || '-',
+                        producer: track.producerName || '-',
+                        musicLanguage: track.language || track.musicLanguage || '-',
+                        parentalAdvisory: track.parentalAdvisory || '-',
                         audioFormat: track.audioFiles?.[0]?.format || '-',
-                        audioFileUrl: track.audioFiles?.[0]?.fileUrl || '-',
-                        duration: track.audioFiles?.[0]?.duration ? `${Math.floor(track.audioFiles[0].duration)}s` : '-',
+                        audioFileUrl: track.fileUrl || track.trackLink || track.audioFiles?.[0]?.fileUrl || '-',
+                        duration: track.audioFiles?.[0]?.duration ? formatDuration(track.audioFiles[0].duration) : '-',
                         fileSize: track.audioFiles?.[0]?.fileSize ? (track.audioFiles[0].fileSize / (1024 * 1024)).toFixed(2) : '-',
-                        previewStartTiming: track.previewStartTiming || '-',
+                        previewTiming: track.previewStartTiming || '-'
                       });
                     });
                   } else {
-                    // If no tracks found (edge case), still export release info
                     flattenedData.push({
                       sno: flattenedData.length + 1,
                       ...releaseInfo,
-                      trackNumber: '-',
-                      trackName: '-',
-                      isrc: '-',
-                      trackComposer: '-',
-                      trackLyricist: '-',
-                      trackSinger: '-',
-                      trackLanguage: '-',
-                      trackProducer: '-',
-                      audioFormat: '-',
-                      audioFileUrl: '-',
-                      duration: '-',
-                      previewStartTiming: '-',
                     });
                   }
                 });
