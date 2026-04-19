@@ -426,11 +426,16 @@ export default function UserManagement({ theme }) {
 
                         <td className="px-4 py-3">
                           <span className={`px-2 py-1 rounded-full text-xs ${
-                            u.subscription?.status === 'active' ? 'bg-green-500/20 text-green-400' : 
-                            u.subscription?.status === 'trialing' ? 'bg-blue-500/20 text-blue-400' :
+                            u.subscription?.status === 'expired' ? 'bg-red-500/20 text-red-400' :
+                            u.subscription?.status === 'cancelled' ? 'bg-orange-500/20 text-orange-400' :
+                            u.membershipActive ? 'bg-green-500/20 text-green-400' :
                             'bg-gray-500/20 text-gray-400'
                           }`}>
-                            {u.subscription?.status ? u.subscription.status.charAt(0).toUpperCase() + u.subscription.status.slice(1) : 'Inactive'}
+                            {
+                              u.subscription?.status === 'expired' ? 'Expired' :
+                              u.subscription?.status === 'cancelled' ? 'Cancelled' :
+                              u.membershipActive ? 'Active' : 'Inactive'
+                            }
                           </span>
                         </td>
 
@@ -802,7 +807,7 @@ setIsResetPasswordOpen(true);
                 verify_paypal: formatBool(u.payoutMethods?.paypal?.verified),
                 acc_status: u.isActive ? "Active" : "Inactive",
                 mem_plan: u.subscription?.planId || "Free",
-                mem_status: u.subscription?.status || "Inactive",
+                mem_status: u.subscription?.status === 'expired' ? 'Expired' : u.subscription?.status === 'cancelled' ? 'Cancelled' : u.membershipActive ? 'Active' : 'Inactive',
                 mem_start: formatDate(u.subscription?.validFrom || u.aggregatorSubscription?.startDate),
                 mem_end: formatDate(u.subscription?.validUntil || u.aggregatorSubscription?.endDate),
                 net_revenue_share: u.subscription?.netRevenueShare !== undefined ? `${u.subscription.netRevenueShare}%` : "0%"
