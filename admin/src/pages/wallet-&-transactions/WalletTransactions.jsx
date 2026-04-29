@@ -114,6 +114,7 @@ export default function WalletTransactions({ theme }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState(""); // "" for 'All Status'
+  const [periodFilter, setPeriodFilter] = useState(""); // format: "month-year" e.g. "4-2026"
   const [pages, setPages] = useState({ requests: 1, history: 1, unified: 1 });
   
   const [activeTab, setActiveTab] = useState("history");
@@ -223,11 +224,14 @@ export default function WalletTransactions({ theme }) {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const [filterMonth, filterYear] = periodFilter ? periodFilter.split('-') : [undefined, undefined];
       const params = {
         page: currentPage,
         limit: 10,
         status: statusFilter || undefined,
         search: debouncedSearch || undefined,
+        month: filterMonth || undefined,
+        year: filterYear || undefined,
       };
 
       let res;
@@ -260,7 +264,7 @@ export default function WalletTransactions({ theme }) {
 
   useEffect(() => {
     fetchData();
-  }, [activeTab, currentPage, debouncedSearch, statusFilter]);
+  }, [activeTab, currentPage, debouncedSearch, statusFilter, periodFilter]);
 
   useEffect(() => {
     fetchStats();
@@ -375,6 +379,29 @@ export default function WalletTransactions({ theme }) {
                 <option value="rejected">Rejected</option>
                 <option value="cancelled">Cancelled</option>
             </select>
+            </div>
+        )}
+        {activeTab === 'unified' && (
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={periodFilter}
+                onChange={(e) => { setPeriodFilter(e.target.value); handlePageChange(1); }}
+                className={`px-3 py-2 text-sm rounded-md ${isDark ? "bg-[#151F28] border border-gray-700 text-gray-200" : "bg-white border border-gray-300"}`}
+              >
+                <option value="">All Time</option>
+                {(() => {
+                  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                  const options = [];
+                  const now = new Date();
+                  for (let i = 0; i < 24; i++) {
+                    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                    const m = d.getMonth() + 1;
+                    const y = d.getFullYear();
+                    options.push(<option key={`${m}-${y}`} value={`${m}-${y}`}>{months[m-1]} {y}</option>);
+                  }
+                  return options;
+                })()}
+              </select>
             </div>
         )}
       </div>
@@ -662,7 +689,8 @@ export default function WalletTransactions({ theme }) {
                 { label: "PayPal Name", key: "paypalName" },
             ]}
             fetchData={async (page, limit) => {
-            const params = { page, limit, status: statusFilter || undefined, search: debouncedSearch || undefined };
+            const [expMonth, expYear] = periodFilter ? periodFilter.split('-') : [undefined, undefined];
+            const params = { page, limit, status: statusFilter || undefined, search: debouncedSearch || undefined, month: expMonth || undefined, year: expYear || undefined };
             let data, rows;
             if (activeTab === 'unified') {
                 const res = await GlobalApi.getAllTransactions(params);

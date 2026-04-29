@@ -29,7 +29,7 @@ const getCountryName = (code) => COUNTRY_NAMES[code] || code;
 
 export default function Analytics() {
   const [timeframe, setTimeframe] = useState('last_year');
-  const [groupBy] = useState('day');
+  const [groupBy] = useState('month');
 
   // Export Modal State
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -152,18 +152,47 @@ export default function Analytics() {
     const data = analyticsData.data;
     const overview = data.overview || {};
 
+    // Helper: Get month number from name
+    const getMonthNumber = (monthStr) => {
+      if (!monthStr) return 0;
+      const monthMap = { 'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12 };
+      const m = String(monthStr).substring(0, 3);
+      return monthMap[m] || parseInt(monthStr, 10) || 0;
+    };
+
+    // Helper: Sort chronologically and limit
+    const sortAndLimitData = (arr, limit = 4) => {
+      if (!arr || arr.length === 0) return [];
+      const sorted = [...arr].sort((a, b) => {
+        const yearA = a.period?.year || 0;
+        const yearB = b.period?.year || 0;
+        if (yearA !== yearB) return yearA - yearB;
+        
+        const monthA = getMonthNumber(a.period?.month);
+        const monthB = getMonthNumber(b.period?.month);
+        if (monthA !== monthB) return monthA - monthB;
+
+        const dayA = a.period?.day || 0;
+        const dayB = b.period?.day || 0;
+        return dayA - dayB;
+      });
+      return sorted.slice(-limit);
+    };
+
     // Transform chart data - add date field from period
-    const streamsChartData = data.charts?.streamsOverTime?.data?.map(item => ({
+    const rawStreamsData = data.charts?.streamsOverTime?.data || [];
+    const streamsChartData = sortAndLimitData(rawStreamsData, 4).map(item => ({
       ...item,
       date: formatPeriod(item.period),
       streams: item.totalStreams
-    })) || [];
+    }));
 
-    const revenueChartData = data.charts?.revenueOverTime?.data?.map(item => ({
+    const rawRevenueData = data.charts?.revenueOverTime?.data || [];
+    const revenueChartData = sortAndLimitData(rawRevenueData, 4).map(item => ({
       ...item,
       date: formatPeriod(item.period),
       revenue: item.totalRevenue
-    })) || [];
+    }));
 
     // Transform top tracks data - map field names
     const topTracks = data.topTracks?.tracks?.map(track => ({

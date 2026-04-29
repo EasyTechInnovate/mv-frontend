@@ -466,6 +466,7 @@ export default function CreateSubscriptionPlanModal({
                   <SelectContent className={`${isDark ? "bg-[#0b1220] text-gray-200" : "bg-white text-[#151F28]"} rounded-md shadow-lg`}>
                     <SelectItem value="month">Month</SelectItem>
                     <SelectItem value="year">Year</SelectItem>
+                    <SelectItem value="lifetime">Lifetime</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
