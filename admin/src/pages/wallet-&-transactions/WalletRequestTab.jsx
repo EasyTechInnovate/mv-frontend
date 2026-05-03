@@ -20,6 +20,7 @@ export default function WithdrawalRow({ withdrawal, onApprove, onReject, onView,
   return (
     <tr className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
       <td className="px-5 py-3">{withdrawal.accountId}</td>
+      <td className="px-5 py-3">{withdrawal.accountName}</td>
       <td className="px-5 py-3">{withdrawal.user}</td>
       <td className="px-5 py-3">₹{withdrawal.amount.toLocaleString("en-IN")}</td>
       <td className="px-5 py-3">{withdrawal.description}</td>

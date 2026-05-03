@@ -414,10 +414,10 @@ export default function WalletTransactions({ theme }) {
                 <p>Loading...</p>
             </div>
         ) : activeTab === 'unified' ? (
-          <table className="w-full text-sm min-w-[900px]">
+          <table className="w-full text-sm min-w-[1050px]">
             <thead className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left`}>
               <tr>
-                {["Date", "User", "Transaction Details", "Amount", "Method"].map((h) => (
+                {["Date", "Account Name", "User", "Transaction Details", "Amount", "Method"].map((h) => (
                   <th key={h} className="px-5 py-3 font-medium">{h}</th>
                 ))}
               </tr>
@@ -430,6 +430,9 @@ export default function WalletTransactions({ theme }) {
                           day: '2-digit', month: 'short', year: 'numeric',
                           hour: '2-digit', minute: '2-digit'
                       })}
+                  </td>
+                  <td className="px-5 py-3">
+                      {t.user?.accountName || '-'}
                   </td>
                   <td className="px-5 py-3">
                       {t.user ? (
@@ -541,16 +544,16 @@ export default function WalletTransactions({ theme }) {
               ))}
               {rows.length === 0 && (
                 <tr>
-                    <td colSpan={5} className="text-center py-10">No records found.</td>
+                    <td colSpan={6} className="text-center py-10">No records found.</td>
                 </tr>
               )}
             </tbody>
           </table>
         ) : activeTab === 'history' ? (
-          <table className="w-full text-sm min-w-[900px]">
+          <table className="w-full text-sm min-w-[1050px]">
             <thead className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left`}>
               <tr>
-                {["Request / Ref ID", "Account ID", "User", "Amount", "Method", "Status", "Date", "Actions"].map((h) => (
+                {["Request / Ref ID", "Account ID", "Account Name", "User", "Amount", "Method", "Status", "Date", "Actions"].map((h) => (
                   <th key={h} className="px-5 py-3 font-medium">{h}</th>
                 ))}
               </tr>
@@ -574,6 +577,15 @@ export default function WalletTransactions({ theme }) {
                     )}
                   </td>
                   <td className="px-5 py-3">{r.accountId}</td>
+                  <td className="px-5 py-3">
+                      {r.userId?.userType === 'artist'
+                        ? r.userId?.artistData?.artistName
+                        : r.userId?.userType === 'label'
+                        ? r.userId?.labelData?.labelName
+                        : r.userId?.userType === 'aggregator'
+                        ? r.userId?.aggregatorData?.companyName
+                        : '-'}
+                  </td>
                   <td className="px-5 py-3">{r.userId?.firstName} {r.userId?.lastName}</td>
                   <td className="px-5 py-3">{formatINR(r.amount)}</td>
                   <td className="px-5 py-3 capitalize">{r.payoutMethod?.replace("_", " ") || "Unknown"}</td>
@@ -604,16 +616,16 @@ export default function WalletTransactions({ theme }) {
               ))}
               {rows.length === 0 && (
                 <tr>
-                    <td colSpan={8} className="text-center py-10">No records found.</td>
+                    <td colSpan={9} className="text-center py-10">No records found.</td>
                 </tr>
               )}
             </tbody>
           </table>
         ) : (
-          <table className="w-full text-sm min-w-[800px]">
+          <table className="w-full text-sm min-w-[950px]">
             <thead className={`${isDark ? "text-gray-400" : "text-gray-600"} text-left`}>
               <tr>
-                {["Account ID", "User", "Withdrawal Amount", "Description", "Date", "Status", "Actions"].map((h) => (
+                {["Account ID", "Account Name", "User", "Withdrawal Amount", "Description", "Date", "Status", "Actions"].map((h) => (
                   <th key={h} className="px-5 py-3 font-medium">{h}</th>
                 ))}
               </tr>
@@ -621,7 +633,7 @@ export default function WalletTransactions({ theme }) {
             <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-5 text-gray-500">
+                <td colSpan={8} className="text-center py-5 text-gray-500">
                   No withdrawal requests found
                 </td>
               </tr>
@@ -632,6 +644,13 @@ export default function WalletTransactions({ theme }) {
                   withdrawal={{
                       id: req._id,
                       accountId: req.accountId,
+                      accountName: req.userId?.userType === 'artist'
+                        ? req.userId?.artistData?.artistName || '-'
+                        : req.userId?.userType === 'label'
+                        ? req.userId?.labelData?.labelName || '-'
+                        : req.userId?.userType === 'aggregator'
+                        ? req.userId?.aggregatorData?.companyName || '-'
+                        : '-',
                       user: req.userId ? `${req.userId.firstName || ''} ${req.userId.lastName || ''}` : 'Unknown User',
                       amount: req.amount,
                       description: req.payoutMethod,
@@ -658,13 +677,14 @@ export default function WalletTransactions({ theme }) {
             totalItems={pagination?.totalItems || pagination?.totalCount || 0}
             headers={activeTab === 'unified' ? [
                 { label: "Date", key: "formattedDate" },
+                { label: "Account Name", key: "accountName" },
                 { label: "User", key: "user" },
                 { label: "Account ID", key: "accountId" },
                 { label: "Type", key: "type" },
                 { label: "Direction", key: "direction" },
                 { label: "Amount", key: "amount" },
                 { label: "Details", key: "description" },
-                { label: "Streams", key: "streams" },
+                // { label: "Streams", key: "streams" },
                 { label: "Status", key: "status" },
                 { label: "Request ID", key: "requestId" },
                 { label: "Payment Ref", key: "transactionReference" },
@@ -673,6 +693,7 @@ export default function WalletTransactions({ theme }) {
             ] : [
                 { label: "Request ID", key: "requestId" },
                 { label: "Account ID", key: "accountId" },
+                { label: "Account Name", key: "accountName" },
                 { label: "User", key: "user" },
                 { label: "Amount", key: "amount" },
                 { label: "Method", key: "payoutMethod" },
@@ -699,6 +720,7 @@ export default function WalletTransactions({ theme }) {
                 return rows.map(row => ({
                     ...row,
                     formattedDate: new Date(row.date).toLocaleString(),
+                    accountName: row.user?.accountName || '',
                     user: row.user ? `${row.user.name}` : 'Unknown',
                     accountId: row.user ? row.user.accountId : 'N/A',
                     type: row.type?.replace(/_/g, " "),
@@ -716,19 +738,29 @@ export default function WalletTransactions({ theme }) {
                     : await GlobalApi.getAdminPendingPayoutRequests(params);
                 data = res?.data?.data;
                 rows = data?.requests || [];
-                return rows.map(row => ({
-                    ...row,
-                    user: `${row.userId?.firstName || ''} ${row.userId?.lastName || ''}`,
-                    requestedAt: new Date(row.requestedAt).toLocaleString(),
-                    bankHolder: row.userId?.payoutMethods?.bank?.accountHolderName || "",
-                    bankName: row.userId?.payoutMethods?.bank?.bankName || "",
-                    bankAccountNumber: row.userId?.payoutMethods?.bank?.accountNumber || "",
-                    bankIfsc: row.userId?.payoutMethods?.bank?.ifscSwiftCode || "",
-                    upiId: row.userId?.payoutMethods?.upi?.upiId || "",
-                    upiHolder: row.userId?.payoutMethods?.upi?.accountHolderName || "",
-                    paypalEmail: row.userId?.payoutMethods?.paypal?.paypalEmail || "",
-                    paypalName: row.userId?.payoutMethods?.paypal?.accountName || "",
-                }));
+                return rows.map(row => {
+                    const acName = row.userId?.userType === 'artist'
+                        ? row.userId?.artistData?.artistName || ''
+                        : row.userId?.userType === 'label'
+                        ? row.userId?.labelData?.labelName || ''
+                        : row.userId?.userType === 'aggregator'
+                        ? row.userId?.aggregatorData?.companyName || ''
+                        : '';
+                    return {
+                        ...row,
+                        accountName: acName,
+                        user: `${row.userId?.firstName || ''} ${row.userId?.lastName || ''}`,
+                        requestedAt: new Date(row.requestedAt).toLocaleString(),
+                        bankHolder: row.userId?.payoutMethods?.bank?.accountHolderName || "",
+                        bankName: row.userId?.payoutMethods?.bank?.bankName || "",
+                        bankAccountNumber: row.userId?.payoutMethods?.bank?.accountNumber || "",
+                        bankIfsc: row.userId?.payoutMethods?.bank?.ifscSwiftCode || "",
+                        upiId: row.userId?.payoutMethods?.upi?.upiId || "",
+                        upiHolder: row.userId?.payoutMethods?.upi?.accountHolderName || "",
+                        paypalEmail: row.userId?.payoutMethods?.paypal?.paypalEmail || "",
+                        paypalName: row.userId?.payoutMethods?.paypal?.accountName || "",
+                    };
+                });
             }
             }}
             filename={activeTab === 'unified' ? 'unified_transactions' : activeTab === 'history' ? 'transaction_history' : 'payout_requests'}
