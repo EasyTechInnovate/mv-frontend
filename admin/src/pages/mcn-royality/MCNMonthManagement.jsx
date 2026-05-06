@@ -123,6 +123,19 @@ export default function MCNMonthManagement({ theme = "dark" }) {
     }
   };
 
+  const MCN_COLUMNS = [
+    'Licensee', 'Licensor', 'Asset Channel ID', 'YouTube Chanel Name', 'Month', 'Acount ID',
+    'Revenue Share %', 'YouTube Payout (USD)', 'MV Commission', 'Revenue (USD)',
+    'Conversion Rate', 'Payout Revenue (INR)'
+  ];
+  const MCN_FIELD_MAP = {
+    'Licensee': 'licensee', 'Licensor': 'licensor', 'Asset Channel ID': 'assetChannelId',
+    'YouTube Chanel Name': 'youtubeChannelName', 'Month': 'month', 'Acount ID': 'accountId',
+    'Revenue Share %': 'revenueSharePercent', 'YouTube Payout (USD)': 'youtubePayoutUsd',
+    'MV Commission': 'mvCommission', 'Revenue (USD)': 'revenueUsd',
+    'Conversion Rate': 'conversionRate', 'Payout Revenue (INR)': 'payoutRevenueInr'
+  };
+
   const handleDownloadReport = async (reportId, fileName) => {
     try {
       toast.info("Preparing download...");
@@ -133,8 +146,17 @@ export default function MCNMonthManagement({ theme = "dark" }) {
         toast.error("No MCN data found for this report.");
         return;
       }
-      
-      const csv = Papa.unparse(reportData.data.mcn);
+
+      const remapped = reportData.data.mcn.map(record => {
+        const row = {};
+        MCN_COLUMNS.forEach(col => {
+          const key = MCN_FIELD_MAP[col];
+          row[col] = record[key] !== undefined ? record[key] : '';
+        });
+        return row;
+      });
+
+      const csv = Papa.unparse(remapped, { columns: MCN_COLUMNS });
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);

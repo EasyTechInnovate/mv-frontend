@@ -124,6 +124,21 @@ export default function AnalyticsManagement({ theme = "dark" }) {
     }
   };
 
+  const ANALYTICS_COLUMNS = [
+    'Licensee', 'Licensor', 'Music Service', 'Month', 'Acount ID',
+    'Label', 'Artist', 'Album Title', 'Track Title', 'Product Title',
+    'Vol/Version', 'UPC', 'Cat No', 'ISRC', 'Total Units', 'S/R',
+    'Country of Sale', 'Usage Type'
+  ];
+  const ANALYTICS_FIELD_MAP = {
+    'Licensee': 'licensee', 'Licensor': 'licensor', 'Music Service': 'musicService',
+    'Month': 'month', 'Acount ID': 'accountId', 'Label': 'label', 'Artist': 'artist',
+    'Album Title': 'albumTitle', 'Track Title': 'trackTitle', 'Product Title': 'productTitle',
+    'Vol/Version': 'volVersion', 'UPC': 'upc', 'Cat No': 'catNo', 'ISRC': 'isrc',
+    'Total Units': 'totalUnits', 'S/R': 'sr', 'Country of Sale': 'countryOfSale',
+    'Usage Type': 'usageType'
+  };
+
   const handleDownloadReport = async (reportId, fileName) => {
     try {
       toast.info("Preparing download...");
@@ -134,8 +149,17 @@ export default function AnalyticsManagement({ theme = "dark" }) {
         toast.error("No analytics data found for this report.");
         return;
       }
-      
-      const csv = Papa.unparse(reportData.data.analytics);
+
+      const remapped = reportData.data.analytics.map(record => {
+        const row = {};
+        ANALYTICS_COLUMNS.forEach(col => {
+          const key = ANALYTICS_FIELD_MAP[col];
+          row[col] = record[key] !== undefined ? record[key] : '';
+        });
+        return row;
+      });
+
+      const csv = Papa.unparse(remapped, { columns: ANALYTICS_COLUMNS });
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
