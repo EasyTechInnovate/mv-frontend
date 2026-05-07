@@ -35,6 +35,15 @@ import {
 import { showToast } from '../../utils/toast'
 import ExportCsvDialog from '../../components/common/ExportCsvDialog'
 
+const formatDuration = (seconds) => {
+    if (!seconds || isNaN(seconds)) return '-';
+    const secs = parseInt(seconds, 10);
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = Math.floor(secs % 60);
+    return [h, m, s].map(v => v < 10 ? '0' + v : v).join(':');
+};
+
 // Release Status Enum
 export const EReleaseStatus = Object.freeze({
     DRAFT: 'draft',
@@ -1071,95 +1080,69 @@ const CatalogPage = () => {
                 isOpen={isExportModalOpen}
                 onClose={() => setIsExportModalOpen(false)}
                 totalItems={pagination?.totalItems || 0}
-                headers={releaseType === 'advanced' ? [
+                headers={[
                   { label: "S.No.", key: "sno" },
+                  { label: "Account ID", key: "accountId" },
+                  { label: "User Name", key: "userName" },
+                  { label: "User Email", key: "userEmail" },
                   { label: "Release ID", key: "releaseId" },
+                  { label: "Release Status", key: "releaseStatus" },
+                  { label: "Release Type", key: "releaseType" },
                   { label: "Release Name", key: "releaseName" },
                   { label: "Release Version", key: "releaseVersion" },
-                  { label: "Release Type", key: "releaseType" },
-                  { label: "Catalog #", key: "catalog" },
+                  { label: "Track Type", key: "trackType" },
+                  { label: "Catalog", key: "catalog" },
                   { label: "UPC", key: "upc" },
-                  { label: "Grid Code", key: "gridCode" },
-                  { label: "Status", key: "releaseStatus" },
-                  { label: "Label Name", key: "labelName" },
+                  { label: "Primary Artist", key: "primaryArtist" },
+                  { label: "Featuring Artist", key: "featuringArtist" },
                   { label: "Primary Genre", key: "primaryGenre" },
                   { label: "Secondary Genre", key: "secondaryGenre" },
+                  { label: "Label", key: "label" },
+                  { label: "C-Year", key: "cYear" },
                   { label: "C-Line", key: "cLine" },
+                  { label: "P-Year", key: "pYear" },
                   { label: "P-Line", key: "pLine" },
-                  { label: "Production Year", key: "productionYear" },
+                  { label: "Pricing Tier", key: "pricingTier" },
                   { label: "Cover Art URL", key: "coverArtUrl" },
-                  { label: "Submitted At", key: "submittedAt" },
-                  { label: "Published At", key: "publishedAt" },
-                  { label: "Live At", key: "liveAt" },
-                  // Track Details
-                  { label: "Track No.", key: "trackNumber" },
+                  { label: "Track Number", key: "trackNumber" },
                   { label: "Track Name", key: "trackName" },
-                  { label: "Display Name", key: "trackDisplayName" },
-                  { label: "Version", key: "trackVersion" },
+                  { label: "Mix Version", key: "mixVersion" },
+                  { label: "Primary Artists", key: "trackPrimaryArtists" },
+                  { label: "Featuring Artists", key: "trackFeaturingArtists" },
                   { label: "ISRC", key: "isrc" },
-                  { label: "Length", key: "trackLength" },
-                  { label: "Primary Genre", key: "trackPrimaryGenre" },
-                  { label: "Secondary Genre", key: "trackSecondaryGenre" },
-                  { label: "Instrumental", key: "isInstrumental" },
-                  { label: "Explicit", key: "isExplicit" },
-                  { label: "Language", key: "trackLanguage" },
-                  { label: "Audio File", key: "audioFileUrl" },
-                  { label: "Preview Start", key: "previewStart" },
-                  { label: "Preview Duration", key: "previewDuration" },
-                  { label: "Lyrics", key: "lyrics" },
-                  // Contributors
-                  { label: "Primary Artists", key: "primaryArtists" },
-                  { label: "Featuring Artists", key: "featuringArtists" },
-                  { label: "Various Artists", key: "variousArtists" },
+                  { label: "Track Primary Genre", key: "trackPrimaryGenre" },
+                  { label: "Track Secondary Genre", key: "trackSecondaryGenre" },
                   { label: "Sound Recording Contributors", key: "soundRecordingContributors" },
                   { label: "Musical Work Contributors", key: "musicalWorkContributors" },
-                  // Delivery & Rights
-                  { label: "Original Release Date", key: "originalReleaseDate" },
-                  { label: "Sales Start Date", key: "salesStartDate" },
-                  { label: "Pre-Order Date", key: "preOrderDate" },
-                  { label: "Territories", key: "territories" },
-                  { label: "Exclusive", key: "isExclusive" },
-                  { label: "Price Tier", key: "priceTier" }
-                ] : [
-                  { label: "S.No.", key: "sno" },
-                  { label: "Release ID", key: "releaseId" },
-                  { label: "Release Name", key: "releaseName" },
-                  { label: "Release Type", key: "releaseType" },
-                  { label: "Track Type", key: "trackType" },
-                  { label: "Status", key: "releaseStatus" },
-                  { label: "Request Status", key: "requestStatus" },
-                  { label: "Label", key: "labelName" },
-                  { label: "Singer Name", key: "singerName" },
-                  { label: "Genre", key: "genre" },
-                  { label: "UPC", key: "upc" },
-                  { label: "Cover Art URL", key: "coverArtUrl" },
-                  { label: "Submitted At", key: "submittedAt" },
-                  { label: "Published At", key: "publishedAt" },
-                  { label: "Live At", key: "liveAt" },
-                  // Track Details
-                  { label: "Track No.", key: "trackNumber" },
-                  { label: "Track Name", key: "trackName" },
-                  { label: "ISRC", key: "isrc" },
-                  { label: "Track Genre", key: "trackGenre" },
-                  { label: "Composer", key: "trackComposer" },
-                  { label: "Lyricist", key: "trackLyricist" },
-                  { label: "Track Singer", key: "trackSinger" },
-                  { label: "Producer", key: "trackProducer" },
+                  { label: "Has Human Vocals", key: "hasHumanVocals" },
+                  { label: "Language", key: "language" },
+                  { label: "Explicit Status", key: "explicitStatus" },
+                  { label: "Available for Download", key: "availableForDownload" },
+                  { label: "Preview Timing", key: "previewTiming" },
                   { label: "Audio Format", key: "audioFormat" },
                   { label: "Audio File URL", key: "audioFileUrl" },
                   { label: "Duration", key: "duration" },
-                  { label: "Preview Start", key: "previewStart" },
-                  { label: "Preview End", key: "previewEnd" },
-                  { label: "Caller Tune Start", key: "callerTuneStart" },
-                  { label: "Caller Tune End", key: "callerTuneEnd" },
-                  // Step 3 Details
+                  { label: "File Size (MB)", key: "fileSizeMB" },
                   { label: "Release Date", key: "releaseDate" },
-                  { label: "Has Rights", key: "hasRights" },
                   { label: "Territories", key: "territories" },
-                  { label: "Has Partners", key: "hasPartners" },
-                  { label: "Partners", key: "partners" },
+                  { label: "Distribution Partners", key: "distributionPartners" },
                   { label: "Owns Copyright", key: "ownsCopyright" },
-                  { label: "Copyright Documents", key: "copyrightDocuments"}
+                  { label: "Copyright Document Link", key: "copyrightDocumentLink" },
+                  { label: "Submitted At", key: "submittedAt" },
+                  { label: "Published At", key: "publishedAt" },
+                  { label: "Live At", key: "liveAt" },
+                  { label: "Footprint Match", key: "footprintMatch" },
+                  { label: "ACR Match Percentage", key: "acrMatchPercentage" },
+                  { label: "ACR Match Title", key: "acrMatchTitle" },
+                  { label: "ACR Artists", key: "acrArtists" },
+                  { label: "ACR Label", key: "acrLabel" },
+                  { label: "ACR Album", key: "acrAlbum" },
+                  { label: "ACR ISRC", key: "acrIsrc" },
+                  { label: "ACR UPC", key: "acrUpc" },
+                  { label: "ACR Release Date", key: "acrReleaseDate" },
+                  { label: "ACR Duration", key: "acrDuration" },
+                  { label: "ACR Genres", key: "acrGenres" },
+                  { label: "ACR Streaming Links", key: "acrStreamingLinks" },
                 ]}
                 fetchData={async (page, limit) => {
                   try {
@@ -1169,127 +1152,162 @@ const CatalogPage = () => {
                       status: selectedStatus === 'all' ? undefined : selectedStatus,
                       search: debouncedSearch || undefined,
                       sortOrder,
-                      isExport: true // Signal backend to populate all fields
+                      isExport: true
                     };
-                    
-                    const fetchFunction = releaseType === 'basic' ? getBasicReleases : getAdvancedReleases;
-                    const res = await fetchFunction(params);
-                    const releasesToExport = res?.data?.releases || res?.data?.data?.releases || []; // Handle structure variations
 
+                    const isAdv = releaseType === 'advanced';
+                    const fetchFunction = isAdv ? getAdvancedReleases : getBasicReleases;
+                    const res = await fetchFunction(params);
+                    const releasesToExport = res?.data?.releases || res?.data?.data?.releases || [];
                     const flattenedData = [];
 
                     releasesToExport.forEach(rel => {
-                        // Determine which release structure we are dealing with
-                        const isAdvanced = releaseType === 'advanced';
-                        const step1 = rel.step1?.releaseInfo || {};
-                        const step3 = rel.step3 || {};
+                      const step1 = rel.step1?.releaseInfo || {};
+                      const step3 = rel.step3 || {};
 
-                        const releaseInfo = isAdvanced ? {
-                            releaseId: rel.releaseId,
-                            releaseName: step1.releaseName || '-',
-                            releaseVersion: step1.releaseVersion || '-',
-                            releaseType: step1.releaseType || rel.releaseType || '-',
-                            catalog: step1.catalog || '-',
-                            upc: step1.upcCode || step1.upc ? `\t${step1.upcCode || step1.upc}` : '-',
-                            gridCode: step1.gridCode || '-',
-                            releaseStatus: rel.releaseStatus === 'submitted' ? 'Pending' : rel.releaseStatus,
-                            labelName: step1.labelName?.name || step1.labelName || '-',
-                            primaryGenre: step1.primaryGenre || '-',
-                            secondaryGenre: step1.secondaryGenre || '-',
-                            cLine: step1.cLine ? `© ${step1.cLine.year} ${step1.cLine.text}` : '-',
-                            pLine: step1.pLine ? `℗ ${step1.pLine.year} ${step1.pLine.text}` : '-',
-                            productionYear: step1.productionYear || '-',
-                            coverArtUrl: rel.step1?.coverArt?.imageUrl || '-',
-                            submittedAt: rel.submittedAt ? new Date(rel.submittedAt).toLocaleDateString() : '-',
-                            publishedAt: rel.publishedAt ? new Date(rel.publishedAt).toLocaleDateString() : '-',
-                            liveAt: rel.liveAt ? new Date(rel.liveAt).toLocaleDateString() : '-',
-                            releaseDate: (step3.deliveryDetails?.releaseDate || step3.deliveryDetails?.forFutureRelease) ? new Date(step3.deliveryDetails.releaseDate || step3.deliveryDetails.forFutureRelease).toLocaleDateString() : '-',
-                            salesStartDate: step3.deliveryDetails?.salesWaitPeriod ? `+${step3.deliveryDetails.salesWaitPeriod} days` : 'Immediate',
-                            preOrderDate: step3.deliveryDetails?.preOrderDate ? new Date(step3.deliveryDetails.preOrderDate).toLocaleDateString() : '-',
-                            territories: step3.territorialRights?.isWorldwide ? "Worldwide" : (step3.territorialRights?.selectedTerritories?.join(", ") || '-'),
-                            isExclusive: step3.territorialRights?.isExclusive ? "Yes" : "No",
-                            priceTier: step1.releasePricingTier || '-'
-                        } : {
-                            releaseId: rel.releaseId,
-                            releaseName: rel.releaseName || rel.step1?.releaseInfo?.releaseName || rel.releaseTitle || '-',
-                            upc: rel.step1?.releaseInfo?.upc ? `\t${rel.step1.releaseInfo.upc}` : '-',
-                            labelName: rel.step1?.releaseInfo?.labelName || '-',
-                            singerName: rel.step1?.coverArt?.singerName?.join(', ') || '-',
-                            genre: rel.step1?.releaseInfo?.genre || '-',
-                            releaseType: rel.releaseType || 'Basic',
-                            trackType: rel.trackType,
-                            releaseStatus: rel.releaseStatus === 'submitted' ? 'Pending' : rel.releaseStatus,
-                            requestStatus: (rel.requestStatus || rel.releaseStatus) === 'submitted' ? 'Pending' : (rel.requestStatus || rel.releaseStatus),
-                            coverArtUrl: rel.step1?.coverArt?.imageUrl || '-',
-                            releaseDate: rel.step3?.releaseDate ? new Date(rel.step3.releaseDate).toLocaleDateString() : '-',
-                            hasRights: rel.step3?.territorialRights?.hasRights ? "Yes" : "No",
-                            territories: rel.step3?.territorialRights?.territories?.join(", ") || '-',
-                            hasPartners: rel.step3?.partnerSelection?.hasPartners ? "Yes" : "No",
-                            partners: rel.step3?.partnerSelection?.partners?.join(", ") || '-',
-                            ownsCopyright: rel.step3?.copyrights?.ownsCopyright ? "Yes" : "No",
-                            copyrightDocuments: rel.step3?.copyrights?.copyrightDocuments?.map(doc => doc.url).join(", ") || step3.copyrightOptions?.proceedWithoutCopyright ? 'Waived' : '-',
-                            submittedAt: rel.submittedAt ? new Date(rel.submittedAt).toLocaleDateString() : '-',
-                            publishedAt: rel.publishedAt ? new Date(rel.publishedAt).toLocaleDateString() : '-',
-                            liveAt: rel.liveAt ? new Date(rel.liveAt).toLocaleDateString() : '-'
+                      const accountId = rel.userId?.accountId || rel.user?.accountId || '-';
+                      const userName = rel.userId
+                        ? `${rel.userId.firstName || ''} ${rel.userId.lastName || ''}`.trim() || '-'
+                        : (rel.user?.name || '-');
+                      const userEmail = rel.userId?.emailAddress || rel.user?.email || '-';
+                      const releaseStatus = rel.releaseStatus === 'submitted' ? 'Pending' : (rel.releaseStatus || '-');
+                      const releaseType = isAdv ? 'Advanced' : 'Basic';
+                      const releaseName = step1.releaseName || rel.releaseName || rel.releaseTitle || '-';
+                      const releaseVersion = isAdv ? (step1.releaseVersion || '-') : '-';
+                      const trackTypeVal = isAdv ? (step1.releaseType || rel.releaseType || '-') : (rel.trackType || '-');
+                      const catalog = isAdv ? (step1.catalog || '-') : '-';
+                      const upcRaw = step1.upcCode || step1.upc || step1.adminProvidedUPC;
+                      const upc = upcRaw ? `\t${upcRaw}` : (rel.step1?.releaseInfo?.upc ? `\t${rel.step1.releaseInfo.upc}` : '-');
+                      const primaryArtist = isAdv
+                        ? (Array.isArray(step1.primaryArtists) ? step1.primaryArtists.join(', ') : '-')
+                        : (rel.step1?.coverArt?.singerName?.join(', ') || '-');
+                      const featuringArtist = isAdv
+                        ? (Array.isArray(step1.featuringArtists) ? step1.featuringArtists.join(', ') : '-')
+                        : '-';
+                      const primaryGenre = step1.primaryGenre || step1.genre || rel.genre || '-';
+                      const secondaryGenre = isAdv ? (step1.secondaryGenre || '-') : '-';
+                      const label = typeof step1.labelName === 'object' ? (step1.labelName?.name || '-') : (step1.labelName || '-');
+                      const cYear = isAdv ? (step1.cLine?.year?.toString() || '-') : '-';
+                      const cLine = isAdv ? (step1.cLine?.text || '-') : '-';
+                      const pYear = isAdv ? (step1.pLine?.year?.toString() || '-') : '-';
+                      const pLine = isAdv ? (step1.pLine?.text || '-') : '-';
+                      const pricingTier = isAdv ? (step1.releasePricingTier || '-') : '-';
+                      const coverArtUrl = rel.step1?.coverArt?.imageUrl || '-';
+                      const releaseDate = (() => {
+                        const rd = isAdv
+                          ? (step3.deliveryDetails?.releaseDate || step3.deliveryDetails?.forFutureRelease)
+                          : (step3.releaseDate || step3.deliveryDetails?.releaseDate);
+                        return rd ? new Date(rd).toLocaleDateString() : '-';
+                      })();
+                      const territories = (
+                        step3.territorialRights?.territories ||
+                        step3.territorialRights?.selectedTerritories || []
+                      ).map(t => t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(', ') || '-';
+                      const distributionPartners = (
+                        step3.distributionPartners ||
+                        step3.partnerSelection?.partners || []
+                      ).map(p => typeof p === 'string' ? p.replace(/_/g, ' ') : p).join(', ') || '-';
+                      const ownsCopyright = (step3.copyrightOptions?.ownsCopyrights || step3.copyrights?.ownsCopyright) ? 'Yes' : 'No';
+                      const copyrightDocumentLink = step3.copyrightOptions?.copyrightDocumentUrl || step3.copyrights?.copyrightDocuments?.[0]?.url || '-';
+                      const submittedAt = rel.submittedAt ? new Date(rel.submittedAt).toLocaleDateString() : '-';
+                      const publishedAt = rel.publishedAt ? new Date(rel.publishedAt).toLocaleDateString() : '-';
+                      const liveAt = rel.liveAt ? new Date(rel.liveAt).toLocaleDateString() : '-';
+
+                      const tracks = rel.step2?.tracks || rel.tracks || [];
+
+                      const buildRow = (track, trackIndex) => {
+                        const acrEntry = rel.audioFootprinting?.find(
+                          fp => fp.trackId?.toString() === track?._id?.toString()
+                        );
+                        const isrcRaw = isAdv
+                          ? (track?.adminProvidedISRC || track?.isrcCode || track?.isrc)
+                          : (track?.isrc || track?.isrcCode || track?.adminProvidedISRC);
+                        return {
+                          sno: flattenedData.length + 1,
+                          accountId,
+                          userName,
+                          userEmail,
+                          releaseId: rel.releaseId || '-',
+                          releaseStatus,
+                          releaseType,
+                          releaseName,
+                          releaseVersion,
+                          trackType: trackTypeVal,
+                          catalog,
+                          upc,
+                          primaryArtist,
+                          featuringArtist,
+                          primaryGenre,
+                          secondaryGenre,
+                          label,
+                          cYear,
+                          cLine,
+                          pYear,
+                          pLine,
+                          pricingTier,
+                          coverArtUrl,
+                          trackNumber: track ? trackIndex + 1 : '-',
+                          trackName: track?.trackName || '-',
+                          mixVersion: isAdv ? (track?.mixVersion || '-') : '-',
+                          trackPrimaryArtists: isAdv
+                            ? (Array.isArray(track?.primaryArtists) ? track.primaryArtists.join(', ') : '-')
+                            : '-',
+                          trackFeaturingArtists: isAdv
+                            ? (Array.isArray(track?.featuringArtists) ? track.featuringArtists.join(', ') : '-')
+                            : '-',
+                          isrc: isrcRaw ? `\t${isrcRaw}` : '-',
+                          trackPrimaryGenre: track?.primaryGenre || track?.genre || '-',
+                          trackSecondaryGenre: isAdv ? (track?.secondaryGenre || '-') : '-',
+                          soundRecordingContributors: isAdv
+                            ? ((track?.contributorsToSoundRecording || track?.contributorsToSound)
+                                ?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`)
+                                .join('; ') || '-')
+                            : '-',
+                          musicalWorkContributors: isAdv
+                            ? ((track?.contributorsToMusicalWork || track?.contributorsToMusical)
+                                ?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`)
+                                .join('; ') || '-')
+                            : '-',
+                          hasHumanVocals: isAdv ? (track?.hasHumanVocals ? 'Yes' : 'No') : '-',
+                          language: track?.language || track?.musicLanguage || '-',
+                          explicitStatus: isAdv
+                            ? (track?.explicitStatus || (track?.parentalAdvisory ? 'Explicit' : 'Clean'))
+                            : (track?.parentalAdvisory || '-'),
+                          availableForDownload: isAdv ? (track?.isAvailableForDownload ? 'Yes' : 'No') : '-',
+                          previewTiming: track?.previewStartTiming || track?.previewTiming?.startTime || '-',
+                          audioFormat: track?.audioFiles?.[0]?.format || '-',
+                          audioFileUrl: track?.trackLink || track?.fileUrl || track?.audioFiles?.[0]?.fileUrl || track?.audioFile?.url || '-',
+                          duration: track?.audioFiles?.[0]?.duration ? formatDuration(track.audioFiles[0].duration) : '-',
+                          fileSizeMB: track?.audioFiles?.[0]?.fileSize ? (track.audioFiles[0].fileSize / (1024 * 1024)).toFixed(2) : '-',
+                          releaseDate,
+                          territories,
+                          distributionPartners,
+                          ownsCopyright,
+                          copyrightDocumentLink,
+                          submittedAt,
+                          publishedAt,
+                          liveAt,
+                          footprintMatch: acrEntry ? 'Yes' : '-',
+                          acrMatchPercentage: acrEntry?.matchPercentage ?? '-',
+                          acrMatchTitle: acrEntry?.title || '-',
+                          acrArtists: acrEntry?.artists?.join(', ') || '-',
+                          acrLabel: acrEntry?.label || '-',
+                          acrAlbum: acrEntry?.album || '-',
+                          acrIsrc: acrEntry?.externalIds?.isrc ? `\t${acrEntry.externalIds.isrc}` : '-',
+                          acrUpc: acrEntry?.externalIds?.upc || '-',
+                          acrReleaseDate: acrEntry?.releaseDate || '-',
+                          acrDuration: acrEntry?.durationMs ? formatDuration(Math.round(acrEntry.durationMs / 1000)) : '-',
+                          acrGenres: acrEntry?.genres?.join(', ') || '-',
+                          acrStreamingLinks: acrEntry?.streamingLinks
+                            ? Object.values(acrEntry.streamingLinks).filter(Boolean).join(', ')
+                            : '-',
                         };
-
-                      const tracks = rel.step2?.tracks || [];
+                      };
 
                       if (tracks.length > 0) {
-                        tracks.forEach((track, index) => {
-                          const trackInfo = isAdvanced ? {
-                                trackName: track.trackName || '-',
-                                trackDisplayName: track.displayName || '-',
-                                trackVersion: track.version || '-',
-                                isrc: track.adminProvidedISRC || track.isrcCode ? `\t${track.adminProvidedISRC || track.isrcCode}` : '-',
-                                trackLength: track.audioFile?.duration ? `${Math.floor(track.audioFile.duration)}s` : '-',
-                                trackPrimaryGenre: track.primaryGenre || '-',
-                                trackSecondaryGenre: track.secondaryGenre || '-',
-                                isInstrumental: track.isInstrumental ? "Yes" : "No",
-                                isExplicit: track.parentalAdvisory ? "Yes" : "No",
-                                trackLanguage: track.language || '-',
-                                audioFileUrl: track.audioFile?.url || '-',
-                                previewStart: track.previewDetails?.startTime || '-',
-                                previewDuration: track.previewDetails?.duration || '-',
-                                lyrics: track.lyrics ? "Yes" : "No",
-                                primaryArtists: track.primaryArtists?.join(", ") || step1.primaryArtists?.join(", ") || '-',
-                                featuringArtists: track.featuringArtists?.join(", ") || '-',
-                                variousArtists: track.variousArtists?.join(", ") || step1.variousArtists?.join(", ") || '-',
-                                soundRecordingContributors: track.contributorsToSoundRecording?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '-',
-                                musicalWorkContributors: track.contributorsToMusicalWork?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`).join('; ') || '-'
-                          } : {
-                                trackName: track.trackName || '-',
-                                isrc: track.isrc ? `\t${track.isrc}` : '-',
-                                trackGenre: track.genre || '-',
-                                trackComposer: track.composerName || '-',
-                                trackLyricist: track.lyricistName || '-',
-                                trackSinger: track.singerName || '-',
-                                trackProducer: track.producerName || '-',
-                                audioFormat: track.audioFiles?.[0]?.format || '-',
-                                audioFileUrl: track.audioFiles?.[0]?.fileUrl || '-',
-                                duration: track.audioFiles?.[0]?.duration ? `${Math.floor(track.audioFiles[0].duration)}s` : '-',
-                                previewStart: track.previewTiming?.startTime ?? '-',
-                                previewEnd: track.previewTiming?.endTime ?? '-',
-                                callerTuneStart: track.callerTuneTiming?.startTime ?? '-',
-                                callerTuneEnd: track.callerTuneTiming?.endTime ?? '-'
-                          };
-
-                          flattenedData.push({
-                            sno: flattenedData.length + 1,
-                            ...releaseInfo,
-                            trackNumber: index + 1,
-                            ...trackInfo
-                          });
-                        });
+                        tracks.forEach((track, i) => flattenedData.push(buildRow(track, i)));
                       } else {
-                        // If no tracks found (edge case), still export release info
-                        flattenedData.push({
-                          sno: flattenedData.length + 1,
-                          ...releaseInfo,
-                          trackNumber: '-',
-                          trackName: '-',
-                          // ... empty fields would be needed for consistent CSV but JSON to CSV usually handles missing keys by leaving them empty
-                        });
+                        flattenedData.push(buildRow(null, 0));
                       }
                     });
 

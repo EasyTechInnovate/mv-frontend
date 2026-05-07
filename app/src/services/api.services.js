@@ -83,7 +83,7 @@ export const submitAdvancedRelease = async (releaseId) => {
 
 // Get Basic Releases
 export const getBasicReleases = async (params) => {
-    const { page = 1, limit = 10, status, search, sortOrder = 'desc' } = params
+    const { page = 1, limit = 10, status, search, sortOrder = 'desc', isExport } = params
     const queryParams = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -92,6 +92,7 @@ export const getBasicReleases = async (params) => {
 
     if (status) queryParams.append('status', status)
     if (search) queryParams.append('search', search)
+    if (isExport) queryParams.append('isExport', 'true')
 
     const response = await servicesAxiosInstance.get(`/v1/releases/my-releases?${queryParams.toString()}`)
     return response.data
@@ -115,7 +116,7 @@ export const requestTakeDown = async (releaseId, data) => {
 
 // Get Advanced Releases
 export const getAdvancedReleases = async (params) => {
-    const { page = 1, limit = 10, status, search, sortOrder = 'desc' } = params
+    const { page = 1, limit = 10, status, search, sortOrder = 'desc', isExport } = params
     const queryParams = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -124,6 +125,7 @@ export const getAdvancedReleases = async (params) => {
 
     if (status) queryParams.append('status', status)
     if (search) queryParams.append('search', search)
+    if (isExport) queryParams.append('isExport', 'true')
 
     const response = await servicesAxiosInstance.get(`/v1/advance-releases/my-releases?${queryParams.toString()}`)
     return response.data
