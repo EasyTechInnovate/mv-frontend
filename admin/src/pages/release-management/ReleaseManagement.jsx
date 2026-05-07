@@ -395,7 +395,7 @@ export default function ReleaseManagement({ theme }) {
         defaultData={selectedRelease}
         userId={selectedUserId}
         onBack={handleBack}
-        releaseCategory={releaseCategory} // Pass the category to handle different actions/views
+        releaseCategory={releaseCategory}   // Pass the category to handle different actions/views
       />
 
     );
