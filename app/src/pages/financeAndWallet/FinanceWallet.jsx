@@ -146,7 +146,6 @@ export default function FinanceWallet() {
           { key: 'description', label: 'Details' },
           { key: 'direction', label: 'Direction' },
           { key: 'amount', label: 'Amount' },
-          { key: 'streams', label: 'Streams' },
           { key: 'status', label: 'Status' },
           { key: 'requestId', label: 'Request ID' },
           { key: 'transactionReference', label: 'Payment Ref' },
@@ -156,7 +155,6 @@ export default function FinanceWallet() {
           formattedDate: new Date(t.date).toLocaleString(),
           type: t.type?.replace(/_/g, ' '),
           direction: t.direction?.toUpperCase(),
-          streams: t.streams || '-',
           status: t.status || 'Completed',
           requestId: t.requestId || '-',
           transactionReference: t.transactionReference || '-',
@@ -503,9 +501,6 @@ export default function FinanceWallet() {
                               {t.type === 'admin_adjustment' && t.description && t.description.length <= 30 && (
                                 <span className="text-xs text-muted-foreground">{t.description}</span>
                               )}
-                              {(t.type === 'regular_royalty' || t.type === 'bonus_royalty') && t.streams && (
-                                <span className="text-xs text-muted-foreground mt-0.5">{t.streams.toLocaleString()} streams</span>
-                              )}
                               {t.type === 'admin_adjustment' && t.adjustedBy && (
                                 <span className="text-xs text-muted-foreground mt-0.5">By: {t.adjustedBy}</span>
                               )}
@@ -773,7 +768,6 @@ export default function FinanceWallet() {
             { key: 'description', label: 'Details' },
             { key: 'direction', label: 'Direction' },
             { key: 'amount', label: 'Amount' },
-            { key: 'streams', label: 'Streams' },
             { key: 'status', label: 'Status' },
             { key: 'requestId', label: 'Request ID' },
             { key: 'transactionReference', label: 'Payment Ref' },
@@ -787,7 +781,6 @@ export default function FinanceWallet() {
               formattedDate: new Date(t.date).toLocaleString(),
               type: t.type?.replace(/_/g, " "),
               direction: t.direction?.toUpperCase(),
-              streams: t.streams || 0,
               status: t.status || 'Completed',
               requestId: t.requestId || '-',
               transactionReference: t.transactionReference || '-',

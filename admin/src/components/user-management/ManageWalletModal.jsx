@@ -297,9 +297,6 @@ export default function ManageWalletModal({ isOpen, onClose, user, theme }) {
                                 {t.type === 'admin_adjustment' && t.description && t.description.length <= 30 && (
                                   <span className="text-xs text-muted-foreground">{t.description}</span>
                                 )}
-                                {(t.type === 'regular_royalty' || t.type === 'bonus_royalty') && t.streams && (
-                                  <span className="text-xs text-muted-foreground mt-0.5">{t.streams.toLocaleString()} streams</span>
-                                )}
                                 {t.type === 'admin_adjustment' && t.adjustedBy && (
                                   <span className="text-xs text-muted-foreground mt-0.5">By: {t.adjustedBy}</span>
                                 )}
