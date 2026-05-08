@@ -365,7 +365,7 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
             step3.partnerSelection?.partners || []
         ).map(p => typeof p === 'string' ? p.replace(/_/g, ' ') : p).join(', ') || '-'
         const ownsCopyright = (step3.copyrightOptions?.ownsCopyrights || step3.copyrights?.ownsCopyright) ? 'Yes' : 'No'
-        const copyrightDocumentLink = step3.copyrightOptions?.copyrightDocumentUrl || step3.copyrights?.copyrightDocuments?.[0]?.url || '-'
+        const copyrightDocumentLink = step3.copyrightOptions?.copyrightDocumentUrl || step3.copyrights?.copyrightDocuments?.[0]?.documentUrl || '-'
         const submittedAt = release.submittedAt ? new Date(release.submittedAt).toLocaleDateString() : '-'
         const publishedAt = release.publishedAt ? new Date(release.publishedAt).toLocaleDateString() : '-'
         const liveAt = release.liveAt ? new Date(release.liveAt).toLocaleDateString() : '-'
@@ -407,7 +407,7 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                 'Mix Version': isAdvanced ? (track.mixVersion || '-') : '-',
                 'Primary Artists': isAdvanced
                     ? (Array.isArray(track.primaryArtists) ? track.primaryArtists.join(', ') : '-')
-                    : '-',
+                    : (track.singerName || '-'),
                 'Featuring Artists': isAdvanced
                     ? (Array.isArray(track.featuringArtists) ? track.featuringArtists.join(', ') : '-')
                     : '-',
@@ -418,12 +418,20 @@ export default function ReleaseModal({ theme, defaultData, onBack, releaseCatego
                     ? ((track.contributorsToSoundRecording || track.contributorsToSound)
                         ?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`)
                         .join('; ') || '-')
-                    : '-',
+                    : ([
+                        track.singerName && `Singer: ${track.singerName}`,
+                        track.composerName && `Composer: ${track.composerName}`,
+                        track.lyricistName && `Lyricist: ${track.lyricistName}`,
+                        track.producerName && `Producer: ${track.producerName}`,
+                      ].filter(Boolean).join('; ') || '-'),
                 'Musical Work Contributors': isAdvanced
                     ? ((track.contributorsToMusicalWork || track.contributorsToMusical)
                         ?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`)
                         .join('; ') || '-')
-                    : '-',
+                    : ([
+                        track.composerName && `Composer: ${track.composerName}`,
+                        track.lyricistName && `Lyricist: ${track.lyricistName}`,
+                      ].filter(Boolean).join('; ') || '-'),
                 'Has Human Vocals': isAdvanced ? (track.hasHumanVocals ? 'Yes' : 'No') : '-',
                 'Language': track.language || track.musicLanguage || '-',
                 'Explicit Status': isAdvanced

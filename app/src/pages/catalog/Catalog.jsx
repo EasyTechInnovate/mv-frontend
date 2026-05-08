@@ -1208,7 +1208,7 @@ const CatalogPage = () => {
                         step3.partnerSelection?.partners || []
                       ).map(p => typeof p === 'string' ? p.replace(/_/g, ' ') : p).join(', ') || '-';
                       const ownsCopyright = (step3.copyrightOptions?.ownsCopyrights || step3.copyrights?.ownsCopyright) ? 'Yes' : 'No';
-                      const copyrightDocumentLink = step3.copyrightOptions?.copyrightDocumentUrl || step3.copyrights?.copyrightDocuments?.[0]?.url || '-';
+                      const copyrightDocumentLink = step3.copyrightOptions?.copyrightDocumentUrl || step3.copyrights?.copyrightDocuments?.[0]?.documentUrl || '-';
                       const submittedAt = rel.submittedAt ? new Date(rel.submittedAt).toLocaleDateString() : '-';
                       const publishedAt = rel.publishedAt ? new Date(rel.publishedAt).toLocaleDateString() : '-';
                       const liveAt = rel.liveAt ? new Date(rel.liveAt).toLocaleDateString() : '-';
@@ -1251,7 +1251,7 @@ const CatalogPage = () => {
                           mixVersion: isAdv ? (track?.mixVersion || '-') : '-',
                           trackPrimaryArtists: isAdv
                             ? (Array.isArray(track?.primaryArtists) ? track.primaryArtists.join(', ') : '-')
-                            : '-',
+                            : (track?.singerName || '-'),
                           trackFeaturingArtists: isAdv
                             ? (Array.isArray(track?.featuringArtists) ? track.featuringArtists.join(', ') : '-')
                             : '-',
@@ -1262,12 +1262,20 @@ const CatalogPage = () => {
                             ? ((track?.contributorsToSoundRecording || track?.contributorsToSound)
                                 ?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`)
                                 .join('; ') || '-')
-                            : '-',
+                            : ([
+                                track?.singerName && `Singer: ${track.singerName}`,
+                                track?.composerName && `Composer: ${track.composerName}`,
+                                track?.lyricistName && `Lyricist: ${track.lyricistName}`,
+                                track?.producerName && `Producer: ${track.producerName}`,
+                              ].filter(Boolean).join('; ') || '-'),
                           musicalWorkContributors: isAdv
                             ? ((track?.contributorsToMusicalWork || track?.contributorsToMusical)
                                 ?.map(c => `${c.profession?.replace(/_/g, ' ')}: ${c.contributors}`)
                                 .join('; ') || '-')
-                            : '-',
+                            : ([
+                                track?.composerName && `Composer: ${track.composerName}`,
+                                track?.lyricistName && `Lyricist: ${track.lyricistName}`,
+                              ].filter(Boolean).join('; ') || '-'),
                           hasHumanVocals: isAdv ? (track?.hasHumanVocals ? 'Yes' : 'No') : '-',
                           language: track?.language || track?.musicLanguage || '-',
                           explicitStatus: isAdv
