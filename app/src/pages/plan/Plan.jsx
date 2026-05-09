@@ -331,8 +331,10 @@ const Plan = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {allPlans.map((plan) => {
-            const isCurrent = currentPlanId === plan.planId
-            const isDowngrade = !isCurrent && !!currentPlanId && currentSub?.status === 'active' && plan.price.current <= currentPrice
+            const isSubActive = currentSub?.status === 'active'
+            const isCurrent = currentPlanId === plan.planId && isSubActive
+            const isExpiredCurrentPlan = currentPlanId === plan.planId && !isSubActive
+            const isDowngrade = !isCurrent && !!currentPlanId && isSubActive && plan.price.current <= currentPrice
             const getFeatureLabel = (key, value) => {
               let label = FEATURE_LABELS[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
               if (key === "supportHours") label = `${FEATURE_LABELS[key]}: ${SUPPORT_HOURS_LABELS[value] || value}`;
@@ -408,6 +410,17 @@ const Plan = () => {
                   {isCurrent ? (
                     <Button className="w-full mt-4 bg-slate-600 cursor-not-allowed text-white" disabled>
                       Current Plan
+                    </Button>
+                  ) : isExpiredCurrentPlan ? (
+                    <Button
+                      className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white"
+                      disabled={buyingPlanId === plan.planId}
+                      onClick={() => handleBuyPlan(plan.planId)}
+                    >
+                      {buyingPlanId === plan.planId
+                        ? <><Loader className="w-4 h-4 animate-spin mr-2" /> Processing...</>
+                        : 'Renew'
+                      }
                     </Button>
                   ) : isDowngrade ? null : (
                     <Button

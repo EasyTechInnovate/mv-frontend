@@ -1393,13 +1393,26 @@ const Profile = () => {
                       {(() => {
                         const currentPlanId = currentSubData?.data?.subscription?.planId;
                         const currentPrice = currentSubData?.data?.plan?.price?.current ?? 0;
-                        const isCurrent = currentPlanId === plan.planId;
-                        const isDowngrade = !isCurrent && plan.price.current <= currentPrice && !!currentPlanId;
+                        const isSubActive = currentSubData?.data?.subscription?.status === 'active';
+                        const isCurrent = currentPlanId === plan.planId && isSubActive;
+                        const isExpiredCurrentPlan = currentPlanId === plan.planId && !isSubActive;
+                        const isDowngrade = !isCurrent && plan.price.current <= currentPrice && !!currentPlanId && isSubActive;
 
                         if (isCurrent) {
                           return (
                             <Button className="w-full mt-4 bg-slate-800 cursor-not-allowed text-white" disabled>
                               Current Plan
+                            </Button>
+                          );
+                        }
+                        if (isExpiredCurrentPlan) {
+                          return (
+                            <Button
+                              className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white"
+                              disabled={isUpgrading}
+                              onClick={() => handleUpgrade(plan.planId)}
+                            >
+                              {isUpgrading ? 'Processing...' : 'Renew'}
                             </Button>
                           );
                         }
