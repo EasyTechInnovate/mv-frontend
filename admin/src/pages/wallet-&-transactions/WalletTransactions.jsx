@@ -379,6 +379,25 @@ export default function WalletTransactions({ theme }) {
                 <option value="rejected">Rejected</option>
                 <option value="cancelled">Cancelled</option>
             </select>
+            <select
+                value={periodFilter}
+                onChange={(e) => { setPeriodFilter(e.target.value); handlePageChange(1); }}
+                className={`px-3 py-2 text-sm rounded-md ${isDark ? "bg-[#151F28] border border-gray-700 text-gray-200" : "bg-white border border-gray-300"}`}
+            >
+                <option value="">All Time</option>
+                {(() => {
+                  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                  const options = [];
+                  const now = new Date();
+                  for (let i = 0; i < 24; i++) {
+                    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                    const m = d.getMonth() + 1;
+                    const y = d.getFullYear();
+                    options.push(<option key={`${m}-${y}`} value={`${m}-${y}`}>{months[m-1]} {y}</option>);
+                  }
+                  return options;
+                })()}
+            </select>
             </div>
         )}
         {activeTab === 'unified' && (
