@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Check, X, CreditCard, Calendar, Clock, Loader, ShieldCheck, ArrowUp, Tag } from 'lucide-react'
-import { getMySubscription, getAllSubscriptionPlans, createPaymentIntent, verifyPayment } from '@/services/api.services'
+import { getMySubscription, getAllSubscriptionPlans, createPaymentIntent, verifyPayment, getProfile } from '@/services/api.services'
 import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
 
@@ -54,7 +54,7 @@ const LIVE_PROCESS_LABELS = {
 };
 
 const Plan = () => {
-  const { user } = useAuthStore()
+  const { user, setUser } = useAuthStore()
   const queryClient = useQueryClient()
   const userType = user?.userType
   const [buyingPlanId, setBuyingPlanId] = useState(null)
@@ -132,6 +132,7 @@ const Plan = () => {
           toast.success('Subscription activated!')
           queryClient.invalidateQueries({ queryKey: ['mySubscription'] })
           queryClient.invalidateQueries({ queryKey: ['subscriptionPlans'] })
+          getProfile().then(res => { if (res?.data?.user) setUser(res.data.user) }).catch(() => {})
         } catch {
           toast.error('Payment verification failed. Contact support.')
         }
@@ -332,9 +333,10 @@ const Plan = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {allPlans.map((plan) => {
             const isSubActive = currentSub?.status === 'active'
-            const isCurrent = currentPlanId === plan.planId && isSubActive
+            const isLifetimePlan = plan.interval === 'lifetime'
+            const isCurrent = currentPlanId === plan.planId && isSubActive && !isLifetimePlan
             const isExpiredCurrentPlan = currentPlanId === plan.planId && !isSubActive
-            const isDowngrade = !isCurrent && !!currentPlanId && isSubActive && plan.price.current <= currentPrice
+            const isDowngrade = !isCurrent && !!currentPlanId && isSubActive && plan.price.current <= currentPrice && !isLifetimePlan
             const getFeatureLabel = (key, value) => {
               let label = FEATURE_LABELS[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
               if (key === "supportHours") label = `${FEATURE_LABELS[key]}: ${SUPPORT_HOURS_LABELS[value] || value}`;
@@ -422,7 +424,7 @@ const Plan = () => {
                         : 'Renew'
                       }
                     </Button>
-                  ) : isDowngrade ? null : (
+                  ) : (
                     <Button
                       className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white"
                       disabled={buyingPlanId === plan.planId}
@@ -430,7 +432,10 @@ const Plan = () => {
                     >
                       {buyingPlanId === plan.planId
                         ? <><Loader className="w-4 h-4 animate-spin mr-2" /> Processing...</>
-                        : currentPlanId ? 'Upgrade' : `Get ${plan.name}`
+                        : isLifetimePlan && currentPlanId === plan.planId ? 'Buy Again'
+                        : isDowngrade ? 'Switch Plan'
+                        : currentPlanId ? 'Upgrade'
+                        : `Get ${plan.name}`
                       }
                     </Button>
                   )}

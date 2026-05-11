@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, Calendar, Clock, FileText, ShieldCheck, Loader, AlertCircle } from 'lucide-react';
+import { CreditCard, Calendar, Clock, FileText, ShieldCheck, Loader, AlertCircle, Disc3 } from 'lucide-react';
 import { getMySubscription, getPaymentHistory } from '@/services/api.services';
 import { useAuthStore } from '@/store/authStore';
 
@@ -146,6 +146,34 @@ const Billing = () => {
                 <span>No active subscription. <a href="/app/plan" className="text-purple-500 hover:underline">Browse plans →</a></span>
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Release Credits ─────────────────────────────────── */}
+      {!isAggregator && sub?.plan && !sub?.plan?.features?.unlimitedReleases && (
+        <Card className="border-slate-700">
+          <CardHeader className="flex flex-row items-center gap-2">
+            <Disc3 className="w-5 h-5 text-purple-500" />
+            <CardTitle>Release Credits</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold text-purple-600">{user?.releaseCredits ?? 0}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {user?.releaseCredits > 0
+                    ? 'Credit available — you can create a new release'
+                    : 'No credits remaining — purchase a plan to create a new release'}
+                </p>
+              </div>
+              <a
+                href="/app/plan"
+                className="text-sm text-purple-500 hover:underline font-medium"
+              >
+                Buy More →
+              </a>
+            </div>
           </CardContent>
         </Card>
       )}
