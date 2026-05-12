@@ -265,13 +265,15 @@ const Plan = () => {
                   <span>New plan price</span>
                   <span className="text-white font-medium">₹{upgradeDialog.checkoutData.originalAmount}</span>
                 </div>
-                <div className="flex justify-between text-green-500">
-                  <span className="flex items-center gap-1">
-                    <Tag className="w-3 h-3" />
-                    Credit from current plan
-                  </span>
-                  <span className="font-medium">−₹{upgradeDialog.checkoutData.prorationCredit}</span>
-                </div>
+                {upgradeDialog.checkoutData.prorationCredit > 0 && (
+                  <div className="flex justify-between text-green-500">
+                    <span className="flex items-center gap-1">
+                      <Tag className="w-3 h-3" />
+                      Credit from current plan
+                    </span>
+                    <span className="font-medium">−₹{upgradeDialog.checkoutData.prorationCredit}</span>
+                  </div>
+                )}
                 <div className="border-t border-slate-700 pt-3 flex justify-between text-white font-semibold text-base">
                   <span>You pay today</span>
                   <span className="text-purple-400">₹{upgradeDialog.checkoutData.chargeAmount}</span>
@@ -279,7 +281,7 @@ const Plan = () => {
               </div>
               <p className="text-xs text-muted-foreground">
                 Your new plan activates immediately and runs for a fresh billing period.
-                Unused days from your current plan are credited above.
+                {upgradeDialog.checkoutData.prorationCredit > 0 && ' Unused days from your current plan are credited above.'}
               </p>
             </div>
           )}

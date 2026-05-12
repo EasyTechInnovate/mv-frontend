@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, Calendar, Clock, FileText, ShieldCheck, Loader, AlertCircle, Disc3 } from 'lucide-react';
-import { getMySubscription, getPaymentHistory } from '@/services/api.services';
+import { getMySubscription, getPaymentHistory, getProfile } from '@/services/api.services';
 import { useAuthStore } from '@/store/authStore';
 
 const formatDate = (dateStr) => {
@@ -27,8 +27,14 @@ const StatusBadge = ({ status }) => {
 };
 
 const Billing = () => {
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const isAggregator = user?.userType === 'aggregator';
+
+  useEffect(() => {
+    getProfile().then((res) => {
+      if (res?.data?.user) setUser(res.data.user);
+    }).catch(() => {});
+  }, []);
 
   const { data: subData, isLoading: subLoading } = useQuery({
     queryKey: ['mySubscription'],
