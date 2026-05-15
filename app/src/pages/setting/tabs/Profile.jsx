@@ -1265,34 +1265,16 @@ const Profile = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h4 className="font-semibold mb-4">Plan Features</h4>
-                  <ul className="space-y-2 text-sm">
-                    {formData.subscription.features.slice(0, 8).map((feature, index) => (
-                      <li key={index} className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        {feature}
-                      </li>
-                    ))}
-                    {formData.subscription.features.length > 8 && (
-                      <li className={user?.userType === 'aggregator' ? 'text-slate-400 font-semibold' : 'text-purple-600 font-semibold'}>
-                        +{formData.subscription.features.length - 8} more features
-                      </li>
-                    )}
-                  </ul>
-                </div>
-                {user?.userType !== 'aggregator' && (
-                  <div>
-                    <h4 className="font-semibold mb-4">Billing Information</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Auto-renewal:</span>
-                        <span>{formData.subscription.autoRenewal ? 'Enabled' : 'Disabled'}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+              <div>
+                <h4 className="font-semibold mb-4">Plan Features</h4>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-8 text-sm">
+                  {formData.subscription.features.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               <div className="flex gap-4 mt-6 flex-wrap">
@@ -1319,7 +1301,7 @@ const Profile = () => {
       </Card>
 
       {/* Available Plans Section */}
-      {user?.userType !== 'aggregator' && (
+      {/* {user?.userType !== 'aggregator' && (
         <Card className="border-slate-700">
           <CardHeader>
             <h2 className="text-2xl font-bold">Available Plans</h2>
@@ -1436,7 +1418,7 @@ const Profile = () => {
             )}
           </CardContent>
         </Card>
-      )}
+      )}*/}
     </div>
   );
 };

@@ -39,8 +39,8 @@ const releaseTypes = [
   { value: "single", label: "Single" },
   { value: "album", label: "Album" },
   { value: "ep", label: "EP" },
-  { value: "minialbum", label: "Mini Album" },
-  { value: "ringtonerelease", label: "Ringtone Release" }
+  { value: "mini_album", label: "Mini Album" },
+  { value: "ringtone_release", label: "Ringtone Release" }
 ];
 
 const AdvancedReleaseBuilder = () => {
@@ -427,7 +427,7 @@ const AdvancedReleaseBuilder = () => {
   };
 
   const addTrack = () => {
-    if ((selectedReleaseType === 'single' || selectedReleaseType === 'ringtonerelease') && formData.tracks.length >= 1) {
+    if ((selectedReleaseType === 'single' || selectedReleaseType === 'ringtone_release') && formData.tracks.length >= 1) {
       showToast.error('Single and Ringtone releases can only have one track');
       return;
     }
@@ -1250,7 +1250,7 @@ const AdvancedReleaseBuilder = () => {
               </div>
               <h3 className="text-foreground text-lg font-medium mb-1">{type.label}</h3>
               <p className="text-muted-foreground text-xs">
-                {(type.value === 'single' || type.value === 'ringtonerelease') ? '1 Track' : 'Multiple Tracks'}
+                {(type.value === 'single' || type.value === 'ringtone_release') ? '1 Track' : 'Multiple Tracks'}
               </p>
             </div>
           </div>

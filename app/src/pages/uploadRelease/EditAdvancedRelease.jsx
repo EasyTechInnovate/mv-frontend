@@ -39,8 +39,8 @@ const releaseTypes = [
   { value: "single", label: "Single" },
   { value: "album", label: "Album" },
   { value: "ep", label: "EP" },
-  { value: "minialbum", label: "Mini Album" },
-  { value: "ringtonerelease", label: "Ringtone Release" }
+  { value: "mini_album", label: "Mini Album" },
+  { value: "ringtone_release", label: "Ringtone Release" }
 ];
 
 const EditAdvancedReleaseBuilder = () => {
@@ -572,7 +572,7 @@ const EditAdvancedReleaseBuilder = () => {
   };
 
   const addTrack = () => {
-    if ((selectedReleaseType === 'single' || selectedReleaseType === 'ringtonerelease') && formData.tracks.length >= 1) {
+    if ((selectedReleaseType === 'single' || selectedReleaseType === 'ringtone_release') && formData.tracks.length >= 1) {
       showToast.error('Single and Ringtone releases can only have one track');
       return;
     }

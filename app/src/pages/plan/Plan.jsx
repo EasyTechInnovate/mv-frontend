@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Check, X, CreditCard, Calendar, Clock, Loader, ShieldCheck, ArrowUp, Tag } from 'lucide-react'
+import { Check, X, CreditCard, Calendar, Clock, Loader, ShieldCheck, ArrowUp, Tag, Disc3 } from 'lucide-react'
 import { getMySubscription, getAllSubscriptionPlans, createPaymentIntent, verifyPayment, getProfile } from '@/services/api.services'
 import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
@@ -319,6 +319,42 @@ const Plan = () => {
                 </div>
               </div>
               <Badge className="bg-green-600 text-white">Active</Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Release Credits */}
+      {currentSubData?.data?.plan && !currentSubData?.data?.plan?.features?.unlimitedReleases && (
+        <Card className="border-slate-700">
+          <CardHeader className="flex flex-row items-center gap-2">
+            <Disc3 className="w-5 h-5 text-purple-500" />
+            <CardTitle>Release Credits</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Single / Ringtone</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(user?.releaseCredits?.one_song ?? 0) > 0
+                      ? 'Credit available'
+                      : 'No credits — buy One Song plan'}
+                  </p>
+                </div>
+                <p className="text-2xl font-bold text-purple-600">{user?.releaseCredits?.one_song ?? 0}</p>
+              </div>
+              <div className="flex items-center justify-between border-t border-slate-700 pt-3">
+                <div>
+                  <p className="text-sm font-medium">Album / EP / Mini Album</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(user?.releaseCredits?.one_album ?? 0) > 0
+                      ? 'Credit available'
+                      : 'No credits — buy One Album plan'}
+                  </p>
+                </div>
+                <p className="text-2xl font-bold text-purple-600">{user?.releaseCredits?.one_album ?? 0}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
