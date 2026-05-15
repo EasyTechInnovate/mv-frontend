@@ -163,23 +163,36 @@ const Billing = () => {
             <Disc3 className="w-5 h-5 text-purple-500" />
             <CardTitle>Release Credits</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-3xl font-bold text-purple-600">{user?.releaseCredits ?? 0}</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {user?.releaseCredits > 0
-                    ? 'Credit available — you can create a new release'
-                    : 'No credits remaining — purchase a plan to create a new release'}
-                </p>
+              <div className="space-y-3 flex-1">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Single / Ringtone</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(user?.releaseCredits?.one_song ?? 0) > 0
+                        ? 'Credit available'
+                        : 'No credits — buy One Song plan'}
+                    </p>
+                  </div>
+                  <p className="text-2xl font-bold text-purple-600">{user?.releaseCredits?.one_song ?? 0}</p>
+                </div>
+                <div className="flex items-center justify-between border-t border-slate-700 pt-3">
+                  <div>
+                    <p className="text-sm font-medium">Album / EP / Mini Album</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(user?.releaseCredits?.one_album ?? 0) > 0
+                        ? 'Credit available'
+                        : 'No credits — buy One Album plan'}
+                    </p>
+                  </div>
+                  <p className="text-2xl font-bold text-purple-600">{user?.releaseCredits?.one_album ?? 0}</p>
+                </div>
               </div>
-              <a
-                href="/app/plan"
-                className="text-sm text-purple-500 hover:underline font-medium"
-              >
-                Buy More →
-              </a>
             </div>
+            <a href="/app/plan" className="text-sm text-purple-500 hover:underline font-medium block text-right">
+              Buy More →
+            </a>
           </CardContent>
         </Card>
       )}
